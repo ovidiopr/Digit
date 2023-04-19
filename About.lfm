@@ -1,0 +1,148 @@
+object AboutBox: TAboutBox
+  Left = 491
+  Height = 218
+  Top = 227
+  Width = 292
+  BorderStyle = bsDialog
+  Caption = 'About...'
+  ClientHeight = 218
+  ClientWidth = 292
+  Color = clBtnFace
+  Font.Color = clBlack
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Position = poScreenCenter
+  LCLVersion = '2.2.4.0'
+  object TxtPanel: TPanel
+    Left = 0
+    Height = 174
+    Top = 0
+    Width = 292
+    Align = alClient
+    BevelOuter = bvLowered
+    ClientHeight = 174
+    ClientWidth = 292
+    Font.Color = clBlack
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    ParentFont = False
+    TabOrder = 0
+    object ProgramIcon: TImage
+      Left = 10
+      Height = 57
+      Top = 0
+      Width = 57
+      Center = True
+      Picture.Data = {
+        1754506F727461626C654E6574776F726B47726170686963E403000089504E47
+        0D0A1A0A0000000D49484452000000300000003008060000005702F987000000
+        06624B4744000000000000F943BB7F000000097048597300002E2300002E2301
+        78A53F7600000384494441546843ED98CF4B146118C7BF6B52111541392E99B2
+        89698675938288F056A7A082FE0459242224BB54445406DAA9A8539702A35327
+        0F1DA243D039C41F6BAD6EAEA6B56A609669ADF3F63CB3333BFB6BF6DDD91D67
+        B6D80F3E3BBBC3FBEC7CBFE3F3BECF3B0B54A8B03108FA13DAE11FA562A064D4
+        8B148AF959F8E97397F57898A2AD226FB2A3B078BEA43ACC264EE24D808EA3FA
+        B9A0655A19195012E28568C6987A001F7409EA10458D2C5BC37DD199A8CA56FC
+        8C98F78FFF03058A67BC3720FCD5F83D691A580FA5CF0909DE1AD026AC56F3AD
+        1815014CACA6CE0959B68180670678B511620F623331D48809045EEAE2558A4E
+        59B681870618351846E0195701A9BEA24FEC82C5331E1B20B9404437D02E1B9B
+        0B4F0DB0685DFC2C1DAB64E373E1B281F4CE1B42D3C04374B181FBF9B2F2E1A2
+        81F4CEDB87EEF6831855F9DC210CDF90655BE1A68164E7E5F5BE0ED33FF87D3D
+        3E7DB3D5BC3270D100C326B859251A573342F15EF41C9665E5C36503C2BF134B
+        B386811D589AB1D3B472E19001F9B6781FA27535F81A83DE797723369F3A2732
+        BFB1501C30903E3991B245E046C5CB23CDD4337771F5339F6BC3901841EB4D73
+        4ED8EBBC99386140F1617D84C5F9101FDF847898DFEFC2E2D447343E217551A1
+        D74C3F2E2FBC46C7D9D4DC52C433B60DD0E06A12D541718B629022348BDAE516
+        840C9D5A89F0FEC638416326282E516C917DBF5D2C0C64D77423C2D748403FC5
+        4252A91E73F00BF3814488FD08AF45D0F08AC65EA7384A277DD9D770861C06B2
+        1FF56A31B7C0E71E2168DCD1F714BD5CDB2F70FE5415E2FAD2C8B56F2C93A54D
+        CE42C96520D9703663653280C81A12934FA52DEF00896ECB18DFA50BD61F059D
+        999C85625542CA362C47534AE2D7735C38913D2E393E88B46E5AFAE42C949C06
+        0671FA5C13C655C380CFEEA39E8B6419788CCEE32D185B67E10ABECCBB5DD376
+        4933C0CB9CD170EA31B5E8454DDB25D3C06DAE997BE8891EC3BB3A73987B356D
+        97A4017A692403AB147F288E48F2CA86A40112FD545FE31F4872CA0ACD00BD34
+        E8777E85A25696542670C755340324FA0E6F07BAD1F75696552618DB8561C126
+        A6B177863760FA7269FDCB70F990581A75C5A2A85F861DC4D0211B9781AA9889
+        4224366CEE8B678A3420FCA906B6E3FBB4579DD6960163B05518137BA3C3EAFA
+        46C00A7962A7F4E24E84D5F58D801CED813B65B077DB051BA2D3293AD1618AD6
+        5174A2C3948B8E0AFF2D7F015C7AE689192E93C50000000049454E44AE426082
+      }
+    end
+    object ProductName: TLabel
+      Left = 80
+      Height = 16
+      Top = 8
+      Width = 33
+      Caption = 'Digit'
+      Font.Color = clBlack
+      Font.Height = -15
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentColor = False
+      ParentFont = False
+    end
+    object Version: TLabel
+      Left = 80
+      Height = 13
+      Top = 32
+      Width = 53
+      Caption = 'Version 2.2'
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      ParentColor = False
+      ParentFont = False
+    end
+    object Copyright: TLabel
+      Left = 10
+      Height = 13
+      Top = 62
+      Width = 174
+      Caption = 'Copyright: Ovidio Y. Peña Rodríguez'
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      ParentColor = False
+      ParentFont = False
+    end
+    object Comments: TMemo
+      Left = 10
+      Height = 67
+      Top = 88
+      Width = 270
+      Anchors = [akTop, akLeft, akRight, akBottom]
+      BorderStyle = bsNone
+      Color = clBtnFace
+      Enabled = False
+      Lines.Strings = (
+        'Digit allows you to digitize scanned documents. Curve color can be selected and paper rotations are automatically corrected.'
+      )
+      TabOrder = 0
+    end
+  end
+  object BtnPanel: TPanel
+    Left = 0
+    Height = 44
+    Top = 174
+    Width = 292
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 44
+    ClientWidth = 292
+    TabOrder = 1
+    object OKButton: TButton
+      Left = 114
+      Height = 33
+      Top = 6
+      Width = 65
+      Caption = 'OK'
+      Default = True
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      ModalResult = 1
+      ParentFont = False
+      TabOrder = 0
+    end
+  end
+end

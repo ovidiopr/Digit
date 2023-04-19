@@ -1,0 +1,110 @@
+object ChartScaleDlg: TChartScaleDlg
+  Left = 608
+  Height = 212
+  Top = 232
+  Width = 292
+  BorderStyle = bsDialog
+  Caption = 'Chart scale...'
+  ClientHeight = 212
+  ClientWidth = 292
+  LCLVersion = '2.2.4.0'
+  object cbManualScale: TCheckBox
+    AnchorSideLeft.Control = Owner
+    AnchorSideTop.Control = Owner
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    Left = 5
+    Height = 19
+    Top = 5
+    Width = 282
+    Align = alTop
+    BorderSpacing.Left = 5
+    BorderSpacing.Top = 5
+    BorderSpacing.Right = 5
+    Caption = 'Use manual scale'
+    OnChange = cbManualScaleChange
+    ParentFont = False
+    TabOrder = 0
+  end
+  object BtnPanel: TPanel
+    Left = 0
+    Height = 45
+    Top = 167
+    Width = 292
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 45
+    ClientWidth = 292
+    ParentFont = False
+    TabOrder = 2
+    object BtnCancel: TBitBtn
+      AnchorSideTop.Control = BtnPanel
+      AnchorSideRight.Control = BtnPanel
+      AnchorSideRight.Side = asrBottom
+      AnchorSideBottom.Control = BtnPanel
+      AnchorSideBottom.Side = asrBottom
+      Left = 212
+      Height = 35
+      Top = 5
+      Width = 75
+      Anchors = [akTop, akRight, akBottom]
+      BorderSpacing.Top = 5
+      BorderSpacing.Right = 5
+      BorderSpacing.Bottom = 5
+      Cancel = True
+      Caption = 'Cancel'
+      Kind = bkCancel
+      ModalResult = 2
+      ParentFont = False
+      TabOrder = 1
+    end
+    object BtnAccept: TBitBtn
+      AnchorSideTop.Control = BtnPanel
+      AnchorSideRight.Control = BtnCancel
+      AnchorSideBottom.Control = BtnPanel
+      AnchorSideBottom.Side = asrBottom
+      Left = 132
+      Height = 35
+      Top = 5
+      Width = 75
+      Anchors = [akTop, akRight, akBottom]
+      BorderSpacing.Top = 5
+      BorderSpacing.Right = 5
+      BorderSpacing.Bottom = 5
+      Caption = '&Acept'
+      Default = True
+      Kind = bkOK
+      ModalResult = 1
+      ParentFont = False
+      TabOrder = 0
+    end
+  end
+  object txtValueEditor: TValueListEditor
+    Left = 0
+    Height = 143
+    Top = 24
+    Width = 292
+    Align = alClient
+    DefaultColWidth = 100
+    FixedCols = 0
+    Flat = True
+    ParentFont = False
+    RowCount = 5
+    TabOrder = 1
+    TitleStyle = tsNative
+    Strings.Strings = (
+      'X min=0.0'
+      'X max=0.0'
+      'Y min=0.0'
+      'Y max=0.0'
+    )
+    TitleCaptions.Strings = (
+      'Key'
+      'Value'
+    )
+    ColWidths = (
+      100
+      191
+    )
+  end
+end
