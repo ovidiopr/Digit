@@ -414,7 +414,7 @@ begin
     MarkersMoveRight.Enabled := ImageIsLoaded and assigned(ActiveMarker);
     MarkersDelete.Enabled := ImageIsLoaded and assigned(ActiveMarker) and not ActiveMarker.IsPersistent;
 
-    GridRemoval.Enabled := ImageIsLoaded;
+    GridRemoval.Enabled := ImageIsLoaded and not (ValidGrid and SubstractGrid);
     GridShowHide.Enabled := ImageIsLoaded and ValidGrid;
 
     PlotExport.Enabled := HasPoints;
@@ -885,6 +885,7 @@ procedure TDigitMainForm.GridShowHideExecute(Sender: TObject);
 begin
   PlotImage.SubstractGrid := not PlotImage.SubstractGrid;
   GridShowHide.Checked := PlotImage.SubstractGrid;
+  GridRemoval.Enabled := not PlotImage.SubstractGrid;
 
   if GridShowHide.Checked then
     GridShowHide.ImageIndex := 40

@@ -27,7 +27,9 @@ backup/
 lib/
 build/
 Installer/
+*.dSYM/
 
 # Application bundle for Mac OS
 *.app/
 .DS_Store
+Digit

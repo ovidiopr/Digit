@@ -1801,32 +1801,30 @@ procedure TPlotImage.RemoveGrid(LineColor1, LineColor2, BckgndColor: TColor;
 const
   angle_step = 1;
 var
-  theta: Double;
-  hori_count,
-  vert_count,
-  hori_index,
-  vert_index: Integer;
-  yo_min,
-  xo_min,
-  yo_max,
-  xo_max: Double;
-  m_min_hori,
-  m_min_vert,
-  m_max_hori,
-  m_max_vert: Double;
-  theta_count: Array of Integer;
-  sin_t, cos_t: Array of Double;
-  img: Array of Array of LongInt;
-  accumulator: Array of Array of Integer;
-  C1, C2: LongInt;
-  max_count_hori,
-  max_count_vert: Integer;
-  rho: Integer;
   t_idx: Integer;
   i, j: Integer;
   x, y: Double;
   diag_len: Integer;
+
+  img: Array of Array of LongInt;
+  accumulator: Array of Array of Integer;
+
   num_thetas: Integer;
+  theta: Double;
+  theta_count: Array of Integer;
+  sin_theta, cos_theta: Array of Double;
+
+  C1, C2: LongInt;
+  rho: Integer;
+
+  hori_count,
+  vert_count,
+  hori_index,
+  vert_index: Integer;
+  vert_line,
+  hori_line: TStraightLine;
+  max_count_hori,
+  max_count_vert: Integer;
 
   IntfImage: TLazIntfImage;
 begin
@@ -1836,14 +1834,14 @@ begin
   with Picture.Bitmap do
   begin
     // Diagonal length of image
-    diag_len := Round(Sqrt(Width*Width + Width*Width));
+    diag_len := Round(Sqrt(Width*Width + Height*Height));
 
     // Put the canvas values in an array for faster access
     SetLength(img, Width, Height);
     IntfImage := CreateIntfImage;
     try
-      for j := 0 to Picture.Bitmap.Height - 1 do
-        for i := 0 to Picture.Bitmap.Width - 1 do
+      for j := 0 to Height - 1 do
+        for i := 0 to Width - 1 do
           img[i, j] := ColorToRGB(IntfImage.TColors[i, j]);
     finally
       IntfImage.Free;
@@ -1852,14 +1850,14 @@ begin
 
   // Cache some reusable values
   num_thetas := 1 + Round(180/angle_step);
-  SetLength(sin_t, num_thetas);
-  SetLength(cos_t, num_thetas);
+  SetLength(sin_theta, num_thetas);
+  SetLength(cos_theta, num_thetas);
   SetLength(theta_count, num_thetas);
-  for t_idx := Low(sin_t) to High(sin_t) do
+  for t_idx := Low(sin_theta) to High(sin_theta) do
   begin
     theta := -90.0 + t_idx*angle_step;
-    sin_t[t_idx] := sin(theta*3.14159/180.0);
-    cos_t[t_idx] := cos(theta*3.14159/180.0);
+    sin_theta[t_idx] := sin(theta*3.14159/180.0);
+    cos_theta[t_idx] := cos(theta*3.14159/180.0);
     theta_count[t_idx] := 0;
   end;
 
@@ -1876,13 +1874,13 @@ begin
     for j := Low(img[Low(img)]) to High(img[Low(img)]) do
       if AreSimilarColors(C1, img[i, j], Tolerance) or
          AreSimilarColors(C2, img[i, j], Tolerance) then
-        for t_idx := Low(sin_t) to High(sin_t) do
+        for t_idx := Low(sin_theta) to High(sin_theta) do
         begin
           // Calculate rho, diag_len is added for a positive index
-          rho := diag_len + Round(i*cos_t[t_idx] + j*sin_t[t_idx]);
+          rho := diag_len + Round(i*cos_theta[t_idx] + j*sin_theta[t_idx]);
           inc(accumulator[rho, t_idx]);
 
-          if (abs(sin_t[t_idx]) > abs(cos_t[t_idx])) then
+          if (abs(sin_theta[t_idx]) > abs(cos_theta[t_idx])) then
           begin
             // Horizontal line
             if (accumulator[rho, t_idx] > max_count_hori) then
@@ -1899,7 +1897,7 @@ begin
   // Histogram of angles
   for i := Low(accumulator) to High(accumulator) do
     for t_idx := Low(accumulator[Low(accumulator)]) to High(accumulator[Low(accumulator)]) do
-      if (abs(sin_t[t_idx]) > abs(cos_t[t_idx])) then
+      if (abs(sin_theta[t_idx]) > abs(cos_theta[t_idx])) then
       begin
         // Horizontal line
         if (accumulator[i, t_idx] > Threshold*max_count_hori) then
@@ -1917,33 +1915,13 @@ begin
   vert_count := 0;
   hori_index := 0;
   vert_index := 0;
-  yo_min := Height;
-  xo_min := Width;
-  yo_max := 0;
-  xo_max := 0;
-  m_min_hori := 0.0;
-  m_min_vert := 0.0;
-  m_max_hori := 0.0;
-  m_max_vert := 0.0;
   for i := Low(accumulator) to High(accumulator) do
     for t_idx := Low(accumulator[Low(accumulator)]) to High(accumulator[Low(accumulator)]) do
-      if (abs(sin_t[t_idx]) > abs(cos_t[t_idx])) then
+      if (abs(sin_theta[t_idx]) > abs(cos_theta[t_idx])) then
       begin
         // Mostly horizontal line
         if (accumulator[i, t_idx] > Threshold*max_count_hori) then
         begin
-          if ((i - diag_len)/sin_t[t_idx] < yo_min) then
-          begin
-            yo_min := (i - diag_len)/sin_t[t_idx];
-            m_min_hori := cos_t[t_idx]/sin_t[t_idx];
-          end;
-
-          if ((i - diag_len)/sin_t[t_idx] > yo_max) then
-          begin
-            yo_max := (i - diag_len)/sin_t[t_idx];
-            m_max_hori := cos_t[t_idx]/sin_t[t_idx];
-          end;
-
           if (theta_count[t_idx] > hori_count) then
           begin
             hori_count := theta_count[t_idx];
@@ -1956,18 +1934,6 @@ begin
         // Mostly vertical line
         if (accumulator[i, t_idx] > Threshold*max_count_vert) then
         begin
-          if ((i - diag_len)/cos_t[t_idx] < xo_min) then
-          begin
-            xo_min := (i - diag_len)/cos_t[t_idx];
-            m_min_vert := sin_t[t_idx]/cos_t[t_idx];
-          end;
-
-          if ((i - diag_len)/cos_t[t_idx] > xo_max) then
-          begin
-            xo_max := (i - diag_len)/cos_t[t_idx];
-            m_max_vert := sin_t[t_idx]/cos_t[t_idx];
-          end;
-
           if (theta_count[t_idx] > vert_count) then
           begin
             vert_count := theta_count[t_idx];
@@ -1976,59 +1942,95 @@ begin
         end;
       end;
 
-  //ShowMessage('Vertical: ' + IntToStr(vert_count) + ', Horizontal: ' + IntToStr(hori_count));
-  with GridMask.Canvas do
-  begin
-    // First, clear the mask
-    Clear;
-    Brush.Color:= clBlack;
-    Pen.Mode := pmCopy;
-    Pen.Color := clBlack;
-    Pen.Style := psSolid;
-    FillRect(0, 0, GridMask.Width, GridMask.Height);
+  //Create all the required TStraightLine objects
+  try
+    hori_line := TStraightLine.Create;
+    hori_line.Color := BckgndColor;
 
-    try
-      // Reset the status of the mask
-      FValidGrid := False;
-      FSubstractGrid := False;
+    vert_line := TStraightLine.Create;
+    vert_line.Color := BckgndColor;
 
-      // Now, draw the lines
-      Pen.Color := BckgndColor;
-
-      for i := Low(accumulator) to High(accumulator) do
-      begin
-        rho := i - diag_len;
-        // Draw horizontal lines
-        if (accumulator[i, hori_index] > Threshold*max_count_hori) then
-        begin
-          y := (rho - xo_min*cos_t[hori_index])/(sin_t[hori_index] - m_min_vert*cos_t[hori_index]);
-          x := xo_min - m_min_vert*y;
-          MoveTo(Round(x), Round(y));
-
-          y := (rho - xo_max*cos_t[hori_index])/(sin_t[hori_index] - m_max_vert*cos_t[hori_index]);
-          x := xo_max - m_max_vert*y;
-          LineTo(Round(x), Round(y));
-        end;
-
-        // Draw vertical lines
-        if (accumulator[i, vert_index] > Threshold*max_count_vert) then
-        begin
-          x := (rho - yo_min*sin_t[vert_index])/(cos_t[vert_index] - m_min_hori*sin_t[vert_index]);
-          y := yo_min - m_min_hori*x;
-          MoveTo(Round(x), Round(y));
-
-          x := (rho - yo_max*sin_t[vert_index])/(cos_t[vert_index] - m_max_hori*sin_t[vert_index]);
-          y := yo_max - m_max_hori*x;
-          LineTo(Round(x), Round(y));
-        end;
-      end;
-    finally
-      ValidGrid := True;
-      SubstractGrid := True;
-
-      IsChanged := True;
+    with GridMask.Canvas do
+    begin
+      // Clear the mask
+      Clear;
+      Brush.Color:= clBlack;
+      Pen.Mode := pmCopy;
+      Pen.Color := clBlack;
+      Pen.Style := psSolid;
+      FillRect(0, 0, GridMask.Width, GridMask.Height);
     end;
+
+    // Reset the status of the mask
+    FValidGrid := False;
+    FSubstractGrid := False;
+
+    // Now, draw the lines
+    for i := Low(accumulator) to High(accumulator) do
+    begin
+      rho := i - diag_len;
+      // Draw horizontal lines
+      if (accumulator[i, hori_index] > Threshold*max_count_hori) then
+      begin
+        hori_line.Clear;
+
+        // Fill the line with all the points that meet the color criteria
+        for j := 0 to GridMask.Width - 1 do
+        begin
+          x := j;
+          y := (rho - x*cos_theta[hori_index])/sin_theta[hori_index];
+
+          if (y >= 0) and (Round(y) < GridMask.Height) then
+            if AreSimilarColors(C1, img[Round(x), Round(y)], Tolerance) or
+               AreSimilarColors(C2, img[Round(x), Round(y)], Tolerance) then
+            begin
+              hori_line.AddPoint(x, y);
+            end;
+        end;
+
+        // Draw the line
+        hori_line.Draw(GridMask.Canvas);
+      end;
+
+      // Draw vertical lines
+      if (accumulator[i, vert_index] > Threshold*max_count_vert) then
+      begin
+        vert_line.Clear;
+
+        // Fill the line with all the points that meet the color criteria
+        for j := 0 to GridMask.Height - 1 do
+        begin
+          y := j;
+          x := (rho - y*sin_theta[vert_index])/cos_theta[vert_index];
+
+          if (x >= 0) and (Round(x) < GridMask.Width) then
+            if AreSimilarColors(C1, img[Round(x), Round(y)], Tolerance) or
+               AreSimilarColors(C2, img[Round(x), Round(y)], Tolerance) then
+            begin
+              vert_line.AddPoint(x, y);
+            end;
+        end;
+
+        // Draw the line
+        vert_line.Draw(GridMask.Canvas);
+      end;
+    end;
+  finally
+    hori_line.Free;
+    vert_line.Free;
+
+    ValidGrid := True;
+    SubstractGrid := True;
+
+    IsChanged := True;
   end;
+
+  // Release all the dynamic arrays
+  SetLength(img, 0);
+  SetLength(sin_theta, 0);
+  SetLength(cos_theta, 0);
+  SetLength(theta_count, 0);
+  SetLength(accumulator, 0);
 end;
 
 procedure TPlotImage.GroupPoints(Region: TRect);

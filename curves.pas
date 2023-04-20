@@ -138,6 +138,23 @@ type
     property Point[Index: Integer]: TCurvePoint read GetPoint write SetPoint; default;
   end;
 
+  TStraightLine = class(TCurve)
+  protected
+    { Protected declarations }
+    FColor: TColor;
+  public
+    { Public declarations }
+    {@exclude}
+    constructor Create;
+    {Draws a line in the canvas from its first point to the last one:
+        @param(Canvas: Canvas where the line will be drawn.)
+    }
+    procedure Draw(Canvas: TCanvas);
+
+    {Return the line color}
+    property Color: TColor read FColor write FColor;
+  end;
+
   TIsland = class(TCurve)
   private
     { Private declarations }
@@ -643,6 +660,37 @@ begin
     end;
   end;
 end;
+
+
+
+//=============================| TStraightLine |==============================//
+constructor TStraightLine.Create;
+begin
+  inherited;
+  FColor := -1;
+end;
+
+procedure TStraightLine.Draw(Canvas: TCanvas);
+var
+  i: Integer;
+begin
+  //Draw the straigh line in the image
+  if (Points.Count >= 2) then
+  begin
+    if not IsSorted then
+      SortCurve;
+
+    with Canvas do
+    begin
+      Pen.Mode := pmCopy;
+      Pen.Color := Color;
+
+      MoveTo(Round(X[0]), Round(Y[0]));
+      LineTo(Round(X[Points.Count - 1]), Round(Y[Points.Count - 1]));
+    end;
+  end;
+end;
+
 
 
 
