@@ -12,10 +12,28 @@ uses LCLIntf, LCLType, SysUtils, Classes, Graphics, Forms, Controls, Menus,
 
 type
   TMouseMode = (mdCursor, mdMarkers, mdColor, mdSteps, mdSegments,
-                mdGroup, mdDelete);
+                mdGroup, mdDelete, mdMajorGridColor, mdMinorGridColor,
+                mdBackgroundColor);
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
+    btnAddCurve: TToolButton;
+    btnAdjustCurve: TToolButton;
+    btnClear: TToolButton;
+    btnDelCurve: TToolButton;
+    btnDigitize: TToolButton;
+    btnEditName: TToolButton;
+    btnExportPlot: TToolButton;
+    btnMoveDown: TToolButton;
+    btnMoveUp: TToolButton;
+    btnSetScale: TToolButton;
+    MainPlot: TChart;
+    ModeBackgroundColor: TAction;
+    ModeMinorGridColor: TAction;
+    ModeMajorGridColor: TAction;
+    btnMajorGridColor: TBitBtn;
+    btnMinorGridColor: TBitBtn;
+    btnBackgroundColor: TBitBtn;
     GridShowHide: TAction;
     GridRemoval: TAction;
     edtSpread: TBCTrackbarUpdown;
@@ -50,26 +68,28 @@ type
     N6: TMenuItem;
     btnGroupPointsmode: TToolButton;
     btnDeletePointsMode: TToolButton;
+    MainPanel: TPanel;
+    PageControl: TPageControl;
     pcInput: TPageControl;
     rgDirection: TRadioGroup;
+    ScrollBox: TScrollBox;
+    sep07: TToolButton;
+    SpeedButton1: TSpeedButton;
+    tbPlot: TToolBar;
     tbGrid: TToolBar;
     tbRemoveGrid: TToolButton;
     tbShowHideGrid: TToolButton;
+    tcCurves: TTabControl;
+    sep08: TToolButton;
     tsGrid: TTabSheet;
     tsDigit: TTabSheet;
     ToolRightItem: TMenuItem;
     ToolLeftItem: TMenuItem;
     ToolCurveRight: TAction;
     ToolCurveLeft: TAction;
-    btnAddCurve: TToolButton;
-    btnAdjustCurve: TToolButton;
-    btnClear: TToolButton;
-    btnDelCurve: TToolButton;
-    btnDigitize: TToolButton;
-    btnEditName: TToolButton;
-    btnMoveDown: TToolButton;
-    btnMoveUp: TToolButton;
     MarkersMenu: TMenuItem;
+    tsPicture: TTabSheet;
+    tsPlot: TTabSheet;
     ZoomImage: TImage;
     MarkersDelete: TAction;
     MarkersMoveRight: TAction;
@@ -91,12 +111,8 @@ type
     N5: TMenuItem;
     btnCopy: TToolButton;
     btnImport: TToolButton;
-    ScrollBox: TScrollBox;
     sep02: TToolButton;
     sep03: TToolButton;
-    sep07: TToolButton;
-    tbDigit: TToolBar;
-    tcCurves: TTabControl;
     ToolScaleOptionsItem: TMenuItem;
     N4: TMenuItem;
 
@@ -127,8 +143,6 @@ type
     PlotExport: TAction;
     PlotScale: TAction;
     SavePlotDlg: TSaveDialog;
-    btnExportPlot: TToolButton;
-    btnSetScale: TToolButton;
     ToolConvertToSymbols: TAction;
     ToolAdjustCurve: TAction;
     seXo: TFloatSpinEdit;
@@ -147,7 +161,7 @@ type
     lblSmoothDegree: TLabel;
     lblBSPoints: TLabel;
     lblSmoothKernel: TLabel;
-    MainPanel: TPanel;
+    InputPanel: TPanel;
     LeftSplitter: TSplitter;
     ModeSteps: TAction;
     ModeColor: TAction;
@@ -156,20 +170,15 @@ type
     pnlData: TPanel;
     seSGDegree: TSpinEdit;
     RightSplitter: TSplitter;
-    tbPlot: TToolBar;
     ToolCurveName: TAction;
     ToolCurveDelete: TAction;
     ToolCurveAdd: TAction;
     DigitizeFromHereItem: TMenuItem;
-    MainPlot: TChart;
     MainMenu: TMainMenu;
     FileMenu: TMenuItem;
     FileNewItem: TMenuItem;
     FileOpenItem: TMenuItem;
-    PageControl: TPageControl;
     DigitPopupMenu: TPopupMenu;
-    tsPicture: TTabSheet;
-    tsPlot: TTabSheet;
     Help1: TMenuItem;
     N1: TMenuItem;
     FileExitItem: TMenuItem;
@@ -185,7 +194,7 @@ type
     FileOpen: TAction;
     FileSaveAs: TAction;
     HelpAbout: TAction;
-    MainToolBar: TToolBar;
+    tbMain: TToolBar;
     BtnOpen: TToolButton;
     BtnSave: TToolButton;
     sep01: TToolButton;
@@ -239,6 +248,9 @@ type
     procedure GridShowHideExecute(Sender: TObject);
     procedure HelpAboutExecute(Sender: TObject);
     procedure FileExitExecute(Sender: TObject);
+    procedure ModeBackgroundColorExecute(Sender: TObject);
+    procedure ModeMajorGridColorExecute(Sender: TObject);
+    procedure ModeMinorGridColorExecute(Sender: TObject);
     procedure PlotImageMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure PlotImageMouseLeave(Sender: TObject);
@@ -248,7 +260,7 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure PlotImageChange(Sender: TObject);
     procedure PlotImageRegionSelected(Sender: TObject; RegionRect: TRect);
-    procedure MainPanelResize(Sender: TObject);
+    procedure InputPanelResize(Sender: TObject);
     procedure MainPlotMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
     procedure MarkersDeleteExecute(Sender: TObject);
@@ -392,6 +404,9 @@ begin
     ModeSegment.Enabled := HasPoints;
     ModeGroupPoints.Enabled := HasPoints;
     ModeDeletePoints.Enabled := HasPoints;
+    ModeMajorGridColor.Enabled := ImageIsLoaded;
+    ModeMinorGridColor.Enabled := ImageIsLoaded;
+    ModeBackgroundColor.Enabled := ImageIsLoaded;
 
     ToolDigit.Enabled := Scale.IsValid and ColorIsSet;
     ToolAdjustCurve.Enabled := HasPoints;
@@ -767,8 +782,8 @@ begin
 
   {$ifdef darwin}
   // This fixes a bug in MacOs (tcCurves is not following the Align 'alClient')
-  MainPanel.Width := MainPanel.Width + 1;
-  MainPanel.Width := MainPanel.Width - 1;
+  InputPanel.Width := InputPanel.Width + 1;
+  InputPanel.Width := InputPanel.Width - 1;
   {$endif}
 end;
 
@@ -903,6 +918,24 @@ begin
   Close;
 end;
 
+procedure TDigitMainForm.ModeBackgroundColorExecute(Sender: TObject);
+begin
+  MouseMode := mdBackgroundColor;
+  TAction(Sender).Checked := True;
+end;
+
+procedure TDigitMainForm.ModeMajorGridColorExecute(Sender: TObject);
+begin
+  MouseMode := mdMajorGridColor;
+  TAction(Sender).Checked := True;
+end;
+
+procedure TDigitMainForm.ModeMinorGridColorExecute(Sender: TObject);
+begin
+  MouseMode := mdMinorGridColor;
+  TAction(Sender).Checked := True;
+end;
+
 function TDigitMainForm.CheckSaveStatus: Boolean;
 begin
   Result := True;
@@ -1007,7 +1040,10 @@ begin
   FMouseMode := Value;
   case Value of
     mdCursor: PlotImage.Cursor := crDefault;
-    mdColor: PlotImage.Cursor := crHandPoint;
+    mdColor,
+    mdMajorGridColor,
+    mdMinorGridColor,
+    mdBackgroundColor: PlotImage.Cursor := crHandPoint;
     mdMarkers,
     mdSteps,
     mdSegments,
@@ -1093,7 +1129,7 @@ begin
   Ini := TIniFile.Create(GetIniName);
   try
     //Save panel widths
-    Ini.WriteInteger('Panels', 'InputPanel', MainPanel.Width);
+    Ini.WriteInteger('Panels', 'InputPanel', InputPanel.Width);
     Ini.WriteInteger('Panels', 'DataPanel', pnlData.Width);
   finally
     Ini.Free;
@@ -1106,7 +1142,7 @@ begin
   Ini := TIniFile.Create(GetIniName);
   try
     //Restore panel widths
-    MainPanel.Width := Ini.ReadInteger('Panels', 'InputPanel', MainPanel.Width);
+    InputPanel.Width := Ini.ReadInteger('Panels', 'InputPanel', InputPanel.Width);
     pnlData.Width := Ini.ReadInteger('Panels', 'DataPanel', pnlData.Width);
   finally
     Ini.Free;
@@ -1166,7 +1202,7 @@ begin
       Width := ZoomImage.Width;
       Height := ZoomImage.Height;
       ZoomRect := Rect(0, 0, Width, Height);
-      Canvas.CopyRect(ZoomRect, PlotImage.Bitmap.Canvas, ImgRect);
+      Canvas.CopyRect(ZoomRect, PlotImage.BlackBoard.Canvas, ImgRect);
 
       Xc := Width*(X - Xo) div (2*span);
       Yc := Height*(Y - Yo) div (2*span);
@@ -1262,10 +1298,13 @@ begin
         end;
         //We are selecting the color
         mdColor: begin
-          btnColor.ButtonColor := PlotImage.Picture.Bitmap.Canvas.Pixels[X, Y];
-          PlotImage.DigitCurve.Color := PlotImage.Picture.Bitmap.Canvas.Pixels[X, Y];
+          btnColor.ButtonColor := PlotImage.PlotImg.GetPixel(X, Y);
+          PlotImage.DigitCurve.Color := PlotImage.PlotImg.GetPixel(X, Y);
           PlotImage.RedrawMarkers;
         end;
+        mdMajorGridColor: btnMajorGrid.ButtonColor := PlotImage.PlotImg.GetPixel(X, Y);
+        mdMinorGridColor: btnMinorGrid.ButtonColor := PlotImage.PlotImg.GetPixel(X, Y);
+        mdBackgroundColor: btnBackground.ButtonColor := PlotImage.PlotImg.GetPixel(X, Y);
       end;
 
       UpdateControls;
@@ -1324,7 +1363,7 @@ begin
   end;
 end;
 
-procedure TDigitMainForm.MainPanelResize(Sender: TObject);
+procedure TDigitMainForm.InputPanelResize(Sender: TObject);
 begin
   ZoomImage.Height := ZoomImage.Width;
 end;

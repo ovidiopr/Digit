@@ -1232,7 +1232,7 @@ object DigitMainForm: TDigitMainForm
   OnShow = FormShow
   Position = poDefault
   LCLVersion = '2.2.4.0'
-  object MainToolBar: TToolBar
+  object tbMain: TToolBar
     Left = 0
     Height = 40
     Top = 0
@@ -1250,7 +1250,7 @@ object DigitMainForm: TDigitMainForm
     ParentFont = False
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 1
+    TabOrder = 0
     object BtnNew: TToolButton
       Left = 5
       Top = 2
@@ -1443,256 +1443,41 @@ object DigitMainForm: TDigitMainForm
       ShowHint = True
     end
   end
-  object PageControl: TPageControl
-    Left = 192
-    Height = 457
-    Top = 40
-    Width = 560
-    ActivePage = tsPicture
-    Align = alClient
-    BorderSpacing.CellAlignHorizontal = ccaCenter
-    Font.Color = clBlack
-    Font.Height = -11
-    Font.Name = 'Default'
-    ParentFont = False
-    TabIndex = 0
-    TabOrder = 0
-    TabPosition = tpBottom
-    object tsPicture: TTabSheet
-      Caption = 'Picture'
-      ClientHeight = 435
-      ClientWidth = 554
-      Font.Color = clBlack
-      Font.Height = -11
-      Font.Name = 'Default'
-      ParentFont = False
-      object tcCurves: TTabControl
-        Left = 0
-        Height = 395
-        Top = 40
-        Width = 554
-        OnChange = tcCurvesChange
-        Align = alClient
-        TabOrder = 0
-        object ScrollBox: TScrollBox
-          Left = 2
-          Height = 333
-          Top = 30
-          Width = 544
-          HorzScrollBar.Page = 1
-          VertScrollBar.Page = 1
-          Align = alClient
-          TabOrder = 1
-        end
-      end
-      object tbDigit: TToolBar
-        Left = 0
-        Height = 40
-        Top = 0
-        Width = 554
-        ButtonHeight = 36
-        ButtonWidth = 32
-        Font.Color = clBlack
-        Font.Height = -11
-        Font.Name = 'Default'
-        Images = LargeImageList
-        ParentFont = False
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 1
-        object btnAddCurve: TToolButton
-          Left = 1
-          Top = 2
-          Action = ToolCurveAdd
-          ParentShowHint = False
-          ShowHint = True
-        end
-        object btnDelCurve: TToolButton
-          Left = 37
-          Top = 2
-          Action = ToolCurveDelete
-          ParentShowHint = False
-          ShowHint = True
-        end
-        object btnEditName: TToolButton
-          Left = 73
-          Top = 2
-          Action = ToolCurveName
-          ParentShowHint = False
-          ShowHint = True
-        end
-        object sep07: TToolButton
-          Left = 109
-          Height = 36
-          Top = 2
-          Caption = 'sep07'
-          Style = tbsSeparator
-        end
-        object btnDigitize: TToolButton
-          Left = 117
-          Top = 2
-          Action = ToolDigit
-          ParentShowHint = False
-          ShowHint = True
-        end
-        object btnMoveUp: TToolButton
-          Left = 189
-          Top = 2
-          Action = ToolCurveUp
-          ParentShowHint = False
-          ShowHint = True
-        end
-        object btnMoveDown: TToolButton
-          Left = 225
-          Top = 2
-          Action = ToolCurveDown
-          ParentShowHint = False
-          ShowHint = True
-        end
-        object btnClear: TToolButton
-          Left = 261
-          Top = 2
-          Action = ToolClear
-          ParentShowHint = False
-          ShowHint = True
-        end
-        object btnAdjustCurve: TToolButton
-          Left = 153
-          Top = 2
-          Action = ToolAdjustCurve
-          ParentShowHint = False
-          ShowHint = True
-        end
-      end
-    end
-    object tsPlot: TTabSheet
-      Caption = 'Plot'
-      ClientHeight = 435
-      ClientWidth = 554
-      Font.Color = clBlack
-      Font.Height = -11
-      Font.Name = 'Default'
-      ImageIndex = 1
-      ParentFont = False
-      object MainPlot: TChart
-        Left = 0
-        Height = 395
-        Top = 40
-        Width = 554
-        AxisList = <        
-          item
-            Grid.Style = psClear
-            Grid.Visible = False
-            Intervals.MaxLength = 200
-            Marks.LabelBrush.Style = bsClear
-            Minors = <>
-            Title.LabelFont.CharSet = ANSI_CHARSET
-            Title.LabelFont.Height = -16
-            Title.LabelFont.Name = 'Arial'
-            Title.LabelFont.Orientation = 900
-            Title.LabelFont.Pitch = fpVariable
-            Title.LabelFont.Quality = fqDraft
-            Title.Visible = True
-            Title.Caption = 'Y'
-            Title.LabelBrush.Style = bsClear
-          end        
-          item
-            Grid.Style = psSolid
-            Grid.Visible = False
-            Intervals.MaxLength = 200
-            Alignment = calBottom
-            Marks.LabelBrush.Style = bsClear
-            Minors = <>
-            Title.LabelFont.CharSet = ANSI_CHARSET
-            Title.LabelFont.Height = -16
-            Title.LabelFont.Name = 'Arial'
-            Title.LabelFont.Pitch = fpVariable
-            Title.LabelFont.Quality = fqDraft
-            Title.Visible = True
-            Title.Caption = 'X'
-            Title.LabelBrush.Style = bsClear
-          end>
-        BackColor = clWhite
-        Foot.Brush.Color = clBtnFace
-        Foot.Font.Color = clBlue
-        Legend.Alignment = laTopCenter
-        Legend.ColumnCount = 6
-        Legend.Visible = True
-        Title.Brush.Color = clBtnFace
-        Title.Font.Color = clBlue
-        Title.Text.Strings = (
-          'TAChart'
-        )
-        Align = alClient
-        OnMouseMove = MainPlotMouseMove
-      end
-      object tbPlot: TToolBar
-        Left = 0
-        Height = 40
-        Top = 0
-        Width = 554
-        ButtonHeight = 36
-        ButtonWidth = 32
-        Font.Color = clBlack
-        Font.Height = -11
-        Font.Name = 'Default'
-        Images = LargeImageList
-        ParentFont = False
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 1
-        object btnExportPlot: TToolButton
-          Left = 1
-          Top = 2
-          Action = PlotExport
-          ParentShowHint = False
-          ShowHint = True
-        end
-        object btnSetScale: TToolButton
-          Left = 37
-          Top = 2
-          Action = PlotScale
-          ParentShowHint = False
-          ShowHint = True
-        end
-      end
-    end
-  end
-  object MainPanel: TPanel
+  object InputPanel: TPanel
     Left = 0
     Height = 457
     Top = 40
-    Width = 187
+    Width = 195
     Align = alLeft
     BevelOuter = bvNone
     BevelWidth = 2
     ClientHeight = 457
-    ClientWidth = 187
+    ClientWidth = 195
     Font.Color = clBlack
     Font.Height = -11
     Font.Name = 'Default'
     ParentFont = False
-    TabOrder = 2
-    OnResize = MainPanelResize
+    TabOrder = 1
+    OnResize = InputPanelResize
     object ZoomImage: TImage
       Left = 0
       Height = 187
       Top = 0
-      Width = 187
+      Width = 195
       Anchors = [akTop, akLeft, akRight]
     end
     object pcInput: TPageControl
-      AnchorSideLeft.Control = MainPanel
+      AnchorSideLeft.Control = InputPanel
       AnchorSideTop.Control = ZoomImage
       AnchorSideTop.Side = asrBottom
-      AnchorSideRight.Control = MainPanel
+      AnchorSideRight.Control = InputPanel
       AnchorSideRight.Side = asrBottom
-      AnchorSideBottom.Control = MainPanel
+      AnchorSideBottom.Control = InputPanel
       AnchorSideBottom.Side = asrBottom
       Left = 0
       Height = 265
       Top = 192
-      Width = 187
+      Width = 195
       ActivePage = tsDigit
       Anchors = [akTop, akLeft, akRight, akBottom]
       BorderSpacing.Top = 5
@@ -1701,7 +1486,7 @@ object DigitMainForm: TDigitMainForm
       object tsDigit: TTabSheet
         Caption = 'Digitization'
         ClientHeight = 235
-        ClientWidth = 181
+        ClientWidth = 189
         object lblColor: TLabel
           AnchorSideLeft.Control = tsDigit
           AnchorSideTop.Control = btnColor
@@ -1728,7 +1513,7 @@ object DigitMainForm: TDigitMainForm
           Left = 44
           Height = 25
           Top = 2
-          Width = 132
+          Width = 140
           Anchors = [akTop, akLeft, akRight]
           BorderSpacing.Left = 5
           BorderSpacing.Top = 2
@@ -1750,7 +1535,7 @@ object DigitMainForm: TDigitMainForm
           Left = 5
           Height = 56
           Top = 29
-          Width = 171
+          Width = 179
           Anchors = [akTop, akLeft, akRight]
           AutoFill = True
           BorderSpacing.Left = 5
@@ -1765,7 +1550,7 @@ object DigitMainForm: TDigitMainForm
           ChildSizing.Layout = cclLeftToRightThenTopToBottom
           ChildSizing.ControlsPerLine = 1
           ClientHeight = 29
-          ClientWidth = 161
+          ClientWidth = 169
           Font.Color = clBlack
           Font.Height = -11
           Font.Name = 'Default'
@@ -1859,7 +1644,7 @@ object DigitMainForm: TDigitMainForm
           Left = 40
           Height = 25
           Top = 89
-          Width = 136
+          Width = 144
           AllowNegativeValues = False
           BarExponent = 1
           Increment = 1
@@ -1943,7 +1728,7 @@ object DigitMainForm: TDigitMainForm
           Left = 57
           Height = 25
           Top = 116
-          Width = 119
+          Width = 127
           AllowNegativeValues = False
           BarExponent = 1
           Increment = 1
@@ -2027,7 +1812,7 @@ object DigitMainForm: TDigitMainForm
           Left = 69
           Height = 25
           Top = 143
-          Width = 107
+          Width = 115
           AllowNegativeValues = False
           BarExponent = 1
           Increment = 1
@@ -2111,7 +1896,7 @@ object DigitMainForm: TDigitMainForm
           Left = 79
           Height = 25
           Top = 170
-          Width = 97
+          Width = 105
           AllowNegativeValues = False
           BarExponent = 1
           Increment = 1
@@ -2189,7 +1974,7 @@ object DigitMainForm: TDigitMainForm
       object tsGrid: TTabSheet
         Caption = 'Grid'
         ClientHeight = 235
-        ClientWidth = 181
+        ClientWidth = 189
         object edtGridTolerance: TBCTrackbarUpdown
           AnchorSideLeft.Control = lblGridTolerance
           AnchorSideLeft.Side = asrBottom
@@ -2200,7 +1985,7 @@ object DigitMainForm: TDigitMainForm
           Left = 64
           Height = 25
           Top = 129
-          Width = 112
+          Width = 120
           AllowNegativeValues = False
           BarExponent = 1
           Increment = 1
@@ -2294,7 +2079,7 @@ object DigitMainForm: TDigitMainForm
           Left = 0
           Height = 40
           Top = 0
-          Width = 181
+          Width = 189
           ButtonHeight = 36
           ButtonWidth = 32
           Caption = 'tbGrid'
@@ -2335,15 +2120,13 @@ object DigitMainForm: TDigitMainForm
           AnchorSideLeft.Side = asrBottom
           AnchorSideTop.Control = lblMinorGrid
           AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Control = tsGrid
-          AnchorSideRight.Side = asrBottom
+          AnchorSideRight.Control = btnMinorGridColor
           Left = 66
           Height = 25
           Top = 75
-          Width = 110
+          Width = 88
           Anchors = [akTop, akLeft, akRight]
           BorderSpacing.Left = 5
-          BorderSpacing.Right = 5
           BorderWidth = 2
           ButtonColorSize = 16
           ButtonColor = clGray
@@ -2373,16 +2156,14 @@ object DigitMainForm: TDigitMainForm
           AnchorSideLeft.Side = asrBottom
           AnchorSideTop.Control = lblBackground
           AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Control = tsGrid
-          AnchorSideRight.Side = asrBottom
+          AnchorSideRight.Control = btnMinorGridColor
           Left = 76
           Height = 25
           Top = 102
-          Width = 100
+          Width = 78
           Anchors = [akTop, akLeft, akRight]
           BorderSpacing.Left = 5
           BorderSpacing.Top = 3
-          BorderSpacing.Right = 5
           BorderWidth = 2
           ButtonColorSize = 16
           ButtonColor = clWhite
@@ -2412,15 +2193,13 @@ object DigitMainForm: TDigitMainForm
           AnchorSideLeft.Side = asrBottom
           AnchorSideTop.Control = lblMajorGrid
           AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Control = tsGrid
-          AnchorSideRight.Side = asrBottom
+          AnchorSideRight.Control = btnMajorGridColor
           Left = 66
           Height = 25
           Top = 48
-          Width = 110
+          Width = 88
           Anchors = [akTop, akLeft, akRight]
           BorderSpacing.Left = 5
-          BorderSpacing.Right = 5
           BorderWidth = 2
           ButtonColorSize = 16
           ButtonColor = clBlack
@@ -2455,7 +2234,7 @@ object DigitMainForm: TDigitMainForm
           Left = 65
           Height = 25
           Top = 158
-          Width = 111
+          Width = 119
           AllowNegativeValues = False
           BarExponent = 1
           Increment = 1
@@ -2529,11 +2308,62 @@ object DigitMainForm: TDigitMainForm
           TabStop = True
           UseDockManager = False
         end
+        object btnMajorGridColor: TSpeedButton
+          AnchorSideTop.Control = lblMajorGrid
+          AnchorSideTop.Side = asrCenter
+          AnchorSideRight.Control = tsGrid
+          AnchorSideRight.Side = asrBottom
+          Left = 154
+          Height = 25
+          Top = 48
+          Width = 30
+          Action = ModeMajorGridColor
+          Anchors = [akTop, akRight]
+          BorderSpacing.Right = 5
+          GroupIndex = 1
+          Images = ImageList
+          ImageIndex = 14
+          ParentShowHint = False
+        end
+        object btnMinorGridColor: TSpeedButton
+          AnchorSideTop.Control = lblMinorGrid
+          AnchorSideTop.Side = asrCenter
+          AnchorSideRight.Control = tsGrid
+          AnchorSideRight.Side = asrBottom
+          Left = 154
+          Height = 25
+          Top = 75
+          Width = 30
+          Action = ModeMinorGridColor
+          Anchors = [akTop, akRight]
+          BorderSpacing.Right = 5
+          GroupIndex = 1
+          Images = ImageList
+          ImageIndex = 14
+          ParentShowHint = False
+        end
+        object btnBackgroundColor: TSpeedButton
+          AnchorSideTop.Control = lblBackground
+          AnchorSideTop.Side = asrCenter
+          AnchorSideRight.Control = tsGrid
+          AnchorSideRight.Side = asrBottom
+          Left = 154
+          Height = 25
+          Top = 102
+          Width = 30
+          Action = ModeBackgroundColor
+          Anchors = [akTop, akRight]
+          BorderSpacing.Right = 5
+          GroupIndex = 1
+          Images = ImageList
+          ImageIndex = 14
+          ParentShowHint = False
+        end
       end
     end
   end
   object LeftSplitter: TSplitter
-    Left = 187
+    Left = 195
     Height = 457
     Top = 40
     Width = 5
@@ -2551,7 +2381,7 @@ object DigitMainForm: TDigitMainForm
     Font.Height = -11
     Font.Name = 'Default'
     ParentFont = False
-    TabOrder = 4
+    TabOrder = 3
     object gbSmooth: TGroupBox
       Left = 0
       Height = 69
@@ -2876,8 +2706,225 @@ object DigitMainForm: TDigitMainForm
     BorderSpacing.Bottom = 1
     ParentFont = False
     Step = 1
-    TabOrder = 7
+    TabOrder = 6
     Visible = False
+  end
+  object MainPanel: TPanel
+    Left = 200
+    Height = 457
+    Top = 40
+    Width = 552
+    Align = alClient
+    BevelOuter = bvNone
+    ClientHeight = 457
+    ClientWidth = 552
+    TabOrder = 7
+    object PageControl: TPageControl
+      Left = 0
+      Height = 417
+      Top = 40
+      Width = 552
+      ActivePage = tsPicture
+      Align = alClient
+      BorderSpacing.CellAlignHorizontal = ccaCenter
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Default'
+      ParentFont = False
+      TabIndex = 0
+      TabOrder = 0
+      TabPosition = tpBottom
+      object tsPicture: TTabSheet
+        Caption = 'Picture'
+        ClientHeight = 395
+        ClientWidth = 546
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Default'
+        ParentFont = False
+        object tcCurves: TTabControl
+          Left = 0
+          Height = 395
+          Top = 0
+          Width = 546
+          OnChange = tcCurvesChange
+          Align = alClient
+          TabOrder = 0
+          object ScrollBox: TScrollBox
+            Left = 2
+            Height = 333
+            Top = 30
+            Width = 536
+            HorzScrollBar.Page = 1
+            VertScrollBar.Page = 1
+            Align = alClient
+            TabOrder = 1
+          end
+        end
+      end
+      object tsPlot: TTabSheet
+        Caption = 'Plot'
+        ClientHeight = 395
+        ClientWidth = 546
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Default'
+        ImageIndex = 1
+        ParentFont = False
+        object MainPlot: TChart
+          Left = 0
+          Height = 395
+          Top = 0
+          Width = 546
+          AxisList = <          
+            item
+              Grid.Style = psClear
+              Grid.Visible = False
+              Intervals.MaxLength = 200
+              Marks.LabelBrush.Style = bsClear
+              Minors = <>
+              Title.LabelFont.CharSet = ANSI_CHARSET
+              Title.LabelFont.Height = -16
+              Title.LabelFont.Name = 'Arial'
+              Title.LabelFont.Orientation = 900
+              Title.LabelFont.Pitch = fpVariable
+              Title.LabelFont.Quality = fqDraft
+              Title.Visible = True
+              Title.Caption = 'Y'
+              Title.LabelBrush.Style = bsClear
+            end          
+            item
+              Grid.Style = psSolid
+              Grid.Visible = False
+              Intervals.MaxLength = 200
+              Alignment = calBottom
+              Marks.LabelBrush.Style = bsClear
+              Minors = <>
+              Title.LabelFont.CharSet = ANSI_CHARSET
+              Title.LabelFont.Height = -16
+              Title.LabelFont.Name = 'Arial'
+              Title.LabelFont.Pitch = fpVariable
+              Title.LabelFont.Quality = fqDraft
+              Title.Visible = True
+              Title.Caption = 'X'
+              Title.LabelBrush.Style = bsClear
+            end>
+          BackColor = clWhite
+          Foot.Brush.Color = clBtnFace
+          Foot.Font.Color = clBlue
+          Legend.Alignment = laTopCenter
+          Legend.ColumnCount = 6
+          Legend.Visible = True
+          Title.Brush.Color = clBtnFace
+          Title.Font.Color = clBlue
+          Title.Text.Strings = (
+            'TAChart'
+          )
+          Align = alClient
+          OnMouseMove = MainPlotMouseMove
+        end
+      end
+    end
+    object tbPlot: TToolBar
+      Left = 0
+      Height = 40
+      Top = 0
+      Width = 552
+      ButtonHeight = 36
+      ButtonWidth = 32
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Default'
+      Images = LargeImageList
+      ParentFont = False
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 1
+      object btnAddCurve: TToolButton
+        Left = 1
+        Top = 2
+        Action = ToolCurveAdd
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object btnDelCurve: TToolButton
+        Left = 37
+        Top = 2
+        Action = ToolCurveDelete
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object btnEditName: TToolButton
+        Left = 73
+        Top = 2
+        Action = ToolCurveName
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object sep07: TToolButton
+        Left = 109
+        Height = 36
+        Top = 2
+        Caption = 'sep07'
+        Style = tbsSeparator
+      end
+      object btnDigitize: TToolButton
+        Left = 117
+        Top = 2
+        Action = ToolDigit
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object btnMoveUp: TToolButton
+        Left = 189
+        Top = 2
+        Action = ToolCurveUp
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object btnMoveDown: TToolButton
+        Left = 225
+        Top = 2
+        Action = ToolCurveDown
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object btnClear: TToolButton
+        Left = 261
+        Top = 2
+        Action = ToolClear
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object btnAdjustCurve: TToolButton
+        Left = 153
+        Top = 2
+        Action = ToolAdjustCurve
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object sep08: TToolButton
+        Left = 297
+        Height = 36
+        Top = 2
+        Caption = 'sep08'
+        Style = tbsSeparator
+      end
+      object btnExportPlot: TToolButton
+        Left = 305
+        Top = 2
+        Action = PlotExport
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object btnSetScale: TToolButton
+        Left = 341
+        Top = 2
+        Action = PlotScale
+        ParentShowHint = False
+        ShowHint = True
+      end
+    end
   end
   object MainMenu: TMainMenu
     Images = ImageList
@@ -3128,9 +3175,9 @@ object DigitMainForm: TDigitMainForm
     object ModeColor: TAction
       Tag = 3
       Category = 'Mode'
-      Caption = 'Select color'
+      Caption = 'Curve color selection'
       GroupIndex = 1
-      Hint = 'Select color|Color selection mode'
+      Hint = 'Curve color selection|Curve color selection mode'
       ImageIndex = 14
       OnExecute = ModeColorExecute
     end
@@ -3393,6 +3440,27 @@ object DigitMainForm: TDigitMainForm
       Hint = 'Show/hide grid|Show/hide grid'
       ImageIndex = 39
       OnExecute = GridShowHideExecute
+    end
+    object ModeMajorGridColor: TAction
+      Category = 'Mode'
+      GroupIndex = 1
+      Hint = 'Major grid color selection|Major grid color selection mode'
+      ImageIndex = 14
+      OnExecute = ModeMajorGridColorExecute
+    end
+    object ModeMinorGridColor: TAction
+      Category = 'Mode'
+      GroupIndex = 1
+      Hint = 'Minor grid color selection|Minor grid color selection mode'
+      ImageIndex = 14
+      OnExecute = ModeMinorGridColorExecute
+    end
+    object ModeBackgroundColor: TAction
+      Category = 'Mode'
+      GroupIndex = 1
+      Hint = 'Background color selection|Background color selection mode'
+      ImageIndex = 14
+      OnExecute = ModeBackgroundColorExecute
     end
   end
   object ImageList: TImageList

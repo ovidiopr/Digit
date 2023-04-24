@@ -6,20 +6,21 @@ interface
 
 uses {$ifdef windows}Windows,{$endif} Forms, Classes, Controls, Graphics,
      ExtDlgs, Fgl, ComCtrls, SysUtils, DOM, XMLWrite, XMLRead, math, curves,
-     coordinates, Dialogs, Types, Base64, intfgraphics;
+     coordinates, Dialogs, Types, Base64, intfgraphics,
+     BGRABitmap, BGRABitmapTypes;
 
 type
   TSelectRegionEvent = procedure(Sender: TObject; RegionRect: TRect) of Object;
 
   TMarker = class
   protected
-    FBitmap: TBitmap;
+    FBitmap: TBGRABitmap;
     FRect: TRect;
     FPersistent: Boolean;
   private
     function GetPosition: TCurvePoint;
   public
-    constructor Create(Bitmap: TBitmap; Coord: TPoint; Persistent: Boolean = False);
+    constructor Create(Bitmap: TBGRABitmap; Coord: TPoint; Persistent: Boolean = False);
     destructor Destroy; override;
 
     function HitTest(Point: TPoint): Boolean;
@@ -27,7 +28,7 @@ type
     procedure Move(Point: TPoint);
     procedure Shift(Delta: TPoint);
 
-    property Bitmap: TBitmap read FBitmap;
+    property Bitmap: TBGRABitmap read FBitmap;
     property Rect: TRect read FRect;
     property Position: TCurvePoint read GetPosition;
     property IsPersistent: Boolean read FPersistent;
@@ -42,9 +43,9 @@ type
     FOldCursor: TCursor;
 
     FImageName: TFileName;
-    FGridMask: TBitmap;
-    FBitmap: TBitmap;
-    FPicture: TPicture;
+    FPlotImg: TBGRABitmap;
+    FBlackBoard: TBitmap;
+    FGridMask: TBGRABitmap;
 
     FMarkers: TMarkerList;
     FMarkerList: TCurve;
@@ -190,9 +191,9 @@ type
     function LoadFromXML(FileName: TFileName; PictureDlg: TOpenPictureDialog = nil): Boolean;
 
     property ImageName: TFileName read FImageName write SetImageName;
-    property GridMask: TBitmap read FGridMask;
-    property Bitmap: TBitmap read FBitmap;
-    property Picture: TPicture read FPicture;
+    property GridMask: TBGRABitmap read FGridMask;
+    property BlackBoard: TBitmap read FBlackBoard;
+    property PlotImg: TBGRABitmap read FPlotImg;
     property Markers: TMarkerList read FMarkers;
     property AxesMarkers[Index: Integer]: TMarker read GetAxesMarkers write SetAxesMarkers;
     property MarkerUnderCursor: TMarker read FMarkerUnderCursor write SetMarkerUnderCursor;
@@ -235,7 +236,7 @@ type
     property OnRegionSelected: TSelectRegionEvent read FOnRegionSelected write FOnRegionSelected;
   end;
 
-function CreateMarker(Size: TPoint; Symbol: Char; Color: TColor; LineWith: Integer = 3): TBitmap;
+function CreateMarker(Size: TPoint; Symbol: Char; Color: TColor; LineWith: Integer = 3): TBGRABitmap;
 
 implementation
 
@@ -256,68 +257,57 @@ begin
 end;
 
 //==============================|Bitmaps|=====================================//
-function CreateMarker(Size: TPoint; Symbol: Char; Color: TColor; LineWith: Integer = 3): TBitmap;
+function CreateMarker(Size: TPoint; Symbol: Char; Color: TColor; LineWith: Integer = 3): TBGRABitmap;
 begin
   // Make sure that the marker is not transparent
   if (color = clBlack) then
     color := RGBToColor(1, 1, 1);
 
-  Result := TBitmap.Create;
+  Result := TBGRABitmap.Create(Size.X, Size.Y, clBlack);
+
   with Result do
   begin
-    Width := Size.X;
-    Height := Size.Y;
-
-    // Color for drawing lines
-    Canvas.Pen.Color := Color;
-    Canvas.Pen.Width := LineWith;
+    FillTransparent;
     case Symbol of
       'x', 'X': begin
-        Canvas.Line(0, 0, Width - 1, Height - 1);
-        Canvas.Line(0, Height - 1, Width - 1, 0);
+        DrawLineAntialias(0, 0, Width - 1, Height - 1, Color, LineWith);
+        DrawLineAntialias(0, Height - 1, Width - 1, 0, Color, LineWith);
       end;
       '+': begin
-        Canvas.Line(0, Height div 2, Width - 1, Height div 2);
-        Canvas.Line(Width div 2, 0, Width div 2, Height - 1);
+        DrawLineAntialias(0, Height div 2, Width - 1, Height div 2, Color, LineWith);
+        DrawLineAntialias(Width div 2, 0, Width div 2, Height - 1, Color, LineWith);
       end;
       '0': begin
-        Canvas.Brush.Color := clBlack;
-        Canvas.Ellipse(1, 1, Width - 1, Height - 1);
+        EllipseAntialias(Width div 2, Height div 2,
+                         (Width - LineWith) div 2, (Height - LineWith) div 2,
+                         Color, LineWith);
 
-        Canvas.Pen.Width := 1;
-        Canvas.Line(0, Height div 2, Width - 1, Height div 2);
-        Canvas.Line(Width div 2, 0, Width div 2, Height - 1);
+        DrawLineAntialias(0, Height div 2, Width - 1, Height div 2, Color, 1);
+        DrawLineAntialias(Width div 2, 0, Width div 2, Height - 1, Color, 1);
       end;
       'c', 'C': begin
-        // Fillcolor for the circle
-        Canvas.Brush.Color := Color;
-        Canvas.Ellipse(1, 1, Width - 1, Height - 1);
+        EllipseAntialias(Width div 2, Height div 2,
+                         (Width - LineWith) div 2, (Height - LineWith) div 2,
+                         Color, LineWith, Color);
       end;
       'o', 'O': begin
-        // Fillcolor for the circle
-        Canvas.Brush.Color := clBlack;
-        Canvas.Ellipse(1, 1, Width - 1, Height - 1);
+        EllipseAntialias(Width div 2, Height div 2,
+                         (Width - LineWith) div 2, (Height - LineWith) div 2,
+                         Color, LineWith);
       end;
       'r', 'R': begin
-        Canvas.Brush.Color := Color;
-        Canvas.FillRect(1, 1, Width - 1, Height - 1);
+        RectangleAntialias(1, 1, Width - 2, Height - 2, Color, LineWith, Color);
       end;
       'q', 'Q': begin
-        Canvas.Brush.Color := clBlack;
-        Canvas.Rectangle(1, 1, Width - 1, Height - 1);
+        RectangleAntialias(1, 1, Width - 2, Height - 2, Color, LineWith);
       end;
     end;
-
-    //Canvas.Pixels[Width div 2, Height div 2] := clBlack;
-    Transparent := True;
-    TransparentColor := clBlack;
-    Mask(clBlack);
   end;
 end;
 //==============================|Bitmaps|=====================================//
 
 //==============================|TMarker|=====================================//
-constructor TMarker.Create(Bitmap: TBitmap; Coord: TPoint; Persistent: Boolean = False);
+constructor TMarker.Create(Bitmap: TBGRABitmap; Coord: TPoint; Persistent: Boolean = False);
 var
   Delta: TPoint;
 begin
@@ -337,7 +327,7 @@ end;
 procedure TMarker.Draw(Canvas: TCanvas; Rectangle: TRect);
 begin
   if not (Rectangle*Rect).IsEmpty then
-    Canvas.Draw(Rect.Left, Rect.Top, Bitmap);
+    Canvas.Draw(Rect.Left, Rect.Top, Bitmap.Bitmap);
 end;
 
 procedure TMarker.Move(Point: TPoint);
@@ -361,10 +351,10 @@ end;
 function TMarker.HitTest(Point: TPoint): Boolean;
 begin
   Result := Rect.Contains(Point);
-  if Result and Bitmap.Transparent then
+  if Result then
   begin
     Point := Point - Rect.TopLeft;
-    Result := Bitmap.Canvas.Pixels[Point.X, Point.Y] <> Bitmap.TransparentColor;
+    Result := Bitmap.GetPixel(Point.X, Point.Y) <> BGRAPixelTransparent;
   end;
 end;
 //==============================|TMarker|=====================================//
@@ -374,9 +364,10 @@ constructor TPlotImage.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
 
-  FGridMask := TBitmap.Create;
-  FBitmap := TBitmap.Create;
-  FPicture := TPicture.Create;
+  FPlotImg := TBGRABitmap.Create;
+  FBlackBoard := TBitmap.Create;
+  FGridMask := TBGRABitmap.Create;
+  FGridMask.FillTransparent;
 
   FMarkers := TMarkerList.Create;
   FMarkerList := TCurve.Create;
@@ -384,21 +375,14 @@ begin
   FCurves := TCurveList.Create;
   FScale := TScale.Create;
 
-  with FGridMask do
-  begin
-    Transparent := True;
-    TransparentColor := clBlack;
-    Mask(clBlack);
-  end;
-
   Reset;
 end;
 
 destructor TPlotImage.Destroy;
 begin
   FGridMask.Free;
-  FBitmap.Free;
-  FPicture.Free;
+  FBlackBoard.Free;
+  FPlotImg.Free;
 
   FMarkers.Free;
   FMarkerList.Free;
@@ -448,7 +432,6 @@ begin
   begin
     // Point to the pixel location
     C2 := GetPixel(Pi);
-    //C2 := ColorToRGB(Picture.Bitmap.Canvas.Pixels[Round(Pi.X), Round(Pi.Y)]);
     if AreSimilarColors(C1, C2, Tolerance) then
     begin
       inc(nP);
@@ -681,7 +664,6 @@ begin
 
     C1 := ColorToRGB(DigitCurve.Color);
     C2 := GetPixel(Pi);
-    //C2 := ColorToRGB(Picture.Bitmap.Canvas.Pixels[Round(Pi.X), Round(Pi.Y)]);
     if (not Island.Contains(Pi)) and AreSimilarColors(C1, C2, Tolerance) then
     begin
       Island.AddPoint(Pi);
@@ -818,31 +800,14 @@ end;
 
 
 function TPlotImage.GetPixel(X, Y: Integer): LongInt;
-//var
-//  IntfImage: TLazIntfImage;
 begin
     if ValidGrid and SubstractGrid then
-    begin
-      Result := ColorToRGB(GridMask.Canvas.Pixels[X, Y]);
-  //    IntfImage := GridMask.CreateIntfImage;
-  //    try
-  //      if (IntfImage.TColors[X, Y] <> clBlack) then
-  //        Result := ColorToRGB(IntfImage.TColors[X, Y]);
-  //    finally
-  //      IntfImage.Free;
-  //    end;
-    end
+      Result := ColorToRGB(GridMask.GetPixel(X, Y))
     else
       Result := 0;
 
     if (Result = 0) then
-      Result := ColorToRGB(Picture.Bitmap.Canvas.Pixels[X, Y]);
-//  IntfImage := Picture.Bitmap.CreateIntfImage;
-//  try
-//    Result := ColorToRGB(IntfImage.TColors[X, Y]);
-//  finally
-//    IntfImage.Free;
-//  end;
+      Result := ColorToRGB(PlotImg.GetPixel(X, Y));
 end;
 
 function TPlotImage.GetPixel(X, Y: Double): LongInt;
@@ -884,7 +849,7 @@ var
   i: Integer;
   X: Double;
 begin
-  X := Bitmap.Width;
+  X := BlackBoard.Width;
   Result := nil;
   for i := 0 to Markers.Count - 1 do
     if (not Markers[i].IsPersistent) and (X > Markers[i].Position.X) then
@@ -914,7 +879,7 @@ var
   i: Integer;
   Y: Double;
 begin
-  Y := Bitmap.Height;
+  Y := BlackBoard.Height;
   Result := nil;
   for i := 0 to Markers.Count - 1 do
     if (not Markers[i].IsPersistent) and (Y > Markers[i].Position.Y) then
@@ -954,8 +919,6 @@ begin
 end;
 
 procedure TPlotImage.SetImageName(Value: TFileName);
-var
-  TmpPic: TPicture;
 begin
   FImageName := Value;
   LoadImage(FImageName);
@@ -988,7 +951,7 @@ end;
 
 procedure TPlotImage.AddMarker(Position: TPoint);
 var
-  BMP: TBitmap;
+  BMP: TBGRABitmap;
 begin
   BMP := CreateMarker(TPoint.Create(13, 13), 'x', DigitCurve.Color, 3);
   AddMarker(TMarker.Create(BMP, Position, False));
@@ -1091,33 +1054,33 @@ var
   {$endif}
 begin
   inherited Paint;
-  Rect := TRect.Create(TPoint.Create(0, 0), Bitmap.Width, Bitmap.Height);
+  Rect := TRect.Create(TPoint.Create(0, 0), BlackBoard.Width, BlackBoard.Height);
   ClipRect := Canvas.ClipRect;
   PaintRect := Rect*ClipRect;
-  with Bitmap.Canvas do
+  with BlackBoard.Canvas do
   begin
     {$ifdef windows}
     ClipRgn := CreateRectRgn(PaintRect.Left, PaintRect.Top, PaintRect.Right, PaintRect.Bottom);
     SelectClipRgn(Handle, ClipRgn);
     {$endif}
     CopyMode:= cmSrcCopy;
-    CopyRect(PaintRect, Picture.Bitmap.Canvas, PaintRect);
+    CopyRect(PaintRect, PlotImg.Canvas, PaintRect);
 
     if SubstractGrid then
       //CopyRect(PaintRect, GridMask.Canvas, PaintRect);
-      Draw(0, 0, GridMask);
+      Draw(0, 0, GridMask.Bitmap);
   end;
 
   if HasPoints then
-    DigitCurve.Draw(Bitmap.Canvas);
+    DigitCurve.Draw(BlackBoard.Canvas);
 
   for i := Markers.Count - 1 downto 0 do
-    Markers[i].Draw(Bitmap.Canvas, PaintRect);
+    Markers[i].Draw(BlackBoard.Canvas, PaintRect);
 
   if Assigned(ActiveMarker) and
      not (ActiveMarker.Rect*PaintRect).IsEmpty then
   begin
-    with Bitmap.Canvas do
+    with BlackBoard.Canvas do
       DrawFocusRect(ActiveMarker.Rect);
   end;
 
@@ -1125,33 +1088,33 @@ begin
      (MarkerUnderCursor <> ActiveMarker) and
      not (MarkerUnderCursor.Rect*PaintRect).IsEmpty then
   begin
-    with Bitmap.Canvas do
+    with BlackBoard.Canvas do
       DrawFocusRect(MarkerUnderCursor.Rect);
   end;
 
   if SelectingRegion then
-    Bitmap.Canvas.DrawFocusRect(SelectionRect);
+    BlackBoard.Canvas.DrawFocusRect(SelectionRect);
 
   {$ifdef windows}
-  with Bitmap.Canvas do
+  with BlackBoard.Canvas do
   begin
     SelectClipRgn(Handle, 0);
     DeleteObject(ClipRgn);
   end;
   {$endif}
-  Canvas.CopyRect(PaintRect, Bitmap.Canvas, PaintRect);
+  Canvas.CopyRect(PaintRect, BlackBoard.Canvas, PaintRect);
   if not PaintRect.Contains(ClipRect) then
   begin
     Rect := ClientRect;
-    Rect.Left := Bitmap.Width;
+    Rect.Left := BlackBoard.Width;
     Rect.Intersect(ClipRect);
-    Canvas.CopyRect(Rect, Picture.Bitmap.Canvas, Rect);
+    Canvas.CopyRect(Rect, PlotImg.Canvas, Rect);
 
     Rect := ClientRect;
-    Rect.Top := Bitmap.Height;
-    Rect.Width := Bitmap.Width;
+    Rect.Top := BlackBoard.Height;
+    Rect.Width := BlackBoard.Width;
     Rect.Intersect(ClipRect);
-    Canvas.CopyRect(Rect, Picture.Bitmap.Canvas, Rect);
+    Canvas.CopyRect(Rect, PlotImg.Canvas, Rect);
   end;
 end;
 
@@ -1508,7 +1471,7 @@ begin
   end
   else
   begin
-    Bitmap.FreeImage;
+    BlackBoard.FreeImage;
     Width := 0;
     Height := 0;
   end;
@@ -1524,7 +1487,8 @@ begin
     Stream.Position := 0;
     TmpPic := TPicture.Create;
     TmpPic.LoadFromStream(Stream);
-    with Picture.Bitmap do
+
+    with PlotImg do
     begin
       // This trick is required because the TPicture has problems updating
       // .JPG and .TIFF images when they are loaded directly. Moreover,
@@ -1539,23 +1503,13 @@ begin
       Canvas.Draw(0, 0, TmpPic.Bitmap);
     end;
 
-    Bitmap.SetSize(Picture.Width, Picture.Height);
-    Bitmap.Canvas.Draw(0, 0, Picture.Bitmap);
-    // We need this line to reset the canvas (else, it is not refreshed)
-    // Ovidio (2023/04/19)
-    GridMask.SetSize(0, 0);
-    GridMask.SetSize(Picture.Width, Picture.Height);
-    with GridMask.Canvas do
-    begin
-      Clear;
-      Brush.Color:= clBlack;
-      Pen.Mode := pmCopy;
-      Pen.Color := clBlack;
-      Pen.Style := psSolid;
-      FillRect(0, 0, GridMask.Width, GridMask.Height);
-    end;
-    Width := Bitmap.Width;
-    Height := Bitmap.Height;
+    BlackBoard.SetSize(PlotImg.Width, PlotImg.Height);
+
+    GridMask.SetSize(PlotImg.Width, PlotImg.Height);
+    GridMask.FillTransparent;
+
+    Width := BlackBoard.Width;
+    Height := BlackBoard.Height;
 
     FImageIsLoaded := True;
     FValidGrid := False;
@@ -1567,9 +1521,8 @@ begin
     TmpPic.Free;
 
     IsChanged := True;
+    Visible := ImageIsLoaded;
   end;
-
-  Visible := ImageIsLoaded;
 end;
 
 procedure TPlotImage.AddCurve;
@@ -1825,27 +1778,20 @@ var
   hori_line: TStraightLine;
   max_count_hori,
   max_count_vert: Integer;
-
-  IntfImage: TLazIntfImage;
 begin
   C1 := ColorToRGB(LineColor1);
   C2 := ColorToRGB(LineColor2);
 
-  with Picture.Bitmap do
+  with PlotImg do
   begin
     // Diagonal length of image
     diag_len := Round(Sqrt(Width*Width + Height*Height));
 
     // Put the canvas values in an array for faster access
     SetLength(img, Width, Height);
-    IntfImage := CreateIntfImage;
-    try
-      for j := 0 to Height - 1 do
-        for i := 0 to Width - 1 do
-          img[i, j] := ColorToRGB(IntfImage.TColors[i, j]);
-    finally
-      IntfImage.Free;
-    end;
+    for j := 0 to Height - 1 do
+      for i := 0 to Width - 1 do
+        img[i, j] := ColorToRGB(GetPixel(i, j));
   end;
 
   // Cache some reusable values
@@ -1950,16 +1896,7 @@ begin
     vert_line := TStraightLine.Create;
     vert_line.Color := BckgndColor;
 
-    with GridMask.Canvas do
-    begin
-      // Clear the mask
-      Clear;
-      Brush.Color:= clBlack;
-      Pen.Mode := pmCopy;
-      Pen.Color := clBlack;
-      Pen.Style := psSolid;
-      FillRect(0, 0, GridMask.Width, GridMask.Height);
-    end;
+    GridMask.FillTransparent;
 
     // Reset the status of the mask
     FValidGrid := False;
@@ -2107,7 +2044,7 @@ end;
 function TPlotImage.SaveToXML(FileName: TFileName): Boolean;
 var
   i: Integer;
-  JPG: TJPEGImage;
+  PNG: TPortableNetworkGraphic;
   Stream: TMemoryStream;
   Buffer: String; // common string with the jpg info
   EncBuffer: String; // it's Base64 equivalent
@@ -2126,7 +2063,7 @@ begin
     XMLDoc := TXMLDocument.Create;
     // Create the stream to save the image
     Stream := TMemoryStream.Create;
-    JPG := TJPEGImage.Create;
+    PNG := TPortableNetworkGraphic.Create;
 
     // Create a root node
     RootNode := XMLDoc.CreateElement('digitization');
@@ -2158,9 +2095,8 @@ begin
       Stream.Clear;
       Stream.Position := 0;
 
-      JPG.Assign(Picture.Bitmap);
-      JPG.CompressionQuality:=90;
-      JPG.SaveToStream(Stream);
+      PNG.Assign(PlotImg.Bitmap);
+      PNG.SaveToStream(Stream);
 
       // Extract Image contents as a common string
       SetString(Buffer, Stream.Memory, Stream.Size);
@@ -2198,6 +2134,7 @@ begin
   finally
     XMLDoc.Free;
     Stream.Free;
+    PNG.Free;
 
     FIsChanged := False;
   end;
