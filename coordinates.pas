@@ -90,6 +90,31 @@ type
     property IsValid: Boolean read GetIsValidScale;
   end;
 
+  TPlotBox = class(TObject)
+  private
+    { Private declarations }
+    FNumVertices: Integer;
+    FVertices: Array of TCurvePoint;
+
+    function GetVertex(Index: Integer): TCurvePoint;
+
+    procedure SetVertex(Index: Integer; const Value: TCurvePoint);
+protected
+    { Protected declarations }
+  public
+    { Public declarations }
+    {@exclude}
+    constructor Create(NumVert: Integer = 4);
+    {@exclude}
+    destructor Destroy; override;
+
+    procedure Reset;
+
+    function Contains(p: TCurvePoint): Boolean;
+
+    property Vertex[Index: Integer]: TCurvePoint read GetVertex write SetVertex;
+  end;
+
 const
   cp: TScalePoints = ((X: 0; Y: 1),
                       (X: 0; Y: 0),
@@ -172,12 +197,13 @@ end;
 //===============================| TScale |===============================//
 constructor TScale.Create;
 begin
+  inherited Create;
   Reset;
 end;
 
 destructor TScale.Destroy;
 begin
-  inherited;
+  inherited Destroy;
 end;
 
 procedure TScale.Reset;
@@ -630,6 +656,86 @@ begin
 end;
 
 //===============================| TScale |===============================//
+
+
+//==============================| TPlotBox |==============================//
+
+constructor TPlotBox.Create(NumVert: Integer = 4);
+begin
+  inherited Create;
+
+  FNumVertices := NumVert;
+  SetLength(FVertices, FNumVertices);
+
+  Reset;
+end;
+
+destructor TPlotBox.Destroy;
+begin
+  SetLength(FVertices, 0);
+
+  inherited Destroy;
+end;
+
+procedure TPlotBox.Reset;
+var
+  i: Integer;
+begin
+  for i := 0 to FNumVertices - 1 do
+    Vertex[i] := GetCurvePoint(-1, -1);
+end;
+
+function TPlotBox.Contains(p: TCurvePoint): Boolean;
+var
+  i, j: Integer;
+begin
+  Result := False;
+
+  j := FNumVertices - 1;
+  for i := 0 to FNumVertices - 1 do
+  begin
+    // The point lies in an horizontal edge
+    if  (Vertex[i].Y = p.Y) and (Vertex[j].Y = p.Y) and
+       ((Vertex[i].X >= p.X) xor (Vertex[j].X >= p.X)) then
+    begin
+      Result := True;
+      Exit;
+    end;
+
+    // The point lies in a non-horizontal edge
+    if ((Vertex[i].Y >= p.Y) xor (Vertex[j].Y >= p.Y)) and
+       ((Vertex[j].X - p.X)*(Vertex[j].Y - Vertex[i].Y) =
+        (Vertex[j].X - Vertex[i].X)*(Vertex[j].Y - p.Y)) then
+    begin
+      Result := True;
+      Exit;
+    end;
+
+    // General case, the line crosses an edge
+    if ((Vertex[i].Y > p.Y) xor (Vertex[j].Y > p.Y)) and
+       ((Vertex[j].X - p.X)*abs(Vertex[j].Y - Vertex[i].Y) <
+        (Vertex[j].X - Vertex[i].X)*abs(Vertex[j].Y - p.Y)) then
+      Result := not Result;
+
+    j := i;
+  end;
+end;
+
+function TPlotBox.GetVertex(Index: Integer): TCurvePoint;
+begin
+  if (Index >= 0) and (Index < FNumVertices) then
+    Result := FVertices[Index]
+  else
+    Result :=  GetCurvePoint(-1, -1);
+end;
+
+procedure TPlotBox.SetVertex(Index: Integer; const Value: TCurvePoint);
+begin
+  if (Index >= 0) and (Index < FNumVertices) then
+    FVertices[Index] := Value;
+end;
+
+//==============================| TPlotBox |==============================//
 
 function GetCurvePoint(X, Y: Double): TCurvePoint;
 begin

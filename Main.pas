@@ -460,9 +460,13 @@ begin
         Pointer.Pen.Color := clBlack;
         ShowLines := not PlotImage.Curves[i].ShowAsSymbols;
         ShowPoints := PlotImage.Curves[i].ShowAsSymbols;
-        PtCv := PlotImage.PlotCurves[i];
-        for j := 0 to PtCv.Count - 1 do
-          AddXY(PtCv.X[j], PtCv.Y[j]);
+        try
+          PtCv := PlotImage.PlotCurves[i];
+          for j := 0 to PtCv.Count - 1 do
+            AddXY(PtCv.X[j], PtCv.Y[j]);
+        finally
+          PtCv.Free;
+        end;
       end;
     end;
   end;
@@ -477,9 +481,13 @@ begin
   leData.Strings.Clear;
   if (PlotImage.Scale.IsValid and PlotImage.HasPoints) then
   begin
-    PtCv := PlotImage.PlotCurve;
-    for i := 0 to PtCv.Count - 1 do
-      leData.InsertRow(Format('%.5g', [PtCv.X[i]]), Format('%.5g', [PtCv.Y[i]]), True);
+    try
+      PtCv := PlotImage.PlotCurve;
+      for i := 0 to PtCv.Count - 1 do
+        leData.InsertRow(Format('%.5g', [PtCv.X[i]]), Format('%.5g', [PtCv.Y[i]]), True);
+    finally
+      PtCv.Free;
+    end;
   end;
   leData.Row := 1;
 end;
@@ -654,6 +662,11 @@ begin
     Scale.PlotPoint[1] := GetCurvePoint(0, 1);
     Scale.PlotPoint[2] := GetCurvePoint(0, 0);
     Scale.PlotPoint[3] := GetCurvePoint(1, 0);
+
+    PlotBox.Vertex[0] := GetCurvePoint(0, 0);;
+    PlotBox.Vertex[1] := GetCurvePoint(Width, 0);;
+    PlotBox.Vertex[2] := GetCurvePoint(Width, Height);;
+    PlotBox.Vertex[3] := GetCurvePoint(0, Height);;
   end;
 
   if not FileExists(DigitFileName) then
@@ -875,9 +888,13 @@ begin
     AssignFile(F, SaveDataDlg.FileName);
     Rewrite(F);
     Writeln(F, '"' + PlotImage.Scale.XLabel + '","' + PlotImage.Scale.YLabel + '"');
-    PtCv := PlotImage.PlotCurve;
-    for i := 0 to PtCv.Count - 1 do
-      Writeln(F, Format('%.5g,%.5g', [PtCv.Point[i].X, PtCv.Point[i].Y]));
+    try
+      PtCv := PlotImage.PlotCurve;
+      for i := 0 to PtCv.Count - 1 do
+        Writeln(F, Format('%.5g,%.5g', [PtCv.Point[i].X, PtCv.Point[i].Y]));
+    finally
+      PtCv.Free;
+    end;
     CloseFile(F);
   end;
 end;
@@ -1202,7 +1219,7 @@ begin
       Width := ZoomImage.Width;
       Height := ZoomImage.Height;
       ZoomRect := Rect(0, 0, Width, Height);
-      Canvas.CopyRect(ZoomRect, PlotImage.BlackBoard.Canvas, ImgRect);
+      Canvas.CopyRect(ZoomRect, PlotImage.WhiteBoard.Canvas, ImgRect);
 
       Xc := Width*(X - Xo) div (2*span);
       Yc := Height*(Y - Yo) div (2*span);
@@ -1231,6 +1248,8 @@ begin
 end;
 
 procedure TDigitMainForm.CurveToGUI;
+var
+  TmpCurve: TCurve;
 begin
   with PlotImage.DigitCurve do
   begin
@@ -1249,17 +1268,22 @@ begin
     edtTolerance.Value := Tolerance;
     edtSpread.Value := Spread;
 
-    if (PlotImage.PlotCurve.Count > 1) then
-    begin
-      seInterpPoints.Value := PlotImage.PlotCurve.Count;
-      seXo.Value := PlotImage.PlotCurve.X[0];
-      seXf.Value := PlotImage.PlotCurve.X[PlotImage.PlotCurve.Count - 1];
-    end
-    else
-    begin
-      seInterpPoints.Value := 101;
-      seXo.Value := 0;
-      seXf.Value := 0;
+    try
+      TmpCurve := PlotImage.PlotCurve;
+      if (TmpCurve.Count > 1) then
+      begin
+        seInterpPoints.Value := TmpCurve.Count;
+        seXo.Value := TmpCurve.X[0];
+        seXf.Value := TmpCurve.X[TmpCurve.Count - 1];
+      end
+      else
+      begin
+        seInterpPoints.Value := 101;
+        seXo.Value := 0;
+        seXf.Value := 0;
+      end;
+    finally
+      TmpCurve.Free;
     end;
   end;
 

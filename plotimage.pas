@@ -6,7 +6,7 @@ interface
 
 uses {$ifdef windows}Windows,{$endif} Forms, Classes, Controls, Graphics,
      ExtDlgs, Fgl, ComCtrls, SysUtils, DOM, XMLWrite, XMLRead, math, curves,
-     coordinates, Dialogs, Types, Base64, intfgraphics,
+     coordinates, Dialogs, Types, Base64,
      BGRABitmap, BGRABitmapTypes;
 
 type
@@ -44,7 +44,7 @@ type
 
     FImageName: TFileName;
     FPlotImg: TBGRABitmap;
-    FBlackBoard: TBitmap;
+    FWhiteBoard: TBitmap;
     FGridMask: TBGRABitmap;
 
     FMarkers: TMarkerList;
@@ -63,6 +63,7 @@ type
     FCurveIndex: Integer;
 
     FScale: TScale;
+    FPlotBox: TPlotBox;
 
     FImageIsLoaded: Boolean;
     FValidGrid: Boolean;
@@ -192,7 +193,7 @@ type
 
     property ImageName: TFileName read FImageName write SetImageName;
     property GridMask: TBGRABitmap read FGridMask;
-    property BlackBoard: TBitmap read FBlackBoard;
+    property WhiteBoard: TBitmap read FWhiteBoard;
     property PlotImg: TBGRABitmap read FPlotImg;
     property Markers: TMarkerList read FMarkers;
     property AxesMarkers[Index: Integer]: TMarker read GetAxesMarkers write SetAxesMarkers;
@@ -225,7 +226,8 @@ type
     property ValidGrid: Boolean read FValidGrid write FValidGrid;
     property SubstractGrid: Boolean read FSubstractGrid write SetSubstractGrid;
 
-    property Scale: TScale read FScale write FScale;
+    property Scale: TScale read FScale;
+    property PlotBox: TPlotBox read FPlotBox;
     property ColorIsSet: Boolean read GetColorIsSet;
     property HasPoints: Boolean read GetHasPoints;
     property IsChanged: Boolean read GetIsChanged write SetIsChanged;
@@ -365,7 +367,7 @@ begin
   inherited Create(AOwner);
 
   FPlotImg := TBGRABitmap.Create;
-  FBlackBoard := TBitmap.Create;
+  FWhiteBoard := TBitmap.Create;
   FGridMask := TBGRABitmap.Create;
   FGridMask.FillTransparent;
 
@@ -374,6 +376,7 @@ begin
 
   FCurves := TCurveList.Create;
   FScale := TScale.Create;
+  FPlotBox := TPlotBox.Create;
 
   Reset;
 end;
@@ -381,7 +384,7 @@ end;
 destructor TPlotImage.Destroy;
 begin
   FGridMask.Free;
-  FBlackBoard.Free;
+  FWhiteBoard.Free;
   FPlotImg.Free;
 
   FMarkers.Free;
@@ -389,6 +392,7 @@ begin
 
   FCurves.Free;
   FScale.Free;
+  FPlotBox.Free;
 
   inherited Destroy;
 end;
@@ -401,6 +405,7 @@ begin
   FCurveIndex := 0;
 
   FScale.Reset;
+  FPlotBox.Reset;
 
   FOldCursor := Cursor;
 
@@ -428,7 +433,7 @@ var
 function CheckPlotPoint(const Pi: TCurvePoint; var P: TCurvePoint; var nP: Integer): Boolean;
 begin
   Result := False;
-  if GetClientRect.Contains(Pi) then
+  if PlotBox.Contains(Pi) then
   begin
     // Point to the pixel location
     C2 := GetPixel(Pi);
@@ -605,7 +610,7 @@ begin
         end;
       Application.ProcessMessages;
     end;
-  until ((Scale.CoordSystem = csCartesian) and (not ClientRect.Contains(Pi))) or
+  until ((Scale.CoordSystem = csCartesian) and (not PlotBox.Contains(Pi))) or
         ((Scale.CoordSystem = csPolar) and (Abs(Delta) > 360)) or
         ((ML.Count > 2) and (i >= ML.Count - 1));
 
@@ -642,7 +647,7 @@ begin
       Pi := (Scale.ImagePoint[3] + Scale.ImagePoint[2])/2;
 
     while (not FindNextPoint(Pi, Round(Modulus(Pi)), True)) and
-          (ClientRect.Contains(Pi)) do
+          (PlotBox.Contains(Pi)) do
       Pi := Pi + Sign(DigitCurve.Step)*Scale.Nx(Pi);
   end;
 
@@ -796,18 +801,19 @@ begin
   end;
 end;
 
-
-
-
 function TPlotImage.GetPixel(X, Y: Integer): LongInt;
+var
+  c: TBGRAPixel;
 begin
     if ValidGrid and SubstractGrid then
-      Result := ColorToRGB(GridMask.GetPixel(X, Y))
+      c := GridMask.GetPixel(X, Y)
     else
-      Result := 0;
+      c := BGRAPixelTransparent;
 
-    if (Result = 0) then
-      Result := ColorToRGB(PlotImg.GetPixel(X, Y));
+    if (c = BGRAPixelTransparent) then
+      c := PlotImg.GetPixel(X, Y);
+
+    Result := ColorToRGB(c);
 end;
 
 function TPlotImage.GetPixel(X, Y: Double): LongInt;
@@ -822,7 +828,7 @@ end;
 
 function TPlotImage.GetAxesMarkers(Index: Integer): TMarker;
 begin
-  if (Index >= 1) and (Index <= 3) then
+  if (Index >= 1) and (Index <= 3) and assigned(FAxesMarkers[Index]) then
     Result := FAxesMarkers[Index]
   else
     Result := nil;
@@ -849,7 +855,7 @@ var
   i: Integer;
   X: Double;
 begin
-  X := BlackBoard.Width;
+  X := WhiteBoard.Width;
   Result := nil;
   for i := 0 to Markers.Count - 1 do
     if (not Markers[i].IsPersistent) and (X > Markers[i].Position.X) then
@@ -879,7 +885,7 @@ var
   i: Integer;
   Y: Double;
 begin
-  Y := BlackBoard.Height;
+  Y := WhiteBoard.Height;
   Result := nil;
   for i := 0 to Markers.Count - 1 do
     if (not Markers[i].IsPersistent) and (Y > Markers[i].Position.Y) then
@@ -1054,10 +1060,10 @@ var
   {$endif}
 begin
   inherited Paint;
-  Rect := TRect.Create(TPoint.Create(0, 0), BlackBoard.Width, BlackBoard.Height);
+  Rect := TRect.Create(TPoint.Create(0, 0), WhiteBoard.Width, WhiteBoard.Height);
   ClipRect := Canvas.ClipRect;
   PaintRect := Rect*ClipRect;
-  with BlackBoard.Canvas do
+  with WhiteBoard.Canvas do
   begin
     {$ifdef windows}
     ClipRgn := CreateRectRgn(PaintRect.Left, PaintRect.Top, PaintRect.Right, PaintRect.Bottom);
@@ -1067,20 +1073,19 @@ begin
     CopyRect(PaintRect, PlotImg.Canvas, PaintRect);
 
     if SubstractGrid then
-      //CopyRect(PaintRect, GridMask.Canvas, PaintRect);
-      Draw(0, 0, GridMask.Bitmap);
+      CopyRect(PaintRect, GridMask.Canvas, PaintRect);
   end;
 
   if HasPoints then
-    DigitCurve.Draw(BlackBoard.Canvas);
+    DigitCurve.Draw(WhiteBoard.Canvas);
 
   for i := Markers.Count - 1 downto 0 do
-    Markers[i].Draw(BlackBoard.Canvas, PaintRect);
+    Markers[i].Draw(WhiteBoard.Canvas, PaintRect);
 
   if Assigned(ActiveMarker) and
      not (ActiveMarker.Rect*PaintRect).IsEmpty then
   begin
-    with BlackBoard.Canvas do
+    with WhiteBoard.Canvas do
       DrawFocusRect(ActiveMarker.Rect);
   end;
 
@@ -1088,33 +1093,37 @@ begin
      (MarkerUnderCursor <> ActiveMarker) and
      not (MarkerUnderCursor.Rect*PaintRect).IsEmpty then
   begin
-    with BlackBoard.Canvas do
+    with WhiteBoard.Canvas do
       DrawFocusRect(MarkerUnderCursor.Rect);
   end;
 
   if SelectingRegion then
-    BlackBoard.Canvas.DrawFocusRect(SelectionRect);
+    WhiteBoard.Canvas.DrawFocusRect(SelectionRect);
 
   {$ifdef windows}
-  with BlackBoard.Canvas do
+  with WhiteBoard.Canvas do
   begin
     SelectClipRgn(Handle, 0);
     DeleteObject(ClipRgn);
   end;
   {$endif}
-  Canvas.CopyRect(PaintRect, BlackBoard.Canvas, PaintRect);
+  Canvas.CopyRect(PaintRect, WhiteBoard.Canvas, PaintRect);
   if not PaintRect.Contains(ClipRect) then
   begin
     Rect := ClientRect;
-    Rect.Left := BlackBoard.Width;
+    Rect.Left := WhiteBoard.Width;
     Rect.Intersect(ClipRect);
     Canvas.CopyRect(Rect, PlotImg.Canvas, Rect);
+    if SubstractGrid then
+      Canvas.CopyRect(Rect, GridMask.Canvas, Rect);
 
     Rect := ClientRect;
-    Rect.Top := BlackBoard.Height;
-    Rect.Width := BlackBoard.Width;
+    Rect.Top := WhiteBoard.Height;
+    Rect.Width := WhiteBoard.Width;
     Rect.Intersect(ClipRect);
     Canvas.CopyRect(Rect, PlotImg.Canvas, Rect);
+    if SubstractGrid then
+      Canvas.CopyRect(Rect, GridMask.Canvas, Rect);
   end;
 end;
 
@@ -1315,6 +1324,8 @@ begin
   Result := DigitCurve.Curve;
 end;
 
+// Warning: any time that we call this function, we must free the curve
+// created here, or we will have a memoory leak
 function TPlotImage.GetPlotCurves(Index: Integer): TCurve;
 var
   i: Integer;
@@ -1395,7 +1406,7 @@ begin
   if FSubstractGrid <> Value then
   begin
     FSubstractGrid := Value;
-    Invalidate;
+    IsChanged := True;
   end;
 end;
 
@@ -1471,45 +1482,36 @@ begin
   end
   else
   begin
-    BlackBoard.FreeImage;
+    WhiteBoard.FreeImage;
     Width := 0;
     Height := 0;
   end;
 end;
 
 procedure TPlotImage.LoadImage(Stream: TStream);
-var
-  TmpPic: TPicture;
 begin
   FImageIsLoaded := False;
 
   try
     Stream.Position := 0;
-    TmpPic := TPicture.Create;
-    TmpPic.LoadFromStream(Stream);
+    PlotImg.LoadFromStream(Stream);
 
-    with PlotImg do
+    with WhiteBoard do
     begin
-      // This trick is required because the TPicture has problems updating
-      // .JPG and .TIFF images when they are loaded directly. Moreover,
-      // the digitization becomes painfully slow in this case.
-      // Ovidio (2021/04/08)
-      SetSize(TmpPic.Width, TmpPic.Height);
+      SetSize(PlotImg.Width, PlotImg.Height);
       // Clean the Canvas (in case there was loaded a previous image)
       Canvas.Pen.Color := clWhite;
       Canvas.Brush.Color := clWhite;
       Canvas.Rectangle(0, 0, Width, Height);
       //Now draw the image
-      Canvas.Draw(0, 0, TmpPic.Bitmap);
+      PlotImg.Draw(Canvas, 0, 0, False);
     end;
-
-    BlackBoard.SetSize(PlotImg.Width, PlotImg.Height);
 
     GridMask.SetSize(PlotImg.Width, PlotImg.Height);
     GridMask.FillTransparent;
 
-    Width := BlackBoard.Width;
-    Height := BlackBoard.Height;
+    Width := WhiteBoard.Width;
+    Height := WhiteBoard.Height;
 
     FImageIsLoaded := True;
     FValidGrid := False;
@@ -1518,8 +1520,6 @@ begin
     FMarkers.Clear;
     Invalidate;
   finally
-    TmpPic.Free;
-
     IsChanged := True;
     Visible := ImageIsLoaded;
   end;
@@ -1609,14 +1609,18 @@ var
   i: Integer;
   TmpCurve: TCurve;
 begin
-  TmpCurve := PlotCurves[Index];
-  TmpCurve.SortCurve;
+  try
+    TmpCurve := PlotCurves[Index];
+    TmpCurve.SortCurve;
 
-  FCurves[Index].Curve.Clear;
-  for i := 0 to TmpCurve.Count - 1 do
-    FCurves[Index].Curve.AddPoint(Scale.FromPlotToImg(TmpCurve.Point[i]));
+    FCurves[Index].Curve.Clear;
+    for i := 0 to TmpCurve.Count - 1 do
+      FCurves[Index].Curve.AddPoint(Scale.FromPlotToImg(TmpCurve.Point[i]));
 
-  IsChanged := True;
+    IsChanged := True;
+  finally
+    TmpCurve.Free;
+  end;
 end;
 
 procedure TPlotImage.Smooth(k, d: Integer; Index: Integer);
@@ -1624,22 +1628,26 @@ var
   i: Integer;
   TmpCurve: TCurve;
 begin
-  TmpCurve := PlotCurves[Index];
+  try
+    TmpCurve := PlotCurves[Index];
 
-  TmpCurve.SortCurve;
-  TmpCurve.Smooth(k, d);
+    TmpCurve.SortCurve;
+    TmpCurve.Smooth(k, d);
 
-  if (Index = CurveIndex) then
-    EraseCurve(DigitCurve);
+    if (Index = CurveIndex) then
+      EraseCurve(DigitCurve);
 
-  FCurves[Index].NextCurve(False);
-  for i := 0 to TmpCurve.Count - 1 do
-    FCurves[Index].Curve.AddPoint(FScale.FromPlotToImg(TmpCurve.Point[i]));
+    FCurves[Index].NextCurve(False);
+    for i := 0 to TmpCurve.Count - 1 do
+      FCurves[Index].Curve.AddPoint(FScale.FromPlotToImg(TmpCurve.Point[i]));
 
-  if (Index = CurveIndex) then
-    DigitCurve.Draw(Canvas);
+    if (Index = CurveIndex) then
+      DigitCurve.Draw(Canvas);
 
-  IsChanged := True;
+    IsChanged := True;
+  finally
+    TmpCurve.Free;
+  end;
 end;
 
 procedure TPlotImage.Smooth(k, d: Integer; AllCurves: Boolean = False);
@@ -1658,22 +1666,26 @@ var
   i: Integer;
   TmpCurve: TCurve;
 begin
-  TmpCurve := PlotCurves[Index];
+  try
+    TmpCurve := PlotCurves[Index];
 
-  TmpCurve.SortCurve;
-  TmpCurve.Interpolate(n);
+    TmpCurve.SortCurve;
+    TmpCurve.Interpolate(n);
 
-  if (Index = CurveIndex) then
-    EraseCurve(DigitCurve);
+    if (Index = CurveIndex) then
+      EraseCurve(DigitCurve);
 
-  FCurves[Index].NextCurve(False);
-  for i := 0 to TmpCurve.Count - 1 do
-    FCurves[Index].Curve.AddPoint(FScale.FromPlotToImg(TmpCurve.Point[i]));
+    FCurves[Index].NextCurve(False);
+    for i := 0 to TmpCurve.Count - 1 do
+      FCurves[Index].Curve.AddPoint(FScale.FromPlotToImg(TmpCurve.Point[i]));
 
-  if (Index = CurveIndex) then
-    DigitCurve.Draw(Canvas);
+    if (Index = CurveIndex) then
+      DigitCurve.Draw(Canvas);
 
-  IsChanged := True;
+    IsChanged := True;
+  finally
+    TmpCurve.Free;
+  end;
 end;
 
 procedure TPlotImage.Interpolate(n: Integer; AllCurves: Boolean = False);
@@ -1692,22 +1704,26 @@ var
   i: Integer;
   TmpCurve: TCurve;
 begin
-  TmpCurve := PlotCurves[Index];
+  try
+    TmpCurve := PlotCurves[Index];
 
-  TmpCurve.SortCurve;
-  TmpCurve.Interpolate(Xo, Xf, n);
+    TmpCurve.SortCurve;
+    TmpCurve.Interpolate(Xo, Xf, n);
 
-  if (Index = CurveIndex) then
-    EraseCurve(DigitCurve);
+    if (Index = CurveIndex) then
+      EraseCurve(DigitCurve);
 
-  FCurves[Index].NextCurve(False);
-  for i := 0 to TmpCurve.Count - 1 do
-    FCurves[Index].Curve.AddPoint(FScale.FromPlotToImg(TmpCurve.Point[i]));
+    FCurves[Index].NextCurve(False);
+    for i := 0 to TmpCurve.Count - 1 do
+      FCurves[Index].Curve.AddPoint(FScale.FromPlotToImg(TmpCurve.Point[i]));
 
-  if (Index = CurveIndex) then
-    DigitCurve.Draw(Canvas);
+    if (Index = CurveIndex) then
+      DigitCurve.Draw(Canvas);
 
-  IsChanged := True;
+    IsChanged := True;
+  finally
+    TmpCurve.Free;
+  end;
 end;
 
 procedure TPlotImage.Interpolate(Xo, Xf: Double; n: Integer; AllCurves: Boolean = False);
@@ -1759,6 +1775,8 @@ var
   x, y: Double;
   diag_len: Integer;
 
+  p: PBGRAPixel;
+
   img: Array of Array of LongInt;
   accumulator: Array of Array of Integer;
 
@@ -1774,200 +1792,187 @@ var
   vert_count,
   hori_index,
   vert_index: Integer;
-  vert_line,
-  hori_line: TStraightLine;
   max_count_hori,
   max_count_vert: Integer;
 begin
-  C1 := ColorToRGB(LineColor1);
-  C2 := ColorToRGB(LineColor2);
-
-  with PlotImg do
-  begin
-    // Diagonal length of image
-    diag_len := Round(Sqrt(Width*Width + Height*Height));
-
-    // Put the canvas values in an array for faster access
-    SetLength(img, Width, Height);
-    for j := 0 to Height - 1 do
-      for i := 0 to Width - 1 do
-        img[i, j] := ColorToRGB(GetPixel(i, j));
-  end;
-
-  // Cache some reusable values
-  num_thetas := 1 + Round(180/angle_step);
-  SetLength(sin_theta, num_thetas);
-  SetLength(cos_theta, num_thetas);
-  SetLength(theta_count, num_thetas);
-  for t_idx := Low(sin_theta) to High(sin_theta) do
-  begin
-    theta := -90.0 + t_idx*angle_step;
-    sin_theta[t_idx] := sin(theta*3.14159/180.0);
-    cos_theta[t_idx] := cos(theta*3.14159/180.0);
-    theta_count[t_idx] := 0;
-  end;
-
-  // Hough accumulator array of theta vs rho
-  SetLength(accumulator, 2*diag_len, num_thetas);
-  for i := Low(accumulator) to High(accumulator) do
-    for j := Low(accumulator[Low(accumulator)]) to High(accumulator[Low(accumulator)]) do
-      accumulator[i, j] := 0;
-
-  max_count_hori := 0;
-  max_count_vert := 0;
-  // Vote in the hough accumulator
-  for i := Low(img) to High(img) do
-    for j := Low(img[Low(img)]) to High(img[Low(img)]) do
-      if AreSimilarColors(C1, img[i, j], Tolerance) or
-         AreSimilarColors(C2, img[i, j], Tolerance) then
-        for t_idx := Low(sin_theta) to High(sin_theta) do
-        begin
-          // Calculate rho, diag_len is added for a positive index
-          rho := diag_len + Round(i*cos_theta[t_idx] + j*sin_theta[t_idx]);
-          inc(accumulator[rho, t_idx]);
-
-          if (abs(sin_theta[t_idx]) > abs(cos_theta[t_idx])) then
-          begin
-            // Horizontal line
-            if (accumulator[rho, t_idx] > max_count_hori) then
-              max_count_hori := accumulator[rho, t_idx];
-          end
-          else
-          begin
-            // Vertical line
-            if (accumulator[rho, t_idx] > max_count_vert) then
-              max_count_vert := accumulator[rho, t_idx];
-          end;
-        end;
-
-  // Histogram of angles
-  for i := Low(accumulator) to High(accumulator) do
-    for t_idx := Low(accumulator[Low(accumulator)]) to High(accumulator[Low(accumulator)]) do
-      if (abs(sin_theta[t_idx]) > abs(cos_theta[t_idx])) then
-      begin
-        // Horizontal line
-        if (accumulator[i, t_idx] > Threshold*max_count_hori) then
-          inc(theta_count[t_idx]);
-      end
-      else
-      begin
-        // Vertical line
-        if (accumulator[i, t_idx] > Threshold*max_count_vert) then
-          inc(theta_count[t_idx]);
-      end;
-
-  // Determine angle for horizontal and vertical grid lines
-  hori_count := 0;
-  vert_count := 0;
-  hori_index := 0;
-  vert_index := 0;
-  for i := Low(accumulator) to High(accumulator) do
-    for t_idx := Low(accumulator[Low(accumulator)]) to High(accumulator[Low(accumulator)]) do
-      if (abs(sin_theta[t_idx]) > abs(cos_theta[t_idx])) then
-      begin
-        // Mostly horizontal line
-        if (accumulator[i, t_idx] > Threshold*max_count_hori) then
-        begin
-          if (theta_count[t_idx] > hori_count) then
-          begin
-            hori_count := theta_count[t_idx];
-            hori_index := t_idx;
-          end;
-        end;
-      end
-      else
-      begin
-        // Mostly vertical line
-        if (accumulator[i, t_idx] > Threshold*max_count_vert) then
-        begin
-          if (theta_count[t_idx] > vert_count) then
-          begin
-            vert_count := theta_count[t_idx];
-            vert_index := t_idx;
-          end;
-        end;
-      end;
-
-  //Create all the required TStraightLine objects
   try
-    hori_line := TStraightLine.Create;
-    hori_line.Color := BckgndColor;
+    C1 := ColorToRGB(LineColor1);
+    C2 := ColorToRGB(LineColor2);
 
-    vert_line := TStraightLine.Create;
-    vert_line.Color := BckgndColor;
-
-    GridMask.FillTransparent;
-
-    // Reset the status of the mask
-    FValidGrid := False;
-    FSubstractGrid := False;
-
-    // Now, draw the lines
-    for i := Low(accumulator) to High(accumulator) do
+    with PlotImg do
     begin
-      rho := i - diag_len;
-      // Draw horizontal lines
-      if (accumulator[i, hori_index] > Threshold*max_count_hori) then
+      // Diagonal length of image
+      diag_len := Round(Sqrt(Width*Width + Height*Height));
+
+      // Put the canvas values in an array for faster access
+      SetLength(img, Width, Height);
+      for j := 0 to Height - 1 do
       begin
-        hori_line.Clear;
-
-        // Fill the line with all the points that meet the color criteria
-        for j := 0 to GridMask.Width - 1 do
+        p := Scanline[j];
+        for i := 0 to Width - 1 do
         begin
-          x := j;
-          y := (rho - x*cos_theta[hori_index])/sin_theta[hori_index];
-
-          if (y >= 0) and (Round(y) < GridMask.Height) then
-            if AreSimilarColors(C1, img[Round(x), Round(y)], Tolerance) or
-               AreSimilarColors(C2, img[Round(x), Round(y)], Tolerance) then
-            begin
-              hori_line.AddPoint(x, y);
-            end;
+          img[i, j] := p^.red or (p^.green shl 8) or (p^.blue shl 16);
+          inc(p);
         end;
-
-        // Draw the line
-        hori_line.Draw(GridMask.Canvas);
-      end;
-
-      // Draw vertical lines
-      if (accumulator[i, vert_index] > Threshold*max_count_vert) then
-      begin
-        vert_line.Clear;
-
-        // Fill the line with all the points that meet the color criteria
-        for j := 0 to GridMask.Height - 1 do
-        begin
-          y := j;
-          x := (rho - y*sin_theta[vert_index])/cos_theta[vert_index];
-
-          if (x >= 0) and (Round(x) < GridMask.Width) then
-            if AreSimilarColors(C1, img[Round(x), Round(y)], Tolerance) or
-               AreSimilarColors(C2, img[Round(x), Round(y)], Tolerance) then
-            begin
-              vert_line.AddPoint(x, y);
-            end;
-        end;
-
-        // Draw the line
-        vert_line.Draw(GridMask.Canvas);
       end;
     end;
+
+    // Cache some reusable values
+    num_thetas := 1 + Round(180/angle_step);
+    SetLength(sin_theta, num_thetas);
+    SetLength(cos_theta, num_thetas);
+    SetLength(theta_count, num_thetas);
+    for t_idx := Low(sin_theta) to High(sin_theta) do
+    begin
+      theta := -90.0 + t_idx*angle_step;
+      sin_theta[t_idx] := sin(theta*3.14159/180.0);
+      cos_theta[t_idx] := cos(theta*3.14159/180.0);
+      theta_count[t_idx] := 0;
+    end;
+
+    // Hough accumulator array of theta vs rho
+    SetLength(accumulator, 2*diag_len, num_thetas);
+    for i := Low(accumulator) to High(accumulator) do
+      for j := Low(accumulator[Low(accumulator)]) to High(accumulator[Low(accumulator)]) do
+        accumulator[i, j] := 0;
+
+    max_count_hori := 0;
+    max_count_vert := 0;
+    // Vote in the hough accumulator
+    for i := Low(img) to High(img) do
+      for j := Low(img[Low(img)]) to High(img[Low(img)]) do
+        if AreSimilarColors(C1, img[i, j], Tolerance) or
+           AreSimilarColors(C2, img[i, j], Tolerance) then
+          for t_idx := Low(sin_theta) to High(sin_theta) do
+          begin
+            // Calculate rho, diag_len is added for a positive index
+            rho := diag_len + Round(i*cos_theta[t_idx] + j*sin_theta[t_idx]);
+            inc(accumulator[rho, t_idx]);
+
+            if (abs(sin_theta[t_idx]) > abs(cos_theta[t_idx])) then
+            begin
+              // Horizontal line
+              if (accumulator[rho, t_idx] > max_count_hori) then
+                max_count_hori := accumulator[rho, t_idx];
+            end
+            else
+            begin
+              // Vertical line
+              if (accumulator[rho, t_idx] > max_count_vert) then
+                max_count_vert := accumulator[rho, t_idx];
+            end;
+          end;
+
+    // Histogram of angles
+    for i := Low(accumulator) to High(accumulator) do
+      for t_idx := Low(accumulator[Low(accumulator)]) to High(accumulator[Low(accumulator)]) do
+        if (abs(sin_theta[t_idx]) > abs(cos_theta[t_idx])) then
+        begin
+          // Horizontal line
+          if (accumulator[i, t_idx] > Threshold*max_count_hori) then
+            inc(theta_count[t_idx]);
+        end
+        else
+        begin
+          // Vertical line
+          if (accumulator[i, t_idx] > Threshold*max_count_vert) then
+            inc(theta_count[t_idx]);
+        end;
+
+    // Determine angle for horizontal and vertical grid lines
+    hori_count := 0;
+    vert_count := 0;
+    hori_index := 0;
+    vert_index := 0;
+    for i := Low(accumulator) to High(accumulator) do
+      for t_idx := Low(accumulator[Low(accumulator)]) to High(accumulator[Low(accumulator)]) do
+        if (abs(sin_theta[t_idx]) > abs(cos_theta[t_idx])) then
+        begin
+          // Mostly horizontal line
+          if (accumulator[i, t_idx] > Threshold*max_count_hori) then
+          begin
+            if (theta_count[t_idx] > hori_count) then
+            begin
+              hori_count := theta_count[t_idx];
+              hori_index := t_idx;
+            end;
+          end;
+        end
+        else
+        begin
+          // Mostly vertical line
+          if (accumulator[i, t_idx] > Threshold*max_count_vert) then
+          begin
+            if (theta_count[t_idx] > vert_count) then
+            begin
+              vert_count := theta_count[t_idx];
+              vert_index := t_idx;
+            end;
+          end;
+        end;
+
+    //Draw all the points in the mask
+    try
+      GridMask.FillTransparent;
+
+      // Reset the status of the mask
+      FValidGrid := False;
+      FSubstractGrid := False;
+
+      // Now, draw the lines
+      for i := Low(accumulator) to High(accumulator) do
+      begin
+        rho := i - diag_len;
+        // Draw horizontal lines
+        if (accumulator[i, hori_index] > Threshold*max_count_hori) then
+        begin
+          // Fill the line with all the points that meet the color criteria
+          for j := 0 to GridMask.Width - 1 do
+          begin
+            x := j;
+            y := (rho - x*cos_theta[hori_index])/sin_theta[hori_index];
+
+            if (y >= 0) and (Round(y) < GridMask.Height) then
+              if AreSimilarColors(C1, img[Round(x), Round(y)], Tolerance) or
+                 AreSimilarColors(C2, img[Round(x), Round(y)], Tolerance) then
+              begin
+                GridMask.SetPixel(Round(x), Round(y), BckgndColor);
+              end;
+          end;
+        end;
+
+        // Draw vertical lines
+        if (accumulator[i, vert_index] > Threshold*max_count_vert) then
+        begin
+          // Fill the line with all the points that meet the color criteria
+          for j := 0 to GridMask.Height - 1 do
+          begin
+            y := j;
+            x := (rho - y*sin_theta[vert_index])/cos_theta[vert_index];
+
+            if (x >= 0) and (Round(x) < GridMask.Width) then
+              if AreSimilarColors(C1, img[Round(x), Round(y)], Tolerance) or
+                 AreSimilarColors(C2, img[Round(x), Round(y)], Tolerance) then
+              begin
+                GridMask.SetPixel(Round(x), Round(y), BckgndColor);
+              end;
+          end;
+        end;
+      end;
+    finally
+      ValidGrid := True;
+      SubstractGrid := True;
+
+      IsChanged := True;
+    end;
   finally
-    hori_line.Free;
-    vert_line.Free;
-
-    ValidGrid := True;
-    SubstractGrid := True;
-
-    IsChanged := True;
+    // Release all the dynamic arrays
+    SetLength(img, 0);
+    SetLength(sin_theta, 0);
+    SetLength(cos_theta, 0);
+    SetLength(theta_count, 0);
+    SetLength(accumulator, 0);
   end;
-
-  // Release all the dynamic arrays
-  SetLength(img, 0);
-  SetLength(sin_theta, 0);
-  SetLength(cos_theta, 0);
-  SetLength(theta_count, 0);
-  SetLength(accumulator, 0);
 end;
 
 procedure TPlotImage.GroupPoints(Region: TRect);
@@ -2308,6 +2313,11 @@ begin
       AxesMarkers[3] := TMarker.Create(CreateMarker(TPoint.Create(13, 13), '+', clRed, 3),
                                        Scale.ImagePoint[3], True);
       UpdateMarkersInImage;
+
+      PlotBox.Vertex[0] := GetCurvePoint(0, 0);;
+      PlotBox.Vertex[1] := GetCurvePoint(Width, 0);;
+      PlotBox.Vertex[2] := GetCurvePoint(Width, Height);;
+      PlotBox.Vertex[3] := GetCurvePoint(0, Height);;
     end;
 
     FCurveIndex := 0;
