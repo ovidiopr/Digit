@@ -27,6 +27,46 @@ type
     btnMoveDown: TToolButton;
     btnMoveUp: TToolButton;
     btnSetScale: TToolButton;
+    cbbCoords: TComboBox;
+    cbbXScale: TComboBox;
+    cbbYScale: TComboBox;
+    EditIX1: TEdit;
+    EditIX2: TEdit;
+    EditIX3: TEdit;
+    EditIY1: TEdit;
+    EditIY2: TEdit;
+    EditIY3: TEdit;
+    EditPX1: TEdit;
+    EditPX2: TEdit;
+    EditPX3: TEdit;
+    EditPY1: TEdit;
+    EditPY2: TEdit;
+    EditPY3: TEdit;
+    edtX: TEdit;
+    edtY: TEdit;
+    gbBasis: TGroupBox;
+    gbCoord: TGroupBox;
+    gbX: TGroupBox;
+    gbY: TGroupBox;
+    lblImg1: TLabel;
+    lblImg2: TLabel;
+    lblImg3: TLabel;
+    lblP1: TLabel;
+    lblP2: TLabel;
+    lblP3: TLabel;
+    lblPlt1: TLabel;
+    lblPlt2: TLabel;
+    lblPlt3: TLabel;
+    lblX: TLabel;
+    lblX1: TLabel;
+    lblX2: TLabel;
+    lblX3: TLabel;
+    lblXScale: TLabel;
+    lblY: TLabel;
+    lblY1: TLabel;
+    lblY2: TLabel;
+    lblY3: TLabel;
+    lblYScale: TLabel;
     MainPlot: TChart;
     ModeBackgroundColor: TAction;
     ModeMinorGridColor: TAction;
@@ -73,8 +113,11 @@ type
     pcInput: TPageControl;
     rgDirection: TRadioGroup;
     ScrollBox: TScrollBox;
+    sbScale: TScrollBox;
     sep07: TToolButton;
     SpeedButton1: TSpeedButton;
+    tsPlotBox: TTabSheet;
+    tsScale: TTabSheet;
     tbPlot: TToolBar;
     tbGrid: TToolBar;
     tbRemoveGrid: TToolButton;
@@ -82,7 +125,7 @@ type
     tcCurves: TTabControl;
     sep08: TToolButton;
     tsGrid: TTabSheet;
-    tsDigit: TTabSheet;
+    tsCurve: TTabSheet;
     ToolRightItem: TMenuItem;
     ToolLeftItem: TMenuItem;
     ToolCurveRight: TAction;
@@ -248,9 +291,11 @@ type
     procedure GridShowHideExecute(Sender: TObject);
     procedure HelpAboutExecute(Sender: TObject);
     procedure FileExitExecute(Sender: TObject);
+    procedure LeftSplitterMoved(Sender: TObject);
     procedure ModeBackgroundColorExecute(Sender: TObject);
     procedure ModeMajorGridColorExecute(Sender: TObject);
     procedure ModeMinorGridColorExecute(Sender: TObject);
+    procedure pcInputChange(Sender: TObject);
     procedure PlotImageMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure PlotImageMouseLeave(Sender: TObject);
@@ -398,28 +443,30 @@ begin
 
     FileExport.Enabled := HasPoints;
 
-    ModeMarkers.Enabled := ImageIsLoaded;
-    ModeColor.Enabled := ImageIsLoaded;
-    ModeSteps.Enabled := HasPoints;
-    ModeSegment.Enabled := HasPoints;
-    ModeGroupPoints.Enabled := HasPoints;
-    ModeDeletePoints.Enabled := HasPoints;
-    ModeMajorGridColor.Enabled := ImageIsLoaded;
-    ModeMinorGridColor.Enabled := ImageIsLoaded;
-    ModeBackgroundColor.Enabled := ImageIsLoaded;
+    ModeMarkers.Enabled := ImageIsLoaded and (State = piSetCurve);
+    ModeColor.Enabled := ImageIsLoaded and (State = piSetCurve);
+    ModeSteps.Enabled := (State = piSetCurve) and HasPoints;
+    ModeSegment.Enabled := (State = piSetCurve) and HasPoints;
+    ModeGroupPoints.Enabled := (State = piSetCurve) and HasPoints;
+    ModeDeletePoints.Enabled := (State = piSetCurve) and HasPoints;
+    ModeMajorGridColor.Enabled := ImageIsLoaded and (State = piSetGrid);
+    ModeMinorGridColor.Enabled := ImageIsLoaded and (State = piSetGrid);
+    ModeBackgroundColor.Enabled := ImageIsLoaded and (State = piSetGrid);
 
-    ToolDigit.Enabled := Scale.IsValid and ColorIsSet;
-    ToolAdjustCurve.Enabled := HasPoints;
-    ToolResample.Enabled := HasPoints;
-    ToolSmooth.Enabled := HasPoints;
-    ToolConvertToSymbols.Enabled := HasPoints;
-    ToolCurveUp.Enabled := HasPoints;
-    ToolCurveDown.Enabled := HasPoints;
-    ToolClear.Enabled := HasPoints;
+    ToolDigit.Enabled := Scale.IsValid and ColorIsSet and (State = piSetCurve);
+    ToolAdjustCurve.Enabled := (State = piSetCurve) and HasPoints;
+    ToolResample.Enabled := (State = piSetCurve) and HasPoints;
+    ToolSmooth.Enabled := (State = piSetCurve) and HasPoints;
+    ToolConvertToSymbols.Enabled := (State = piSetCurve) and HasPoints;
+    ToolCurveUp.Enabled := (State = piSetCurve) and HasPoints;
+    ToolCurveDown.Enabled := (State = piSetCurve) and HasPoints;
+    ToolCurveLeft.Enabled := (State = piSetCurve) and HasPoints;
+    ToolCurveRight.Enabled := (State = piSetCurve) and HasPoints;
+    ToolClear.Enabled := (State = piSetCurve) and HasPoints;
 
-    ToolCurveAdd.Enabled := ImageIsLoaded;
-    ToolCurveDelete.Enabled := ImageIsLoaded and (Count > 1);
-    ToolCurveName.Enabled := ImageIsLoaded and (Count > 0);
+    ToolCurveAdd.Enabled := ImageIsLoaded and (State = piSetCurve);
+    ToolCurveDelete.Enabled := ImageIsLoaded and (State = piSetCurve) and (Count > 1);
+    ToolCurveName.Enabled := ImageIsLoaded and (State = piSetCurve) and (Count > 0);
 
     ToolScaleOptions.Enabled := ImageIsLoaded;
 
@@ -429,15 +476,15 @@ begin
     MarkersMoveRight.Enabled := ImageIsLoaded and assigned(ActiveMarker);
     MarkersDelete.Enabled := ImageIsLoaded and assigned(ActiveMarker) and not ActiveMarker.IsPersistent;
 
-    GridRemoval.Enabled := ImageIsLoaded and not (ValidGrid and SubstractGrid);
-    GridShowHide.Enabled := ImageIsLoaded and ValidGrid;
+    GridRemoval.Enabled := ImageIsLoaded and (State = piSetGrid) and not (ValidGrid and SubstractGrid);
+    GridShowHide.Enabled := ImageIsLoaded and (State = piSetGrid) and ValidGrid;
 
-    PlotExport.Enabled := HasPoints;
-    PlotScale.Enabled := HasPoints;
+    PlotExport.Enabled := (State = piSetCurve) and HasPoints;
+    PlotScale.Enabled := (State = piSetCurve) and HasPoints;
 
-    EditUndo.Enabled := CanUndo;
-    EditRedo.Enabled := CanRedo;
-    EditCopy.Enabled := HasPoints;
+    EditUndo.Enabled := (State = piSetCurve) and CanUndo;
+    EditRedo.Enabled := (State = piSetCurve) and CanRedo;
+    EditCopy.Enabled := (State = piSetCurve) and HasPoints;
   end;
 end;
 
@@ -635,38 +682,72 @@ begin
   if PlotImage.ImageIsLoaded then
     with PlotImage do
     begin
-      AxesMarkers[1] := TMarker.Create(CreateMarker(TPoint.Create(13, 13), '+', clRed, 3),
-                                       Scale.ImagePoint[1], True);
-      AxesMarkers[2] := TMarker.Create(CreateMarker(TPoint.Create(13, 13), '+', clGreen, 3),
-                                       Scale.ImagePoint[2], True);
-      AxesMarkers[3] := TMarker.Create(CreateMarker(TPoint.Create(13, 13), '+', clRed, 3),
-                                       Scale.ImagePoint[3], True);
+      AxesPoint[1] := Scale.ImagePoint[1];
+      AxesPoint[2] := Scale.ImagePoint[2];
+      AxesPoint[3] := Scale.ImagePoint[3];
     end;
 
   IsSaved := False;
 end;
 
 procedure TDigitMainForm.InsertImage(FileName: TFileName);
-begin
-  PlotImage.ImageName := FileName;
+var
+  i: Integer;
+  ResetPoints: Boolean;
 
+function PutInside(p: TCurvePoint; w, h: Integer; d: Integer = 0): TCurvePoint;
+var
+  X, Y: Double;
+begin
+  X := p.X;
+  Y := p.Y;
+
+  if (X < d) then X := d;
+  if (Y < d) then Y := d;
+  if (X > w - d) then X := w - d;
+  if (Y > h - d) then Y := h - d;
+
+  Result := GetCurvePoint(X, Y);
+end;
+
+begin
   with PlotImage do
   begin
-    AxesMarkers[1] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'+', clRed, 3),
-                                     TPoint.Create(6, 6), True);
-    AxesMarkers[2] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'+', clGreen, 3),
-                                     TPoint.Create(6, Height - 6), True);
-    AxesMarkers[3] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'+', clRed, 3),
-                                     TPoint.Create(Width - 6, Height - 6), True);
+    ResetPoints := not ImageIsLoaded;
 
-    Scale.PlotPoint[1] := GetCurvePoint(0, 1);
-    Scale.PlotPoint[2] := GetCurvePoint(0, 0);
-    Scale.PlotPoint[3] := GetCurvePoint(1, 0);
+    ImageName := FileName;
 
-    PlotBox.Vertex[0] := GetCurvePoint(0, 0);;
-    PlotBox.Vertex[1] := GetCurvePoint(Width, 0);;
-    PlotBox.Vertex[2] := GetCurvePoint(Width, Height);;
-    PlotBox.Vertex[3] := GetCurvePoint(0, Height);;
+    if ImageIsLoaded then
+    begin
+      if ResetPoints then
+      begin
+        AxesPoint[1] := TPoint.Create(6, 6);
+        AxesPoint[2] := TPoint.Create(6, Height - 6);
+        AxesPoint[3] := TPoint.Create(Width - 6, Height - 6);
+
+        Scale.PlotPoint[1] := GetCurvePoint(0, 1);
+        Scale.PlotPoint[2] := GetCurvePoint(0, 0);
+        Scale.PlotPoint[3] := GetCurvePoint(1, 0);
+
+        BoxVertex[1] := GetCurvePoint(0, 0);
+        BoxVertex[2] := GetCurvePoint(Width, 0);
+        BoxVertex[3] := GetCurvePoint(Width, Height);
+        BoxVertex[4] := GetCurvePoint(0, Height);
+      end
+      else
+      begin
+        AxesPoint[1] := PutInside(AxesPoint[1], Width, Height, 6);
+        AxesPoint[2] := PutInside(AxesPoint[2], Width, Height, 6);
+        AxesPoint[3] := PutInside(AxesPoint[3], Width, Height, 6);
+
+        BoxVertex[1] := PutInside(BoxVertex[1], Width, Height, 0);
+        BoxVertex[2] := PutInside(BoxVertex[2], Width, Height, 0);
+        BoxVertex[3] := PutInside(BoxVertex[3], Width, Height, 0);
+        BoxVertex[4] := PutInside(BoxVertex[4], Width, Height, 0);
+      end;
+
+      State := piSetCurve;
+    end;
   end;
 
   if not FileExists(DigitFileName) then
@@ -698,6 +779,7 @@ begin
   PlotImage.Reset;
   IsSaved := True;
   leData.Strings.Clear;
+  pcInput.ActivePageIndex := Integer(PlotImage.State);
 end;
 //End of general functions
 
@@ -706,6 +788,7 @@ procedure TDigitMainForm.FormActivate(Sender: TObject);
 begin
   MustOpen := True;
   UpdateControls;
+  pcInput.ActivePageIndex := Integer(PlotImage.State);
 end;
 
 procedure TDigitMainForm.FormCloseQuery(Sender: TObject; var CanClose: boolean);
@@ -935,6 +1018,16 @@ begin
   Close;
 end;
 
+procedure TDigitMainForm.LeftSplitterMoved(Sender: TObject);
+begin
+  EditIX1.Width := (EditIX1.Width + EditPX1.Width) div 2;
+  EditIY1.Width := (EditIY1.Width + EditPY1.Width) div 2;
+  EditIX2.Width := (EditIX2.Width + EditPX2.Width) div 2;
+  EditIY2.Width := (EditIY2.Width + EditPY2.Width) div 2;
+  EditIX3.Width := (EditIX3.Width + EditPX3.Width) div 2;
+  EditIY3.Width := (EditIY3.Width + EditPY3.Width) div 2;
+end;
+
 procedure TDigitMainForm.ModeBackgroundColorExecute(Sender: TObject);
 begin
   MouseMode := mdBackgroundColor;
@@ -951,6 +1044,12 @@ procedure TDigitMainForm.ModeMinorGridColorExecute(Sender: TObject);
 begin
   MouseMode := mdMinorGridColor;
   TAction(Sender).Checked := True;
+end;
+
+procedure TDigitMainForm.pcInputChange(Sender: TObject);
+begin
+  PlotImage.State := TPlotImageState(pcInput.ActivePageIndex);
+  UpdateControls;
 end;
 
 function TDigitMainForm.CheckSaveStatus: Boolean;

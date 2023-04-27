@@ -17,23 +17,22 @@ type
     cbbCoords: TComboBox;
     cbbXScale: TComboBox;
     cbbYScale: TComboBox;
-    EditPX1: TEdit;
-    EditPX2: TEdit;
-    EditPX3: TEdit;
-    EditPY1: TEdit;
-    EditPY2: TEdit;
-    EditPY3: TEdit;
     EditIX1: TEdit;
     EditIX2: TEdit;
     EditIX3: TEdit;
     EditIY1: TEdit;
     EditIY2: TEdit;
     EditIY3: TEdit;
+    EditPX1: TEdit;
+    EditPX2: TEdit;
+    EditPX3: TEdit;
+    EditPY1: TEdit;
+    EditPY2: TEdit;
+    EditPY3: TEdit;
     edtX: TEdit;
     edtY: TEdit;
     gbX: TGroupBox;
     gbY: TGroupBox;
-    lblCoords: TLabel;
     lblImg1: TLabel;
     lblImg2: TLabel;
     lblImg3: TLabel;
@@ -43,6 +42,7 @@ type
     lblPlt1: TLabel;
     lblPlt2: TLabel;
     lblPlt3: TLabel;
+    lblType: TLabel;
     lblX: TLabel;
     lblX1: TLabel;
     lblX2: TLabel;
@@ -53,10 +53,10 @@ type
     lblY2: TLabel;
     lblY3: TLabel;
     lblYScale: TLabel;
-    PageControl: TPageControl;
+    pcScale: TPageControl;
     pnButtons: TPanel;
     tsBasis: TTabSheet;
-    tsScale: TTabSheet;
+    tsCoordinates: TTabSheet;
     procedure cbbCoordsChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
   private
@@ -326,11 +326,11 @@ begin
   EditPY3.Enabled := (Scale.PointIsSet[3] and (not EditBasis)) or (ActivePoint = 3);
 
   if EditBasis then
-    PageControl.TabIndex := 1
+    pcScale.TabIndex := 1
   else
-    PageControl.TabIndex := 0;
+    pcScale.TabIndex := 0;
 
-  tsScale.Enabled := not EditBasis;
+  tsCoordinates.Enabled := not EditBasis;
 
   Result := (ShowModal = mrOK);
 end;

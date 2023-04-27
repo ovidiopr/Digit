@@ -6,7 +6,7 @@ unit coordinates;
 interface
 
 uses
-  Classes, SysUtils, Math, DOM;
+  Classes, SysUtils, Math, DOM, Types;
 
 type
   TCoordSystem = (csCartesian, csPolar);
@@ -27,6 +27,8 @@ type
   TBasis = Array [1..2] of TCurvePoint;
   TBasisChangeMtrx = Array [1..2, 1..2] of Double;
   TScalePoints = Array [1..3] of TCurvePoint;
+
+  ArrayOfTPointF = Array of TPointF;
 
   TScale = class(TObject)
   private
@@ -90,14 +92,17 @@ type
     property IsValid: Boolean read GetIsValidScale;
   end;
 
-  TPlotBox = class(TObject)
+  TPlotPoly = class(TObject)
   private
     { Private declarations }
-    FNumVertices: Integer;
     FVertices: Array of TCurvePoint;
 
+    function GetNumvertices: Integer;
     function GetVertex(Index: Integer): TCurvePoint;
+    function GetPolygonPoints: ArrayOfTPointF;
+    function GetRect: TRect;
 
+    procedure SetNumVertices(const Value: Integer);
     procedure SetVertex(Index: Integer; const Value: TCurvePoint);
 protected
     { Protected declarations }
@@ -112,7 +117,13 @@ protected
 
     function Contains(p: TCurvePoint): Boolean;
 
+    function ImportFromXML(Item: TDOMNode): Boolean;
+    function ExportToXML(Doc: TXMLDocument): TDOMNode;
+
+    property NumVertices: Integer read GetNumvertices write SetNumVertices;
     property Vertex[Index: Integer]: TCurvePoint read GetVertex write SetVertex;
+    property PolygonPoints: ArrayOfTPointF read GetPolygonPoints;
+    property Rect: TRect read GetRect;
   end;
 
 const
@@ -658,41 +669,99 @@ end;
 //===============================| TScale |===============================//
 
 
-//==============================| TPlotBox |==============================//
+//==============================| TPlotPoly |==============================//
 
-constructor TPlotBox.Create(NumVert: Integer = 4);
+constructor TPlotPoly.Create(NumVert: Integer = 4);
 begin
   inherited Create;
 
-  FNumVertices := NumVert;
-  SetLength(FVertices, FNumVertices);
+  NumVertices := NumVert;
 
   Reset;
 end;
 
-destructor TPlotBox.Destroy;
+destructor TPlotPoly.Destroy;
 begin
   SetLength(FVertices, 0);
 
   inherited Destroy;
 end;
 
-procedure TPlotBox.Reset;
+procedure TPlotPoly.Reset;
 var
   i: Integer;
 begin
-  for i := 0 to FNumVertices - 1 do
+  for i := 0 to NumVertices - 1 do
     Vertex[i] := GetCurvePoint(-1, -1);
 end;
 
-function TPlotBox.Contains(p: TCurvePoint): Boolean;
+function TPlotPoly.GetNumVertices: Integer;
+begin
+  Result :=  Length(FVertices);
+end;
+
+function TPlotPoly.GetVertex(Index: Integer): TCurvePoint;
+begin
+  if (Index >= 0) and (Index < NumVertices) then
+    Result := FVertices[Index]
+  else
+    Result :=  GetCurvePoint(-1, -1);
+end;
+
+function TPlotPoly.GetPolygonPoints: ArrayOfTPointF;
+var i: Integer;
+begin
+  Setlength(Result, NumVertices);
+  for i := 0 to High(Result) do
+  begin
+    Result[i].X := FVertices[i].X;
+    Result[i].Y := FVertices[i].Y;
+  end;
+end;
+
+function TPlotPoly.GetRect: TRect;
+var
+  i, Xo, Yo, Xf, Yf: Integer;
+begin
+  Result := TRect.Create(0, 0, 0, 0);
+
+  if (NumVertices > 0) then
+  begin
+    Xo := Round(FVertices[0].X);
+    Yo := Round(FVertices[0].Y);
+    Xf := Round(FVertices[0].X);
+    Yf := Round(FVertices[0].Y);
+    for i := 1 to NumVertices -1 do
+    begin
+      if (FVertices[i].X < Xo) then Xo := Round(FVertices[i].X);
+      if (FVertices[i].Y < Yo) then Yo := Round(FVertices[i].Y);
+      if (FVertices[i].X > Xf) then Xf := Round(FVertices[i].X);
+      if (FVertices[i].Y > Yf) then Yf := Round(FVertices[i].Y);
+    end;
+
+    Result := TRect.Create(Xo, Yo, Xf, Yf);
+  end;
+end;
+
+procedure TPlotPoly.SetNumVertices(const Value: Integer);
+begin
+  SetLength(FVertices, Value);
+end;
+
+procedure TPlotPoly.SetVertex(Index: Integer; const Value: TCurvePoint);
+begin
+  if (Index >= 0) and (Index < NumVertices) then
+    FVertices[Index] := Value;
+end;
+
+function TPlotPoly.Contains(p: TCurvePoint): Boolean;
 var
   i, j: Integer;
 begin
   Result := False;
 
-  j := FNumVertices - 1;
-  for i := 0 to FNumVertices - 1 do
+  j := NumVertices - 1;
+  for i := 0 to NumVertices - 1 do
   begin
     // The point lies in an horizontal edge
     if  (Vertex[i].Y = p.Y) and (Vertex[j].Y = p.Y) and
@@ -721,21 +790,80 @@ begin
   end;
 end;
 
-function TPlotBox.GetVertex(Index: Integer): TCurvePoint;
+function TPlotPoly.ImportFromXML(Item: TDOMNode): Boolean;
+var
+  i, j: Integer;
+  X, Y: Double;
+  Child: TDOMNode;
 begin
-  if (Index >= 0) and (Index < FNumVertices) then
-    Result := FVertices[Index]
-  else
-    Result :=  GetCurvePoint(-1, -1);
+  Result := False;
+  try
+    with Item.Attributes do
+    begin
+      for i := 0 to Length - 1 do
+      begin
+        if (Item[i].CompareName('NumVertices') = 0) then
+          NumVertices := StrToInt(UTF8Encode(Item[i].NodeValue));
+      end;
+    end;
+    Child := Item.FirstChild;
+    while Assigned(Child) do
+    begin
+      for i := 1 to NumVertices do
+      begin
+        // Vertex points
+        if (Child.CompareName(UTF8Decode('VertexPoint' + IntToStr(i))) = 0) then
+        begin
+          X := 0.0;
+          Y := 0.0;
+          for j := 0 to Child.Attributes.Length - 1 do
+          begin
+            if (Child.Attributes.Item[j].CompareName('X') = 0) then
+              X := StrToFloat(UTF8Encode(Child.Attributes.Item[j].NodeValue));
+            if (Child.Attributes.Item[j].CompareName('Y') = 0) then
+              Y := StrToFloat(UTF8Encode(Child.Attributes.Item[j].NodeValue));
+          end;
+
+          Vertex[i - 1] := GetCurvePoint(X, Y);
+        end;
+      end;
+
+      // Go for the next vertex point
+      Child := Child.NextSibling;
+    end;
+
+    Result := True;
+  except
+    // Do nothing, just catch the error
+  end;
 end;
 
-procedure TPlotBox.SetVertex(Index: Integer; const Value: TCurvePoint);
+function TPlotPoly.ExportToXML(Doc: TXMLDocument): TDOMNode;
+var
+  i: Integer;
+  VertexNode: TDOMNode;
 begin
-  if (Index >= 0) and (Index < FNumVertices) then
-    FVertices[Index] := Value;
+  try
+    // Create scale node
+    Result := Doc.CreateElement('PlotBox');
+    with TDOMElement(Result) do
+    begin
+      SetAttribute('NumVertices', UTF8Decode(IntToStr(NumVertices)));
+    end;
+    // Vertex points
+    for i := 1 to NumVertices do
+    begin
+      VertexNode := Doc.CreateElement(UTF8Decode('VertexPoint' + IntToStr(i)));
+      TDOMElement(VertexNode).SetAttribute('X', UTF8Decode(FloatToStr(Vertex[i - 1].X)));
+      TDOMElement(VertexNode).SetAttribute('Y', UTF8Decode(FloatToStr(Vertex[i - 1].Y)));
+      Result.Appendchild(VertexNode);
+    end;
+  except
+    Result := nil;
+  end;
 end;
 
-//==============================| TPlotBox |==============================//
+//==============================| TPlotPoly |==============================//
 
 function GetCurvePoint(X, Y: Double): TCurvePoint;
 begin

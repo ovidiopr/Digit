@@ -7,7 +7,7 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, tachartlazaruspkg,
+  Forms, tachartlazaruspkg, lazcontrols,
   coordinates in 'coordinates.pas',
   Main in 'Main.pas' {DigitMainForm},
   About in 'About.pas' {AboutBox},
