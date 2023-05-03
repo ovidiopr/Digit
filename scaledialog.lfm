@@ -73,15 +73,15 @@ object ScaleDlg: TScaleDlg
     Height = 319
     Top = 0
     Width = 298
-    ActivePage = tsBasis
+    ActivePage = tsCoordinates
     Align = alClient
     Font.Height = -11
     ParentFont = False
-    TabIndex = 1
+    TabIndex = 0
     TabOrder = 1
     object tsCoordinates: TTabSheet
       Caption = 'Coordinates'
-      ClientHeight = 297
+      ClientHeight = 289
       ClientWidth = 292
       ParentFont = False
       object lblType: TLabel
@@ -347,7 +347,7 @@ object ScaleDlg: TScaleDlg
     end
     object tsBasis: TTabSheet
       Caption = 'Basis'
-      ClientHeight = 297
+      ClientHeight = 289
       ClientWidth = 292
       ParentFont = False
       object lblP1: TLabel

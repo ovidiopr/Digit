@@ -6,13 +6,10 @@ interface
 
 uses {$ifdef windows}Windows,{$endif} Forms, Classes, Controls, Graphics,
      ExtDlgs, Fgl, ComCtrls, SysUtils, DOM, XMLWrite, XMLRead, math, curves,
-     coordinates, Dialogs, Types, Base64,
-     BGRABitmap, BGRABitmapTypes;
+     coordinates, Dialogs, Types, Base64, BGRABitmap, BGRABitmapTypes;
 
 type
   TPlotImageState = (piSetCurve, piSetScale, piSetPlotBox, piSetGrid);
-
-  TSelectRegionEvent = procedure(Sender: TObject; RegionRect: TRect) of Object;
 
   TMarker = class
   protected
@@ -28,7 +25,7 @@ type
     destructor Destroy; override;
 
     function HitTest(Point: TPoint): Boolean;
-    procedure Draw(Canvas: TCanvas; Rectangle: TRect);
+    procedure Draw(img: TBGRABitmap; Rectangle: TRect);
     procedure Move(Point: TPoint);
     procedure Shift(Delta: TPoint);
 
@@ -40,11 +37,18 @@ type
 
   TMarkerList = specialize TFPGObjectList<TMarker>;
 
+  TSelectRegionEvent = procedure(Sender: TObject; RegionRect: TRect) of Object;
+  TStateChangeEvent = procedure(Sender: TObject; NewState: TPlotImageState) of Object;
+  TMarkerDraggedEvent = procedure(Sender: TObject; Marker: TMarker) of Object;
+
   TPlotImage = class(TCustomControl)
   protected type
     TCurveList = specialize TFPGObjectList<TDigitCurve>;
   protected
     FOldCursor: TCursor;
+
+    InMouseMove: boolean;
+    MouseMovePos: TPoint;
 
     FState: TPlotImageState;
 
@@ -74,12 +78,14 @@ type
 
     FImageIsLoaded: Boolean;
     FValidGrid: Boolean;
-    FSubstractGrid: Boolean;
+    FSubtractGrid: Boolean;
 
     FIsChanged: Boolean;
     FOnChange: TNotifyEvent;
 
     FOnRegionSelected: TSelectRegionEvent;
+    FOnStateChanged: TStateChangeEvent;
+    FOnMarkerDragged: TMarkerDraggedEvent;
 
     procedure Paint; override;
     procedure Resize; override;
@@ -129,7 +135,7 @@ type
 
     procedure SetCurveIndex(Value: Integer);
     procedure SetIsChanged(Value: Boolean);
-    procedure SetSubstractGrid(Value: Boolean);
+    procedure SetSubtractGrid(Value: Boolean);
 
     procedure ClearMarkers;
     procedure UpdateMarkersInCurve;
@@ -200,8 +206,12 @@ type
     procedure MoveCurveLeft;
     procedure MoveCurveRight;
 
+    procedure ClearMarker(Marker: TMarker);
+    procedure DrawMarker(Marker: TMarker);
     procedure MoveMarker(Marker: TMarker; Point: TPoint); overload;
     procedure MoveMarker(Marker: TMarker; X, Y: Double); overload;
+
+    function GetZoomImage(w, h: Integer; Region: TRect): TBitmap;
 
     function SaveToXML(FileName: TFileName): Boolean;
     function LoadFromXML(FileName: TFileName; PictureDlg: TOpenPictureDialog = nil): Boolean;
@@ -243,7 +253,7 @@ type
     property PlotCurve: TCurve read GetPlotCurve;
     property ImageIsLoaded: Boolean read FImageIsLoaded write FImageIsLoaded;
     property ValidGrid: Boolean read FValidGrid write FValidGrid;
-    property SubstractGrid: Boolean read FSubstractGrid write SetSubstractGrid;
+    property SubtractGrid: Boolean read FSubtractGrid write SetSubtractGrid;
 
     property Scale: TScale read FScale;
     property PlotBox: TPlotPoly read FPlotBox;
@@ -255,6 +265,8 @@ type
   published
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnRegionSelected: TSelectRegionEvent read FOnRegionSelected write FOnRegionSelected;
+    property OnStateChanged: TStateChangeEvent read FOnStateChanged write FOnStateChanged;
+    property OnMarkerDragged: TMarkerDraggedEvent read FOnMarkerDragged write FOnMarkerDragged;
   end;
 
 function CreateMarker(Size: TPoint; Symbol: Char; Color: TColor; LineWith: Integer = 3): TBGRABitmap;
@@ -280,15 +292,10 @@ end;
 //==============================|Bitmaps|=====================================//
 function CreateMarker(Size: TPoint; Symbol: Char; Color: TColor; LineWith: Integer = 3): TBGRABitmap;
 begin
-  // Make sure that the marker is not transparent
-  if (color = clBlack) then
-    color := RGBToColor(1, 1, 1);
-
-  Result := TBGRABitmap.Create(Size.X, Size.Y, clBlack);
+  Result := TBGRABitmap.Create(Size.X, Size.Y, BGRAPixelTransparent);
 
   with Result do
   begin
-    FillTransparent;
     case Symbol of
       'x', 'X': begin
         DrawLineAntialias(0, 0, Width - 1, Height - 1, Color, LineWith);
@@ -306,6 +313,12 @@ begin
         DrawLineAntialias(0, Height div 2, Width - 1, Height div 2, Color, 1);
         DrawLineAntialias(Width div 2, 0, Width div 2, Height - 1, Color, 1);
       end;
+      '1': begin
+        RectangleAntialias(1, 1, Width - 2, Height - 2, Color, LineWith);
+
+        DrawLineAntialias(0, Height div 2, Width - 1, Height div 2, Color, 1);
+        DrawLineAntialias(Width div 2, 0, Width div 2, Height - 1, Color, 1);
+      end;
       'c', 'C': begin
         EllipseAntialias(Width div 2, Height div 2,
                          (Width - LineWith) div 2, (Height - LineWith) div 2,
@@ -317,7 +330,8 @@ begin
                          Color, LineWith);
       end;
       'r', 'R': begin
-        RectangleAntialias(1, 1, Width - 2, Height - 2, clWhite - Color, LineWith, Color);
+        RectangleAntialias(1, 1, Width - 2, Height - 2, clWhite - Color,
+                           LineWith, Color);
       end;
       'q', 'Q': begin
         RectangleAntialias(1, 1, Width - 2, Height - 2, Color, LineWith);
@@ -345,10 +359,10 @@ begin
   inherited Destroy;
 end;
 
-procedure TMarker.Draw(Canvas: TCanvas; Rectangle: TRect);
+procedure TMarker.Draw(img: TBGRABitmap; Rectangle: TRect);
 begin
   if not (Rectangle*Rect).IsEmpty then
-    Canvas.Draw(Rect.Left, Rect.Top, Bitmap.Bitmap);
+    img.PutImage(Rect.Left, Rect.Top, Bitmap, dmDrawWithTransparency);
 end;
 
 procedure TMarker.Move(Point: TPoint);
@@ -436,6 +450,8 @@ begin
   FPlotBox.Reset;
 
   FMarkers.Clear;
+  ActiveMarker := nil;
+  MarkerUnderCursor := nil;
   for i := 1 to 3 do
     FAxesMarkers[i] := nil;
   for i := 1 to 4 do
@@ -445,7 +461,9 @@ begin
 
   FImageIsLoaded := False;
   FValidGrid := False;
-  FSubstractGrid := False;
+  FSubtractGrid := False;
+
+  InMouseMove := false;
 
   FIsChanged := False;
 end;
@@ -557,7 +575,7 @@ begin
   PixelStep := DigitCurve.Step;
   Interval := DigitCurve.Interval;
 
-  if assigned(ProgressBar) then
+  if Assigned(ProgressBar) then
   begin
     ProgressBar.Visible := True;
     ProgressBar.Position := 0;
@@ -625,7 +643,7 @@ begin
       Curve.AddPoint(Pi);
     end;
 
-    if assigned(ProgressBar) then
+    if Assigned(ProgressBar) then
     begin
       case ML.Count of
         0..2: begin
@@ -648,7 +666,7 @@ begin
         ((Scale.CoordSystem = csPolar) and (Abs(Delta) > 360)) or
         ((ML.Count > 2) and (i >= ML.Count - 1));
 
-  if assigned(ProgressBar) then
+  if Assigned(ProgressBar) then
     ProgressBar.Visible := False;
 
   SortCurve;
@@ -661,7 +679,7 @@ var
   Pi : TCurvePoint;
 begin
   // Estimate the first point
-  if (Markers.Count > 3) then
+  if (Markers.Count > 0) then
   begin
     if (DigitCurve.Step > 0) then
       Pi := LeftMarker.Position
@@ -736,7 +754,7 @@ begin
       NewPoints := TPointList.Create;
       NewPoints.Clear;
 
-      if assigned(ProgressBar) then
+      if Assigned(ProgressBar) then
       begin
         ProgressBar.Visible := True;
         ProgressBar.Position := 0;
@@ -746,7 +764,7 @@ begin
       Island.Clear;
       for i := 0 to Curve.Count - 1 do
       begin
-        if assigned(ProgressBar) then
+        if Assigned(ProgressBar) then
         begin
           ProgressBar.Position := Round(100*(i + 1)/Curve.Count);
           Application.ProcessMessages;
@@ -768,7 +786,7 @@ begin
       for i := 0 to NewPoints.Count - 1 do
         Curve.AddPoint(NewPoints[i]);
 
-      if assigned(ProgressBar) then
+      if Assigned(ProgressBar) then
         ProgressBar.Visible := False;
     finally
       NewPoints.Free;
@@ -793,7 +811,7 @@ begin
       NewPoints := TPointList.Create;
       NewPoints.Clear;
 
-      if assigned(ProgressBar) then
+      if Assigned(ProgressBar) then
       begin
         ProgressBar.Visible := True;
         ProgressBar.Position := 0;
@@ -803,7 +821,7 @@ begin
       Island.Clear;
       for i := 0 to Curve.Count - 1 do
       begin
-        if assigned(ProgressBar) then
+        if Assigned(ProgressBar) then
         begin
           ProgressBar.Position := Round(100*(i + 1)/Curve.Count);
           Application.ProcessMessages;
@@ -824,7 +842,7 @@ begin
       for i := 0 to NewPoints.Count - 1 do
         Curve.AddPoint(NewPoints[i]);
 
-      if assigned(ProgressBar) then
+      if Assigned(ProgressBar) then
         ProgressBar.Visible := False;
     finally
       NewPoints.Free;
@@ -839,7 +857,7 @@ function TPlotImage.GetPixel(X, Y: Integer): LongInt;
 var
   c: TBGRAPixel;
 begin
-    if ValidGrid and SubstractGrid then
+    if ValidGrid and SubtractGrid then
       c := GridMask.GetPixel(X, Y)
     else
       c := BGRAPixelTransparent;
@@ -872,7 +890,7 @@ end;
 
 function TPlotImage.GetAxesMarkers(Index: Integer): TMarker;
 begin
-  if (Index >= 1) and (Index <= 3) and assigned(FAxesMarkers[Index]) then
+  if (Index >= 1) and (Index <= 3) and Assigned(FAxesMarkers[Index]) then
     Result := FAxesMarkers[Index]
   else
     Result := nil;
@@ -880,7 +898,7 @@ end;
 
 function TPlotImage.GetBoxMarkers(Index: Integer): TMarker;
 begin
-  if (Index >= 1) and (Index <= 4) and assigned(FBoxMarkers[Index]) then
+  if (Index >= 1) and (Index <= 4) and Assigned(FBoxMarkers[Index]) then
     Result := FBoxMarkers[Index]
   else
     Result := nil;
@@ -890,7 +908,7 @@ procedure TPlotImage.SetAxesPoint(Index: Integer; const Value: TCurvePoint);
 begin
   if (Index >= 1) and (Index <= 3) and (Scale.ImagePoint[Index] <> Value) then
   begin
-    if assigned(FAxesMarkers[Index]) then
+    if Assigned(FAxesMarkers[Index]) then
       FAxesMarkers[Index].Position := Value;
 
     Scale.ImagePoint[Index] := Value;
@@ -903,7 +921,7 @@ procedure TPlotImage.SetBoxVertex(Index: Integer; const Value: TCurvePoint);
 begin
   if (Index >= 1) and (Index <= 4) and (PlotBox.Vertex[Index - 1] <> Value) then
   begin
-    if assigned(FBoxMarkers[Index]) then
+    if Assigned(FBoxMarkers[Index]) then
       FBoxMarkers[Index].Position := Value;
 
     PlotBox.Vertex[Index - 1] := Value;
@@ -920,8 +938,9 @@ begin
   Result := nil;
   if (State = piSetCurve) then
   begin
-    X := WhiteBoard.Width;
-    for i := 0 to Markers.Count - 1 do
+    X := Markers[0].Position.X;
+    Result := Markers[0];
+    for i := 1 to Markers.Count - 1 do
       if (X > Markers[i].Position.X) then
       begin
         X := Markers[i].Position.X;
@@ -938,8 +957,9 @@ begin
   Result := nil;
   if (State = piSetCurve) then
   begin
-    X := 0;
-    for i := 0 to Markers.Count - 1 do
+    X := Markers[0].Position.X;
+    Result := Markers[0];
+    for i := 1 to Markers.Count - 1 do
       if (X < Markers[i].Position.X) then
       begin
         X := Markers[i].Position.X;
@@ -956,8 +976,9 @@ begin
   Result := nil;
   if (State = piSetCurve) then
   begin
-    Y := WhiteBoard.Height;
-    for i := 0 to Markers.Count - 1 do
+    Y := Markers[0].Position.Y;
+    Result := Markers[0];
+    for i := 1 to Markers.Count - 1 do
       if (Y > Markers[i].Position.Y) then
       begin
         Y := Markers[i].Position.Y;
@@ -974,8 +995,9 @@ begin
   Result := nil;
   if (State = piSetCurve) then
   begin
-    Y := 0;
-    for i := 0 to Markers.Count - 1 do
+    Y := Markers[0].Position.Y;
+    Result := Markers[0];
+    for i := 1 to Markers.Count - 1 do
       if (Y < Markers[i].Position.Y) then
       begin
         Y := Markers[i].Position.Y;
@@ -1059,7 +1081,7 @@ procedure TPlotImage.DeleteMarker(Marker: TMarker; RealDelete: Boolean = True);
 var
   i: Integer;
 begin
-  if assigned(Marker) then
+  if Assigned(Marker) then
   begin
     if (FClickedMarker = Marker) then
     begin
@@ -1083,7 +1105,7 @@ begin
 
     Markers.Remove(Marker);
 
-    if (not assigned(ActiveMarker)) and (Markers.Count > 0) then
+    if (not Assigned(ActiveMarker)) and (Markers.Count > 0) then
       ActiveMarker := Markers[0];
 
     if RealDelete then
@@ -1111,7 +1133,7 @@ procedure TPlotImage.ShiftActiveMarker(Delta: TPoint);
 var
   i: Integer;
 begin
-  if assigned(ActiveMarker) then
+  if Assigned(ActiveMarker) then
   begin
     UpdateMarker(ActiveMarker);
     ActiveMarker.Shift(Delta);
@@ -1148,9 +1170,11 @@ var
   {$endif}
 begin
   inherited Paint;
-  Rect := TRect.Create(TPoint.Create(0, 0), WhiteBoard.Width, WhiteBoard.Height);
+
+  Rect := TRect.Create(TPoint.Create(0, 0), Width, Height);
   ClipRect := Canvas.ClipRect;
   PaintRect := Rect*ClipRect;
+
   with WhiteBoard.Canvas do
   begin
     {$ifdef windows}
@@ -1160,7 +1184,7 @@ begin
     CopyMode:= cmSrcCopy;
     CopyRect(PaintRect, PlotImg.Bitmap.Canvas, PaintRect);
 
-    if SubstractGrid then
+    if SubtractGrid then
       CopyRect(PaintRect, GridMask.Canvas, PaintRect);
   end;
 
@@ -1176,7 +1200,7 @@ begin
   end;
 
   for i := Markers.Count - 1 downto 0 do
-    Markers[i].Draw(WhiteBoard.Canvas, PaintRect);
+    Markers[i].Draw(WhiteBoard, PaintRect);
 
   if Assigned(ActiveMarker) and
      not (ActiveMarker.Rect*PaintRect).IsEmpty then
@@ -1193,8 +1217,7 @@ begin
       DrawFocusRect(MarkerUnderCursor.Rect);
   end;
 
-  if SelectingRegion and
-     not (SelectionRect*PaintRect).IsEmpty then
+  if SelectingRegion then
     WhiteBoard.Canvas.DrawFocusRect(SelectionRect);
 
   {$ifdef windows}
@@ -1204,14 +1227,16 @@ begin
     DeleteObject(ClipRgn);
   end;
   {$endif}
+  //WhiteBoard.Draw(Canvas, PaintRect, True);
   Canvas.CopyRect(PaintRect, WhiteBoard.Canvas, PaintRect);
+
   if not PaintRect.Contains(ClipRect) then
   begin
     Rect := ClientRect;
     Rect.Left := WhiteBoard.Width;
     Rect.Intersect(ClipRect);
     Canvas.CopyRect(Rect, PlotImg.Canvas, Rect);
-    if SubstractGrid then
+    if SubtractGrid then
       Canvas.CopyRect(Rect, GridMask.Canvas, Rect);
 
     Rect := ClientRect;
@@ -1219,7 +1244,7 @@ begin
     Rect.Width := WhiteBoard.Width;
     Rect.Intersect(ClipRect);
     Canvas.CopyRect(Rect, PlotImg.Canvas, Rect);
-    if SubstractGrid then
+    if SubtractGrid then
       Canvas.CopyRect(Rect, GridMask.Canvas, Rect);
   end;
 end;
@@ -1268,12 +1293,21 @@ var
   Marker, HitMarker: TMarker;
   TmpRect: TRect;
 begin
-  inherited MouseMove(Shift, X, Y);
+  MouseMovePos := TPoint.Create(X, Y);
+
+  // Make sure that there are no previous events in the stack
+  if InMouseMove then Exit;
+  InMouseMove := True;
+  // Empty message stack
+  Application.ProcessMessages;
+
+  inherited MouseMove(Shift, MouseMovePos.X, MouseMovePos.Y);
 
   if Assigned(FClickedMarker) then
   begin
     if not Dragging then
-      if (Abs(X - FClickedPoint.X) > 5) or (Abs(Y - FClickedPoint.Y) > 5) then
+      if (Abs(MouseMovePos.X - FClickedPoint.X) > 5) or
+         (Abs(MouseMovePos.Y - FClickedPoint.Y) > 5) then
         Dragging := True;
 
     if Dragging then
@@ -1282,15 +1316,15 @@ begin
       if (State = piSetPlotBox) then
         UpdateRegion(PlotBox.Rect);
 
-      if ClientRect.Contains(TPoint.Create(X, Y)) then
+      if ClientRect.Contains(MouseMovePos) then
       begin
-        FClickedMarker.Move(FClickedCoord + TPoint.Create(X, Y) - FClickedPoint);
+        FClickedMarker.Move(FClickedCoord + MouseMovePos - FClickedPoint);
 
         if (State = piSetPlotBox) then
         begin
           for i := 1 to PlotBox.NumVertices do
             if (FClickedMarker = BoxMarkers[i]) then
-              PlotBox.Vertex[i - 1] := FClickedCoord + TPoint.Create(X, Y) - FClickedPoint;
+              PlotBox.Vertex[i - 1] := FClickedCoord + MouseMovePos - FClickedPoint;
         end;
       end
       else //The mouse moves out of the image
@@ -1310,6 +1344,8 @@ begin
         UpdateRegion(PlotBox.Rect);
       MarkerUnderCursor := FClickedMarker;
 
+      InMouseMove := False;
+
       Exit;
     end;
   end
@@ -1318,12 +1354,14 @@ begin
     if SelectingRegion and (State = piSetCurve) then
     begin
       TmpRect := FSelectionRect;
-      FSelectionRect.Width := X - FSelectionRect.Left;
-      FSelectionRect.Height := Y - FSelectionRect.Top;
+      FSelectionRect.Width := MouseMovePos.X - FSelectionRect.Left;
+      FSelectionRect.Height := MouseMovePos.Y - FSelectionRect.Top;
 
       //Refresh the rectangle containing the old and new selection
       UnionRect(TmpRect, TmpRect, FSelectionRect);
       UpdateRegion(TmpRect);
+
+      InMouseMove := False;
 
       Exit;
     end;
@@ -1333,10 +1371,12 @@ begin
   for i := 0 to Markers.Count - 1 do
   begin
     Marker := Markers[i];
-    if Marker.HitTest(TPoint.Create(X, Y)) then
+    if Marker.HitTest(MouseMovePos) then
       HitMarker := Marker;
   end;
   MarkerUnderCursor := HitMarker;
+
+  InMouseMove := False;
 end;
 
 procedure TPlotImage.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -1353,7 +1393,7 @@ begin
         FSelectionRect.Height := Y - FSelectionRect.Top;
 
         // Notify the parent that the user has selected a region
-        if assigned(OnRegionSelected) then
+        if Assigned(OnRegionSelected) then
           OnRegionSelected(Self, FSelectionRect);
 
         SelectingRegion := False;
@@ -1363,6 +1403,7 @@ begin
 
     inherited MouseUp(Button, Shift, X, Y);
   end;
+
   if Button = mbLeft then
   begin
     if Dragging then
@@ -1380,6 +1421,10 @@ begin
       end;
 
       Dragging := False;
+
+      // Notify the parent that the marker has been dragged
+      if Assigned(OnMarkerDragged) then
+        OnMarkerDragged(Self, FClickedMarker);
 
       IsChanged := True;
     end
@@ -1511,6 +1556,10 @@ procedure TPlotImage.SetState(Value: TPlotImageState);
 begin
   FState := Value;
   UpdateMarkersInImage;
+
+  // Notify the parent that the state has changed
+  if assigned(OnStateChanged) then
+    OnStateChanged(Self, Value);
 end;
 
 procedure TPlotImage.SetCurveIndex(Value: Integer);
@@ -1541,11 +1590,11 @@ begin
     FOnChange(Self);
 end;
 
-procedure TPlotImage.SetSubstractGrid(Value: Boolean);
+procedure TPlotImage.SetSubtractGrid(Value: Boolean);
 begin
-  if FSubstractGrid <> Value then
+  if FSubtractGrid <> Value then
   begin
-    FSubstractGrid := Value;
+    FSubtractGrid := Value;
     IsChanged := True;
   end;
 end;
@@ -1593,13 +1642,13 @@ begin
       AddMarker(AxesMarkers[3], False);
     end;
     piSetPlotBox: begin
-      FBoxMarkers[1] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'c', clWhite, 2),
+      FBoxMarkers[1] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'1', clBlack, 3),
                                        PlotBox.Vertex[0], True);
-      FBoxMarkers[2] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'c', clWhite, 2),
+      FBoxMarkers[2] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'1', clBlack, 3),
                                        PlotBox.Vertex[1], True);
-      FBoxMarkers[3] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'c', clWhite, 2),
+      FBoxMarkers[3] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'1', clBlack, 3),
                                        PlotBox.Vertex[2], True);
-      FBoxMarkers[4] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'c', clWhite, 2),
+      FBoxMarkers[4] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'1', clBlack, 3),
                                        PlotBox.Vertex[3], True);
 
       AddMarker(BoxMarkers[1], False);
@@ -1619,6 +1668,7 @@ end;
 
 procedure TPlotImage.UpdateRegion(UpdateArea: TRect);
 begin
+  Canvas.ClipRect := UpdateArea;
   {$ifdef windows}
   InvalidateRect(Handle, UpdateArea, False);
   {$else}
@@ -1662,7 +1712,7 @@ begin
   end
   else
   begin
-    WhiteBoard.Bitmap.FreeImage;
+    Visible := False;
     Width := 0;
     Height := 0;
   end;
@@ -1677,21 +1727,9 @@ begin
     PlotImg.LoadFromStream(Stream);
     PlotImg.ReplaceTransparent(clWhite);
 
-    with WhiteBoard do
-    begin
-      // This is required for the case when the new bitmap has the same size
-      // than the old one. Is this a bug?
-      SetSize(0, 0);
-      SetSize(PlotImg.Width, PlotImg.Height);
-      // Clean the Canvas (in case there was loaded a previous image)
-      Canvas.Pen.Color := clWhite;
-      Canvas.Brush.Color := clWhite;
-      Canvas.Rectangle(0, 0, Width, Height);
-      //Now draw the image
-      PlotImg.Draw(Canvas, 0, 0, False);
-    end;
+    WhiteBoard.SetSize(PlotImg.Width, PlotImg.Height);
+    WhiteBoard.PutImage(0, 0, PlotImg, dmSet);
 
-    GridMask.SetSize(0, 0);
     GridMask.SetSize(PlotImg.Width, PlotImg.Height);
     GridMask.FillTransparent;
 
@@ -1700,7 +1738,7 @@ begin
 
     FImageIsLoaded := True;
     FValidGrid := False;
-    FSubstractGrid := False;
+    FSubtractGrid := False;
 
     FMarkers.Clear;
     Invalidate;
@@ -2102,7 +2140,7 @@ begin
 
       // Reset the status of the mask
       FValidGrid := False;
-      FSubstractGrid := False;
+      FSubtractGrid := False;
 
       // Now, draw the lines
       for i := Low(accumulator) to High(accumulator) do
@@ -2148,7 +2186,7 @@ begin
       end;
     finally
       ValidGrid := True;
-      SubstractGrid := True;
+      SubtractGrid := True;
 
       IsChanged := True;
     end;
@@ -2216,13 +2254,39 @@ begin
   IsChanged := True;
 end;
 
+procedure TPlotImage.ClearMarker(Marker: TMarker);
+var
+  i: Integer;
+begin
+  if (Markers.IndexOf(Marker) > -1) then
+  begin
+    with WhiteBoard.CanvasBGRA do
+    begin
+      CopyRect(Marker.Rect, PlotImg, Marker.Rect);
+
+      if SubtractGrid then
+        CopyRect(Marker.Rect, GridMask, Marker.Rect);
+    end;
+
+    for i := Markers.Count - 1 downto 0 do
+      if (Markers[i] <> Marker) and not (Markers[i].Rect*Marker.Rect).IsEmpty then
+        Markers[i].Draw(WhiteBoard, Marker.Rect);
+  end;
+end;
+
+procedure TPlotImage.DrawMarker(Marker: TMarker);
+begin
+  if (Markers.IndexOf(Marker) > -1) then
+    Marker.Draw(WhiteBoard, Marker.Rect);
+end;
+
 procedure TPlotImage.MoveMarker(Marker: TMarker; Point: TPoint);
 begin
-  if (FMarkers.IndexOf(Marker) > -1) then
+  if (Markers.IndexOf(Marker) > -1) then
   begin
-    UpdateMarker(Marker);
+    ClearMarker(Marker);
     Marker.Move(Point);
-    UpdateMarker(Marker);
+    DrawMarker(Marker);
 
     IsChanged := True;
   end;
@@ -2231,6 +2295,26 @@ end;
 procedure TPlotImage.MoveMarker(Marker: TMarker; X, Y: Double);
 begin
   MoveMarker(Marker,TPoint.Create(Round(X), Round(Y)));
+end;
+
+function TPlotImage.GetZoomImage(w, h: Integer; Region: TRect): TBitmap;
+var
+  ZoomImg: TBGRABitmap;
+begin
+  try
+    Result := TBitmap.Create;
+    Result.SetSize(w, h);
+    Result.PixelFormat := pf24bit;
+
+    ZoomImg := TBGRABitmap.Create(Region.Width, Region.Height, clWhite);
+    ZoomImg.CanvasBGRA.CopyRect(TRect.Create(0, 0, Region.Width, Region.Height),
+                                WhiteBoard, Region);
+
+    BGRAReplace(ZoomImg, ZoomImg.Resample(w, h, rmSimpleStretch));
+    ZoomImg.Draw(Result.Canvas, 0, 0, True);
+  finally
+    ZoomImg.Free;
+  end;
 end;
 
 function TPlotImage.SaveToXML(FileName: TFileName): Boolean;
@@ -2264,13 +2348,19 @@ begin
     RootNode:= XMLDoc.DocumentElement;
     DigitNode := XMLDoc.CreateElement('document');
     // Create atributes to document node
-    TDOMElement(DigitNode).SetAttribute('ImageIsLoaded', UTF8Decode(BoolToStr(ImageIsLoaded, True)));
+    with TDOMElement(DigitNode) do
+    begin
+      SetAttribute('ImageIsLoaded', UTF8Decode(BoolToStr(ImageIsLoaded, True)));
+    end;
 
     if ImageIsLoaded then
     begin
       ImageNode := XMLDoc.CreateElement('image');
-      TDOMElement(ImageNode).SetAttribute('Width', UTF8Decode(IntToStr(Width)));
-      TDOMElement(ImageNode).SetAttribute('Height', UTF8Decode(IntToStr(Height)));
+      with TDOMElement(ImageNode) do
+      begin
+        SetAttribute('Width', UTF8Decode(IntToStr(Width)));
+        SetAttribute('Height', UTF8Decode(IntToStr(Height)));
+      end;
 
       PathNode := XMLDoc.CreateElement('path');
       PathNode.Appendchild(XMLDoc.CreateTextNode(UTF8Decode(ExtractFilePath(ImageName))));
@@ -2304,6 +2394,36 @@ begin
 
     // Add PlotBox node
     DigitNode.AppendChild(PlotBox.ExportToXML(XMLDoc));
+
+    // Add Grid node
+    if ValidGrid then
+    begin
+      ImageNode := XMLDoc.CreateElement('grid');
+      with TDOMElement(ImageNode) do
+      begin
+        SetAttribute('Width', UTF8Decode(IntToStr(GridMask.Width)));
+        SetAttribute('Height', UTF8Decode(IntToStr(GridMask.Height)));
+        SetAttribute('Subtract', UTF8Decode(BoolToStr(SubtractGrid, True)));
+      end;
+
+      DataNode := XMLDoc.CreateElement('data');
+      // Now encode the grid image and save it to the XML file
+      Stream.Clear;
+      Stream.Position := 0;
+
+      GridMask.SaveToStreamAsPng(Stream);
+
+      // Extract Image contents as a common string
+      SetString(Buffer, Stream.Memory, Stream.Size);
+      // Encode the image contents in a Base64 string
+      EncBuffer := EncodeStringBase64(Buffer);
+      // Store the image on a CData-section node
+      CDataNode := XMLDoc.CreateCDATASection(UTF8Decode(EncBuffer));
+      DataNode.AppendChild(CDataNode);
+      ImageNode.AppendChild(DataNode);
+
+      DigitNode.Appendchild(ImageNode);
+    end;
 
     // Save document node
     RootNode.Appendchild(DigitNode);
@@ -2368,10 +2488,13 @@ begin
       if (Child.CompareName('document') = 0) then
       begin
         ImageLoaded := False;
-        for i := 0 to Child.Attributes.Length - 1 do
+        with Child.Attributes do
         begin
-          if (Child.Attributes.Item[i].CompareName('ImageIsLoaded') = 0) then
-            ImageLoaded := StrToBool(UTF8Encode(Child.Attributes.Item[i].NodeValue));
+          for i := 0 to Length - 1 do
+          begin
+            if (Item[i].CompareName('ImageIsLoaded') = 0) then
+              ImageLoaded := StrToBool(UTF8Encode(Item[i].NodeValue));
+          end;
         end;
 
         DigitChild := Child.FirstChild;
@@ -2381,12 +2504,15 @@ begin
           begin
             w := 0;
             h := 0;
-            for i := 0 to DigitChild.Attributes.Length - 1 do
+            with DigitChild.Attributes do
             begin
-              if (DigitChild.Attributes.Item[i].CompareName('Width') = 0) then
-                w := StrToInt(UTF8Encode(DigitChild.Attributes.Item[i].NodeValue));
-              if (DigitChild.Attributes.Item[i].CompareName('Height') = 0) then
-                h := StrToInt(UTF8Encode(DigitChild.Attributes.Item[i].NodeValue));
+              for i := 0 to Length - 1 do
+              begin
+                if (Item[i].CompareName('Width') = 0) then
+                  w := StrToInt(UTF8Encode(Item[i].NodeValue));
+                if (Item[i].CompareName('Height') = 0) then
+                  h := StrToInt(UTF8Encode(Item[i].NodeValue));
+              end;
             end;
 
             Path := '';
@@ -2434,7 +2560,54 @@ begin
             PlotBoxLoaded := True;
           end;
 
-          // Go for the next image or scale
+          // Read Grid parameters
+          if (DigitChild.CompareName('grid') = 0) then
+          begin
+            ValidGrid := False;
+            SubtractGrid := False;
+
+            w := 0;
+            h := 0;
+            with DigitChild.Attributes do
+            begin
+              for i := 0 to Length - 1 do
+              begin
+                if (Item[i].CompareName('Width') = 0) then
+                  w := StrToInt(UTF8Encode(Item[i].NodeValue));
+                if (Item[i].CompareName('Height') = 0) then
+                  h := StrToInt(UTF8Encode(Item[i].NodeValue));
+                if (Item[i].CompareName('Subtract') = 0) then
+                  SubtractGrid := StrToBool(UTF8Encode(Item[i].NodeValue));
+              end;
+            end;
+
+            ImageChild := DigitChild.FirstChild;
+            while Assigned(ImageChild) do
+            begin
+              // Grid data
+              if (ImageChild.CompareName('data') = 0) then
+              begin
+                // Extract the image data as a Base64 string
+                EncBuffer := UTF8Encode(ImageChild.FirstChild.NodeValue);
+                // Convert it back to an ordinary string
+                Buffer := DecodeStringBase64(EncBuffer);
+
+                // Put the image data in the stream
+                Stream.Clear;
+                Stream.Write(Pointer(Buffer)^, Length(Buffer));
+                Stream.Position := 0;
+
+                // And load the stream in the GridMask
+                GridMask.LoadFromStream(Stream);
+              end;
+
+              ImageChild := ImageChild.NextSibling;
+            end;
+
+            ValidGrid := True;
+          end;
+
+          // Go for the next element
           DigitChild := DigitChild.NextSibling;
         end;
       end;
