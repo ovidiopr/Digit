@@ -1215,26 +1215,32 @@ begin
 
     SavedMarkerCount := 0;
     SavedPointCount := 0;
-    for i := 0 to Item.Attributes.Length - 1 do
+    with Item.Attributes do
     begin
-      if (Item.Attributes.Item[i].CompareName('Name') = 0) then
-        Name := UTF8Encode(Item.Attributes.Item[i].NodeValue);
-      if (Item.Attributes.Item[i].CompareName('Color') = 0) then
-        Color := StrToInt(UTF8Encode('$' + Item.Attributes.Item[i].NodeValue));
-      if (Item.Attributes.Item[i].CompareName('ShowAsSymbols') = 0) then
-        ShowAsSymbols := StrToBool(UTF8Encode(Item.Attributes.Item[i].NodeValue));
-      if (Item.Attributes.Item[i].CompareName('Step') = 0) then
-        Step := StrToInt(UTF8Encode(Item.Attributes.Item[i].NodeValue));
-      if (Item.Attributes.Item[i].CompareName('Interval') = 0) then
-        Interval := StrToInt(UTF8Encode(Item.Attributes.Item[i].NodeValue));
-      if (Item.Attributes.Item[i].CompareName('Tolerance') = 0) then
-        Tolerance := StrToInt(UTF8Encode(Item.Attributes.Item[i].NodeValue));
-      if (Item.Attributes.Item[i].CompareName('Spread') = 0) then
-        Spread := StrToInt(UTF8Encode(Item.Attributes.Item[i].NodeValue));
-      if (Item.Attributes.Item[i].CompareName('MarkerCount') = 0) then
-        SavedMarkerCount := StrToInt(UTF8Encode(Item.Attributes.Item[i].NodeValue));
-      if (Item.Attributes.Item[i].CompareName('PointCount') = 0) then
-        SavedPointCount := StrToInt(UTF8Encode(Item.Attributes.Item[i].NodeValue));
+      for i := 0 to Length - 1 do
+      begin
+        if (Item[i].CompareName('Name') = 0) then
+          Name := UTF8Encode(Item[i].NodeValue);
+        if (Item[i].CompareName('Color') = 0) then
+          if (Item[i].NodeValue[1] = '$') then
+            Color := StrToInt(UTF8Encode(Item[i].NodeValue))
+          else
+            Color := StrToInt(UTF8Encode('$' + Item[i].NodeValue));
+        if (Item[i].CompareName('ShowAsSymbols') = 0) then
+          ShowAsSymbols := StrToBool(UTF8Encode(Item[i].NodeValue));
+        if (Item[i].CompareName('Step') = 0) then
+          Step := StrToInt(UTF8Encode(Item[i].NodeValue));
+        if (Item[i].CompareName('Interval') = 0) then
+          Interval := StrToInt(UTF8Encode(Item[i].NodeValue));
+        if (Item[i].CompareName('Tolerance') = 0) then
+          Tolerance := StrToInt(UTF8Encode(Item[i].NodeValue));
+        if (Item[i].CompareName('Spread') = 0) then
+          Spread := StrToInt(UTF8Encode(Item[i].NodeValue));
+        if (Item[i].CompareName('MarkerCount') = 0) then
+          SavedMarkerCount := StrToInt(UTF8Encode(Item[i].NodeValue));
+        if (Item[i].CompareName('PointCount') = 0) then
+          SavedPointCount := StrToInt(UTF8Encode(Item[i].NodeValue));
+      end;
     end;
 
     RealPointCount := 0;
@@ -1291,14 +1297,17 @@ var
   PointNode, MarkerNode: TDOMNode;
 begin
   Result := Doc.CreateElement('curve');
-  TDOMElement(Result).SetAttribute('Name', UTF8Decode(Name));
-  TDOMElement(Result).SetAttribute('Color', UTF8Decode(IntToHex(Color, 6)));
-  TDOMElement(Result).SetAttribute('ShowAsSymbols', UTF8Decode(BoolToStr(ShowAsSymbols)));
-  TDOMElement(Result).SetAttribute('Step', UTF8Decode(IntToStr(Step)));
-  TDOMElement(Result).SetAttribute('Interval', UTF8Decode(IntToStr(Interval)));
-  TDOMElement(Result).SetAttribute('Tolerance', UTF8Decode(IntToStr(Tolerance)));
-  TDOMElement(Result).SetAttribute('Spread', UTF8Decode(IntToStr(Spread)));
-  TDOMElement(Result).SetAttribute('MarkerCount', UTF8Decode(IntToStr(MarkerCount)));
+  with TDOMElement(Result) do
+  begin
+    SetAttribute('Name', UTF8Decode(Name));
+    SetAttribute('Color', UTF8Decode('$' + IntToHex(Color, 6)));
+    SetAttribute('ShowAsSymbols', UTF8Decode(BoolToStr(ShowAsSymbols)));
+    SetAttribute('Step', UTF8Decode(IntToStr(Step)));
+    SetAttribute('Interval', UTF8Decode(IntToStr(Interval)));
+    SetAttribute('Tolerance', UTF8Decode(IntToStr(Tolerance)));
+    SetAttribute('Spread', UTF8Decode(IntToStr(Spread)));
+    SetAttribute('MarkerCount', UTF8Decode(IntToStr(MarkerCount)));
+  end;
   with FCurves[FCurveIndex] do
   begin
     TDOMElement(Result).SetAttribute('PointCount', UTF8Decode(IntToStr(Count)));

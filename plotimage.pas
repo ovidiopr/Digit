@@ -35,6 +35,41 @@ type
     property IsPersistent: Boolean read FPersistent;
   end;
 
+  TGridMask = class
+  protected
+    FMask: TBGRABitmap;
+
+    FMajorGridColor: TColor;
+    FMinorGridColor: TColor;
+    FBckgndColor: TColor;
+    FTolerance: Integer;
+    FThreshold: Double;
+
+    FIsValid: Boolean;
+    FIsActive: Boolean;
+  private
+  public
+    constructor Create(Width, Height: Integer);
+    destructor Destroy; override;
+
+    procedure SetSize(Width, Height: Integer);
+
+    procedure RemoveCartesianGrid(PlotImg: TBGRABitmap; PlotBox: TPlotQuad);
+    procedure RemovePolarGrid(PlotImg: TBGRABitmap; PlotBox: TPlotQuad);
+
+    function ImportFromXML(Item: TDOMNode): Boolean;
+    function ExportToXML(Doc: TXMLDocument): TDOMNode;
+
+    property Mask: TBGRABitmap read FMask;
+    property MajorGridColor: TColor read FMajorGridColor write FMajorGridColor;
+    property MinorGridColor: TColor read FMinorGridColor write FMinorGridColor;
+    property BckgndColor: TColor read FBckgndColor write FBckgndColor;
+    property Tolerance: Integer read FTolerance write FTolerance;
+    property Threshold: Double read FThreshold write FThreshold;
+    property IsValid: Boolean read FIsValid write FIsValid;
+    property IsActive: Boolean read FIsActive write FIsActive;
+  end;
+
   TMarkerList = specialize TFPGObjectList<TMarker>;
 
   TSelectRegionEvent = procedure(Sender: TObject; RegionRect: TRect) of Object;
@@ -55,7 +90,7 @@ type
     FImageName: TFileName;
     FPlotImg: TBGRABitmap;
     FWhiteBoard: TBGRABitmap;
-    FGridMask: TBGRABitmap;
+    FGridMask: TGridMask;
 
     FMarkers: TMarkerList;
     FMarkerList: TCurve;
@@ -74,11 +109,9 @@ type
     FCurveIndex: Integer;
 
     FScale: TScale;
-    FPlotBox: TPlotPoly;
+    FPlotBox: TPlotQuad;
 
     FImageIsLoaded: Boolean;
-    FValidGrid: Boolean;
-    FSubtractGrid: Boolean;
 
     FIsChanged: Boolean;
     FOnChange: TNotifyEvent;
@@ -135,7 +168,6 @@ type
 
     procedure SetCurveIndex(Value: Integer);
     procedure SetIsChanged(Value: Boolean);
-    procedure SetSubtractGrid(Value: Boolean);
 
     procedure ClearMarkers;
     procedure UpdateMarkersInCurve;
@@ -165,6 +197,8 @@ type
 
     function ConvertCoords(p: TCurvePoint): TCurvePoint; overload;
     function ConvertCoords(X, Y: Double): TCurvePoint; overload;
+
+    procedure SwitchGrid;
 
     procedure AddMarker(Position: TPoint; NewMarker: Boolean = True); overload;
     procedure AddMarker(Marker: TMarker; NewMarker: Boolean = True); overload;
@@ -218,7 +252,7 @@ type
 
     property State: TPlotImageState read FState write SetState;
     property ImageName: TFileName read FImageName write SetImageName;
-    property GridMask: TBGRABitmap read FGridMask;
+    property GridMask: TGridMask read FGridMask;
     property WhiteBoard: TBGRABitmap read FWhiteBoard;
     property PlotImg: TBGRABitmap read FPlotImg;
     property Markers: TMarkerList read FMarkers;
@@ -252,11 +286,9 @@ type
     {Return the active curve converted to plot scale}
     property PlotCurve: TCurve read GetPlotCurve;
     property ImageIsLoaded: Boolean read FImageIsLoaded write FImageIsLoaded;
-    property ValidGrid: Boolean read FValidGrid write FValidGrid;
-    property SubtractGrid: Boolean read FSubtractGrid write SetSubtractGrid;
 
     property Scale: TScale read FScale;
-    property PlotBox: TPlotPoly read FPlotBox;
+    property PlotBox: TPlotQuad read FPlotBox;
     property ColorIsSet: Boolean read GetColorIsSet;
     property HasPoints: Boolean read GetHasPoints;
     property IsChanged: Boolean read GetIsChanged write SetIsChanged;
@@ -399,6 +431,369 @@ begin
 end;
 //==============================|TMarker|=====================================//
 
+//=============================|TGridMask|====================================//
+constructor TGridMask.Create(Width, Height: Integer);
+begin
+  inherited Create;
+
+  FMask := TBGRABitmap.Create(Width, Height, BGRAPixelTransparent);
+
+  FMajorGridColor := clBlack;
+  FMinorGridColor := clGray;
+  FBckgndColor := clWhite;
+  FTolerance := 10;
+  FThreshold := 0.5;
+
+  FIsValid := False;
+  FIsActive := False;
+end;
+
+destructor TGridMask.Destroy;
+begin
+  FMask.Free;
+
+  inherited Destroy;
+end;
+
+procedure TGridMask.SetSize(Width, Height: Integer);
+begin
+  FMask.SetSize(Width, Height);
+  FMask.FillTransparent;
+end;
+
+procedure TGridMask.RemoveCartesianGrid(PlotImg: TBGRABitmap; PlotBox: TPlotQuad);
+const
+  angle_step = 1;
+var
+  t_idx: Integer;
+  i, j: Integer;
+  x, y: Double;
+  diag_len: Integer;
+
+  p: PBGRAPixel;
+
+  img: Array of Array of LongInt;
+  accumulator: Array of Array of Integer;
+
+  num_thetas: Integer;
+  theta: Double;
+  theta_count: Array of Integer;
+  sin_theta, cos_theta: Array of Double;
+
+  C1, C2: LongInt;
+  rho: Integer;
+
+  hori_count,
+  vert_count,
+  hori_index,
+  vert_index: Integer;
+  max_count_hori,
+  max_count_vert: Integer;
+begin
+  try
+    C1 := ColorToRGB(FMajorGridColor);
+    C2 := ColorToRGB(FMinorGridColor);
+
+    with PlotImg do
+    begin
+      // Diagonal length of image
+      diag_len := Round(Sqrt(Width*Width + Height*Height));
+
+      // Put the canvas values in an array for faster access
+      SetLength(img, Width, Height);
+      for j := 0 to Height - 1 do
+      begin
+        p := Scanline[j];
+        for i := 0 to Width - 1 do
+        begin
+          img[i, j] := p^.red or (p^.green shl 8) or (p^.blue shl 16);
+          inc(p);
+        end;
+      end;
+    end;
+
+    // Cache some reusable values
+    num_thetas := 1 + Round(180/angle_step);
+    SetLength(sin_theta, num_thetas);
+    SetLength(cos_theta, num_thetas);
+    SetLength(theta_count, num_thetas);
+    for t_idx := Low(sin_theta) to High(sin_theta) do
+    begin
+      theta := -90.0 + t_idx*angle_step;
+      sin_theta[t_idx] := sin(theta*3.14159/180.0);
+      cos_theta[t_idx] := cos(theta*3.14159/180.0);
+      theta_count[t_idx] := 0;
+    end;
+
+    // Hough accumulator array of theta vs rho
+    SetLength(accumulator, 2*diag_len, num_thetas);
+    for i := Low(accumulator) to High(accumulator) do
+      for j := Low(accumulator[Low(accumulator)]) to High(accumulator[Low(accumulator)]) do
+        accumulator[i, j] := 0;
+
+    max_count_hori := 0;
+    max_count_vert := 0;
+    // Vote in the hough accumulator
+    for i := Low(img) to High(img) do
+      for j := Low(img[Low(img)]) to High(img[Low(img)]) do
+        if AreSimilarColors(C1, img[i, j], Tolerance) or
+           AreSimilarColors(C2, img[i, j], Tolerance) then
+          for t_idx := Low(sin_theta) to High(sin_theta) do
+          begin
+            // Calculate rho, diag_len is added for a positive index
+            rho := diag_len + Round(i*cos_theta[t_idx] + j*sin_theta[t_idx]);
+            inc(accumulator[rho, t_idx]);
+
+            if (abs(sin_theta[t_idx]) > abs(cos_theta[t_idx])) then
+            begin
+              // Horizontal line
+              if (accumulator[rho, t_idx] > max_count_hori) then
+                max_count_hori := accumulator[rho, t_idx];
+            end
+            else
+            begin
+              // Vertical line
+              if (accumulator[rho, t_idx] > max_count_vert) then
+                max_count_vert := accumulator[rho, t_idx];
+            end;
+          end;
+
+    // Histogram of angles
+    for i := Low(accumulator) to High(accumulator) do
+      for t_idx := Low(accumulator[Low(accumulator)]) to High(accumulator[Low(accumulator)]) do
+        if (abs(sin_theta[t_idx]) > abs(cos_theta[t_idx])) then
+        begin
+          // Horizontal line
+          if (accumulator[i, t_idx] > Threshold*max_count_hori) then
+            inc(theta_count[t_idx]);
+        end
+        else
+        begin
+          // Vertical line
+          if (accumulator[i, t_idx] > Threshold*max_count_vert) then
+            inc(theta_count[t_idx]);
+        end;
+
+    // Determine angle for horizontal and vertical grid lines
+    hori_count := 0;
+    vert_count := 0;
+    hori_index := 0;
+    vert_index := 0;
+    for i := Low(accumulator) to High(accumulator) do
+      for t_idx := Low(accumulator[Low(accumulator)]) to High(accumulator[Low(accumulator)]) do
+        if (abs(sin_theta[t_idx]) > abs(cos_theta[t_idx])) then
+        begin
+          // Mostly horizontal line
+          if (accumulator[i, t_idx] > Threshold*max_count_hori) then
+          begin
+            if (theta_count[t_idx] > hori_count) then
+            begin
+              hori_count := theta_count[t_idx];
+              hori_index := t_idx;
+            end;
+          end;
+        end
+        else
+        begin
+          // Mostly vertical line
+          if (accumulator[i, t_idx] > Threshold*max_count_vert) then
+          begin
+            if (theta_count[t_idx] > vert_count) then
+            begin
+              vert_count := theta_count[t_idx];
+              vert_index := t_idx;
+            end;
+          end;
+        end;
+
+    //Draw all the points in the mask
+    try
+      Mask.FillTransparent;
+
+      // Reset the status of the mask
+      IsValid := False;
+      IsActive := False;
+
+      // Now, draw the lines
+      for i := Low(accumulator) to High(accumulator) do
+      begin
+        rho := i - diag_len;
+        // Draw horizontal lines
+        if (accumulator[i, hori_index] > Threshold*max_count_hori) then
+        begin
+          // Fill the line with all the points that meet the color criteria
+          for j := 0 to Mask.Width - 1 do
+          begin
+            x := j;
+            y := (rho - x*cos_theta[hori_index])/sin_theta[hori_index];
+
+            if (y >= 0) and (Round(y) < Mask.Height) and
+               PlotBox.Contains(GetCurvePoint(x, y)) then
+              if AreSimilarColors(C1, img[Round(x), Round(y)], Tolerance) or
+                 AreSimilarColors(C2, img[Round(x), Round(y)], Tolerance) then
+              begin
+                Mask.SetPixel(Round(x), Round(y), BckgndColor);
+              end;
+          end;
+        end;
+
+        // Draw vertical lines
+        if (accumulator[i, vert_index] > Threshold*max_count_vert) then
+        begin
+          // Fill the line with all the points that meet the color criteria
+          for j := 0 to Mask.Height - 1 do
+          begin
+            y := j;
+            x := (rho - y*sin_theta[vert_index])/cos_theta[vert_index];
+
+            if (x >= 0) and (Round(x) < Mask.Width) and
+               PlotBox.Contains(GetCurvePoint(x, y)) then
+              if AreSimilarColors(C1, img[Round(x), Round(y)], Tolerance) or
+                 AreSimilarColors(C2, img[Round(x), Round(y)], Tolerance) then
+              begin
+                Mask.SetPixel(Round(x), Round(y), BckgndColor);
+              end;
+          end;
+        end;
+      end;
+    finally
+      IsValid := True;
+      IsActive := True;
+    end;
+  finally
+    // Release all the dynamic arrays
+    SetLength(img, 0);
+    SetLength(sin_theta, 0);
+    SetLength(cos_theta, 0);
+    SetLength(theta_count, 0);
+    SetLength(accumulator, 0);
+  end;
+end;
+
+procedure TGridMask.RemovePolarGrid(PlotImg: TBGRABitmap; PlotBox: TPlotQuad);
+begin
+  // TODO
+end;
+
+function TGridMask.ImportFromXML(Item: TDOMNode): Boolean;
+var
+  i, w, h: Integer;
+  Stream: TMemoryStream;
+  Buffer: String; // common string with the jpg info
+  EncBuffer: String; // it's Base64 equivalent
+  Child: TDOMNode;
+begin
+  Result := False;
+  try
+    IsValid := False;
+    IsActive := False;
+
+    // Create the stream to save the image
+    Stream := TMemoryStream.Create;
+
+    w := 0;
+    h := 0;
+    with Item.Attributes do
+    begin
+      for i := 0 to Length - 1 do
+      begin
+        if (Item[i].CompareName('Width') = 0) then
+          w := StrToInt(UTF8Encode(Item[i].NodeValue));
+        if (Item[i].CompareName('Height') = 0) then
+          h := StrToInt(UTF8Encode(Item[i].NodeValue));
+        if (Item[i].CompareName('Active') = 0) then
+          IsActive := StrToBool(UTF8Encode(Item[i].NodeValue));
+        if (Item[i].CompareName('MajorGridColor') = 0) then
+          MajorGridColor := StrToInt(UTF8Encode(Item[i].NodeValue));
+        if (Item[i].CompareName('MinorGridColor') = 0) then
+          MinorGridColor := StrToInt(UTF8Encode(Item[i].NodeValue));
+        if (Item[i].CompareName('BckgndColor') = 0) then
+          BckgndColor := StrToInt(UTF8Encode(Item[i].NodeValue));
+        if (Item[i].CompareName('Tolerance') = 0) then
+          Tolerance := StrToInt(UTF8Encode(Item[i].NodeValue));
+        if (Item[i].CompareName('Threshold') = 0) then
+          Threshold := StrToFloat(UTF8Encode(Item[i].NodeValue));
+      end;
+    end;
+
+    Child := Item.FirstChild;
+    while Assigned(Child) do
+    begin
+      // Grid data
+      if (Child.CompareName('data') = 0) then
+      begin
+        // Extract the image data as a Base64 string
+        EncBuffer := UTF8Encode(Child.FirstChild.NodeValue);
+        // Convert it back to an ordinary string
+        Buffer := DecodeStringBase64(EncBuffer);
+
+        // Put the image data in the stream
+        Stream.Clear;
+        Stream.Write(Pointer(Buffer)^, Length(Buffer));
+        Stream.Position := 0;
+
+        // And load the stream in the GridMask
+        Mask.LoadFromStream(Stream);
+      end;
+
+      Child := Child.NextSibling;
+    end;
+
+    IsValid := True;
+
+    Result := True;
+  finally
+    Stream.Free;
+  end;
+end;
+
+function TGridMask.ExportToXML(Doc: TXMLDocument): TDOMNode;
+var
+  Stream: TMemoryStream;
+  Buffer: String; // common string with the jpg info
+  EncBuffer: String; // it's Base64 equivalent
+  DataNode,
+  CDataNode: TDOMNode;
+begin
+  try
+    // Create the stream to save the image
+    Stream := TMemoryStream.Create;
+
+    Result := Doc.CreateElement('grid');
+    with TDOMElement(Result) do
+    begin
+      SetAttribute('Width', UTF8Decode(IntToStr(Mask.Width)));
+      SetAttribute('Height', UTF8Decode(IntToStr(Mask.Height)));
+      SetAttribute('Active', UTF8Decode(BoolToStr(IsActive, True)));
+      SetAttribute('MajorGridColor', UTF8Decode('$' + IntToHex(MajorGridColor, 6)));
+      SetAttribute('MinorGridColor', UTF8Decode('$' + IntToHex(MinorGridColor, 6)));
+      SetAttribute('BckgndColor', UTF8Decode('$' + IntToHex(BckgndColor, 6)));
+      SetAttribute('Tolerance', UTF8Decode(IntToStr(Tolerance)));
+      SetAttribute('Threshold', UTF8Decode(FloatToStr(Threshold)));
+    end;
+
+    DataNode := Doc.CreateElement('data');
+    // Now encode the grid image and save it to the XML file
+    Stream.Clear;
+    Stream.Position := 0;
+
+    Mask.SaveToStreamAsPng(Stream);
+
+    // Extract Image contents as a common string
+    SetString(Buffer, Stream.Memory, Stream.Size);
+    // Encode the image contents in a Base64 string
+    EncBuffer := EncodeStringBase64(Buffer);
+    // Store the image on a CData-section node
+    CDataNode := Doc.CreateCDATASection(UTF8Decode(EncBuffer));
+    DataNode.AppendChild(CDataNode);
+
+    Result.AppendChild(DataNode);
+  finally
+  end;
+end;
+
+//=============================|TGridMask|====================================//
+
 //=============================|TPlotImage|===================================//
 constructor TPlotImage.Create(AOwner: TComponent);
 begin
@@ -406,15 +801,14 @@ begin
 
   FPlotImg := TBGRABitmap.Create;
   FWhiteBoard := TBGRABitmap.Create;
-  FGridMask := TBGRABitmap.Create;
-  FGridMask.FillTransparent;
+  FGridMask := TGridMask.Create(0, 0);
 
   FMarkers := TMarkerList.Create;
   FMarkerList := TCurve.Create;
 
   FCurves := TCurveList.Create;
   FScale := TScale.Create;
-  FPlotBox := TPlotPoly.Create;
+  FPlotBox := TPlotQuad.Create;
 
   Reset;
 end;
@@ -460,8 +854,9 @@ begin
   FOldCursor := Cursor;
 
   FImageIsLoaded := False;
-  FValidGrid := False;
-  FSubtractGrid := False;
+
+  FGridMask.IsValid := False;
+  FGridMask.IsActive := False;
 
   InMouseMove := false;
 
@@ -857,8 +1252,8 @@ function TPlotImage.GetPixel(X, Y: Integer): LongInt;
 var
   c: TBGRAPixel;
 begin
-    if ValidGrid and SubtractGrid then
-      c := GridMask.GetPixel(X, Y)
+    if GridMask.IsValid and GridMask.IsActive then
+      c := GridMask.Mask.GetPixel(X, Y)
     else
       c := BGRAPixelTransparent;
 
@@ -1054,6 +1449,12 @@ begin
     Cursor := FOldCursor;
 end;
 
+procedure TPlotImage.SwitchGrid;
+begin
+  GridMask.IsActive := not GridMask.IsActive;
+  IsChanged := True;
+end;
+
 procedure TPlotImage.AddMarker(Position: TPoint; NewMarker: Boolean = True);
 var
   BMP: TBGRABitmap;
@@ -1184,8 +1585,8 @@ begin
     CopyMode:= cmSrcCopy;
     CopyRect(PaintRect, PlotImg.Bitmap.Canvas, PaintRect);
 
-    if SubtractGrid then
-      CopyRect(PaintRect, GridMask.Canvas, PaintRect);
+    if GridMask.IsActive then
+      CopyRect(PaintRect, GridMask.Mask.Canvas, PaintRect);
   end;
 
   if HasPoints and (State = piSetCurve) then
@@ -1196,6 +1597,7 @@ begin
   begin
     PolyColor := clBlue;
     PolyColor.alpha := 80;
+    PlotBox.PolarCoordinates := (Scale.CoordSystem = csPolar);
     WhiteBoard.DrawPolygonAntialias(PlotBox.PolygonPoints, BGRABlack, 1, PolyColor);
   end;
 
@@ -1236,16 +1638,16 @@ begin
     Rect.Left := WhiteBoard.Width;
     Rect.Intersect(ClipRect);
     Canvas.CopyRect(Rect, PlotImg.Canvas, Rect);
-    if SubtractGrid then
-      Canvas.CopyRect(Rect, GridMask.Canvas, Rect);
+    if GridMask.IsActive then
+      Canvas.CopyRect(Rect, GridMask.Mask.Canvas, Rect);
 
     Rect := ClientRect;
     Rect.Top := WhiteBoard.Height;
     Rect.Width := WhiteBoard.Width;
     Rect.Intersect(ClipRect);
     Canvas.CopyRect(Rect, PlotImg.Canvas, Rect);
-    if SubtractGrid then
-      Canvas.CopyRect(Rect, GridMask.Canvas, Rect);
+    if GridMask.IsActive then
+      Canvas.CopyRect(Rect, GridMask.Mask.Canvas, Rect);
   end;
 end;
 
@@ -1590,15 +1992,6 @@ begin
     FOnChange(Self);
 end;
 
-procedure TPlotImage.SetSubtractGrid(Value: Boolean);
-begin
-  if FSubtractGrid <> Value then
-  begin
-    FSubtractGrid := Value;
-    IsChanged := True;
-  end;
-end;
-
 procedure TPlotImage.ClearMarkers;
 var
   i: Integer;
@@ -1731,14 +2124,14 @@ begin
     WhiteBoard.PutImage(0, 0, PlotImg, dmSet);
 
     GridMask.SetSize(PlotImg.Width, PlotImg.Height);
-    GridMask.FillTransparent;
 
     Width := PlotImg.Width;
     Height := PlotImg.Height;
 
     FImageIsLoaded := True;
-    FValidGrid := False;
-    FSubtractGrid := False;
+
+    GridMask.IsValid := False;
+    GridMask.IsActive := False;
 
     FMarkers.Clear;
     Invalidate;
@@ -1990,213 +2383,17 @@ end;
 
 procedure TPlotImage.RemoveGrid(LineColor1, LineColor2, BckgndColor: TColor;
                                 Tolerance: Integer = 10; Threshold: Double = 0.5);
-const
-  angle_step = 1;
-var
-  t_idx: Integer;
-  i, j: Integer;
-  x, y: Double;
-  diag_len: Integer;
-
-  p: PBGRAPixel;
-
-  img: Array of Array of LongInt;
-  accumulator: Array of Array of Integer;
-
-  num_thetas: Integer;
-  theta: Double;
-  theta_count: Array of Integer;
-  sin_theta, cos_theta: Array of Double;
-
-  C1, C2: LongInt;
-  rho: Integer;
-
-  hori_count,
-  vert_count,
-  hori_index,
-  vert_index: Integer;
-  max_count_hori,
-  max_count_vert: Integer;
 begin
   try
-    C1 := ColorToRGB(LineColor1);
-    C2 := ColorToRGB(LineColor2);
+    GridMask.MajorGridColor := LineColor1;
+    GridMask.MinorGridColor := LineColor2;
+    GridMask.BckgndColor := BckgndColor;
+    GridMask.Tolerance := Tolerance;
+    GridMask.Threshold := Threshold;
 
-    with PlotImg do
-    begin
-      // Diagonal length of image
-      diag_len := Round(Sqrt(Width*Width + Height*Height));
-
-      // Put the canvas values in an array for faster access
-      SetLength(img, Width, Height);
-      for j := 0 to Height - 1 do
-      begin
-        p := Scanline[j];
-        for i := 0 to Width - 1 do
-        begin
-          img[i, j] := p^.red or (p^.green shl 8) or (p^.blue shl 16);
-          inc(p);
-        end;
-      end;
-    end;
-
-    // Cache some reusable values
-    num_thetas := 1 + Round(180/angle_step);
-    SetLength(sin_theta, num_thetas);
-    SetLength(cos_theta, num_thetas);
-    SetLength(theta_count, num_thetas);
-    for t_idx := Low(sin_theta) to High(sin_theta) do
-    begin
-      theta := -90.0 + t_idx*angle_step;
-      sin_theta[t_idx] := sin(theta*3.14159/180.0);
-      cos_theta[t_idx] := cos(theta*3.14159/180.0);
-      theta_count[t_idx] := 0;
-    end;
-
-    // Hough accumulator array of theta vs rho
-    SetLength(accumulator, 2*diag_len, num_thetas);
-    for i := Low(accumulator) to High(accumulator) do
-      for j := Low(accumulator[Low(accumulator)]) to High(accumulator[Low(accumulator)]) do
-        accumulator[i, j] := 0;
-
-    max_count_hori := 0;
-    max_count_vert := 0;
-    // Vote in the hough accumulator
-    for i := Low(img) to High(img) do
-      for j := Low(img[Low(img)]) to High(img[Low(img)]) do
-        if AreSimilarColors(C1, img[i, j], Tolerance) or
-           AreSimilarColors(C2, img[i, j], Tolerance) then
-          for t_idx := Low(sin_theta) to High(sin_theta) do
-          begin
-            // Calculate rho, diag_len is added for a positive index
-            rho := diag_len + Round(i*cos_theta[t_idx] + j*sin_theta[t_idx]);
-            inc(accumulator[rho, t_idx]);
-
-            if (abs(sin_theta[t_idx]) > abs(cos_theta[t_idx])) then
-            begin
-              // Horizontal line
-              if (accumulator[rho, t_idx] > max_count_hori) then
-                max_count_hori := accumulator[rho, t_idx];
-            end
-            else
-            begin
-              // Vertical line
-              if (accumulator[rho, t_idx] > max_count_vert) then
-                max_count_vert := accumulator[rho, t_idx];
-            end;
-          end;
-
-    // Histogram of angles
-    for i := Low(accumulator) to High(accumulator) do
-      for t_idx := Low(accumulator[Low(accumulator)]) to High(accumulator[Low(accumulator)]) do
-        if (abs(sin_theta[t_idx]) > abs(cos_theta[t_idx])) then
-        begin
-          // Horizontal line
-          if (accumulator[i, t_idx] > Threshold*max_count_hori) then
-            inc(theta_count[t_idx]);
-        end
-        else
-        begin
-          // Vertical line
-          if (accumulator[i, t_idx] > Threshold*max_count_vert) then
-            inc(theta_count[t_idx]);
-        end;
-
-    // Determine angle for horizontal and vertical grid lines
-    hori_count := 0;
-    vert_count := 0;
-    hori_index := 0;
-    vert_index := 0;
-    for i := Low(accumulator) to High(accumulator) do
-      for t_idx := Low(accumulator[Low(accumulator)]) to High(accumulator[Low(accumulator)]) do
-        if (abs(sin_theta[t_idx]) > abs(cos_theta[t_idx])) then
-        begin
-          // Mostly horizontal line
-          if (accumulator[i, t_idx] > Threshold*max_count_hori) then
-          begin
-            if (theta_count[t_idx] > hori_count) then
-            begin
-              hori_count := theta_count[t_idx];
-              hori_index := t_idx;
-            end;
-          end;
-        end
-        else
-        begin
-          // Mostly vertical line
-          if (accumulator[i, t_idx] > Threshold*max_count_vert) then
-          begin
-            if (theta_count[t_idx] > vert_count) then
-            begin
-              vert_count := theta_count[t_idx];
-              vert_index := t_idx;
-            end;
-          end;
-        end;
-
-    //Draw all the points in the mask
-    try
-      GridMask.FillTransparent;
-
-      // Reset the status of the mask
-      FValidGrid := False;
-      FSubtractGrid := False;
-
-      // Now, draw the lines
-      for i := Low(accumulator) to High(accumulator) do
-      begin
-        rho := i - diag_len;
-        // Draw horizontal lines
-        if (accumulator[i, hori_index] > Threshold*max_count_hori) then
-        begin
-          // Fill the line with all the points that meet the color criteria
-          for j := 0 to GridMask.Width - 1 do
-          begin
-            x := j;
-            y := (rho - x*cos_theta[hori_index])/sin_theta[hori_index];
-
-            if (y >= 0) and (Round(y) < GridMask.Height) and
-               PlotBox.Contains(GetCurvePoint(x, y)) then
-              if AreSimilarColors(C1, img[Round(x), Round(y)], Tolerance) or
-                 AreSimilarColors(C2, img[Round(x), Round(y)], Tolerance) then
-              begin
-                GridMask.SetPixel(Round(x), Round(y), BckgndColor);
-              end;
-          end;
-        end;
-
-        // Draw vertical lines
-        if (accumulator[i, vert_index] > Threshold*max_count_vert) then
-        begin
-          // Fill the line with all the points that meet the color criteria
-          for j := 0 to GridMask.Height - 1 do
-          begin
-            y := j;
-            x := (rho - y*sin_theta[vert_index])/cos_theta[vert_index];
-
-            if (x >= 0) and (Round(x) < GridMask.Width) and
-               PlotBox.Contains(GetCurvePoint(x, y)) then
-              if AreSimilarColors(C1, img[Round(x), Round(y)], Tolerance) or
-                 AreSimilarColors(C2, img[Round(x), Round(y)], Tolerance) then
-              begin
-                GridMask.SetPixel(Round(x), Round(y), BckgndColor);
-              end;
-          end;
-        end;
-      end;
-    finally
-      ValidGrid := True;
-      SubtractGrid := True;
-
-      IsChanged := True;
-    end;
+    GridMask.RemoveCartesianGrid(PlotImg, PlotBox);
   finally
-    // Release all the dynamic arrays
-    SetLength(img, 0);
-    SetLength(sin_theta, 0);
-    SetLength(cos_theta, 0);
-    SetLength(theta_count, 0);
-    SetLength(accumulator, 0);
+    IsChanged := True;
   end;
 end;
 
@@ -2264,8 +2461,8 @@ begin
     begin
       CopyRect(Marker.Rect, PlotImg, Marker.Rect);
 
-      if SubtractGrid then
-        CopyRect(Marker.Rect, GridMask, Marker.Rect);
+      if GridMask.IsActive then
+        CopyRect(Marker.Rect, GridMask.Mask, Marker.Rect);
     end;
 
     for i := Markers.Count - 1 downto 0 do
@@ -2396,34 +2593,8 @@ begin
     DigitNode.AppendChild(PlotBox.ExportToXML(XMLDoc));
 
     // Add Grid node
-    if ValidGrid then
-    begin
-      ImageNode := XMLDoc.CreateElement('grid');
-      with TDOMElement(ImageNode) do
-      begin
-        SetAttribute('Width', UTF8Decode(IntToStr(GridMask.Width)));
-        SetAttribute('Height', UTF8Decode(IntToStr(GridMask.Height)));
-        SetAttribute('Subtract', UTF8Decode(BoolToStr(SubtractGrid, True)));
-      end;
-
-      DataNode := XMLDoc.CreateElement('data');
-      // Now encode the grid image and save it to the XML file
-      Stream.Clear;
-      Stream.Position := 0;
-
-      GridMask.SaveToStreamAsPng(Stream);
-
-      // Extract Image contents as a common string
-      SetString(Buffer, Stream.Memory, Stream.Size);
-      // Encode the image contents in a Base64 string
-      EncBuffer := EncodeStringBase64(Buffer);
-      // Store the image on a CData-section node
-      CDataNode := XMLDoc.CreateCDATASection(UTF8Decode(EncBuffer));
-      DataNode.AppendChild(CDataNode);
-      ImageNode.AppendChild(DataNode);
-
-      DigitNode.Appendchild(ImageNode);
-    end;
+    if GridMask.IsValid then
+      DigitNode.AppendChild(GridMask.ExportToXML(XMLDoc));
 
     // Save document node
     RootNode.Appendchild(DigitNode);
@@ -2562,50 +2733,7 @@ begin
 
           // Read Grid parameters
           if (DigitChild.CompareName('grid') = 0) then
-          begin
-            ValidGrid := False;
-            SubtractGrid := False;
-
-            w := 0;
-            h := 0;
-            with DigitChild.Attributes do
-            begin
-              for i := 0 to Length - 1 do
-              begin
-                if (Item[i].CompareName('Width') = 0) then
-                  w := StrToInt(UTF8Encode(Item[i].NodeValue));
-                if (Item[i].CompareName('Height') = 0) then
-                  h := StrToInt(UTF8Encode(Item[i].NodeValue));
-                if (Item[i].CompareName('Subtract') = 0) then
-                  SubtractGrid := StrToBool(UTF8Encode(Item[i].NodeValue));
-              end;
-            end;
-
-            ImageChild := DigitChild.FirstChild;
-            while Assigned(ImageChild) do
-            begin
-              // Grid data
-              if (ImageChild.CompareName('data') = 0) then
-              begin
-                // Extract the image data as a Base64 string
-                EncBuffer := UTF8Encode(ImageChild.FirstChild.NodeValue);
-                // Convert it back to an ordinary string
-                Buffer := DecodeStringBase64(EncBuffer);
-
-                // Put the image data in the stream
-                Stream.Clear;
-                Stream.Write(Pointer(Buffer)^, Length(Buffer));
-                Stream.Position := 0;
-
-                // And load the stream in the GridMask
-                GridMask.LoadFromStream(Stream);
-              end;
-
-              ImageChild := ImageChild.NextSibling;
-            end;
-
-            ValidGrid := True;
-          end;
+            GridMask.ImportFromXML(DigitChild);
 
           // Go for the next element
           DigitChild := DigitChild.NextSibling;

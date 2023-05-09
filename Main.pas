@@ -42,21 +42,43 @@ type
     EditPY1: TEdit;
     EditPY2: TEdit;
     EditPY3: TEdit;
+    EditVX1: TBCTrackbarUpdown;
+    EditVX2: TBCTrackbarUpdown;
+    EditVX3: TBCTrackbarUpdown;
+    EditVX4: TBCTrackbarUpdown;
+    EditVY1: TBCTrackbarUpdown;
+    EditVY2: TBCTrackbarUpdown;
+    EditVY3: TBCTrackbarUpdown;
+    EditVY4: TBCTrackbarUpdown;
     edtX: TEdit;
     edtY: TEdit;
-    gbBasis: TGroupBox;
     gbCoord: TGroupBox;
+    gbPoint1: TGroupBox;
+    gbPoint2: TGroupBox;
+    gbPoint3: TGroupBox;
+    gbVertex1: TGroupBox;
+    gbVertex2: TGroupBox;
+    gbVertex3: TGroupBox;
+    gbVertex4: TGroupBox;
     gbX: TGroupBox;
     gbY: TGroupBox;
     lblImg1: TLabel;
     lblImg2: TLabel;
     lblImg3: TLabel;
-    lblP1: TLabel;
-    lblP2: TLabel;
-    lblP3: TLabel;
     lblPlt1: TLabel;
     lblPlt2: TLabel;
     lblPlt3: TLabel;
+    lblSpace1: TLabel;
+    lblSpace2: TLabel;
+    lblSpace3: TLabel;
+    lblVX1: TLabel;
+    lblVX2: TLabel;
+    lblVX3: TLabel;
+    lblVX4: TLabel;
+    lblVY1: TLabel;
+    lblVY2: TLabel;
+    lblVY3: TLabel;
+    lblVY4: TLabel;
     lblX: TLabel;
     lblX1: TLabel;
     lblX2: TLabel;
@@ -114,6 +136,7 @@ type
     rgDirection: TRadioGroup;
     ScrollBox: TScrollBox;
     sbScale: TScrollBox;
+    sbPlotBox: TScrollBox;
     sep07: TToolButton;
     SpeedButton1: TSpeedButton;
     tsPlotBox: TTabSheet;
@@ -270,6 +293,9 @@ type
     OpenProjectDlg: TOpenDialog;
     SaveProjectDlg: TSaveDialog;
     leData: TValueListEditor;
+    procedure btnBackgroundColorChanged(Sender: TObject);
+    procedure btnMajorGridColorChanged(Sender: TObject);
+    procedure btnMinorGridColorChanged(Sender: TObject);
     procedure cbbCoordsChange(Sender: TObject);
     procedure cbbXScaleChange(Sender: TObject);
     procedure cbbYScaleChange(Sender: TObject);
@@ -279,6 +305,10 @@ type
     procedure EditIY1Change(Sender: TObject; AByUser: boolean);
     procedure EditPX1EditingDone(Sender: TObject);
     procedure EditPY1EditingDone(Sender: TObject);
+    procedure EditVX1Change(Sender: TObject; AByUser: boolean);
+    procedure EditVY1Change(Sender: TObject; AByUser: boolean);
+    procedure edtGridThresholdChange(Sender: TObject; AByUser: boolean);
+    procedure edtGridToleranceChange(Sender: TObject; AByUser: boolean);
     procedure edtXEditingDone(Sender: TObject);
     procedure edtYEditingDone(Sender: TObject);
     procedure FileImportDigitExecute(Sender: TObject);
@@ -471,7 +501,11 @@ procedure TDigitMainForm.UpdateControls;
 begin
   with PlotImage do
   begin
-    pcInput.Enabled := ImageIsLoaded;
+    //pcInput.Enabled := ImageIsLoaded;
+    tsCurve.Enabled := ImageIsLoaded;
+    tsScale.Enabled := ImageIsLoaded;
+    tsPlotBox.Enabled := ImageIsLoaded;
+    tsGrid.Enabled := ImageIsLoaded;
 
     FileSave.Enabled :=  ImageIsLoaded and (not IsSaved);
     FileSaveAs.Enabled := ImageIsLoaded;
@@ -511,8 +545,8 @@ begin
     MarkersMoveRight.Enabled := ImageIsLoaded and assigned(ActiveMarker);
     MarkersDelete.Enabled := ImageIsLoaded and assigned(ActiveMarker) and not ActiveMarker.IsPersistent;
 
-    GridRemoval.Enabled := ImageIsLoaded and (State = piSetGrid) and not (ValidGrid and SubtractGrid);
-    GridShowHide.Enabled := ImageIsLoaded and (State = piSetGrid) and ValidGrid;
+    GridRemoval.Enabled := ImageIsLoaded and (State = piSetGrid) and not (GridMask.IsValid and GridMask.IsActive);
+    GridShowHide.Enabled := ImageIsLoaded and (State = piSetGrid) and GridMask.IsValid;
 
     PlotExport.Enabled := (State = piSetCurve) and HasPoints;
     PlotScale.Enabled := (State = piSetCurve) and HasPoints;
@@ -615,6 +649,15 @@ begin
       EditIY2.MaxValue := PlotImage.Height - 1;
       EditIX3.MaxValue := PlotImage.Width - 1;
       EditIY3.MaxValue := PlotImage.Height - 1;
+
+      EditVX1.MaxValue := PlotImage.Width - 1;
+      EditVY1.MaxValue := PlotImage.Height - 1;
+      EditVX2.MaxValue := PlotImage.Width - 1;
+      EditVY2.MaxValue := PlotImage.Height - 1;
+      EditVX3.MaxValue := PlotImage.Width - 1;
+      EditVY3.MaxValue := PlotImage.Height - 1;
+      EditVX4.MaxValue := PlotImage.Width - 1;
+      EditVY4.MaxValue := PlotImage.Height - 1;
     end;
     CurveToGUI;
 
@@ -795,6 +838,15 @@ begin
       EditIY2.MaxValue := Height - 1;
       EditIX3.MaxValue := Width - 1;
       EditIY3.MaxValue := Height - 1;
+
+      EditVX1.MaxValue := Width - 1;
+      EditVY1.MaxValue := Height - 1;
+      EditVX2.MaxValue := Width - 1;
+      EditVY2.MaxValue := Height - 1;
+      EditVX3.MaxValue := Width - 1;
+      EditVY3.MaxValue := Height - 1;
+      EditVX4.MaxValue := Width - 1;
+      EditVY4.MaxValue := Height - 1;
     end;
   end;
 
@@ -892,6 +944,33 @@ begin
     PlotImage.Scale.CoordSystem := TCoordSystem(cbbCoords.ItemIndex);
 end;
 
+procedure TDigitMainForm.btnMajorGridColorChanged(Sender: TObject);
+begin
+  if (PlotImage.GridMask.MajorGridColor <> btnMajorGrid.ButtonColor) then
+  begin
+    PlotImage.GridMask.MajorGridColor := btnMajorGrid.ButtonColor;
+    PlotImage.IsChanged := True;
+  end;
+end;
+
+procedure TDigitMainForm.btnBackgroundColorChanged(Sender: TObject);
+begin
+  if (PlotImage.GridMask.BckgndColor <> btnBackground.ButtonColor) then
+  begin
+    PlotImage.GridMask.BckgndColor := btnBackground.ButtonColor;
+    PlotImage.IsChanged := True;
+  end;
+end;
+
+procedure TDigitMainForm.btnMinorGridColorChanged(Sender: TObject);
+begin
+  if (PlotImage.GridMask.MinorGridColor <> btnMinorGrid.ButtonColor) then
+  begin
+    PlotImage.GridMask.MinorGridColor := btnMinorGrid.ButtonColor;
+    PlotImage.IsChanged := True;
+  end;
+end;
+
 procedure TDigitMainForm.cbbXScaleChange(Sender: TObject);
 begin
   if (PlotImage.Scale.XScale <> TScaleType(cbbXScale.ItemIndex)) then
@@ -912,10 +991,9 @@ end;
 procedure TDigitMainForm.EditIX1Change(Sender: TObject; AByUser: boolean);
 begin
   if AByUser then
-    with TBCTrackbarUpdown(Sender) do
-    begin
-      PlotImage.AxesPoint[Tag] := ImagePoint[Tag];
-    end;
+  begin
+    PlotImage.AxesPoint[Tag] := ImagePoint[Tag];
+  end;
 end;
 
 procedure TDigitMainForm.EditIY1Change(Sender: TObject; AByUser: boolean);
@@ -958,6 +1036,44 @@ begin
     end
     else
       Text := FloatToStr(PlotImage.Scale.PlotPoint[Tag].Y);
+  end;
+end;
+
+procedure TDigitMainForm.EditVX1Change(Sender: TObject; AByUser: boolean);
+begin
+  if AByUser then
+    with TBCTrackbarUpdown(Sender) do
+    begin
+      PlotImage.BoxVertex[Tag] := GetCurvePoint(Value, PlotImage.BoxVertex[Tag].Y);
+    end;
+end;
+
+procedure TDigitMainForm.EditVY1Change(Sender: TObject; AByUser: boolean);
+begin
+  if AByUser then
+    with TBCTrackbarUpdown(Sender) do
+    begin
+      PlotImage.BoxVertex[Tag] := GetCurvePoint(PlotImage.BoxVertex[Tag].X, Value);
+    end;
+end;
+
+procedure TDigitMainForm.edtGridThresholdChange(Sender: TObject;
+  AByUser: boolean);
+begin
+  if AByUser and (PlotImage.GridMask.Threshold <> edtGridThreshold.Value/100) then
+  begin
+    PlotImage.GridMask.Threshold := edtGridThreshold.Value/100;
+    PlotImage.IsChanged := True;
+  end;
+end;
+
+procedure TDigitMainForm.edtGridToleranceChange(Sender: TObject;
+  AByUser: boolean);
+begin
+  if AByUser and (PlotImage.GridMask.Tolerance <> edtGridTolerance.Value) then
+  begin
+    PlotImage.GridMask.Tolerance := edtGridTolerance.Value;
+    PlotImage.IsChanged := True;
   end;
 end;
 
@@ -1171,9 +1287,9 @@ end;
 
 procedure TDigitMainForm.GridShowHideExecute(Sender: TObject);
 begin
-  PlotImage.SubtractGrid := not PlotImage.SubtractGrid;
-  GridShowHide.Checked := PlotImage.SubtractGrid;
-  GridRemoval.Enabled := not PlotImage.SubtractGrid;
+  PlotImage.SwitchGrid;
+  GridShowHide.Checked := PlotImage.GridMask.IsActive;
+  GridRemoval.Enabled := not PlotImage.GridMask.IsActive;
 
   if GridShowHide.Checked then
     GridShowHide.ImageIndex := 40
@@ -1230,6 +1346,23 @@ begin
       PlotPoint[2] := PlotImage.Scale.PlotPoint[2];
       ImagePoint[3] := PlotImage.Scale.ImagePoint[3];
       PlotPoint[3] := PlotImage.Scale.PlotPoint[3];
+    end;
+    piSetPlotBox: begin
+      EditVX1.Value := Round(PlotImage.PlotBox.Vertex[0].X);
+      EditVY1.Value := Round(PlotImage.PlotBox.Vertex[0].Y);
+      EditVX2.Value := Round(PlotImage.PlotBox.Vertex[1].X);
+      EditVY2.Value := Round(PlotImage.PlotBox.Vertex[1].Y);
+      EditVX3.Value := Round(PlotImage.PlotBox.Vertex[2].X);
+      EditVY3.Value := Round(PlotImage.PlotBox.Vertex[2].Y);
+      EditVX4.Value := Round(PlotImage.PlotBox.Vertex[3].X);
+      EditVY4.Value := Round(PlotImage.PlotBox.Vertex[3].Y);
+    end;
+    piSetGrid: begin
+      btnMajorGrid.ButtonColor := PlotImage.GridMask.MajorGridColor;
+      btnMinorGrid.ButtonColor := PlotImage.GridMask.MinorGridColor;
+      btnBackground.ButtonColor := PlotImage.GridMask.BckgndColor;
+      edtGridTolerance.Value := PlotImage.GridMask.Tolerance;
+      edtGridThreshold.Value := Round(100*PlotImage.GridMask.Threshold);
     end;
   end;
 
@@ -1705,7 +1838,7 @@ begin
     end;
   end;
 
-  GridShowHide.Checked := PlotImage.ValidGrid and PlotImage.SubtractGrid;
+  GridShowHide.Checked := PlotImage.GridMask.IsValid and PlotImage.GridMask.IsActive;
   if GridShowHide.Checked then
     GridShowHide.ImageIndex := 40
   else
@@ -1752,7 +1885,7 @@ begin
       UpdateControls;
     end;
     mbRight: begin
-      Self.DigitizeFromHereItem.Enabled := PlotImage.Scale.IsValid and PlotImage.ColorIsSet;
+      DigitizeFromHereItem.Enabled := PlotImage.Scale.IsValid and PlotImage.ColorIsSet;
       TmpPoint.X := X;
       TmpPoint.Y := Y;
     end;
@@ -1828,6 +1961,31 @@ begin
       if (Marker = PlotImage.AxesMarkers[3]) then
         ImagePoint[3] := PlotImage.Scale.ImagePoint[3];
     end;
+    piSetPlotBox: begin
+      if (Marker = PlotImage.BoxMarkers[1]) then
+      begin
+        EditVX1.Value := Round(PlotImage.BoxVertex[1].X);
+        EditVY1.Value := Round(PlotImage.BoxVertex[1].Y);
+      end;
+
+      if (Marker = PlotImage.BoxMarkers[2]) then
+      begin
+        EditVX2.Value := Round(PlotImage.BoxVertex[2].X);
+        EditVY2.Value := Round(PlotImage.BoxVertex[2].Y);
+      end;
+
+      if (Marker = PlotImage.BoxMarkers[3]) then
+      begin
+        EditVX3.Value := Round(PlotImage.BoxVertex[3].X);
+        EditVY3.Value := Round(PlotImage.BoxVertex[3].Y);
+      end;
+
+      if (Marker = PlotImage.BoxMarkers[4]) then
+      begin
+        EditVX4.Value := Round(PlotImage.BoxVertex[4].X);
+        EditVY4.Value := Round(PlotImage.BoxVertex[4].Y);
+      end;
+    end;
   end;
 
   UpdateZoomImage(Round(Marker.Position.X), Round(Marker.Position.Y));
@@ -1836,14 +1994,21 @@ end;
 procedure TDigitMainForm.InputPanelResize(Sender: TObject);
 begin
   ZoomImage.Height := InputPanel.Width;
-  EditIX1.Width := (gbBasis.ClientWidth - lblX1.Width - 10) div 2;
   {$ifdef linux}
+  edtStep.Invalidate;
+  edtInterval.Invalidate;
+  edtTolerance.Invalidate;
+  edtSpread.Invalidate;
+
   EditIX1.Invalidate;
   EditIY1.Invalidate;
   EditIX2.Invalidate;
   EditIY2.Invalidate;
   EditIX3.Invalidate;
   EditIY3.Invalidate;
+
+  edtGridTolerance.Invalidate;
+  edtGridThreshold.Invalidate;
   {$endif}
 end;
 
