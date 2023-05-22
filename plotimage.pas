@@ -25,7 +25,7 @@ type
     destructor Destroy; override;
 
     function HitTest(Point: TPoint): Boolean;
-    procedure Draw(img: TBGRABitmap; Rectangle: TRect);
+    procedure Draw(Img: TBGRABitmap; Rectangle: TRect);
     procedure Move(Point: TPoint);
     procedure Shift(Delta: TPoint);
 
@@ -55,7 +55,7 @@ type
     procedure SetSize(Width, Height: Integer);
 
     procedure RemoveCartesianGrid(PlotImg: TBGRABitmap; PlotBox: TPlotQuad);
-    procedure RemovePolarGrid(PlotImg: TBGRABitmap; PlotBox: TPlotQuad);
+    procedure RemovePolarGrid(PlotImg: TBGRABitmap; PlotBox: TPlotQuad; Pc: TCurvePoint);
 
     function ImportFromXML(Item: TDOMNode): Boolean;
     function ExportToXML(Doc: TXMLDocument): TDOMNode;
@@ -305,16 +305,7 @@ function CreateMarker(Size: TPoint; Symbol: Char; Color: TColor; LineWith: Integ
 
 implementation
 
-function AreSimilarColors(C1, C2: LongInt; Tolerance: Byte): Boolean;
-begin
-  //Check for the trivial case
-  if C1 = C2 then
-    Result := True
-  else
-    Result := (Abs(Red(C1) - Red(C2)) +
-               Abs(Green(C1) - Green(C2)) +
-               Abs(Blue(C1) - Blue(C2)) <= 3*Tolerance);
-end;
+uses utils;
 
 function TMarkerComparator(const a, b: TMarker): Integer;
 begin
@@ -391,10 +382,10 @@ begin
   inherited Destroy;
 end;
 
-procedure TMarker.Draw(img: TBGRABitmap; Rectangle: TRect);
+procedure TMarker.Draw(Img: TBGRABitmap; Rectangle: TRect);
 begin
   if not (Rectangle*Rect).IsEmpty then
-    img.PutImage(Rect.Left, Rect.Top, Bitmap, dmDrawWithTransparency);
+    Img.PutImage(Rect.Left, Rect.Top, Bitmap, dmDrawWithTransparency);
 end;
 
 procedure TMarker.Move(Point: TPoint);
@@ -472,16 +463,19 @@ var
 
   p: PBGRAPixel;
 
-  img: Array of Array of LongInt;
-  accumulator: Array of Array of Integer;
+  grid_points: Array of Array of Boolean;
+  accumulator: THough2DMap;
 
   num_thetas: Integer;
   theta: Double;
   theta_count: Array of Integer;
   sin_theta, cos_theta: Array of Double;
 
-  C1, C2: LongInt;
   rho: Integer;
+
+  C1, C2: LongInt;
+  R1, G1, B1 : Byte;
+  R2, G2, B2 : Byte;
 
   hori_count,
   vert_count,
@@ -494,19 +488,28 @@ begin
     C1 := ColorToRGB(FMajorGridColor);
     C2 := ColorToRGB(FMinorGridColor);
 
+    R1 := Red(C1);
+    G1 := Green(C1);
+    B1 := Blue(C1);
+    R2 := Red(C2);
+    G2 := Green(C2);
+    B2 := Blue(C2);
+
     with PlotImg do
     begin
       // Diagonal length of image
       diag_len := Round(Sqrt(Width*Width + Height*Height));
 
       // Put the canvas values in an array for faster access
-      SetLength(img, Width, Height);
+      SetLength(grid_points, Width, Height);
       for j := 0 to Height - 1 do
       begin
         p := Scanline[j];
         for i := 0 to Width - 1 do
         begin
-          img[i, j] := p^.red or (p^.green shl 8) or (p^.blue shl 16);
+          grid_points[i, j] := PlotBox.Contains(GetCurvePoint(i, j)) and
+                              (AreSimilar(p^.red, p^.green, p^.blue, R1, G1, B1, Tolerance) or
+                               AreSimilar(p^.red, p^.green, p^.blue, R2, G2, B2, Tolerance));
           inc(p);
         end;
       end;
@@ -520,8 +523,8 @@ begin
     for t_idx := Low(sin_theta) to High(sin_theta) do
     begin
       theta := -90.0 + t_idx*angle_step;
-      sin_theta[t_idx] := sin(theta*3.14159/180.0);
-      cos_theta[t_idx] := cos(theta*3.14159/180.0);
+      sin_theta[t_idx] := sin(theta*PI/180.0);
+      cos_theta[t_idx] := cos(theta*PI/180.0);
       theta_count[t_idx] := 0;
     end;
 
@@ -534,10 +537,9 @@ begin
     max_count_hori := 0;
     max_count_vert := 0;
     // Vote in the hough accumulator
-    for i := Low(img) to High(img) do
-      for j := Low(img[Low(img)]) to High(img[Low(img)]) do
-        if AreSimilarColors(C1, img[i, j], Tolerance) or
-           AreSimilarColors(C2, img[i, j], Tolerance) then
+    for i := Low(grid_points) to High(grid_points) do
+      for j := Low(grid_points[Low(grid_points)]) to High(grid_points[Low(grid_points)]) do
+        if grid_points[i, j] then
           for t_idx := Low(sin_theta) to High(sin_theta) do
           begin
             // Calculate rho, diag_len is added for a positive index
@@ -615,6 +617,10 @@ begin
       IsActive := False;
 
       // Now, draw the lines
+      R1 := Red(BckgndColor);
+      G1 := Green(BckgndColor);
+      B1 := Blue(BckgndColor);
+
       for i := Low(accumulator) to High(accumulator) do
       begin
         rho := i - diag_len;
@@ -628,12 +634,19 @@ begin
             y := (rho - x*cos_theta[hori_index])/sin_theta[hori_index];
 
             if (y >= 0) and (Round(y) < Mask.Height) and
-               PlotBox.Contains(GetCurvePoint(x, y)) then
-              if AreSimilarColors(C1, img[Round(x), Round(y)], Tolerance) or
-                 AreSimilarColors(C2, img[Round(x), Round(y)], Tolerance) then
+               grid_points[Round(x), Round(y)] then
+            begin
+              p := Mask.Scanline[Round(y)];
+              inc(p, Round(x));
+              if (p^.alpha = 0) then
               begin
-                Mask.SetPixel(Round(x), Round(y), BckgndColor);
+                p^.red := R1;
+                p^.green := G1;
+                p^.blue := B1;
+                p^.alpha := 255;
+                // Mask.SetPixel(Round(x), Round(y), BckgndColor);
               end;
+            end;
           end;
         end;
 
@@ -647,22 +660,31 @@ begin
             x := (rho - y*sin_theta[vert_index])/cos_theta[vert_index];
 
             if (x >= 0) and (Round(x) < Mask.Width) and
-               PlotBox.Contains(GetCurvePoint(x, y)) then
-              if AreSimilarColors(C1, img[Round(x), Round(y)], Tolerance) or
-                 AreSimilarColors(C2, img[Round(x), Round(y)], Tolerance) then
+               grid_points[Round(x), Round(y)] then
+            begin
+              p := Mask.Scanline[Round(y)];
+              inc(p, Round(x));
+              if (p^.alpha = 0) then
               begin
-                Mask.SetPixel(Round(x), Round(y), BckgndColor);
+                p^.red := R1;
+                p^.green := G1;
+                p^.blue := B1;
+                p^.alpha := 255;
+                // Mask.SetPixel(Round(x), Round(y), BckgndColor);
               end;
+            end;
           end;
         end;
       end;
     finally
+      Mask.InvalidateBitmap;
+
       IsValid := True;
       IsActive := True;
     end;
   finally
     // Release all the dynamic arrays
-    SetLength(img, 0);
+    SetLength(grid_points, 0);
     SetLength(sin_theta, 0);
     SetLength(cos_theta, 0);
     SetLength(theta_count, 0);
@@ -670,9 +692,234 @@ begin
   end;
 end;
 
-procedure TGridMask.RemovePolarGrid(PlotImg: TBGRABitmap; PlotBox: TPlotQuad);
+procedure TGridMask.RemovePolarGrid(PlotImg: TBGRABitmap; PlotBox: TPlotQuad; Pc: TCurvePoint);
+const
+  angle_step = 0.5;
+var
+  t_idx: Integer;
+  i, j, k: Integer;
+  x, y: Double;
+  diag_len: Integer;
+
+  p: PBGRAPixel;
+
+  grid_points: Array of Array of Boolean;
+  accumulator: THough2DMap;
+
+  num_thetas: Integer;
+  theta: Double;
+  sin_theta, cos_theta: Array of Double;
+
+  rho: Integer;
+
+  C1, C2: LongInt;
+  R1, G1, B1 : Byte;
+  R2, G2, B2 : Byte;
+
+  max_count: Integer;
+
+  accum_radius: Array of Integer;
+  max_radius_count: Integer;
+  radius_max_count: Integer;
 begin
-  // TODO
+  try
+    C1 := ColorToRGB(FMajorGridColor);
+    C2 := ColorToRGB(FMinorGridColor);
+
+    R1 := Red(C1);
+    G1 := Green(C1);
+    B1 := Blue(C1);
+    R2 := Red(C2);
+    G2 := Green(C2);
+    B2 := Blue(C2);
+
+    with PlotImg do
+    begin
+      // Diagonal length of image
+      diag_len := Round(Sqrt(Width*Width + Height*Height));
+
+      // Put the canvas values in an array for faster access
+      SetLength(grid_points, Width, Height);
+      for j := 0 to Height - 1 do
+      begin
+        p := Scanline[j];
+        for i := 0 to Width - 1 do
+        begin
+          //grid_points[i, j] := p^.red or (p^.green shl 8) or (p^.blue shl 16);
+          grid_points[i, j] := PlotBox.Contains(GetCurvePoint(i, j)) and
+                              (AreSimilar(p^.red, p^.green, p^.blue, R1, G1, B1, Tolerance) or
+                               AreSimilar(p^.red, p^.green, p^.blue, R2, G2, B2, Tolerance));
+          inc(p);
+        end;
+      end;
+    end;
+
+    // Cache some reusable values
+    num_thetas := 1 + Round(180/angle_step);
+    SetLength(sin_theta, num_thetas);
+    SetLength(cos_theta, num_thetas);
+    for t_idx := Low(sin_theta) to High(sin_theta) do
+    begin
+      theta := -90.0 + t_idx*angle_step;
+      sin_theta[t_idx] := sin(theta*PI/180.0);
+      cos_theta[t_idx] := cos(theta*PI/180.0);
+    end;
+
+    // Hough accumulator array of theta vs rho
+    SetLength(accumulator, 2*diag_len, num_thetas);
+    for i := Low(accumulator) to High(accumulator) do
+      for j := Low(accumulator[Low(accumulator)]) to High(accumulator[Low(accumulator)]) do
+        accumulator[i, j] := 0;
+
+    max_count := 0;
+    // Vote in the hough accumulator
+    for i := Low(grid_points) to High(grid_points) do
+      for j := Low(grid_points[Low(grid_points)]) to High(grid_points[Low(grid_points)]) do
+        if grid_points[i, j] then
+          for t_idx := Low(sin_theta) to High(sin_theta) do
+          begin
+            // Calculate rho, diag_len is added for a positive index
+            rho := diag_len + Round(i*cos_theta[t_idx] + j*sin_theta[t_idx]);
+            inc(accumulator[rho, t_idx]);
+
+            if (accumulator[rho, t_idx] > max_count) then
+              max_count := accumulator[rho, t_idx];
+          end;
+
+    // Find circles (all should be concentric, and centered in the origin)
+    SetLength(accum_radius, diag_len);
+    max_radius_count := 0;
+    // Vote in the hough accumulator (for circles)
+    for i := Low(grid_points) to High(grid_points) do
+      for j := Low(grid_points[Low(grid_points)]) to High(grid_points[Low(grid_points)]) do
+        if grid_points[i, j] then
+        begin
+          // Calculate radius
+          rho := Round(Sqrt((i - Pc.X)*(i - Pc.X) + (j - Pc.Y)*(j - Pc.Y)));
+          inc(accum_radius[rho]);
+
+          if (accum_radius[rho] > max_radius_count) then
+          begin
+            radius_max_count := rho;
+            max_radius_count := accum_radius[rho];
+          end;
+        end;
+
+    //Draw all the points in the mask
+    try
+      Mask.FillTransparent;
+
+      // Reset the status of the mask
+      IsValid := False;
+      IsActive := False;
+
+      R1 := Red(BckgndColor);
+      G1 := Green(BckgndColor);
+      B1 := Blue(BckgndColor);
+
+      // Now, draw the lines
+      for i := Low(accumulator) to High(accumulator) do
+        for j := Low(accumulator[Low(accumulator)]) to High(accumulator[Low(accumulator)]) do
+        begin
+          rho := i - diag_len;
+          // Draw lines
+          if (accumulator[i, j] >= Threshold*max_count) and
+             ((Pc.X*cos_theta[j] + Pc.Y*sin_theta[j] - rho) <= 2) then
+          begin
+            if (abs(sin_theta[j]) > abs(cos_theta[j])) then
+            begin
+              // Horizontal line
+              // Fill the line with all the points that meet the color criteria
+              for k := 0 to Mask.Width - 1 do
+              begin
+                x := k;
+                y := (rho - x*cos_theta[j])/sin_theta[j];
+
+                if (y >= 0) and (Round(y) < Mask.Height) and
+                   grid_points[Round(x), Round(y)] then
+                begin
+                  p := Mask.Scanline[Round(y)];
+                  inc(p, Round(x));
+                  if (p^.alpha = 0) then
+                  begin
+                    p^.red := R1;
+                    p^.green := G1;
+                    p^.blue := B1;
+                    p^.alpha := 255;
+                    // Mask.SetPixel(Round(x), Round(y), BckgndColor);
+                  end;
+                end;
+              end;
+            end
+            else
+            begin
+              // Vertical line
+              // Fill the line with all the points that meet the color criteria
+              for k := 0 to Mask.Height - 1 do
+              begin
+                y := k;
+                x := (rho - y*sin_theta[j])/cos_theta[j];
+
+                if (x >= 0) and (Round(x) < Mask.Width) and
+                   grid_points[Round(x), Round(y)] then
+                begin
+                  p := Mask.Scanline[Round(y)];
+                  inc(p, Round(x));
+                  if (p^.alpha = 0) then
+                  begin
+                    p^.red := R1;
+                    p^.green := G1;
+                    p^.blue := B1;
+                    p^.alpha := 255;
+                    // Mask.SetPixel(Round(x), Round(y), BckgndColor);
+                  end;
+                end;
+              end;
+            end;
+          end;
+        end;
+
+      // Now, draw the circles
+      for i := 1 to High(accum_radius) do
+      begin
+        // Draw circles
+        if ((radius_max_count*accum_radius[i] div i) >= Threshold*max_radius_count) then
+          for j := 0 to Round(2*PI*i) do
+          begin
+            x := Pc.X + i*cos(j/i);
+            y := Pc.Y + i*sin(j/i);;
+
+            if (x >= 0) and (Round(x) < Mask.Width) and
+               (y >= 0) and (Round(y) < Mask.Height) and
+               grid_points[Round(x), Round(y)] then
+            begin
+              p := Mask.Scanline[Round(y)];
+              inc(p, Round(x));
+              if (p^.alpha = 0) then
+              begin
+                p^.red := R1;
+                p^.green := G1;
+                p^.blue := B1;
+                p^.alpha := 255;
+                // Mask.SetPixel(Round(x), Round(y), BckgndColor);
+              end;
+            end;
+          end;
+      end;
+    finally
+      Mask.InvalidateBitmap;
+
+      IsValid := True;
+      IsActive := True;
+    end;
+  finally
+    // Release all the dynamic arrays
+    SetLength(grid_points, 0);
+    SetLength(sin_theta, 0);
+    SetLength(cos_theta, 0);
+    SetLength(accumulator, 0);
+    SetLength(accum_radius, 0);
+  end;
 end;
 
 function TGridMask.ImportFromXML(Item: TDOMNode): Boolean;
@@ -884,7 +1131,7 @@ begin
   begin
     // Point to the pixel location
     C2 := GetPixel(Pi);
-    if AreSimilarColors(C1, C2, Tolerance) then
+    if AreSimilar(C1, C2, Tolerance) then
     begin
       inc(nP);
       P := P + Pi;
@@ -1116,7 +1363,7 @@ begin
 
     C1 := ColorToRGB(DigitCurve.Color);
     C2 := GetPixel(Pi);
-    if (not Island.Contains(Pi)) and AreSimilarColors(C1, C2, Tolerance) then
+    if (not Island.Contains(Pi)) and AreSimilar(C1, C2, Tolerance) then
     begin
       Island.AddPoint(Pi);
       FillIsland(Pi - Scale.Ny(Pi), Island, JustInY);
@@ -1138,7 +1385,7 @@ end;
 procedure TPlotImage.AdjustCurve(ProgressBar: TProgressBar = nil);
 var
   i: Integer;
-  Pi, Pv: TCurvePoint;
+  Pi: TCurvePoint;
   NewPoints: TPointList;
   Island: TIsland;
 begin
@@ -1690,10 +1937,14 @@ begin
 end;
 
 procedure TPlotImage.MouseMove(Shift: TShiftState; X, Y: Integer);
+const
+  xm: Array [1..4] of Integer = (2, 1, 4, 3);
+  ym: Array [1..4] of Integer = (4, 3, 2, 1);
 var
   i: Integer;
   Marker, HitMarker: TMarker;
   TmpRect: TRect;
+  Newpos: TPoint;
 begin
   MouseMovePos := TPoint.Create(X, Y);
 
@@ -1719,26 +1970,27 @@ begin
         UpdateRegion(PlotBox.Rect);
 
       if ClientRect.Contains(MouseMovePos) then
-      begin
-        FClickedMarker.Move(FClickedCoord + MouseMovePos - FClickedPoint);
+        NewPos := FClickedCoord + MouseMovePos - FClickedPoint
+      else
+        NewPos := FClickedCoord;  //The mouse moves out of the image
 
-        if (State = piSetPlotBox) then
-        begin
-          for i := 1 to PlotBox.NumVertices do
-            if (FClickedMarker = BoxMarkers[i]) then
-              PlotBox.Vertex[i - 1] := FClickedCoord + MouseMovePos - FClickedPoint;
-        end;
-      end
-      else //The mouse moves out of the image
-      begin
-        FClickedMarker.Move(FClickedCoord);
+      FClickedMarker.Move(NewPos);
 
-        if (State = piSetPlotBox) then
-        begin
-          for i := 1 to PlotBox.NumVertices do
-            if (FClickedMarker = BoxMarkers[i]) then
-              PlotBox.Vertex[i - 1] := FClickedCoord;
-        end;
+      if (State = piSetPlotBox) then
+      begin
+        for i := 1 to PlotBox.NumVertices do
+          if (FClickedMarker = BoxMarkers[i]) then
+          begin
+            PlotBox.Vertex[i - 1] := NewPos;
+            if not (ssShift in Shift) then
+            begin
+              BoxMarkers[xm[i]].Move(GetCurvePoint(NewPos.X, BoxMarkers[xm[i]].Position.Y));
+              BoxMarkers[ym[i]].Move(GetCurvePoint(BoxMarkers[ym[i]].Position.X, NewPos.Y));
+
+              PlotBox.Vertex[xm[i] - 1] := BoxMarkers[xm[i]].Position;
+              PlotBox.Vertex[ym[i] - 1] := BoxMarkers[ym[i]].Position;
+            end;
+          end;
       end;
 
       UpdateMarker(FClickedMarker);
@@ -1810,17 +2062,10 @@ begin
   begin
     if Dragging then
     begin
-      for i := 1 to 3 do
-        if (FClickedMarker = AxesMarkers[i]) then
-          Scale.ImagePoint[i] := FClickedMarker.Position;
-
-      for i := 1 to PlotBox.NumVertices do
-      begin
-        UpdateRegion(PlotBox.Rect);
-        if (FClickedMarker = BoxMarkers[i]) then
-          PlotBox.Vertex[i - 1] := FClickedMarker.Position;
-        UpdateRegion(PlotBox.Rect);
-      end;
+      if (State = piSetScale) then
+        for i := 1 to 3 do
+          if (FClickedMarker = AxesMarkers[i]) then
+            Scale.ImagePoint[i] := FClickedMarker.Position;
 
       Dragging := False;
 
@@ -2391,7 +2636,12 @@ begin
     GridMask.Tolerance := Tolerance;
     GridMask.Threshold := Threshold;
 
-    GridMask.RemoveCartesianGrid(PlotImg, PlotBox);
+    PlotBox.PolarCoordinates := (Scale.CoordSystem = csPolar);
+
+    if Scale.CoordSystem = csCartesian then
+      GridMask.RemoveCartesianGrid(PlotImg, PlotBox)
+    else
+      GridMask.RemovePolarGrid(PlotImg, PlotBox, Scale.ImagePoint[2]);
   finally
     IsChanged := True;
   end;
@@ -2728,6 +2978,7 @@ begin
           if (DigitChild.CompareName('PlotBox') = 0) then
           begin
             PlotBox.ImportFromXML(DigitChild);
+            PlotBox.PolarCoordinates := (Scale.CoordSystem = csPolar);
             PlotBoxLoaded := True;
           end;
 

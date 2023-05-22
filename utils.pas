@@ -5,13 +5,38 @@ unit utils;
 interface
 
 uses
-  Classes, SysUtils, coordinates, typ, ipf, math, inv, Dialogs;
+  Classes, SysUtils, coordinates, typ, ipf, math, inv, Graphics;
 
+type
+  THough1DMap = Array of LongWord;
+  THough2DMap = Array of Array of LongWord;
+
+
+function AreSimilar(R1, G1, B1, R2, G2, B2, Tolerance: Byte): Boolean; overload;
+function AreSimilar(R1, G1, B1: Byte; C2: LongWord; Tolerance: Byte): Boolean; overload;
+function AreSimilar(C1, C2: LongWord; Tolerance: Byte): Boolean; overload;
 function BSpline(Points: Array of TCurvePoint; Degree: Integer; Xval: Double): Double;
 procedure SavitzkyGolay(Kernel, Degree, Deriv: Integer; var Points: Array of TCurvePoint);
 
+
 implementation
 
+function AreSimilar(R1, G1, B1, R2, G2, B2, Tolerance: Byte): Boolean;
+begin
+  Result := (Abs(R1 - R2) + Abs(G1 - G2) + Abs(B1 - B2) <= 3*Tolerance);
+end;
+
+function AreSimilar(R1, G1, B1: Byte; C2: LongWord; Tolerance: Byte): Boolean;
+begin
+  Result := AreSimilar(R1, G1, B1, Red(C2), Green(C2), Blue(C2), Tolerance);
+end;
+
+function AreSimilar(C1, C2: LongWord; Tolerance: Byte): Boolean;
+begin
+  //Check for the trivial case first
+  Result := (C1 = C2) or AreSimilar(Red(C1), Green(C1), Blue(C1),
+                                    Red(C2), Green(C2), Blue(C2), Tolerance);
+end;
 
 function WeightedAverage(X1, X2, Coeff: Double): Double;
 begin
@@ -257,7 +282,6 @@ begin
     SetLength(tAA, 0);
   end;
 end;
-
 
 end.
 

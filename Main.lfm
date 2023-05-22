@@ -1465,7 +1465,6 @@ object DigitMainForm: TDigitMainForm
       Top = 300
       Width = 220
       Align = alBottom
-      Visible = False
     end
     object pcInput: TPageControl
       Left = 0
@@ -1493,491 +1492,502 @@ object DigitMainForm: TDigitMainForm
         ImageIndex = 17
         ParentShowHint = False
         ShowHint = True
-        object lblColor: TLabel
-          AnchorSideLeft.Control = tsCurve
-          AnchorSideTop.Control = btnColor
-          AnchorSideTop.Side = asrCenter
-          Left = 5
-          Height = 13
-          Top = 8
-          Width = 34
-          BorderSpacing.Left = 5
-          BorderSpacing.Top = 9
-          Caption = 'Color:'
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Style = [fsBold]
-          ParentColor = False
-          ParentFont = False
-        end
-        object btnColor: TColorButton
-          AnchorSideLeft.Control = lblColor
-          AnchorSideLeft.Side = asrBottom
-          AnchorSideTop.Control = tsCurve
-          AnchorSideRight.Control = tsCurve
-          AnchorSideRight.Side = asrBottom
-          Left = 44
-          Height = 25
-          Top = 2
-          Width = 165
-          Anchors = [akTop, akLeft, akRight]
-          BorderSpacing.Left = 5
-          BorderSpacing.Top = 2
-          BorderSpacing.Right = 5
-          BorderWidth = 2
-          ButtonColorSize = 16
-          ButtonColor = clWhite
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Default'
-          ParentFont = False
-        end
-        object rgDirection: TRadioGroup
-          AnchorSideLeft.Control = tsCurve
-          AnchorSideTop.Control = btnColor
-          AnchorSideTop.Side = asrBottom
-          AnchorSideRight.Control = tsCurve
-          AnchorSideRight.Side = asrBottom
-          Left = 5
-          Height = 56
-          Top = 29
-          Width = 204
-          Anchors = [akTop, akLeft, akRight]
-          AutoFill = True
-          BorderSpacing.Left = 5
-          BorderSpacing.Top = 2
-          BorderSpacing.Right = 5
-          Caption = 'Scan direction'
-          ChildSizing.LeftRightSpacing = 6
-          ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
-          ChildSizing.EnlargeVertical = crsHomogenousChildResize
-          ChildSizing.ShrinkHorizontal = crsScaleChilds
-          ChildSizing.ShrinkVertical = crsScaleChilds
-          ChildSizing.Layout = cclLeftToRightThenTopToBottom
-          ChildSizing.ControlsPerLine = 1
-          ClientHeight = 29
-          ClientWidth = 194
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Default'
-          Font.Style = [fsBold]
-          ItemIndex = 0
-          Items.Strings = (
-            'Left to Right (CW)'
-            'Right to Left (CCW)'
-          )
-          ParentFont = False
+        object sbCurve: TScrollBox
+          Left = 0
+          Height = 265
+          Top = 0
+          Width = 214
+          HorzScrollBar.Page = 168
+          VertScrollBar.Page = 181
+          Align = alClient
+          ClientHeight = 263
+          ClientWidth = 212
           TabOrder = 0
-        end
-        object lblStep: TLabel
-          AnchorSideLeft.Control = tsCurve
-          AnchorSideTop.Control = rgDirection
-          AnchorSideTop.Side = asrBottom
-          Left = 5
-          Height = 13
-          Top = 95
-          Width = 30
-          BorderSpacing.Left = 5
-          BorderSpacing.Top = 10
-          Caption = 'Step:'
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Default'
-          Font.Style = [fsBold]
-          ParentColor = False
-          ParentFont = False
-        end
-        object lblInterval: TLabel
-          AnchorSideLeft.Control = tsCurve
-          AnchorSideTop.Control = lblStep
-          AnchorSideTop.Side = asrBottom
-          Left = 5
-          Height = 13
-          Top = 118
-          Width = 47
-          BorderSpacing.Left = 5
-          BorderSpacing.Top = 10
-          Caption = 'Interval:'
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Default'
-          Font.Style = [fsBold]
-          ParentColor = False
-          ParentFont = False
-        end
-        object lblTolerance: TLabel
-          AnchorSideLeft.Control = tsCurve
-          AnchorSideTop.Control = lblInterval
-          AnchorSideTop.Side = asrBottom
-          Left = 5
-          Height = 13
-          Top = 141
-          Width = 59
-          BorderSpacing.Left = 5
-          BorderSpacing.Top = 10
-          Caption = 'Tolerance:'
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Default'
-          Font.Style = [fsBold]
-          ParentColor = False
-          ParentFont = False
-        end
-        object lblSpread: TLabel
-          AnchorSideLeft.Control = tsCurve
-          AnchorSideTop.Control = lblTolerance
-          AnchorSideTop.Side = asrBottom
-          Left = 5
-          Height = 13
-          Top = 164
-          Width = 69
-          BorderSpacing.Left = 5
-          BorderSpacing.Top = 10
-          Caption = 'Line spread:'
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Default'
-          Font.Style = [fsBold]
-          ParentColor = False
-          ParentFont = False
-        end
-        object edtStep: TBCTrackbarUpdown
-          AnchorSideLeft.Control = lblStep
-          AnchorSideLeft.Side = asrBottom
-          AnchorSideTop.Control = lblStep
-          AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Control = tsCurve
-          AnchorSideRight.Side = asrBottom
-          Left = 40
-          Height = 22
-          Top = 90
-          Width = 169
-          AllowNegativeValues = False
-          BarExponent = 1
-          Increment = 1
-          LongTimeInterval = 400
-          MinValue = 1
-          MaxValue = 200
-          Value = 1
-          ShortTimeInterval = 100
-          Background.Color = clWindow
-          Background.Gradient1.StartColor = clWhite
-          Background.Gradient1.EndColor = clBlack
-          Background.Gradient1.GradientType = gtLinear
-          Background.Gradient1.Point1XPercent = 0
-          Background.Gradient1.Point1YPercent = 0
-          Background.Gradient1.Point2XPercent = 0
-          Background.Gradient1.Point2YPercent = 100
-          Background.Gradient2.StartColor = clWhite
-          Background.Gradient2.EndColor = clBlack
-          Background.Gradient2.GradientType = gtLinear
-          Background.Gradient2.Point1XPercent = 0
-          Background.Gradient2.Point1YPercent = 0
-          Background.Gradient2.Point2XPercent = 0
-          Background.Gradient2.Point2YPercent = 100
-          Background.Gradient1EndPercent = 35
-          Background.Style = bbsColor
-          ButtonBackground.Gradient1.StartColor = clBtnShadow
-          ButtonBackground.Gradient1.EndColor = clBtnFace
-          ButtonBackground.Gradient1.GradientType = gtLinear
-          ButtonBackground.Gradient1.Point1XPercent = 0
-          ButtonBackground.Gradient1.Point1YPercent = -50
-          ButtonBackground.Gradient1.Point2XPercent = 0
-          ButtonBackground.Gradient1.Point2YPercent = 50
-          ButtonBackground.Gradient2.StartColor = clBtnFace
-          ButtonBackground.Gradient2.EndColor = clBtnShadow
-          ButtonBackground.Gradient2.GradientType = gtLinear
-          ButtonBackground.Gradient2.Point1XPercent = 0
-          ButtonBackground.Gradient2.Point1YPercent = 50
-          ButtonBackground.Gradient2.Point2XPercent = 0
-          ButtonBackground.Gradient2.Point2YPercent = 150
-          ButtonBackground.Gradient1EndPercent = 50
-          ButtonBackground.Style = bbsGradient
-          ButtonDownBackground.Color = clBtnShadow
-          ButtonDownBackground.Gradient1.StartColor = clWhite
-          ButtonDownBackground.Gradient1.EndColor = clBlack
-          ButtonDownBackground.Gradient1.GradientType = gtLinear
-          ButtonDownBackground.Gradient1.Point1XPercent = 0
-          ButtonDownBackground.Gradient1.Point1YPercent = 0
-          ButtonDownBackground.Gradient1.Point2XPercent = 0
-          ButtonDownBackground.Gradient1.Point2YPercent = 100
-          ButtonDownBackground.Gradient2.StartColor = clWhite
-          ButtonDownBackground.Gradient2.EndColor = clBlack
-          ButtonDownBackground.Gradient2.GradientType = gtLinear
-          ButtonDownBackground.Gradient2.Point1XPercent = 0
-          ButtonDownBackground.Gradient2.Point1YPercent = 0
-          ButtonDownBackground.Gradient2.Point2XPercent = 0
-          ButtonDownBackground.Gradient2.Point2YPercent = 100
-          ButtonDownBackground.Gradient1EndPercent = 35
-          ButtonDownBackground.Style = bbsColor
-          Border.Color = clWindowText
-          Border.Style = bboSolid
-          Rounding.RoundX = 1
-          Rounding.RoundY = 1
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Default'
-          HasTrackBar = True
-          ArrowColor = clBtnText
-          Anchors = [akTop, akLeft, akRight]
-          BorderSpacing.Left = 5
-          BorderSpacing.Right = 5
-          TabOrder = 1
-          TabStop = True
-          UseDockManager = False
-        end
-        object edtInterval: TBCTrackbarUpdown
-          AnchorSideLeft.Control = lblInterval
-          AnchorSideLeft.Side = asrBottom
-          AnchorSideTop.Control = lblInterval
-          AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Control = tsCurve
-          AnchorSideRight.Side = asrBottom
-          Left = 57
-          Height = 22
-          Top = 113
-          Width = 152
-          AllowNegativeValues = False
-          BarExponent = 1
-          Increment = 1
-          LongTimeInterval = 400
-          MinValue = 0
-          MaxValue = 1000
-          Value = 50
-          ShortTimeInterval = 100
-          Background.Color = clWindow
-          Background.Gradient1.StartColor = clWhite
-          Background.Gradient1.EndColor = clBlack
-          Background.Gradient1.GradientType = gtLinear
-          Background.Gradient1.Point1XPercent = 0
-          Background.Gradient1.Point1YPercent = 0
-          Background.Gradient1.Point2XPercent = 0
-          Background.Gradient1.Point2YPercent = 100
-          Background.Gradient2.StartColor = clWhite
-          Background.Gradient2.EndColor = clBlack
-          Background.Gradient2.GradientType = gtLinear
-          Background.Gradient2.Point1XPercent = 0
-          Background.Gradient2.Point1YPercent = 0
-          Background.Gradient2.Point2XPercent = 0
-          Background.Gradient2.Point2YPercent = 100
-          Background.Gradient1EndPercent = 35
-          Background.Style = bbsColor
-          ButtonBackground.Gradient1.StartColor = clBtnShadow
-          ButtonBackground.Gradient1.EndColor = clBtnFace
-          ButtonBackground.Gradient1.GradientType = gtLinear
-          ButtonBackground.Gradient1.Point1XPercent = 0
-          ButtonBackground.Gradient1.Point1YPercent = -50
-          ButtonBackground.Gradient1.Point2XPercent = 0
-          ButtonBackground.Gradient1.Point2YPercent = 50
-          ButtonBackground.Gradient2.StartColor = clBtnFace
-          ButtonBackground.Gradient2.EndColor = clBtnShadow
-          ButtonBackground.Gradient2.GradientType = gtLinear
-          ButtonBackground.Gradient2.Point1XPercent = 0
-          ButtonBackground.Gradient2.Point1YPercent = 50
-          ButtonBackground.Gradient2.Point2XPercent = 0
-          ButtonBackground.Gradient2.Point2YPercent = 150
-          ButtonBackground.Gradient1EndPercent = 50
-          ButtonBackground.Style = bbsGradient
-          ButtonDownBackground.Color = clBtnShadow
-          ButtonDownBackground.Gradient1.StartColor = clWhite
-          ButtonDownBackground.Gradient1.EndColor = clBlack
-          ButtonDownBackground.Gradient1.GradientType = gtLinear
-          ButtonDownBackground.Gradient1.Point1XPercent = 0
-          ButtonDownBackground.Gradient1.Point1YPercent = 0
-          ButtonDownBackground.Gradient1.Point2XPercent = 0
-          ButtonDownBackground.Gradient1.Point2YPercent = 100
-          ButtonDownBackground.Gradient2.StartColor = clWhite
-          ButtonDownBackground.Gradient2.EndColor = clBlack
-          ButtonDownBackground.Gradient2.GradientType = gtLinear
-          ButtonDownBackground.Gradient2.Point1XPercent = 0
-          ButtonDownBackground.Gradient2.Point1YPercent = 0
-          ButtonDownBackground.Gradient2.Point2XPercent = 0
-          ButtonDownBackground.Gradient2.Point2YPercent = 100
-          ButtonDownBackground.Gradient1EndPercent = 35
-          ButtonDownBackground.Style = bbsColor
-          Border.Color = clWindowText
-          Border.Style = bboSolid
-          Rounding.RoundX = 1
-          Rounding.RoundY = 1
-          Font.Color = clWindowText
-          Font.Height = -11
-          Font.Name = 'Arial'
-          HasTrackBar = True
-          ArrowColor = clBtnText
-          Anchors = [akTop, akLeft, akRight]
-          BorderSpacing.Left = 5
-          BorderSpacing.Right = 5
-          TabOrder = 2
-          TabStop = True
-          UseDockManager = False
-        end
-        object edtTolerance: TBCTrackbarUpdown
-          AnchorSideLeft.Control = lblTolerance
-          AnchorSideLeft.Side = asrBottom
-          AnchorSideTop.Control = lblTolerance
-          AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Control = tsCurve
-          AnchorSideRight.Side = asrBottom
-          Left = 69
-          Height = 22
-          Top = 136
-          Width = 140
-          AllowNegativeValues = False
-          BarExponent = 1
-          Increment = 1
-          LongTimeInterval = 400
-          MinValue = 1
-          MaxValue = 255
-          Value = 32
-          ShortTimeInterval = 100
-          Background.Color = clWindow
-          Background.Gradient1.StartColor = clWhite
-          Background.Gradient1.EndColor = clBlack
-          Background.Gradient1.GradientType = gtLinear
-          Background.Gradient1.Point1XPercent = 0
-          Background.Gradient1.Point1YPercent = 0
-          Background.Gradient1.Point2XPercent = 0
-          Background.Gradient1.Point2YPercent = 100
-          Background.Gradient2.StartColor = clWhite
-          Background.Gradient2.EndColor = clBlack
-          Background.Gradient2.GradientType = gtLinear
-          Background.Gradient2.Point1XPercent = 0
-          Background.Gradient2.Point1YPercent = 0
-          Background.Gradient2.Point2XPercent = 0
-          Background.Gradient2.Point2YPercent = 100
-          Background.Gradient1EndPercent = 35
-          Background.Style = bbsColor
-          ButtonBackground.Gradient1.StartColor = clBtnShadow
-          ButtonBackground.Gradient1.EndColor = clBtnFace
-          ButtonBackground.Gradient1.GradientType = gtLinear
-          ButtonBackground.Gradient1.Point1XPercent = 0
-          ButtonBackground.Gradient1.Point1YPercent = -50
-          ButtonBackground.Gradient1.Point2XPercent = 0
-          ButtonBackground.Gradient1.Point2YPercent = 50
-          ButtonBackground.Gradient2.StartColor = clBtnFace
-          ButtonBackground.Gradient2.EndColor = clBtnShadow
-          ButtonBackground.Gradient2.GradientType = gtLinear
-          ButtonBackground.Gradient2.Point1XPercent = 0
-          ButtonBackground.Gradient2.Point1YPercent = 50
-          ButtonBackground.Gradient2.Point2XPercent = 0
-          ButtonBackground.Gradient2.Point2YPercent = 150
-          ButtonBackground.Gradient1EndPercent = 50
-          ButtonBackground.Style = bbsGradient
-          ButtonDownBackground.Color = clBtnShadow
-          ButtonDownBackground.Gradient1.StartColor = clWhite
-          ButtonDownBackground.Gradient1.EndColor = clBlack
-          ButtonDownBackground.Gradient1.GradientType = gtLinear
-          ButtonDownBackground.Gradient1.Point1XPercent = 0
-          ButtonDownBackground.Gradient1.Point1YPercent = 0
-          ButtonDownBackground.Gradient1.Point2XPercent = 0
-          ButtonDownBackground.Gradient1.Point2YPercent = 100
-          ButtonDownBackground.Gradient2.StartColor = clWhite
-          ButtonDownBackground.Gradient2.EndColor = clBlack
-          ButtonDownBackground.Gradient2.GradientType = gtLinear
-          ButtonDownBackground.Gradient2.Point1XPercent = 0
-          ButtonDownBackground.Gradient2.Point1YPercent = 0
-          ButtonDownBackground.Gradient2.Point2XPercent = 0
-          ButtonDownBackground.Gradient2.Point2YPercent = 100
-          ButtonDownBackground.Gradient1EndPercent = 35
-          ButtonDownBackground.Style = bbsColor
-          Border.Color = clWindowText
-          Border.Style = bboSolid
-          Rounding.RoundX = 1
-          Rounding.RoundY = 1
-          Font.Color = clWindowText
-          Font.Name = 'Arial'
-          HasTrackBar = True
-          ArrowColor = clBtnText
-          Anchors = [akTop, akLeft, akRight]
-          BorderSpacing.Left = 5
-          BorderSpacing.Right = 5
-          TabOrder = 3
-          TabStop = True
-          UseDockManager = False
-        end
-        object edtSpread: TBCTrackbarUpdown
-          AnchorSideLeft.Control = lblSpread
-          AnchorSideLeft.Side = asrBottom
-          AnchorSideTop.Control = lblSpread
-          AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Control = tsCurve
-          AnchorSideRight.Side = asrBottom
-          Left = 79
-          Height = 22
-          Top = 159
-          Width = 130
-          AllowNegativeValues = False
-          BarExponent = 1
-          Increment = 1
-          LongTimeInterval = 400
-          MinValue = 0
-          MaxValue = 100
-          Value = 4
-          ShortTimeInterval = 100
-          Background.Color = clWindow
-          Background.Gradient1.StartColor = clWhite
-          Background.Gradient1.EndColor = clBlack
-          Background.Gradient1.GradientType = gtLinear
-          Background.Gradient1.Point1XPercent = 0
-          Background.Gradient1.Point1YPercent = 0
-          Background.Gradient1.Point2XPercent = 0
-          Background.Gradient1.Point2YPercent = 100
-          Background.Gradient2.StartColor = clWhite
-          Background.Gradient2.EndColor = clBlack
-          Background.Gradient2.GradientType = gtLinear
-          Background.Gradient2.Point1XPercent = 0
-          Background.Gradient2.Point1YPercent = 0
-          Background.Gradient2.Point2XPercent = 0
-          Background.Gradient2.Point2YPercent = 100
-          Background.Gradient1EndPercent = 35
-          Background.Style = bbsColor
-          ButtonBackground.Gradient1.StartColor = clBtnShadow
-          ButtonBackground.Gradient1.EndColor = clBtnFace
-          ButtonBackground.Gradient1.GradientType = gtLinear
-          ButtonBackground.Gradient1.Point1XPercent = 0
-          ButtonBackground.Gradient1.Point1YPercent = -50
-          ButtonBackground.Gradient1.Point2XPercent = 0
-          ButtonBackground.Gradient1.Point2YPercent = 50
-          ButtonBackground.Gradient2.StartColor = clBtnFace
-          ButtonBackground.Gradient2.EndColor = clBtnShadow
-          ButtonBackground.Gradient2.GradientType = gtLinear
-          ButtonBackground.Gradient2.Point1XPercent = 0
-          ButtonBackground.Gradient2.Point1YPercent = 50
-          ButtonBackground.Gradient2.Point2XPercent = 0
-          ButtonBackground.Gradient2.Point2YPercent = 150
-          ButtonBackground.Gradient1EndPercent = 50
-          ButtonBackground.Style = bbsGradient
-          ButtonDownBackground.Color = clBtnShadow
-          ButtonDownBackground.Gradient1.StartColor = clWhite
-          ButtonDownBackground.Gradient1.EndColor = clBlack
-          ButtonDownBackground.Gradient1.GradientType = gtLinear
-          ButtonDownBackground.Gradient1.Point1XPercent = 0
-          ButtonDownBackground.Gradient1.Point1YPercent = 0
-          ButtonDownBackground.Gradient1.Point2XPercent = 0
-          ButtonDownBackground.Gradient1.Point2YPercent = 100
-          ButtonDownBackground.Gradient2.StartColor = clWhite
-          ButtonDownBackground.Gradient2.EndColor = clBlack
-          ButtonDownBackground.Gradient2.GradientType = gtLinear
-          ButtonDownBackground.Gradient2.Point1XPercent = 0
-          ButtonDownBackground.Gradient2.Point1YPercent = 0
-          ButtonDownBackground.Gradient2.Point2XPercent = 0
-          ButtonDownBackground.Gradient2.Point2YPercent = 100
-          ButtonDownBackground.Gradient1EndPercent = 35
-          ButtonDownBackground.Style = bbsColor
-          Border.Color = clWindowText
-          Border.Style = bboSolid
-          Rounding.RoundX = 1
-          Rounding.RoundY = 1
-          Font.Color = clWindowText
-          Font.Name = 'Arial'
-          HasTrackBar = True
-          ArrowColor = clBtnText
-          Anchors = [akTop, akLeft, akRight]
-          BorderSpacing.Left = 5
-          BorderSpacing.Right = 5
-          TabOrder = 4
-          TabStop = True
-          UseDockManager = False
+          object lblColor: TLabel
+            AnchorSideLeft.Control = sbCurve
+            AnchorSideTop.Control = btnColor
+            AnchorSideTop.Side = asrCenter
+            Left = 5
+            Height = 13
+            Top = 8
+            Width = 34
+            BorderSpacing.Left = 5
+            BorderSpacing.Top = 9
+            Caption = 'Color:'
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Style = [fsBold]
+            ParentColor = False
+            ParentFont = False
+          end
+          object btnColor: TColorButton
+            AnchorSideLeft.Control = lblColor
+            AnchorSideLeft.Side = asrBottom
+            AnchorSideRight.Control = sbCurve
+            AnchorSideRight.Side = asrBottom
+            Left = 44
+            Height = 25
+            Top = 2
+            Width = 163
+            Anchors = [akTop, akLeft, akRight]
+            BorderSpacing.Left = 5
+            BorderSpacing.Top = 2
+            BorderSpacing.Right = 5
+            BorderWidth = 2
+            ButtonColorSize = 16
+            ButtonColor = clWhite
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Name = 'Default'
+            ParentFont = False
+          end
+          object rgDirection: TRadioGroup
+            AnchorSideLeft.Control = sbCurve
+            AnchorSideTop.Control = btnColor
+            AnchorSideTop.Side = asrBottom
+            AnchorSideRight.Control = sbCurve
+            AnchorSideRight.Side = asrBottom
+            Left = 5
+            Height = 56
+            Top = 29
+            Width = 202
+            Anchors = [akTop, akLeft, akRight]
+            AutoFill = True
+            BorderSpacing.Left = 5
+            BorderSpacing.Top = 2
+            BorderSpacing.Right = 5
+            Caption = 'Scan direction'
+            ChildSizing.LeftRightSpacing = 6
+            ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+            ChildSizing.EnlargeVertical = crsHomogenousChildResize
+            ChildSizing.ShrinkHorizontal = crsScaleChilds
+            ChildSizing.ShrinkVertical = crsScaleChilds
+            ChildSizing.Layout = cclLeftToRightThenTopToBottom
+            ChildSizing.ControlsPerLine = 1
+            ClientHeight = 29
+            ClientWidth = 192
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Name = 'Default'
+            Font.Style = [fsBold]
+            ItemIndex = 0
+            Items.Strings = (
+              'Left to Right (CW)'
+              'Right to Left (CCW)'
+            )
+            ParentFont = False
+            TabOrder = 0
+          end
+          object lblStep: TLabel
+            AnchorSideLeft.Control = sbCurve
+            AnchorSideTop.Control = rgDirection
+            AnchorSideTop.Side = asrBottom
+            Left = 5
+            Height = 13
+            Top = 95
+            Width = 30
+            BorderSpacing.Left = 5
+            BorderSpacing.Top = 10
+            Caption = 'Step:'
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Name = 'Default'
+            Font.Style = [fsBold]
+            ParentColor = False
+            ParentFont = False
+          end
+          object edtStep: TBCTrackbarUpdown
+            AnchorSideLeft.Control = lblStep
+            AnchorSideLeft.Side = asrBottom
+            AnchorSideTop.Control = lblStep
+            AnchorSideTop.Side = asrCenter
+            AnchorSideRight.Control = sbCurve
+            AnchorSideRight.Side = asrBottom
+            Left = 40
+            Height = 22
+            Top = 90
+            Width = 167
+            AllowNegativeValues = False
+            BarExponent = 1
+            Increment = 1
+            LongTimeInterval = 400
+            MinValue = 1
+            MaxValue = 200
+            Value = 1
+            ShortTimeInterval = 100
+            Background.Color = clWindow
+            Background.Gradient1.StartColor = clWhite
+            Background.Gradient1.EndColor = clBlack
+            Background.Gradient1.GradientType = gtLinear
+            Background.Gradient1.Point1XPercent = 0
+            Background.Gradient1.Point1YPercent = 0
+            Background.Gradient1.Point2XPercent = 0
+            Background.Gradient1.Point2YPercent = 100
+            Background.Gradient2.StartColor = clWhite
+            Background.Gradient2.EndColor = clBlack
+            Background.Gradient2.GradientType = gtLinear
+            Background.Gradient2.Point1XPercent = 0
+            Background.Gradient2.Point1YPercent = 0
+            Background.Gradient2.Point2XPercent = 0
+            Background.Gradient2.Point2YPercent = 100
+            Background.Gradient1EndPercent = 35
+            Background.Style = bbsColor
+            ButtonBackground.Gradient1.StartColor = clBtnShadow
+            ButtonBackground.Gradient1.EndColor = clBtnFace
+            ButtonBackground.Gradient1.GradientType = gtLinear
+            ButtonBackground.Gradient1.Point1XPercent = 0
+            ButtonBackground.Gradient1.Point1YPercent = -50
+            ButtonBackground.Gradient1.Point2XPercent = 0
+            ButtonBackground.Gradient1.Point2YPercent = 50
+            ButtonBackground.Gradient2.StartColor = clBtnFace
+            ButtonBackground.Gradient2.EndColor = clBtnShadow
+            ButtonBackground.Gradient2.GradientType = gtLinear
+            ButtonBackground.Gradient2.Point1XPercent = 0
+            ButtonBackground.Gradient2.Point1YPercent = 50
+            ButtonBackground.Gradient2.Point2XPercent = 0
+            ButtonBackground.Gradient2.Point2YPercent = 150
+            ButtonBackground.Gradient1EndPercent = 50
+            ButtonBackground.Style = bbsGradient
+            ButtonDownBackground.Color = clBtnShadow
+            ButtonDownBackground.Gradient1.StartColor = clWhite
+            ButtonDownBackground.Gradient1.EndColor = clBlack
+            ButtonDownBackground.Gradient1.GradientType = gtLinear
+            ButtonDownBackground.Gradient1.Point1XPercent = 0
+            ButtonDownBackground.Gradient1.Point1YPercent = 0
+            ButtonDownBackground.Gradient1.Point2XPercent = 0
+            ButtonDownBackground.Gradient1.Point2YPercent = 100
+            ButtonDownBackground.Gradient2.StartColor = clWhite
+            ButtonDownBackground.Gradient2.EndColor = clBlack
+            ButtonDownBackground.Gradient2.GradientType = gtLinear
+            ButtonDownBackground.Gradient2.Point1XPercent = 0
+            ButtonDownBackground.Gradient2.Point1YPercent = 0
+            ButtonDownBackground.Gradient2.Point2XPercent = 0
+            ButtonDownBackground.Gradient2.Point2YPercent = 100
+            ButtonDownBackground.Gradient1EndPercent = 35
+            ButtonDownBackground.Style = bbsColor
+            Border.Color = clWindowText
+            Border.Style = bboSolid
+            Rounding.RoundX = 1
+            Rounding.RoundY = 1
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Name = 'Default'
+            HasTrackBar = True
+            ArrowColor = clBtnText
+            Anchors = [akTop, akLeft, akRight]
+            BorderSpacing.Left = 5
+            BorderSpacing.Right = 5
+            TabOrder = 1
+            TabStop = True
+            UseDockManager = False
+          end
+          object lblInterval: TLabel
+            AnchorSideLeft.Control = sbCurve
+            AnchorSideTop.Control = lblStep
+            AnchorSideTop.Side = asrBottom
+            Left = 5
+            Height = 13
+            Top = 118
+            Width = 47
+            BorderSpacing.Left = 5
+            BorderSpacing.Top = 10
+            Caption = 'Interval:'
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Name = 'Default'
+            Font.Style = [fsBold]
+            ParentColor = False
+            ParentFont = False
+          end
+          object edtInterval: TBCTrackbarUpdown
+            AnchorSideLeft.Control = lblInterval
+            AnchorSideLeft.Side = asrBottom
+            AnchorSideTop.Control = lblInterval
+            AnchorSideTop.Side = asrCenter
+            AnchorSideRight.Control = sbCurve
+            AnchorSideRight.Side = asrBottom
+            Left = 57
+            Height = 22
+            Top = 113
+            Width = 150
+            AllowNegativeValues = False
+            BarExponent = 1
+            Increment = 1
+            LongTimeInterval = 400
+            MinValue = 0
+            MaxValue = 1000
+            Value = 50
+            ShortTimeInterval = 100
+            Background.Color = clWindow
+            Background.Gradient1.StartColor = clWhite
+            Background.Gradient1.EndColor = clBlack
+            Background.Gradient1.GradientType = gtLinear
+            Background.Gradient1.Point1XPercent = 0
+            Background.Gradient1.Point1YPercent = 0
+            Background.Gradient1.Point2XPercent = 0
+            Background.Gradient1.Point2YPercent = 100
+            Background.Gradient2.StartColor = clWhite
+            Background.Gradient2.EndColor = clBlack
+            Background.Gradient2.GradientType = gtLinear
+            Background.Gradient2.Point1XPercent = 0
+            Background.Gradient2.Point1YPercent = 0
+            Background.Gradient2.Point2XPercent = 0
+            Background.Gradient2.Point2YPercent = 100
+            Background.Gradient1EndPercent = 35
+            Background.Style = bbsColor
+            ButtonBackground.Gradient1.StartColor = clBtnShadow
+            ButtonBackground.Gradient1.EndColor = clBtnFace
+            ButtonBackground.Gradient1.GradientType = gtLinear
+            ButtonBackground.Gradient1.Point1XPercent = 0
+            ButtonBackground.Gradient1.Point1YPercent = -50
+            ButtonBackground.Gradient1.Point2XPercent = 0
+            ButtonBackground.Gradient1.Point2YPercent = 50
+            ButtonBackground.Gradient2.StartColor = clBtnFace
+            ButtonBackground.Gradient2.EndColor = clBtnShadow
+            ButtonBackground.Gradient2.GradientType = gtLinear
+            ButtonBackground.Gradient2.Point1XPercent = 0
+            ButtonBackground.Gradient2.Point1YPercent = 50
+            ButtonBackground.Gradient2.Point2XPercent = 0
+            ButtonBackground.Gradient2.Point2YPercent = 150
+            ButtonBackground.Gradient1EndPercent = 50
+            ButtonBackground.Style = bbsGradient
+            ButtonDownBackground.Color = clBtnShadow
+            ButtonDownBackground.Gradient1.StartColor = clWhite
+            ButtonDownBackground.Gradient1.EndColor = clBlack
+            ButtonDownBackground.Gradient1.GradientType = gtLinear
+            ButtonDownBackground.Gradient1.Point1XPercent = 0
+            ButtonDownBackground.Gradient1.Point1YPercent = 0
+            ButtonDownBackground.Gradient1.Point2XPercent = 0
+            ButtonDownBackground.Gradient1.Point2YPercent = 100
+            ButtonDownBackground.Gradient2.StartColor = clWhite
+            ButtonDownBackground.Gradient2.EndColor = clBlack
+            ButtonDownBackground.Gradient2.GradientType = gtLinear
+            ButtonDownBackground.Gradient2.Point1XPercent = 0
+            ButtonDownBackground.Gradient2.Point1YPercent = 0
+            ButtonDownBackground.Gradient2.Point2XPercent = 0
+            ButtonDownBackground.Gradient2.Point2YPercent = 100
+            ButtonDownBackground.Gradient1EndPercent = 35
+            ButtonDownBackground.Style = bbsColor
+            Border.Color = clWindowText
+            Border.Style = bboSolid
+            Rounding.RoundX = 1
+            Rounding.RoundY = 1
+            Font.Color = clWindowText
+            Font.Height = -11
+            Font.Name = 'Arial'
+            HasTrackBar = True
+            ArrowColor = clBtnText
+            Anchors = [akTop, akLeft, akRight]
+            BorderSpacing.Left = 5
+            BorderSpacing.Right = 5
+            TabOrder = 2
+            TabStop = True
+            UseDockManager = False
+          end
+          object lblTolerance: TLabel
+            AnchorSideLeft.Control = sbCurve
+            AnchorSideTop.Control = lblInterval
+            AnchorSideTop.Side = asrBottom
+            Left = 5
+            Height = 13
+            Top = 141
+            Width = 59
+            BorderSpacing.Left = 5
+            BorderSpacing.Top = 10
+            Caption = 'Tolerance:'
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Name = 'Default'
+            Font.Style = [fsBold]
+            ParentColor = False
+            ParentFont = False
+          end
+          object edtTolerance: TBCTrackbarUpdown
+            AnchorSideLeft.Control = lblTolerance
+            AnchorSideLeft.Side = asrBottom
+            AnchorSideTop.Control = lblTolerance
+            AnchorSideTop.Side = asrCenter
+            AnchorSideRight.Control = sbCurve
+            AnchorSideRight.Side = asrBottom
+            Left = 69
+            Height = 22
+            Top = 136
+            Width = 138
+            AllowNegativeValues = False
+            BarExponent = 1
+            Increment = 1
+            LongTimeInterval = 400
+            MinValue = 1
+            MaxValue = 255
+            Value = 32
+            ShortTimeInterval = 100
+            Background.Color = clWindow
+            Background.Gradient1.StartColor = clWhite
+            Background.Gradient1.EndColor = clBlack
+            Background.Gradient1.GradientType = gtLinear
+            Background.Gradient1.Point1XPercent = 0
+            Background.Gradient1.Point1YPercent = 0
+            Background.Gradient1.Point2XPercent = 0
+            Background.Gradient1.Point2YPercent = 100
+            Background.Gradient2.StartColor = clWhite
+            Background.Gradient2.EndColor = clBlack
+            Background.Gradient2.GradientType = gtLinear
+            Background.Gradient2.Point1XPercent = 0
+            Background.Gradient2.Point1YPercent = 0
+            Background.Gradient2.Point2XPercent = 0
+            Background.Gradient2.Point2YPercent = 100
+            Background.Gradient1EndPercent = 35
+            Background.Style = bbsColor
+            ButtonBackground.Gradient1.StartColor = clBtnShadow
+            ButtonBackground.Gradient1.EndColor = clBtnFace
+            ButtonBackground.Gradient1.GradientType = gtLinear
+            ButtonBackground.Gradient1.Point1XPercent = 0
+            ButtonBackground.Gradient1.Point1YPercent = -50
+            ButtonBackground.Gradient1.Point2XPercent = 0
+            ButtonBackground.Gradient1.Point2YPercent = 50
+            ButtonBackground.Gradient2.StartColor = clBtnFace
+            ButtonBackground.Gradient2.EndColor = clBtnShadow
+            ButtonBackground.Gradient2.GradientType = gtLinear
+            ButtonBackground.Gradient2.Point1XPercent = 0
+            ButtonBackground.Gradient2.Point1YPercent = 50
+            ButtonBackground.Gradient2.Point2XPercent = 0
+            ButtonBackground.Gradient2.Point2YPercent = 150
+            ButtonBackground.Gradient1EndPercent = 50
+            ButtonBackground.Style = bbsGradient
+            ButtonDownBackground.Color = clBtnShadow
+            ButtonDownBackground.Gradient1.StartColor = clWhite
+            ButtonDownBackground.Gradient1.EndColor = clBlack
+            ButtonDownBackground.Gradient1.GradientType = gtLinear
+            ButtonDownBackground.Gradient1.Point1XPercent = 0
+            ButtonDownBackground.Gradient1.Point1YPercent = 0
+            ButtonDownBackground.Gradient1.Point2XPercent = 0
+            ButtonDownBackground.Gradient1.Point2YPercent = 100
+            ButtonDownBackground.Gradient2.StartColor = clWhite
+            ButtonDownBackground.Gradient2.EndColor = clBlack
+            ButtonDownBackground.Gradient2.GradientType = gtLinear
+            ButtonDownBackground.Gradient2.Point1XPercent = 0
+            ButtonDownBackground.Gradient2.Point1YPercent = 0
+            ButtonDownBackground.Gradient2.Point2XPercent = 0
+            ButtonDownBackground.Gradient2.Point2YPercent = 100
+            ButtonDownBackground.Gradient1EndPercent = 35
+            ButtonDownBackground.Style = bbsColor
+            Border.Color = clWindowText
+            Border.Style = bboSolid
+            Rounding.RoundX = 1
+            Rounding.RoundY = 1
+            Font.Color = clWindowText
+            Font.Name = 'Arial'
+            HasTrackBar = True
+            ArrowColor = clBtnText
+            Anchors = [akTop, akLeft, akRight]
+            BorderSpacing.Left = 5
+            BorderSpacing.Right = 5
+            TabOrder = 3
+            TabStop = True
+            UseDockManager = False
+          end
+          object lblSpread: TLabel
+            AnchorSideLeft.Control = sbCurve
+            AnchorSideTop.Control = lblTolerance
+            AnchorSideTop.Side = asrBottom
+            Left = 5
+            Height = 13
+            Top = 164
+            Width = 69
+            BorderSpacing.Left = 5
+            BorderSpacing.Top = 10
+            Caption = 'Line spread:'
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Name = 'Default'
+            Font.Style = [fsBold]
+            ParentColor = False
+            ParentFont = False
+          end
+          object edtSpread: TBCTrackbarUpdown
+            AnchorSideLeft.Control = lblSpread
+            AnchorSideLeft.Side = asrBottom
+            AnchorSideTop.Control = lblSpread
+            AnchorSideTop.Side = asrCenter
+            AnchorSideRight.Control = sbCurve
+            AnchorSideRight.Side = asrBottom
+            Left = 79
+            Height = 22
+            Top = 159
+            Width = 128
+            AllowNegativeValues = False
+            BarExponent = 1
+            Increment = 1
+            LongTimeInterval = 400
+            MinValue = 0
+            MaxValue = 100
+            Value = 4
+            ShortTimeInterval = 100
+            Background.Color = clWindow
+            Background.Gradient1.StartColor = clWhite
+            Background.Gradient1.EndColor = clBlack
+            Background.Gradient1.GradientType = gtLinear
+            Background.Gradient1.Point1XPercent = 0
+            Background.Gradient1.Point1YPercent = 0
+            Background.Gradient1.Point2XPercent = 0
+            Background.Gradient1.Point2YPercent = 100
+            Background.Gradient2.StartColor = clWhite
+            Background.Gradient2.EndColor = clBlack
+            Background.Gradient2.GradientType = gtLinear
+            Background.Gradient2.Point1XPercent = 0
+            Background.Gradient2.Point1YPercent = 0
+            Background.Gradient2.Point2XPercent = 0
+            Background.Gradient2.Point2YPercent = 100
+            Background.Gradient1EndPercent = 35
+            Background.Style = bbsColor
+            ButtonBackground.Gradient1.StartColor = clBtnShadow
+            ButtonBackground.Gradient1.EndColor = clBtnFace
+            ButtonBackground.Gradient1.GradientType = gtLinear
+            ButtonBackground.Gradient1.Point1XPercent = 0
+            ButtonBackground.Gradient1.Point1YPercent = -50
+            ButtonBackground.Gradient1.Point2XPercent = 0
+            ButtonBackground.Gradient1.Point2YPercent = 50
+            ButtonBackground.Gradient2.StartColor = clBtnFace
+            ButtonBackground.Gradient2.EndColor = clBtnShadow
+            ButtonBackground.Gradient2.GradientType = gtLinear
+            ButtonBackground.Gradient2.Point1XPercent = 0
+            ButtonBackground.Gradient2.Point1YPercent = 50
+            ButtonBackground.Gradient2.Point2XPercent = 0
+            ButtonBackground.Gradient2.Point2YPercent = 150
+            ButtonBackground.Gradient1EndPercent = 50
+            ButtonBackground.Style = bbsGradient
+            ButtonDownBackground.Color = clBtnShadow
+            ButtonDownBackground.Gradient1.StartColor = clWhite
+            ButtonDownBackground.Gradient1.EndColor = clBlack
+            ButtonDownBackground.Gradient1.GradientType = gtLinear
+            ButtonDownBackground.Gradient1.Point1XPercent = 0
+            ButtonDownBackground.Gradient1.Point1YPercent = 0
+            ButtonDownBackground.Gradient1.Point2XPercent = 0
+            ButtonDownBackground.Gradient1.Point2YPercent = 100
+            ButtonDownBackground.Gradient2.StartColor = clWhite
+            ButtonDownBackground.Gradient2.EndColor = clBlack
+            ButtonDownBackground.Gradient2.GradientType = gtLinear
+            ButtonDownBackground.Gradient2.Point1XPercent = 0
+            ButtonDownBackground.Gradient2.Point1YPercent = 0
+            ButtonDownBackground.Gradient2.Point2XPercent = 0
+            ButtonDownBackground.Gradient2.Point2YPercent = 100
+            ButtonDownBackground.Gradient1EndPercent = 35
+            ButtonDownBackground.Style = bbsColor
+            Border.Color = clWindowText
+            Border.Style = bboSolid
+            Rounding.RoundX = 1
+            Rounding.RoundY = 1
+            Font.Color = clWindowText
+            Font.Name = 'Arial'
+            HasTrackBar = True
+            ArrowColor = clBtnText
+            Anchors = [akTop, akLeft, akRight]
+            BorderSpacing.Left = 5
+            BorderSpacing.Right = 5
+            TabOrder = 4
+            TabStop = True
+            UseDockManager = False
+          end
         end
       end
       object tsScale: TTabSheet
@@ -2378,6 +2388,7 @@ object DigitMainForm: TDigitMainForm
               Font.Height = -13
               Font.Name = 'Default'
               Font.Style = [fsBold]
+              OnEditingDone = EditPX1EditingDone
               ParentFont = False
               TabOrder = 1
             end
@@ -2481,6 +2492,7 @@ object DigitMainForm: TDigitMainForm
               Font.Height = -13
               Font.Name = 'Default'
               Font.Style = [fsBold]
+              OnEditingDone = EditPY1EditingDone
               ParentFont = False
               TabOrder = 3
             end
@@ -2644,6 +2656,7 @@ object DigitMainForm: TDigitMainForm
               Font.Height = -13
               Font.Name = 'Default'
               Font.Style = [fsBold]
+              OnEditingDone = EditPX1EditingDone
               ParentFont = False
               TabOrder = 1
             end
@@ -2747,6 +2760,7 @@ object DigitMainForm: TDigitMainForm
               Font.Height = -13
               Font.Name = 'Default'
               Font.Style = [fsBold]
+              OnEditingDone = EditPY1EditingDone
               ParentFont = False
               TabOrder = 3
             end
@@ -2910,6 +2924,7 @@ object DigitMainForm: TDigitMainForm
               Font.Height = -13
               Font.Name = 'Default'
               Font.Style = [fsBold]
+              OnEditingDone = EditPX1EditingDone
               ParentFont = False
               TabOrder = 1
             end
@@ -3013,6 +3028,7 @@ object DigitMainForm: TDigitMainForm
               Font.Height = -13
               Font.Name = 'Default'
               Font.Style = [fsBold]
+              OnEditingDone = EditPY1EditingDone
               ParentFont = False
               TabOrder = 3
             end
@@ -3290,7 +3306,7 @@ object DigitMainForm: TDigitMainForm
               MinValue = 0
               MaxValue = 100
               OnChange = EditVX1Change
-              Value = 50
+              Value = 41
               ShortTimeInterval = 100
               Background.Color = clWindow
               Background.Gradient1.StartColor = clWhite
@@ -3868,107 +3884,6 @@ object DigitMainForm: TDigitMainForm
         ImageIndex = 38
         ParentShowHint = False
         ShowHint = True
-        object edtGridTolerance: TBCTrackbarUpdown
-          AnchorSideLeft.Control = lblGridTolerance
-          AnchorSideLeft.Side = asrBottom
-          AnchorSideTop.Control = lblGridTolerance
-          AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Control = tsGrid
-          AnchorSideRight.Side = asrBottom
-          Left = 64
-          Height = 22
-          Top = 128
-          Width = 145
-          AllowNegativeValues = False
-          BarExponent = 1
-          Increment = 1
-          LongTimeInterval = 400
-          MinValue = 1
-          MaxValue = 255
-          OnChange = edtGridToleranceChange
-          Value = 32
-          ShortTimeInterval = 100
-          Background.Color = clWindow
-          Background.Gradient1.StartColor = clWhite
-          Background.Gradient1.EndColor = clBlack
-          Background.Gradient1.GradientType = gtLinear
-          Background.Gradient1.Point1XPercent = 0
-          Background.Gradient1.Point1YPercent = 0
-          Background.Gradient1.Point2XPercent = 0
-          Background.Gradient1.Point2YPercent = 100
-          Background.Gradient2.StartColor = clWhite
-          Background.Gradient2.EndColor = clBlack
-          Background.Gradient2.GradientType = gtLinear
-          Background.Gradient2.Point1XPercent = 0
-          Background.Gradient2.Point1YPercent = 0
-          Background.Gradient2.Point2XPercent = 0
-          Background.Gradient2.Point2YPercent = 100
-          Background.Gradient1EndPercent = 35
-          Background.Style = bbsColor
-          ButtonBackground.Gradient1.StartColor = clBtnShadow
-          ButtonBackground.Gradient1.EndColor = clBtnFace
-          ButtonBackground.Gradient1.GradientType = gtLinear
-          ButtonBackground.Gradient1.Point1XPercent = 0
-          ButtonBackground.Gradient1.Point1YPercent = -50
-          ButtonBackground.Gradient1.Point2XPercent = 0
-          ButtonBackground.Gradient1.Point2YPercent = 50
-          ButtonBackground.Gradient2.StartColor = clBtnFace
-          ButtonBackground.Gradient2.EndColor = clBtnShadow
-          ButtonBackground.Gradient2.GradientType = gtLinear
-          ButtonBackground.Gradient2.Point1XPercent = 0
-          ButtonBackground.Gradient2.Point1YPercent = 50
-          ButtonBackground.Gradient2.Point2XPercent = 0
-          ButtonBackground.Gradient2.Point2YPercent = 150
-          ButtonBackground.Gradient1EndPercent = 50
-          ButtonBackground.Style = bbsGradient
-          ButtonDownBackground.Color = clBtnShadow
-          ButtonDownBackground.Gradient1.StartColor = clWhite
-          ButtonDownBackground.Gradient1.EndColor = clBlack
-          ButtonDownBackground.Gradient1.GradientType = gtLinear
-          ButtonDownBackground.Gradient1.Point1XPercent = 0
-          ButtonDownBackground.Gradient1.Point1YPercent = 0
-          ButtonDownBackground.Gradient1.Point2XPercent = 0
-          ButtonDownBackground.Gradient1.Point2YPercent = 100
-          ButtonDownBackground.Gradient2.StartColor = clWhite
-          ButtonDownBackground.Gradient2.EndColor = clBlack
-          ButtonDownBackground.Gradient2.GradientType = gtLinear
-          ButtonDownBackground.Gradient2.Point1XPercent = 0
-          ButtonDownBackground.Gradient2.Point1YPercent = 0
-          ButtonDownBackground.Gradient2.Point2XPercent = 0
-          ButtonDownBackground.Gradient2.Point2YPercent = 100
-          ButtonDownBackground.Gradient1EndPercent = 35
-          ButtonDownBackground.Style = bbsColor
-          Border.Color = clWindowText
-          Border.Style = bboSolid
-          Rounding.RoundX = 1
-          Rounding.RoundY = 1
-          Font.Color = clWindowText
-          Font.Name = 'Arial'
-          HasTrackBar = True
-          ArrowColor = clBtnText
-          Anchors = [akTop, akLeft, akRight]
-          BorderSpacing.Left = 5
-          BorderSpacing.Right = 5
-          TabOrder = 0
-          TabStop = True
-          UseDockManager = False
-        end
-        object lblGridTolerance: TLabel
-          AnchorSideLeft.Control = tsGrid
-          AnchorSideTop.Control = lblBackground
-          AnchorSideTop.Side = asrBottom
-          Left = 0
-          Height = 13
-          Top = 133
-          Width = 59
-          BorderSpacing.Top = 12
-          Caption = 'Tolerance:'
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Style = [fsBold]
-          ParentColor = False
-          ParentFont = False
-        end
         object tbGrid: TToolBar
           Left = 0
           Height = 40
@@ -3979,7 +3894,7 @@ object DigitMainForm: TDigitMainForm
           Caption = 'tbGrid'
           Images = LargeImageList
           ParentShowHint = False
-          TabOrder = 2
+          TabOrder = 0
           object tbRemoveGrid: TToolButton
             Left = 1
             Top = 2
@@ -3993,269 +3908,381 @@ object DigitMainForm: TDigitMainForm
             ParentShowHint = False
           end
         end
-        object lblMinorGrid: TLabel
-          AnchorSideLeft.Control = tsGrid
-          AnchorSideTop.Control = lblMajorGrid
-          AnchorSideTop.Side = asrBottom
+        object sbGrid: TScrollBox
           Left = 0
-          Height = 13
-          Top = 81
-          Width = 61
-          BorderSpacing.Top = 14
-          Caption = 'Minor grid:'
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Style = [fsBold]
-          ParentColor = False
-          ParentFont = False
-        end
-        object btnMinorGrid: TColorButton
-          AnchorSideLeft.Control = lblMinorGrid
-          AnchorSideLeft.Side = asrBottom
-          AnchorSideTop.Control = lblMinorGrid
-          AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Control = btnMinorGridColor
-          Left = 66
-          Height = 25
-          Top = 75
-          Width = 113
-          Anchors = [akTop, akLeft, akRight]
-          BorderSpacing.Left = 5
-          BorderWidth = 2
-          ButtonColorSize = 16
-          ButtonColor = clGray
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Default'
-          OnColorChanged = btnMinorGridColorChanged
-          ParentFont = False
-        end
-        object lblBackground: TLabel
-          AnchorSideLeft.Control = tsGrid
-          AnchorSideTop.Control = lblMinorGrid
-          AnchorSideTop.Side = asrBottom
-          Left = 0
-          Height = 13
-          Top = 108
-          Width = 71
-          BorderSpacing.Top = 14
-          Caption = 'Background:'
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Style = [fsBold]
-          ParentColor = False
-          ParentFont = False
-        end
-        object btnBackground: TColorButton
-          AnchorSideLeft.Control = lblBackground
-          AnchorSideLeft.Side = asrBottom
-          AnchorSideTop.Control = lblBackground
-          AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Control = btnMinorGridColor
-          Left = 76
-          Height = 25
-          Top = 102
-          Width = 103
-          Anchors = [akTop, akLeft, akRight]
-          BorderSpacing.Left = 5
-          BorderSpacing.Top = 3
-          BorderWidth = 2
-          ButtonColorSize = 16
-          ButtonColor = clWhite
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Default'
-          OnColorChanged = btnBackgroundColorChanged
-          ParentFont = False
-        end
-        object lblMajorGrid: TLabel
-          AnchorSideLeft.Control = tsGrid
-          AnchorSideTop.Control = tbGrid
-          AnchorSideTop.Side = asrBottom
-          Left = 0
-          Height = 13
-          Top = 54
-          Width = 61
-          BorderSpacing.Top = 14
-          Caption = 'Major grid:'
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Style = [fsBold]
-          ParentColor = False
-          ParentFont = False
-        end
-        object btnMajorGrid: TColorButton
-          AnchorSideLeft.Control = lblMajorGrid
-          AnchorSideLeft.Side = asrBottom
-          AnchorSideTop.Control = lblMajorGrid
-          AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Control = btnMajorGridColor
-          Left = 66
-          Height = 25
-          Top = 48
-          Width = 113
-          Anchors = [akTop, akLeft, akRight]
-          BorderSpacing.Left = 5
-          BorderWidth = 2
-          ButtonColorSize = 16
-          ButtonColor = clBlack
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Default'
-          OnColorChanged = btnMajorGridColorChanged
-          ParentFont = False
-        end
-        object lblGridThreshold: TLabel
-          AnchorSideLeft.Control = tsGrid
-          AnchorSideTop.Control = lblGridTolerance
-          AnchorSideTop.Side = asrBottom
-          Left = 0
-          Height = 13
-          Top = 158
-          Width = 60
-          BorderSpacing.Top = 12
-          Caption = 'Threshold:'
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Style = [fsBold]
-          ParentColor = False
-          ParentFont = False
-        end
-        object edtGridThreshold: TBCTrackbarUpdown
-          AnchorSideLeft.Control = lblGridThreshold
-          AnchorSideLeft.Side = asrBottom
-          AnchorSideTop.Control = lblGridThreshold
-          AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Control = tsGrid
-          AnchorSideRight.Side = asrBottom
-          Left = 65
-          Height = 22
-          Top = 153
-          Width = 144
-          AllowNegativeValues = False
-          BarExponent = 1
-          Increment = 1
-          LongTimeInterval = 400
-          MinValue = 0
-          MaxValue = 100
-          OnChange = edtGridThresholdChange
-          Value = 50
-          ShortTimeInterval = 100
-          Background.Color = clWindow
-          Background.Gradient1.StartColor = clWhite
-          Background.Gradient1.EndColor = clBlack
-          Background.Gradient1.GradientType = gtLinear
-          Background.Gradient1.Point1XPercent = 0
-          Background.Gradient1.Point1YPercent = 0
-          Background.Gradient1.Point2XPercent = 0
-          Background.Gradient1.Point2YPercent = 100
-          Background.Gradient2.StartColor = clWhite
-          Background.Gradient2.EndColor = clBlack
-          Background.Gradient2.GradientType = gtLinear
-          Background.Gradient2.Point1XPercent = 0
-          Background.Gradient2.Point1YPercent = 0
-          Background.Gradient2.Point2XPercent = 0
-          Background.Gradient2.Point2YPercent = 100
-          Background.Gradient1EndPercent = 35
-          Background.Style = bbsColor
-          ButtonBackground.Gradient1.StartColor = clBtnShadow
-          ButtonBackground.Gradient1.EndColor = clBtnFace
-          ButtonBackground.Gradient1.GradientType = gtLinear
-          ButtonBackground.Gradient1.Point1XPercent = 0
-          ButtonBackground.Gradient1.Point1YPercent = -50
-          ButtonBackground.Gradient1.Point2XPercent = 0
-          ButtonBackground.Gradient1.Point2YPercent = 50
-          ButtonBackground.Gradient2.StartColor = clBtnFace
-          ButtonBackground.Gradient2.EndColor = clBtnShadow
-          ButtonBackground.Gradient2.GradientType = gtLinear
-          ButtonBackground.Gradient2.Point1XPercent = 0
-          ButtonBackground.Gradient2.Point1YPercent = 50
-          ButtonBackground.Gradient2.Point2XPercent = 0
-          ButtonBackground.Gradient2.Point2YPercent = 150
-          ButtonBackground.Gradient1EndPercent = 50
-          ButtonBackground.Style = bbsGradient
-          ButtonDownBackground.Color = clBtnShadow
-          ButtonDownBackground.Gradient1.StartColor = clWhite
-          ButtonDownBackground.Gradient1.EndColor = clBlack
-          ButtonDownBackground.Gradient1.GradientType = gtLinear
-          ButtonDownBackground.Gradient1.Point1XPercent = 0
-          ButtonDownBackground.Gradient1.Point1YPercent = 0
-          ButtonDownBackground.Gradient1.Point2XPercent = 0
-          ButtonDownBackground.Gradient1.Point2YPercent = 100
-          ButtonDownBackground.Gradient2.StartColor = clWhite
-          ButtonDownBackground.Gradient2.EndColor = clBlack
-          ButtonDownBackground.Gradient2.GradientType = gtLinear
-          ButtonDownBackground.Gradient2.Point1XPercent = 0
-          ButtonDownBackground.Gradient2.Point1YPercent = 0
-          ButtonDownBackground.Gradient2.Point2XPercent = 0
-          ButtonDownBackground.Gradient2.Point2YPercent = 100
-          ButtonDownBackground.Gradient1EndPercent = 35
-          ButtonDownBackground.Style = bbsColor
-          Border.Color = clWindowText
-          Border.Style = bboSolid
-          Rounding.RoundX = 1
-          Rounding.RoundY = 1
-          Font.Color = clWindowText
-          Font.Name = 'Arial'
-          HasTrackBar = True
-          ArrowColor = clBtnText
-          Anchors = [akTop, akLeft, akRight]
-          BorderSpacing.Left = 5
-          BorderSpacing.Right = 5
+          Height = 225
+          Top = 40
+          Width = 214
+          HorzScrollBar.Page = 145
+          VertScrollBar.Page = 135
+          Align = alClient
+          ClientHeight = 223
+          ClientWidth = 212
           TabOrder = 1
-          TabStop = True
-          UseDockManager = False
-        end
-        object btnMajorGridColor: TSpeedButton
-          AnchorSideTop.Control = lblMajorGrid
-          AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Control = tsGrid
-          AnchorSideRight.Side = asrBottom
-          Left = 179
-          Height = 25
-          Top = 48
-          Width = 30
-          Action = ModeMajorGridColor
-          Anchors = [akTop, akRight]
-          BorderSpacing.Right = 5
-          GroupIndex = 1
-          Images = ImageList
-          ImageIndex = 14
-          ParentShowHint = False
-        end
-        object btnMinorGridColor: TSpeedButton
-          AnchorSideTop.Control = lblMinorGrid
-          AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Control = tsGrid
-          AnchorSideRight.Side = asrBottom
-          Left = 179
-          Height = 25
-          Top = 75
-          Width = 30
-          Action = ModeMinorGridColor
-          Anchors = [akTop, akRight]
-          BorderSpacing.Right = 5
-          GroupIndex = 1
-          Images = ImageList
-          ImageIndex = 14
-          ParentShowHint = False
-        end
-        object btnBackgroundColor: TSpeedButton
-          AnchorSideTop.Control = lblBackground
-          AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Control = tsGrid
-          AnchorSideRight.Side = asrBottom
-          Left = 179
-          Height = 25
-          Top = 102
-          Width = 30
-          Action = ModeBackgroundColor
-          Anchors = [akTop, akRight]
-          BorderSpacing.Right = 5
-          GroupIndex = 1
-          Images = ImageList
-          ImageIndex = 14
-          ParentShowHint = False
+          object lblMajorGrid: TLabel
+            AnchorSideLeft.Control = sbGrid
+            AnchorSideTop.Control = sbGrid
+            Left = 0
+            Height = 13
+            Top = 14
+            Width = 61
+            BorderSpacing.Top = 14
+            Caption = 'Major grid:'
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Style = [fsBold]
+            ParentColor = False
+            ParentFont = False
+          end
+          object btnMajorGrid: TColorButton
+            AnchorSideLeft.Control = lblMajorGrid
+            AnchorSideLeft.Side = asrBottom
+            AnchorSideTop.Control = lblMajorGrid
+            AnchorSideTop.Side = asrCenter
+            AnchorSideRight.Control = btnMajorGridColor
+            Left = 66
+            Height = 25
+            Top = 8
+            Width = 111
+            Anchors = [akTop, akLeft, akRight]
+            BorderSpacing.Left = 5
+            BorderWidth = 2
+            ButtonColorSize = 16
+            ButtonColor = clBlack
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Name = 'Default'
+            OnColorChanged = btnMajorGridColorChanged
+            ParentFont = False
+          end
+          object btnMajorGridColor: TSpeedButton
+            AnchorSideTop.Control = lblMajorGrid
+            AnchorSideTop.Side = asrCenter
+            AnchorSideRight.Control = sbGrid
+            AnchorSideRight.Side = asrBottom
+            Left = 177
+            Height = 25
+            Top = 8
+            Width = 30
+            Action = ModeMajorGridColor
+            Anchors = [akTop, akRight]
+            BorderSpacing.Right = 5
+            GroupIndex = 1
+            Images = ImageList
+            ImageIndex = 14
+            ParentShowHint = False
+          end
+          object lblMinorGrid: TLabel
+            AnchorSideLeft.Control = sbGrid
+            AnchorSideTop.Control = lblMajorGrid
+            AnchorSideTop.Side = asrBottom
+            Left = 0
+            Height = 13
+            Top = 41
+            Width = 61
+            BorderSpacing.Top = 14
+            Caption = 'Minor grid:'
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Style = [fsBold]
+            ParentColor = False
+            ParentFont = False
+          end
+          object btnMinorGrid: TColorButton
+            AnchorSideLeft.Control = lblMinorGrid
+            AnchorSideLeft.Side = asrBottom
+            AnchorSideTop.Control = lblMinorGrid
+            AnchorSideTop.Side = asrCenter
+            AnchorSideRight.Control = btnMinorGridColor
+            Left = 66
+            Height = 25
+            Top = 35
+            Width = 111
+            Anchors = [akTop, akLeft, akRight]
+            BorderSpacing.Left = 5
+            BorderWidth = 2
+            ButtonColorSize = 16
+            ButtonColor = clGray
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Name = 'Default'
+            OnColorChanged = btnMinorGridColorChanged
+            ParentFont = False
+          end
+          object btnMinorGridColor: TSpeedButton
+            AnchorSideTop.Control = lblMinorGrid
+            AnchorSideTop.Side = asrCenter
+            AnchorSideRight.Control = sbGrid
+            AnchorSideRight.Side = asrBottom
+            Left = 177
+            Height = 25
+            Top = 35
+            Width = 30
+            Action = ModeMinorGridColor
+            Anchors = [akTop, akRight]
+            BorderSpacing.Right = 5
+            GroupIndex = 1
+            Images = ImageList
+            ImageIndex = 14
+            ParentShowHint = False
+          end
+          object lblBackground: TLabel
+            AnchorSideLeft.Control = sbGrid
+            AnchorSideTop.Control = lblMinorGrid
+            AnchorSideTop.Side = asrBottom
+            Left = 0
+            Height = 13
+            Top = 68
+            Width = 71
+            BorderSpacing.Top = 14
+            Caption = 'Background:'
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Style = [fsBold]
+            ParentColor = False
+            ParentFont = False
+          end
+          object btnBackground: TColorButton
+            AnchorSideLeft.Control = lblBackground
+            AnchorSideLeft.Side = asrBottom
+            AnchorSideTop.Control = lblBackground
+            AnchorSideTop.Side = asrCenter
+            AnchorSideRight.Control = btnMinorGridColor
+            Left = 76
+            Height = 25
+            Top = 62
+            Width = 101
+            Anchors = [akTop, akLeft, akRight]
+            BorderSpacing.Left = 5
+            BorderSpacing.Top = 3
+            BorderWidth = 2
+            ButtonColorSize = 16
+            ButtonColor = clWhite
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Name = 'Default'
+            OnColorChanged = btnBackgroundColorChanged
+            ParentFont = False
+          end
+          object btnBackgroundColor: TSpeedButton
+            AnchorSideTop.Control = lblBackground
+            AnchorSideTop.Side = asrCenter
+            AnchorSideRight.Control = sbGrid
+            AnchorSideRight.Side = asrBottom
+            Left = 177
+            Height = 25
+            Top = 62
+            Width = 30
+            Action = ModeBackgroundColor
+            Anchors = [akTop, akRight]
+            BorderSpacing.Right = 5
+            GroupIndex = 1
+            Images = ImageList
+            ImageIndex = 14
+            ParentShowHint = False
+          end
+          object lblGridTolerance: TLabel
+            AnchorSideLeft.Control = sbGrid
+            AnchorSideTop.Control = lblBackground
+            AnchorSideTop.Side = asrBottom
+            Left = 0
+            Height = 13
+            Top = 93
+            Width = 59
+            BorderSpacing.Top = 12
+            Caption = 'Tolerance:'
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Style = [fsBold]
+            ParentColor = False
+            ParentFont = False
+          end
+          object edtGridTolerance: TBCTrackbarUpdown
+            AnchorSideLeft.Control = lblGridTolerance
+            AnchorSideLeft.Side = asrBottom
+            AnchorSideTop.Control = lblGridTolerance
+            AnchorSideTop.Side = asrCenter
+            AnchorSideRight.Control = sbGrid
+            AnchorSideRight.Side = asrBottom
+            Left = 64
+            Height = 22
+            Top = 88
+            Width = 143
+            AllowNegativeValues = False
+            BarExponent = 1
+            Increment = 1
+            LongTimeInterval = 400
+            MinValue = 1
+            MaxValue = 255
+            OnChange = edtGridToleranceChange
+            Value = 32
+            ShortTimeInterval = 100
+            Background.Color = clWindow
+            Background.Gradient1.StartColor = clWhite
+            Background.Gradient1.EndColor = clBlack
+            Background.Gradient1.GradientType = gtLinear
+            Background.Gradient1.Point1XPercent = 0
+            Background.Gradient1.Point1YPercent = 0
+            Background.Gradient1.Point2XPercent = 0
+            Background.Gradient1.Point2YPercent = 100
+            Background.Gradient2.StartColor = clWhite
+            Background.Gradient2.EndColor = clBlack
+            Background.Gradient2.GradientType = gtLinear
+            Background.Gradient2.Point1XPercent = 0
+            Background.Gradient2.Point1YPercent = 0
+            Background.Gradient2.Point2XPercent = 0
+            Background.Gradient2.Point2YPercent = 100
+            Background.Gradient1EndPercent = 35
+            Background.Style = bbsColor
+            ButtonBackground.Gradient1.StartColor = clBtnShadow
+            ButtonBackground.Gradient1.EndColor = clBtnFace
+            ButtonBackground.Gradient1.GradientType = gtLinear
+            ButtonBackground.Gradient1.Point1XPercent = 0
+            ButtonBackground.Gradient1.Point1YPercent = -50
+            ButtonBackground.Gradient1.Point2XPercent = 0
+            ButtonBackground.Gradient1.Point2YPercent = 50
+            ButtonBackground.Gradient2.StartColor = clBtnFace
+            ButtonBackground.Gradient2.EndColor = clBtnShadow
+            ButtonBackground.Gradient2.GradientType = gtLinear
+            ButtonBackground.Gradient2.Point1XPercent = 0
+            ButtonBackground.Gradient2.Point1YPercent = 50
+            ButtonBackground.Gradient2.Point2XPercent = 0
+            ButtonBackground.Gradient2.Point2YPercent = 150
+            ButtonBackground.Gradient1EndPercent = 50
+            ButtonBackground.Style = bbsGradient
+            ButtonDownBackground.Color = clBtnShadow
+            ButtonDownBackground.Gradient1.StartColor = clWhite
+            ButtonDownBackground.Gradient1.EndColor = clBlack
+            ButtonDownBackground.Gradient1.GradientType = gtLinear
+            ButtonDownBackground.Gradient1.Point1XPercent = 0
+            ButtonDownBackground.Gradient1.Point1YPercent = 0
+            ButtonDownBackground.Gradient1.Point2XPercent = 0
+            ButtonDownBackground.Gradient1.Point2YPercent = 100
+            ButtonDownBackground.Gradient2.StartColor = clWhite
+            ButtonDownBackground.Gradient2.EndColor = clBlack
+            ButtonDownBackground.Gradient2.GradientType = gtLinear
+            ButtonDownBackground.Gradient2.Point1XPercent = 0
+            ButtonDownBackground.Gradient2.Point1YPercent = 0
+            ButtonDownBackground.Gradient2.Point2XPercent = 0
+            ButtonDownBackground.Gradient2.Point2YPercent = 100
+            ButtonDownBackground.Gradient1EndPercent = 35
+            ButtonDownBackground.Style = bbsColor
+            Border.Color = clWindowText
+            Border.Style = bboSolid
+            Rounding.RoundX = 1
+            Rounding.RoundY = 1
+            Font.Color = clWindowText
+            Font.Name = 'Arial'
+            HasTrackBar = True
+            ArrowColor = clBtnText
+            Anchors = [akTop, akLeft, akRight]
+            BorderSpacing.Left = 5
+            BorderSpacing.Right = 5
+            TabOrder = 0
+            TabStop = True
+            UseDockManager = False
+          end
+          object lblGridThreshold: TLabel
+            AnchorSideLeft.Control = sbGrid
+            AnchorSideTop.Control = lblGridTolerance
+            AnchorSideTop.Side = asrBottom
+            Left = 0
+            Height = 13
+            Top = 118
+            Width = 60
+            BorderSpacing.Top = 12
+            Caption = 'Threshold:'
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Style = [fsBold]
+            ParentColor = False
+            ParentFont = False
+          end
+          object edtGridThreshold: TBCTrackbarUpdown
+            AnchorSideLeft.Control = lblGridThreshold
+            AnchorSideLeft.Side = asrBottom
+            AnchorSideTop.Control = lblGridThreshold
+            AnchorSideTop.Side = asrCenter
+            AnchorSideRight.Control = sbGrid
+            AnchorSideRight.Side = asrBottom
+            Left = 65
+            Height = 22
+            Top = 113
+            Width = 142
+            AllowNegativeValues = False
+            BarExponent = 1
+            Increment = 1
+            LongTimeInterval = 400
+            MinValue = 0
+            MaxValue = 100
+            OnChange = edtGridThresholdChange
+            Value = 50
+            ShortTimeInterval = 100
+            Background.Color = clWindow
+            Background.Gradient1.StartColor = clWhite
+            Background.Gradient1.EndColor = clBlack
+            Background.Gradient1.GradientType = gtLinear
+            Background.Gradient1.Point1XPercent = 0
+            Background.Gradient1.Point1YPercent = 0
+            Background.Gradient1.Point2XPercent = 0
+            Background.Gradient1.Point2YPercent = 100
+            Background.Gradient2.StartColor = clWhite
+            Background.Gradient2.EndColor = clBlack
+            Background.Gradient2.GradientType = gtLinear
+            Background.Gradient2.Point1XPercent = 0
+            Background.Gradient2.Point1YPercent = 0
+            Background.Gradient2.Point2XPercent = 0
+            Background.Gradient2.Point2YPercent = 100
+            Background.Gradient1EndPercent = 35
+            Background.Style = bbsColor
+            ButtonBackground.Gradient1.StartColor = clBtnShadow
+            ButtonBackground.Gradient1.EndColor = clBtnFace
+            ButtonBackground.Gradient1.GradientType = gtLinear
+            ButtonBackground.Gradient1.Point1XPercent = 0
+            ButtonBackground.Gradient1.Point1YPercent = -50
+            ButtonBackground.Gradient1.Point2XPercent = 0
+            ButtonBackground.Gradient1.Point2YPercent = 50
+            ButtonBackground.Gradient2.StartColor = clBtnFace
+            ButtonBackground.Gradient2.EndColor = clBtnShadow
+            ButtonBackground.Gradient2.GradientType = gtLinear
+            ButtonBackground.Gradient2.Point1XPercent = 0
+            ButtonBackground.Gradient2.Point1YPercent = 50
+            ButtonBackground.Gradient2.Point2XPercent = 0
+            ButtonBackground.Gradient2.Point2YPercent = 150
+            ButtonBackground.Gradient1EndPercent = 50
+            ButtonBackground.Style = bbsGradient
+            ButtonDownBackground.Color = clBtnShadow
+            ButtonDownBackground.Gradient1.StartColor = clWhite
+            ButtonDownBackground.Gradient1.EndColor = clBlack
+            ButtonDownBackground.Gradient1.GradientType = gtLinear
+            ButtonDownBackground.Gradient1.Point1XPercent = 0
+            ButtonDownBackground.Gradient1.Point1YPercent = 0
+            ButtonDownBackground.Gradient1.Point2XPercent = 0
+            ButtonDownBackground.Gradient1.Point2YPercent = 100
+            ButtonDownBackground.Gradient2.StartColor = clWhite
+            ButtonDownBackground.Gradient2.EndColor = clBlack
+            ButtonDownBackground.Gradient2.GradientType = gtLinear
+            ButtonDownBackground.Gradient2.Point1XPercent = 0
+            ButtonDownBackground.Gradient2.Point1YPercent = 0
+            ButtonDownBackground.Gradient2.Point2XPercent = 0
+            ButtonDownBackground.Gradient2.Point2YPercent = 100
+            ButtonDownBackground.Gradient1EndPercent = 35
+            ButtonDownBackground.Style = bbsColor
+            Border.Color = clWindowText
+            Border.Style = bboSolid
+            Rounding.RoundX = 1
+            Rounding.RoundY = 1
+            Font.Color = clWindowText
+            Font.Name = 'Arial'
+            HasTrackBar = True
+            ArrowColor = clBtnText
+            Anchors = [akTop, akLeft, akRight]
+            BorderSpacing.Left = 5
+            BorderSpacing.Right = 5
+            TabOrder = 1
+            TabStop = True
+            UseDockManager = False
+          end
         end
       end
     end
@@ -5362,12 +5389,18 @@ object DigitMainForm: TDigitMainForm
       ImageIndex = 14
       OnExecute = ModeBackgroundColorExecute
     end
+    object EditCopyImage: TAction
+      Category = 'Edit'
+      Caption = '&Copy image'
+      Hint = 'Copy image|Copy plot image to clipboard'
+      ImageIndex = 44
+    end
   end
   object ImageList: TImageList
     Left = 463
     Top = 408
     Bitmap = {
-      4C7A300000001000000010000000C46100000000000078DAECBD055455DFDAF6
+      4C7A330000001000000010000000506600000000000078DAECBD055455DFDAF6
       3DA5BBBB4B091130B1155B516CC56E51FF7677618B01764B8809A8A8806281A2
       1880D2DDDD29215CEF9C0B370711EB9C677CCFF9C6FBEE31AEB1F65E6BFE66AD
       79CFB8E7DA7B03200F1E3C087FFDFA75C3AB57AF2A79A29F9BC43B171010C01D
@@ -5938,218 +5971,255 @@ object DigitMainForm: TDigitMainForm
       E90E0A24F5A83249DEAE42E83C81C4EC9427490768181AD673894254E9152D54
       B9A9606B3FC1FB8527544816B5A9D4434A24F9A06293928E2893A46D8D7CF40E
       7992B85F91A41FA5699D5226DE2BE5E2EB6FE960CF20A1A03D438448AEA30AF9
-      3FED9D075455B9BAC73788E0D0140B284A0741B15004E9BD8958692220885415
-      1410050B3A323A2258505414B160D75167AE027691C18ABD0B3A2A20D2A41C0E
-      45CAF9BF64E3E1A26341EF7D6FDDB7D6DD6B7D6BE724DF2FF992ECEC2467EF9D
-      BC4E20FAF1D2241D6986DCC3981789FD99174B0674F0CF57D27B8D34F366A30C
-      53BDBB3F732154AE69E128A13B8BF5BB33F3B585D8F4DBD94FF8859DF84469A6
-      78833469A7324CFD3E35A6395D5EA865AF02D3942ECF34EC92679E131BA99D5F
-      E25F11BE90944159AA0C53B54B95A9DD3688A94D956B97EDF2A4AFEAD71E4727
-      3E7A4114539677925DFE5B79E848C669920BB365EB566667CA06E6C26F698C78
-      AF3EDD14D534A4758DCCCC9CA77845C44447EFDFBB2BEDCE808172F4032C262A
-      6A1EF3FAF21F4C7F39458911BA069AE39CDDBCD76D48DEB02579FDB9DF766D7E
-      FEE0CCC1EAAA2B879B1B2FEFC4FB736BF0FE2869268F0FC2CCC67E5E3B1F75FC
-      F6A983E585970E3472AFEC6D6BBAB001D587E793F16E102AB67AE3ED467714AD
-      7761A538998CAD367BA22D771DFCFCFD77513E65D3FA47ADBFCF4149A2135E27
-      4EC2AB359349FFE681D7C9D3509432036FB607A27467084AD367A37C5F186A0F
-      8691B6B406EBE2E3E8B7FE4C40F0CCF4D69CF578BBC51B256944775708CAD267
-      11BD50D41C9A8B774722507D340AB57F2C04F7642CDACE2D079E6D43DEE92345
-      9437B71D3BA7EDE96FE0EC0F21764780733C0A2D990B517A34062DA797A1EDC2
-      4AB45E5C85B69C04725FD944DAEE261491B872B30E7145C5257BA8688C306979
-      7591D7961583E63371E0E5AC44F599D5080B4B406602B90D16A6032587891C42
-      49F606FC1C1E0C9561DA589AB8AA554D4D4D5E5854A257E583B34DB8164FF2B5
-      96A4918CB4D56BE13F73035C267862AAF530F83B69213A642A3C2787C375F202
-      58D9FB626DCA2E1819188C5FB63C4EB1B0E07E23E7790EAA1E9E46D19D33483F
-      700A31D14B10322702D36785C2DD6D0A1CC7B963BC832FAC4CACE0ECE48EC4F5
-      A97073738B6B6868601F44705B5A9177EF11AEDCBC8E9B376F207DCF5E649CCC
-      62D7C9A0CF64E83B0E2B776D85C80473084DB683CCA260CC9D1F757EC78EB45B
-      748DCB9292B7282C7E83A7CF0A70F3D62D767F5EBACEC69AD5F198EC3C19D9A7
-      4EE3CAAD9BD05E3813AE1B56B62C484FE5CE9A1D7A22267A411EE5E9DAA50505
-      05EC1AA9746FDDACCC2C94BE29C7B8C94E60C418C42C88A1CF77785E6EEE7395
-      E5E5E5A57BF7EE41EB6F4E58289B7E6969290A0B0B71F7EE1DFC999B83F3E7CF
-      81AE779F9AB20D3E3ED3B07E4D224E9EC86870739D2224212CD2F1EC6CDD9A35
-      F7E973AAD7AF5FE3E5CBBF70332F0F972E65B36BFF67659EC283FB0F91753213
-      C78F1DC3E3478FE37D7CA731B367CFEAE06786CC745F16BBEC9AD358A7025333
-      D3524303C3777A7A7AD5DA3A3AD55A23B5AAC9EF4A1B4B9BB71E1E1EE766CF9A
-      ADEEEF3F43303028900909096EFF266B7E9420C9BBF0F6EDDBA562626254BCBC
-      BC468F1933C6D2C6C6C6D6D9D9D9C2D0D05057658892E2CC9060A984D50912BE
-      BE3ECC8C197E4C4080FF57FB7581C1732C440787B84DB0B60BF599307641ACAB
-      A57457C603BD34E7068E0B3996B3F18FDAAADD196F505A51D7C6A9ABC38533D9
-      F7F52CC3627E121A26F42556D174CDB6E929801769266EAB81394915687ADFBE
-      DF75390798BEA905EA16F1BB3EC7F6D35FBDD59E30F2D389B872A1E0F812E62E
-      59F8FDD86F282CB8815FF772D17B2A307E0DA062BA2A95CF1D986B27A26B1234
-      3F36E559ABA63F0703C6556380F611CEA041D332A47B99878A881878688D18BF
-      55DDF2778EBC4B3D94C82C72C22FDCE6BE3293D8FD37ED742C7A1FDE7F9C5D37
-      E4F6AD7C8C77D9DAA22A6B9530B0B7EE47FBAD09081ABB2B989D6F1834A515FA
-      3180D1A4BD3BD97567552CD58A5F15B09B9294BF7D8271F6AE871966C467CB48
-      BCFF9CD401E36B3190E451D73BBB58486094C814337BCD9894E2CA1379C0A163
-      B9E82F6331E34BE52B29E5E43135FA199C7F05A6C6157307F5331F2C23652AAF
-      135256D397948D9CCD6308F718FBC579F2100D47EF570537DBD7F8BEF7B44667
-      9801DD7B85519F7CE6A95A08A034A90CBD062DF9E34B7C90EFACA30D9CF667ED
-      4FEEE5BD1FA2317A12F597D1FB355587DCEAE43C9AA1649D0761318F8FDE1155
-      96D651D01C129464E8760D1BD20B5056D58CF0B0E5E92E0626EC35D95DD8585A
-      73EAB5326A43DF898D700DCD436CCCA2F3D616532234357D172B696FBA3ED0EE
-      594B3FD736C8F901936665576829995AAFF2B215E3A721A63A2BD27A416DB3D1
-      02E0F1EB5634D557A0AAFC05A2563F86C6B4060C0F068C49BD8D5BFCAE45426D
-      66CC67CB572D283C62D5859ACECFB98F675760CD0960CB69C03DF25C99A45A60
-      F8D7DA8FACD4E8A1E1B396A4EDDEB1AB6AC7F63DC5A9DB335FBACEDC93676C11
-      B5A87B77FD415D7BA76784402F515DB9DE3F692B0B0A68F5FC77BE2F54BF54D2
-      A7658F6E555392E269FEBE005D918EB5BE13066CE0555E44CB61DBC2AEB29F7E
-      C7581FD77BE9D7D2EE6C6367FFE67DA6EC7F898D890305BE96D6D76CAC6218ED
-      7A4F661ED79C71FC5A1CF5B192539B0E3BE534FFE172B5F1D79F12B821CC80A6
-      106633EF7E048FF7622378976CD0E8C88477E8933C716730F338D68C10671833
-      B425636205AFA50C3CD2F7F3B88FC13BA1C0E3D55D058FF390FC7E065ED959D4
-      4F6596D67B31066D478670795557C07B778E8C8D9C5BDB8E306DBC9617E0959F
-      01EFAF4DE0E5AF02AF288D9C37F05AB23CCA9A370CB8DDB85464294DB76975EF
-      745E7E02782FB682577B839C7790318B471BAFFC1C784D248ECA4BE0D5DD22F1
-      CE785FCD30669FE6931B2DA2D6B259ED594B867B75739AF6F5FA68013FAE0F23
-      D9F8B3E8AF6D194E2DBCE622F0DA4AD07CD4FEFEF7D437955A1346A679B3C243
-      BA6E565B79761BD78299FBBD7114328C09EF5D36BB8E36AFE420B886CCF4EFE1
-      CB18A677CB02A699D75C4CCA3C138DA1CCAEEFB5A13E8899DF14DBBDAAF9973E
-      F9DC284185EFE5D9728E10B2E4467657FB5ABBF811C9CEFE582E10C9CBE632C8
-      3E4F24FB9F9293C3E0DAB5B85C67E7FAFE0CF398BE7645C7305DE22F5DA2128B
-      F5EB81152B70C9DC1C04A6EF47C97D93A7E95EBAB4144949C0A245C07232FE5E
-      BD1A172D2CA0D4AD5BC157F9F6749777B0CB96FD53882DC7D4D45ABFC8E75CA4
-      EC62D6E64F59927ED1B46918232EFEFE8B7CD6C965584BC6E38B17FF935BBA94
-      65DF12D6A25BB70692FF319FF217893C7D849FF188F4B32B7EF938EDF8781413
-      D65450B091B00E9DCBFFE24530972FB3EEC57AFAF790B4B502A8AD047E896B8F
-      232181652DBB77E711CC8EFFFE179F27436D2627A735CEC0807EE34ABFD33D87
-      A4D477407329B06123DE7A7AC29C61B8D4E6CEEF8F51363717CC9F7FF2627574
-      EEB25CFBF7CB1759F7F6C38D645EB40B660CD34C5F03FDDB9A9D7F82C9C878BF
-      B49D3DFB81E5CB6508743B07A53EFAEF89AAFDE7DE5FBB7103714B97967D602F
-      7662733F7CCF6BC2E597D5E70E526EB87D1B888D2D27BAE73FC441BF1F3E45C4
-      A28DAE42F4B5F7E748FE691D36DCBB072C59520A71F1AB1FD2B568F8B4ACBEC0
-      5371207634E6E793F1C538FA1DB161E3D76CFE0C4FCBC12E29A9B8BE776FDBFA
-      CEF5DB95F7FFFE8DEF12B77C8FFBDFC553BF0F82EF7057FED7FEFFDAFF1F667F
-      E5F7B8FFAFDFFFFF4F398CEF38A17F66FF981F61A54FC963E2231FC496ACC7A0
-      4CF5EF2A00D933CA7079E88FB4AAA398F03A080A199A5DE665B214105C108353
-      4D79707CE903E52BBAE8BF7B6097788903E208CB5FD270F1FD3DD83C9F0AD53C
-      7D0CD83BA8A30CC4778AAEA1F239567CB7189C6FFBE244E35558E6BB61F05D43
-      0C3AA4847EDBFAB2696B5ED2C3B28A1DF07C300B248E8FEC913C2001B3ABF60D
-      279A2EC32EDF0BAA770DA078540DFD52FA76E8695DB584E5EB10449626C1F6C6
-      7848A489B161527B7A6178B60E8E3766C3F3E51C28DFD187DA052D486FEBFF51
-      1A340F5AF71C61F8C21B3E6FA26170D9025227FB40F99C3AF6D79FC2ECA29FA1
-      74671494328640E1D8E0CF96D7A093F2D07D380E7AF9CE707B158A49A46E526B
-      7F47CCDB3550BEAD07D5F32320BB4FFEAB652D7F5215DA0F1DA1F5C4118E7FCD
-      4068F1CF50BBAD0FD58B23D9B4BB524F8A27D5A1FDC801C31F5A42E5961ED448
-      BACA9943BFEB1A53CED2C4F0DBA6A4ACBA9EEEDFAE53726D50E9AABE836D0DA6
-      7A70305CF5DD3719AAE341741D6C6A585D1BCB7758B4AE1E0B931B10B9A88EC4
-      518E2FB3E5885C5C87851B1BB0705D03286B695309E7082E6CFC39F0FF998BB0
-      F91CA8CB97FC2D8EE16A6F316F31D159C6852DD19D3CB70EA69615501E580843
-      FB4A3886D4C1C68F039F8575080EAB81BA4261471CC3540A11BEB016BE8BB8B0
-      263A54D7C0AE028A03DA7514FBFF85D13665B09BC18185772DBC16D4113BAAA1
-      A5F11223D45E626E740DBC1770D9305BC2EB9A964249E6C547362AF67F063DAB
-      B7B0F2217679D4C235AC0E914B39888CE5C02DACDDCF6A5A1DB48D8AA120FDEC
-      B365A420F310DA66C5309B520B43E71AD84EE3C0D6870323E23673AF81965111
-      14FA3DF86A1DC9F5BD0D1D8B1298B8706030B10606136A604CDCA36CCB20D7EF
-      F637EB7798CA4DD84E2A83DEB85AE83B55B3A237AE065693CAA1A972EBABBCBA
-      D215F80595C0DA8D032D727D8C72E0B0A265530D2B570EA607BE81B26CEE67E3
-      18AC948380996F60EF568761A624AF96B5D0D42F6685BA87133F478F3A78FBBC
-      82D2808B1FC5A12A77160181457070AEC39051D51869CCC160CD6790ED738615
-      EAA67E1A24CC7E721D7CA6BF84AADC19360EE54199F0F37B0D9BB175183CBC1A
-      C374395019FC04FD7B9FE84883BAA91F0DA33AF6E3B82C435953A36BB0736880
-      AA5A2D866AD64149E921FAF63CFAB73C523F1A4675A82E6528AB209B0135E532
-      A8ABD44261E03DF491DCFFC532A6615487EA5286B26CDC92C72023750ABDC476
-      7FB37EA90ED5A50CFD9D9C9CAC909696766DCB962DAD74BDC3AE0A65B66EDD2A
-      4FCED7F3F2F25AF97B4576F5A0CCF6EDDBAFD2B8F87B9C314CD779CAF06DA16E
-      CA527173FB319E9F7EE7FDD6BE9717141464BFD5F8115E424202020202F0F7F7
-      FF219E7EE32E2E2E4ED7CDFB61FB252525D96FA07E8457575787909010E8BE99
-      3F9ABEBCBC3C5D07F15FAABFA2A222D64DF78AE61F742F49FEC1BF3EBE74FDB4
-      0BF305F9A70E9FA7ED867FED77BE7E3FEC63C41E747F49FEC1D7A1CF0C09DB42
-      DBD1BFD27E681BA4E71F68BF5728CBFC3F3F2AABAAA03F6A047EE44C79EAFE91
-      74F91C3F9E3B4F1EA0ABD299E3C7F3BDFC7FD3FFF7A6FFAFD4FFBF72FDFD7F3A
-      34D49566BB8DB7AD1A3FC6AA6084B2A2C9F7B0AAAA4A9AEE634C78EB663B237D
-      6504C63998E777951D3840C6C5427FE8FB28672344396A62DD6C17B838595575
-      95F7F29DB6C473CA64F8590CC6FCC986F07034E169A8AB847785F50F0A9C77FD
-      E60DFC55F80AE39DEC60A937B45943434DA74B6C7060F8D5AB3928AD28C3EEFD
-      7BDBA67A7B86680C56F1E862BA73CF1F4CC2A38BFB917E705F1B89CBBFABF925
-      BAA1E70FACEFC406057C073BF3F49E4496DD73687F9B7F5050E0F7D4F3AE94D5
-      B87F7E1F6579DFCBD2636D522236A76E256C60705719C55E3D04ADD57A391189
-      B151EB1546CE664A52225D5E873F6074FFE519AB67F2AEED4BC0FE506B6CF1D0
-      E4AD9BA456BB72ACC21607857EDFEC23D74E542D797AFE205E5ECFC2998440EC
-      0D18C5CA36AFE1881FABF8EC5B7CBC93D23F923D4656A70559BC4F72560749BB
-      26DE49F902B16B998D4A2FE5FFCD363D27188EAB566073C26A3C9837A7ED81B7
-      6BBD91CF947AC12FE9FB7ABD1812ECFF222D7CEEB3070121AF1FC72EC6B2BDC7
-      C8188B4852320FC1BE4D355E2EF5E69F7221FE25BDFDA6BD340C0978B52F7649
-      59CDA6D41A2C5D518A75DB800DBF03BFEC001277031BD378080B696A7076AA33
-      E4B3CE13DEEA04CD28FF75E5CF35F59B37F2B02AA1054161953511D125E6945F
-      4ED8C55B808878209248FC661EC2C31AABC9AD4ADF75FC3BFDF0D09A9A7509AD
-      583C1FF0F468C484716F7E75B07FC0B6616747980745E2F770C2852700C14B80
-      8068203A8EC435B7BE65796C634BFC4A608637E064CB81BDF5D3C59F2B17D729
-      88F3F4477D2019FE7A87032E3E805F3030D51318A9C9E3E98D7C57EE645F10F7
-      D5FF35F5DB7A0D566FCA183ABA0DAA238101F280743F405484D3D4A7E75DDB6F
-      D56537E6BD704FC9860CBBC96D501C06F41FD4CE4BF56C83886041A50073F52B
-      FB9CB40E10156EB934D68B070D33A09F12E1FAB5414A0AE8D31390E8D1042181
-      9B895FA205189E8FAD33A0ED44D21C02F425B677177CDE2C22F8F27D4F51A017
-      1111C1227417B812F977B6D5D0D40E3516D388CD3A80EC08E027D18AEAEECC65
-      7D61E68ABEB04061B5B808999F10E9CEDCBE27C4EC1FD8C96E03F5A16DD5E366
-      038AA6808211B157810721A6C888AF41E2301416286AA0BCA8700D0498CB133A
-      D62DE9812D63485D69937981AA2520A74FD2FEA92EFB531B491C66C202A5D592
-      622D649EF7EC5786B9CFB61125D9F63C8F207957B7A369B7121B6B6D3E5F3FF7
-      8DC4C5DEA3478F6232D77BA0CBFEB72B84B3320AA8193A86A4ADCD83B060E362
-      61A64EE84BE52C285878595CB299F27E1D6BBEF4C5D99E526DA0F2ED16FFA497
-      8848E90DC22FE9FCFCEFE4C9937D77EEDCF9FCB7DF7E7B73FCF8F162BE1C3B76
-      AC98F8151F3972849583070F161F3A74E80D997354A6A4A49CEBD8733C375796
-      EE71FFAD833FCFA1F3E45DBB763DE2F3972E5D9225F1B261FCF53FA84EE7F938
-      FD4DC3F8EE8D1B373EE8F8C6F8C20559621FEB4FDF37E5AF1F42D3FB340EFE39
-      2929A9833F77EE9CECE1C387597F3A07A671D0B4F8ECE76CE9CC9F3D7B964D9F
-      A647E7E2741D11AA53565686E7CF9F77D8DD99EF6C7F5656962C5D5384DA4CD7
-      11A16B9894949480940BE2E357937971D5DFECDFB46953074FCA5E36232383E5
-      285F5151C1EE5FB78FCC7D4F9D3AD5B1AE4AE7F22373C60E9ED82E9B9999C986
-      979595B37BDDEDDCBE1D5B5352583F5A1EFCB5553EC7936B44F6E2C58B741D7F
-      BC7AF50A3B525391909040D7E167CB83BFB60A8D83CF93EBA783CFC83821FBC7
-      1F2748BA2FB177F76EAC58B182FD2F8072340E9A27FE5A629FCB7F4464A4F1DD
-      BB77F18F7FFC81F855F1EC5E7C94A3FF87D073673B3EE597FF122747CAFFFA09
-      52FE74CF11FA2E704D4D0DAAC8189D9E691C74FD0FBE1D7C3E3939F9C1A48993
-      247E3FFEFBD1DC9C1C242626B0E5CEAE5BD889E197DDA7E54FF36F6E663167C9
-      E2D8BA808080BADF8E1EE5917688FDFBF777C881030740AF4BDA36E879EFDEBD
-      D84DCA2795942FE19F8BFE24E6D9AF9FF47E3B3B3B9353595916644E6F4DE6F7
-      D6C43656C8356ABD66CD1AEBB56BD7B242EAC47AD5AA55D6DBB66DB3DBB76F9F
-      C1A7778714BB1E4E7BDDA4D38EF8AB969D8CD4E252A16EEA47C3BE7457499F28
-      2DBE6382D4A92BEB1CF0FA7C24AAEE27A2F649322BD44DFD6818D5A1BA9DD943
-      9E03C50E4F1B54F82233029CE7A9A8BCB71625B90B51923DB75D889BFAD130AA
-      437529C3E70F78C864BE3A1B8BBAFC5D78931D85CA731EE0667B817B697ABB10
-      37F5A3615487EA5286B247BCFA3BDEDD3E1DF57FED46F1B95070CE4F21E7586C
-      DFF91421896085BAA95F7B5828AB4B19CA66860ED951762309E5B931A8C90946
-      D1E958F82F07DC160181CB78AC5037F5A3615487EA5286B2B971E665B5F7D6A1
-      F2F232345C9F8B9F973D80F644D2A78C6920FD70BB5037F5A3615487EA52E6CF
-      388BB21BEB6C1BEB9FA682437EBF39600D09B91648293663805A03066AB40B75
-      533F1A4675A82E97307984BD9F32A9B13E7F376A734390BF4E15DDC5DA203BB0
-      058306359073BBB4BB5BD830AA43751BF3D3717FCBC4C67BC90E65B5798B89DF
-      6C94ECD18599D23F20D883F4E37D3990E9C36585BAA91F0DA33A549732F73739
-      94DD596BB4A32A770E6AAF2D00EFAE3F0E078C64D7C917E84EC61012CDAC5037
-      F5A3615487EA5286B23757EA38BEC9F003F7EE7270EEC4A1E5DA14ECF31E0A03
-      B974088B36B142DDD48F86511DAA4B19CAB21B2F6C32CEACBDB518F50F56A1E1
-      C16AE059045EEDD6C38D65AAAC5037F5A3615487EA52867FFD3DDC6024F657BA
-      4361DDFD15687CB20EF58F12D1F6720350B28915EAA67E348CEA505DCA746E03
-      CF52CCC45FECB63A5575391C0D0F13D058B0E923A17E348CEA50DD2FB5C3173B
-      4D9DDE1C1D9FF636634A59F9691F2E15EAA67E34EC53FDD8D8D88A9898184445
-      479BCD9C3D7B646070C0489FE9D3E5BD7D7D0E4EF5F2848BBB5BC1D8714E83ED
-      1C1D742CADAD34CCAD2CD52C2CCDDF98989AD61B191B5B5076FE8205A7677B4F
-      579BE3ED6712EAED6B326BEA34E5100FEF8820F7A933035C3DC2FC26BB8DF09D
-      E862E933C159DBDDD671A49989698C81A101F4478FB627ACE94C4F1FF9609B71
-      0EAB66455C5D1D1645258FC805BE2484455D27723561EEFCEBF35DBCA2271899
-      FFA43B6A949D9EBE9EF8ECB0B021FE135D2DA35CBDF25ADB5ADBEFBB1FEED3EC
-      FD9EED731AD97E8BF6DEFB9236C14EDFD86CE488918E5A5ADA4CC0CCE0217E13
-      5DAC16B8FB5CAD25F7EB7BF7EEE1C9E3C7C8CF7FC6FE974CFB8292B725EC7DBD
-      85C4BF7FE396161B3D23B32143351D870D1BCEF807069AF8384D528F76F7C9A3
-      F7FAC7A4CF7DF1E2390A8B0A71FDFA75DCB871034D8D4D1DFFCB1F4CDED636DE
-      D87CB8B29AAA9D9A9A9AF8F4193340F85092FE792EB1373F3F9FED3FAB49BF43
-      F7119A376F1E6EDDBCD931F63898BCB5494551D1415945052A2A2AF69ED3BC6B
-      BCC68CF721E967D3FCFE45FAEDE2E262B6EF898C8C64FB50BAD7D5ED5BB758FE
-      C0A66DEF351495AD141514DE29292A5AB8794CD1F0B01B3B3C7A8AEF0DDA3716
-      923C979595B265161616C6C643FB2CDAA7D2714CD69E83AD36BAA375A465644C
-      64A4A5BB394D183FC4DD768C11E1F39AC9D8A58CF4BBD4767ACC0D9FDBF17F3E
-      ED135352B7E19739F35A1D8DCC8C7E121363E7330E4E63D5DD6D1C6CA3DDA7E5
-      545554A290F4FF25C486464E1DE684867DF43CE00EE9DFFD7C7CA122A7602D2A
-      263689F276631CA64DB0B653F1B771320D7599BA6DB6B3C7B60837EF344F7BA7
-      247B4B6B76231F5AA7D476BA970E2320902D2C222C212929E92F2820A06A676F
-      07730B8B5756C626BAE6C626F646A30DEC4D471B0C565151DD42F42BE9388494
-      335B2FF4D90C7D0F514AAA774A9FDE7DE8F30E174B4BCBEBA626A6054646C623
-      47E9E9C968696BCB686A6AF6D450578FB5B5B5794258BA57A9A2B6B6369B110F
-      0F8F264141C12A7171F16782DDBA99119E213C63626CC2E8EBEB333A3A3ACC88
-      E1C3190D0D75760FDF6EDDDAF7B81115158D27FD38468D1A75F7C3BB81749F40
-      896FF1DDF99BCC7C78D4FF61AF483A37A27D7FDFFF01515F5383
+      3FED9D0554564BDBF7379847D16382492328162A0848B78849280A628088028A
+      8882227620186000227677801DE8B1B15B1451A441BAE3FE7F736DBC39A8A0E8
+      39DFFB3EEF5ACF5EEB5A7BEE99EB373D7B66EE3D7BE66300D3F71767E18873EC
+      19C6C50576E0E21674ACE6DFADA0678D3897B44182CBDED981BBE2D6B564DE80
+      868F7CD51A7173541AF2E157B1DFF0F36AF081E25C62B0386BA7125CE15E05AE
+      6C9764C3F23D525CC92E49AE688724F78EC591E25917FF81F1092C0FD2C225B8
+      AC1DF25CEE962E5C6E78D72AD92AC9FAAAF6557ED4E0BDE77A71693191FCF6DF
+      B23DFA701623ADB890B0306E7B683077E5480427D6AA6D03690525F1FE9A3A3A
+      9663EC66F9787BEFDBB323E251C7CE5DE9032CCECB6B36F7F1E649AE4357E916
+      BDFBAB2B0FB5B4B15F17BC313864E3FA4B47766C7EF7ECC281ECAC5B87CA8A6F
+      6E47E9A535283DCA9AC9CB03D031329D5DC57B1D7F78EE407AC2B5FDC505B7F6
+      54965C0946F6A1396CBCEB8C8C307BA46C188D4FEBAD7849DCC8C6569BC7A1F2
+      C63A4C7274DC417CE8A6F52F2A4ECC4072A0053E068EC48735A358FF668B8F1B
+      C7E353E864246D9D82D4ED2E48DDE58AF4BDEEC83DE0CEDAD21AACF35F4ADFFA
+      734E53A7EDAAB8BE1E2921F6488E60BA3B5C90B66B3AD37343CEC199F87C7816
+      B28F7A21F7E43C1444FAA1F2D212E0CD16C49C3FFC89785DE321332A5F1F41DE
+      3E1716EF59C83BEE85F233F3907AD407E5E717A1F2CA0A545C5D85CAEB01ECB9
+      B289B5DD4DF8C4FCBA71F6604133B1964DE5947A6B957FB82AA83CEB83B20B4B
+      21B8BE02D91756C3DD3D006702D863306117907C88C94124470763B1C754C8F5
+      54C1C2C055150A0A0A928D9BB56895F9EC6209EEF8B374AD65616C44C4EAB570
+      9C160CABE1E330D6B0271C2DFAC2DB652CC68DF280F5A8B930309D80B5A13BA0
+      A9AE3E6CD192A5D2096F9F16E7BDBB8EACE7E7F1E9D105ECDA7F0E3EDE0BE032
+      6316264E77C3689B31301F3A1AC3CC26C040CB009616A311B83E1C3636364B8B
+      8A8AF8171105E5158879F202B7EEDFC5FDFBF7B06BF71E44459EE5F7C9A07732
+      B4C661C58E303419AE8B86A34C20317F2A66CEF1BABC6D5BC403DAE332393905
+      09894978FDE62DEE3F78C09FCF4BFB6CAC59ED8F5196A3107DEE3C6E3DB80F95
+      79D3601DBCA27CEEAEF082E9AE6EA77DBCE7C6104F7B97BE7DFB96DF2395CED6
+      3D7BE62C5293D231749405B8E61C7CE6FAD0FB1D819DCDE899B2929292E26DDA
+      34A5F29BE1EEC6879F9A9A8A8484043C7EFC087FDDB88ECB972F81F6BB0F0FDD
+      020787F158BF261091A7A38A6CACC7346CD1B849F5BBB3756BD63CA5F7541F3F
+      7E447CFC7BDC8F89C1B56BD1FCDEFF67CF9CC3B3A7CF7136F20C8E1F3B86972F
+      5EFA3B4C18CFB9BA4EAFE6A7B94C1BBDC86FD11D8B21166FB575B45335D4353E
+      ABAAAA66ABF4EB97DDB74FDF6CF63BD348DF28C5D6D6F692EB74574547C7C9A2
+      539CA7702E2E53ABBEC99AE325CAD2DE78EBD6ADAD7D7C7CE4ECECEC060E1E3C
+      58DFC8C8C8D8D2D2524F4343A3BF5C7719E9692E535B07AC0E68316182033779
+      F224CEC9C9F187FDBA48B7197ACDBAB9D80C37347173183E64AE9FB5BE787DC6
+      03AD94674E19EA72ECFA8693B9593BA392909A915F99979F8F2B17A29FAAEABB
+      FBFCD1B067C3BA5869ED355B26860276AC99D8AC06660465A0A4B4EABCEBF43C
+      60E2A67228EAF9EFA88D6DAFB63ACC9431921399581740CA3C1EBA566771E2D8
+      1124BCBD87957B0AD0662C306C0D20A7BD2A5CC8ED9F69D2A4BF96F31CBFD037
+      15CA8E79E838341B1D550EE775E9323E4ABC95AE5B9326EAB67D7B0F0B53D43F
+      912769550819368B1CBEACA0AC9DC448FEFC4D937E7A6D0EED3BCEEF1BF2F041
+      2C86598595CB773208E8DCA6FF57E7AD89880E1A2DA573B9A8CB980AA8F9009A
+      23F76CE7F79D95D35748FCF0963F94243DE515869A5A1FE2B8DEB5E691588719
+      E11D87E5A2334B637FFBE8C48622039A8CD13155F6094DCC3C1D031C3C76031D
+      24F426D795BF2D5B5BD88EF57E03CB95C0D8A589055DDAEB769368AD2DD9CF25
+      2DA71DCB9BAE462FD1B8E9903AE7C9DD95CCED3FBCBD5FB5C7F793D739FD7AAA
+      D3D92B9CE2A80BAF155C0099916968D565C1C9BA78E709D38F16E555BD6B7FF5
+      24A6B4BBD2C091642FA1BA32BC1F7BD475B52D838C610C1A37B7FD6A8DA8AC78
+      3F29E5EECE411A367710BCEB2DD2B2CAE0E1BE649795BA165F271B351E24AE3C
+      F64E1AC5A1DD886258BBC5C0CF67FE6543BD31B3949527F8CAA86CBADBD9E44D
+      797BEB4A749D048C9C1E9DD15746DB70959D71736118CDE5A77B1ACECD2DD39C
+      0BBCFC588192C20C64A5C7C16BF54B288D2F42AFA9C020566E437D3F97B75098
+      E6536BFE2A387BCC5A7525A7E67BEEE3D11958731A08390F8CF6BC94D652618A
+      C78FDA4FA7D6037B784C5F10B173DB8EAC6D5B7727866F3D136F3D6D77CC203D
+      AFF98D1AA975A9DF9A9EDE22AD9AF5EFDAE60F15595191BE7FFE9BEB850A17B6
+      7428DFDD3FAB2448FABCF05C80FA48F55EDF011D83059957517EC838A1BEECB7
+      DF31162E6DB3F04761D78C634DFBB2BDDAFC7F89C5819D457E14D68FE298C571
+      2A85E3B8D905BA9CF98FFC28F46B39B6E490C5F5B29356B78B57FE1150E0C275
+      2C71E1360B9ECE1208E2364070CD08C5E69C47B53E4B53C1646E769E21D730AF
+      27D7A33C6A4486A03C0D02D6F70B0A5E42705A4A20C8BF0D41DE73F6FB0D0469
+      175138965B5868C7A9571EEE5E20C8BA05C1E74B6C6C6459517998AB1494C741
+      907E0182F79B20885D05C1A708760F16949FB54D2B0BEEF8B078619385146EC9
+      EA36BB04B10110C48541907B8FDDB7B1318B6DA520FD120425CC8FCC6B10E43F
+      60FE4E2ECDE6389D6FD359E0DD44A17CB3C29BF2A8D1D965112A770BBD452615
+      38702D8B17375B591965512E28FB04416532CA8E9A3EFD95F226C9D5E224CA36
+      4B3DA77DB32AD3A32B0BF4B899BFEA4702C769093E47F3FB680B920FA040839B
+      F82B7C1AC7B5299FCB9509CA12599E9F41B11BB7E357E350E8CCCD29F16B9455
+      B6AC6D6C8197A8D4AFF27C3ECF6AA85FE0D948E147EDE277243AFA6BB9C22426
+      BA8043F46526D17FCBF5EB1CEEDC597AC3D2B2B003C7BDA465573486A9177FED
+      1A891FD6AF07962FC7355D5D3098D64775FD294FE15EBBB6104141C0FCF9C012
+      36FE5EBD1A57F5F420D3A0C1DB1FF255E12EA966172DFA5B585C8E292854D4C9
+      5FBF4AAC2F1FE76F5916FEA7F1E331584CACB44EFE6CE422AC65E3715FDFBFB9
+      850B793685B17A0D1A14B1F40FFE96BFCAE4F50B2CC60BD6CF2E5FF675D8FEFE
+      4864ACB6A8683163CD6AE6FFD5ABE06EDEE4CDBEAA6A4F10149601E46602CB96
+      56F91110C0B3FA8D1A091866225CFF25E4D9509BBB7EBD62A9BA3A7DE34ADFE9
+      5E4250F867A02C1508DE809471E3A0CB710514E79AEBC788BD7103DC5F7F09FC
+      FAF57BCC7355DF2F5FE5CD5B0F15B379D10EE8705C192D03FD6ECFCEBFC04545
+      952EAC622F7E61857213220D2E41A6AD5A295335AD6DFDDABD7B58BA7061DA17
+      F66A0DF6C697EF79B50A847955DBC5F20D0F1F027E7EE94CF7F2173FE8FBE173
+      4CF42A6917A21FAD9F63E9A7322C7AF20458B020156262B7BF84AB57F46D5ED5
+      C19398B17814C7C6B2F1C550FA8E58A3F84771AE85A77C30090A4A2C6CD3C6B8
+      B066F9D667FDDFBFB896B8FC57CCFF164F765F04BF60CEFC6FFCFF1BFFFFB0F8
+      67FE8AF97F7AFDFF7FCA35E891053A9CE9E0F33BACF839498C78E100BFE4F5E8
+      7246F19732A0D30559583D774444D6510CFFE80CA928E57AF31267A530F5AD0F
+      CE95C4C03CDE01B2B7FAA3C3CECEF5E25BEC17837BEC82A2ABA54F60F46E2CE4
+      63D4D0714F97EA3C10DBDE6C0D496DACD8CEE6B07C3801A78B6F433FD606DD1E
+      6BA0CB4119B4DFD28E0F5BF99A2A16656CC3B867D3C1FCF82A3E2DF7B780CE6D
+      D3A2D3253761126B07F9C7EA903EAA80F6A1EDAAF5FADED687FE471778A606C1
+      F8DE30B48868CEBBB5DEDD0ABDA2FBE1787134C6C5CF80EC2335285CE90BF12D
+      1DBE0A83D2D0F7893934E2ECE190E40DF59B7A681DD916B29714B1AFF01C5C3F
+      2D86CCA3019089EA0EA963DD6ACDAF2E9192E8FF7C2854632D61F3C10D2359D9
+      84E79E804FCA1AC83E5485FCE5DEE8B457F287792D19290F95E7E6E8FBCA1CE6
+      EF27C32D7131141EAA41FE6A1F3EECFA949374A422545E98A1D7737DC83D5085
+      020B57F64C8F5FAA63B26795D1EBA136CBABFA87FB5D3D657583A4BEFA66C639
+      186B9B875EF29F7FCA908E2DD33533CAE1758DF43F63FEBA42CCDB5804CFF9F9
+      CC8F74D4CDA6C3D3371FF3361461DEBA2210AB6F9409CB59053072CC83E3E202
+      B8CFC983A264F2777EF45248C16C5FA6B3A800C64C77D4CC7C68EB6740B67302
+      344C3361EE920FA349797098978FA9EE3950944AA8F6A3A75C023CE6E562C2FC
+      0218321DD25537C98074C72A1DE90EEF31D0280D2693F3A0679F0BBBB9F92C1E
+      D9E8AB148FDE0AF198E99D03FBB905BC9B31E3FB6BA7424622EEAB384A777803
+      5583141838B078D9E6C2DA3D1F9E0BF3E0E997071BF72A3B83F1F950D14C8494
+      F89B5AF3484AE239547412A13326171A9639301E9F0763873C6832B3CEE81CF4
+      D5FC04A9F6CF7E58465DDB3D443FBD646859E5417D440ED487E76010330F304E
+      43D7F60F7F5ABE3DE5EEC378641A5487E642CD229B17D5A1393018990E65B907
+      3FE415656E619273320C6DF2D097D58F016679BCF435CA8681751E264E49826C
+      A71BB5FAD14DE63A9CA625C1D4261F3DB5595AF573A1AC96C80B997B313B73DB
+      7CD83B7C804CC7AB5FF921DFF5229CA67C8299653EBA0FC8469F4179E8A6FC06
+      9DDA5EE085CC64A7C4DC4C47E5C361623CE4BB5EE0FD90ED720693267D84D190
+      7C74EB958D9EFDF320D7ED153AB4395D1D0699C98EDC48C7746801CF10ABAD79
+      072666459057C8450FE57CC8C83C47BB3F8F7E9746B22337D2215D628895EA14
+      0505D93428CAE542AAF313B46DB9AFCE3C2637D2215D6288E5FD6E790C12ADCF
+      A155F39D3F2D5FD2215D62E8F7C68D1BA5222222EE84848454D07E87F51562C2
+      C2C224D9FD6E4C4C4C85F0ACC8FA5EC46CDDBAF536F9253CE38CE3EACF13238C
+      0B998925B1B1F93D5E187ECDF3D67E95171515E5BFD5F81DBE458B1610111181
+      A3A3E36FF1F48DBB989818ED9BF7DBF16FD9B225FF0DD4EFF08A8A8A68D8B021
+      E8DCCCDF0D5F525292F641FC47E5F7E9D327DE4C67450B2F3A4B527809EB475D
+      F5A74AB83AE46F1D214FED4658F76BD6DF2FE718F1179D2F29BC843AF4CE90B1
+      E5D48EFE49FBA13648F7DF68BFB788E5FE8F5F995959501BD01BBF73279ECCBF
+      13AE9013FAF3E8D533D4576A72427F7E95FF6FF8FF6EF8FFA4FCFF49FDFBBF74
+      2929CAB8DA0C33CE1A36D8E06D6F5969AD5F61E5E56594470FD612AC73B5C4AE
+      15B330D44C37B6BE6CE78E12567A6A3D4ABD2C35E165AE8C75AE56B0B230C8AA
+      2F6F3761FC8271634661925E37CC19A5015B732D8192A29C477D5847E729B3EF
+      DEBF87F7091F30CCC204FAAA3DCA949414FAD58B9D3AC5E3F6EDEB48CD48C3CE
+      7D7B2AC7DA8F7351EA26675BCF70675E3E10841757F761D781BD95CC2FC7FAA6
+      97E9BA5DDEBFBE06EBECF40BECB4F3BB037976F7C17D958ECECE537EA59C7784
+      AEC6D3CB7B8915FC2A4BD7DAA0406C0E0F63EC94A9F565A45B351535546865C1
+      C4C748A1953BBBEBC8B46E52EF7DF89D06765812B57A9AE0CEDE00EC73334488
+      ADB260DD4885DC1543A442CCA4DAFFB48F5C3B423EF9F5E50388BF7B161702A6
+      608FD3005EB6D8F582FF10E9373FE3FD2D644E6DB4ED931DE1AC571A64A90816
+      768EBF85EC1516AF454672AD64FF7FB6E9FF8D3D47BADA2F33B24A44FBDF61DB
+      1B4C9BDC21A5FC4A171B5F5DFA1D191989FACABC559B31E8551ABCB79FF8CABE
+      BCB4F4A7F2E0592C34EEC541F3453AF6475EE7ED6AF271C1F6F810E2888F2193
+      10CFEEF121939938213E6C0A4E0478C0C9CD0B035F2562BEEB147CD834E93B3E
+      659B33D2F74C67E286B4DDAEC839E0CE9B2FACF18749C0290C7F5C88BE171F22
+      78E10C64EE9DFE1D9F73C41339A77C9073C21BB8E0035C9E8FBCA815301DF708
+      13EE65A0EF8B14046EDB8ECCC865283A35EF3BBEE4C232945C5C09DC5B89A2E8
+      20985A2EC0EA43C711BCE730B2F2F2B1DB7D08CA6FAC063E6C07DE877EC70B6E
+      6E005E4530F7DD98E9B109D3365CC3B49D17909E958399E187F039E71CF0320C
+      67B6CC818591E6773CB2FF0272AF6043F03E3878ACC5D065DB9198FE19EEEB77
+      40B65B47CC701E0FCB619E1863EB0F3DE3EFD3BF6C820DAC75D5D15D5A010613
+      3DA1E1E0056DAF500CB7990C355915F4941B00E711B3A1ABA209FBA1DFE77F0F
+      433D184C9D8CE9A1BB60E8B618BA4EF331D2773EF4478F84D9989158BD7F3BA6
+      AD5B0A55EB6130B01CFE1DFF3BF22B75B72EF937DAE3BE7DFB92EA92FDFBF757
+      CB810307920E1E3CC8CB57DF9DEDDD9BF42B7397BAF82E0131B5CAF5EBD7ABE7
+      4C74513CBEFAC672CF9E2A7ECE66F8B1BB73323095DD6991D0A6BFF7FAA8BE7E
+      C47BB2FB46363FBA74E922BF6673DFFEFD78F7EEDD57FF0BFC8877657762857B
+      66DDB973077E7E7EFC9E26423FBEE5D9FCB49A77A635632C5C9A872F5EBC98F7
+      83CCE48F706E4E65511BDFC2FE08C437549D0FBF64C9127E3F12E19E26B40677
+      F9F2E575F214B72C36267DFFFE3D7FA7F068CF8B9A7E901DA5A3369EE6AF5252
+      52781F1787F8F878D0F91AC9C9C9F8EB5A34BFB696CEC6239E746AE3C95F5ABF
+      4BEB68297CCA73D2CFC9C9E1E3111818C8FB47BF6BCB3F4ADFFCF9F3F9F93FFD
+      87407E242525F17E90E4E7E7F3FE501ED4567E94BE478F1EE1D5AB57B447191F
+      DF949414FE2EF48FC227FF6BE3298F286DE407A599C2A1F4AC5CB9924F137164
+      4F3ADFF2C2FA4F71AC595E24942F94B735EB5F6DEDE75BA9AD0DD7D57EFF53F6
+      FF292D2DABDABBA7A694947ED9D387E5476995B92E9ECA99CA8ACFBBE22A29CC
+      CFC5F645139118F7125985C578995D3B5F5656CA9FFDF2E2C50B7CF8F00145C5
+      B46F6401CE6D5F8ED58EFAC8CECA444C6631565EFD88F7A939DFF1F4BF1FF119
+      191978FEFC395F7FDFDEBB80F5AE437072CB32BE1D1DFD5804D7DDF7119F9EF7
+      1D4F652CE4A9DE9E3A75120782176083A7353EC63E6775230F7EB752E173F021
+      AF5B174F75EED4A953F8EBAFBF70E4E07E9CD813CAE7E3FBCFF99879F2357646
+      BFA9952F2F2FC3D9B367718C3D7B9E3E7D8A972F5F222A328A6FCB4F9E3C4174
+      7211A6ECBC8FE71F5279DD6F796258BDE2D34D6D94FA26CA07617A965D798759
+      FB1E223B3B872FA36F79B2BB71E306AFFFF8F163444545F1FED0EF94F40C4C3B
+      F60A01C7EEF27A9417DFF294464A3F09C5E3FCF9F3D5BF4FDC7A0887883B3871
+      E926FFBBB6F2A73A43E1515ACF9C39C39B8572F8F567F89E7AC9C79D7E93EEB7
+      3CBF3F227323FF5FBF7EFD15EF187E0BE99FB3AB7F936E6DE5F74FDA0FC599F2
+      2C2A2AF2CBBDA644E2C8F148562F2271F1E2455E57C8CF980AF355CBB1396035
+      9ECD9E51F9CCDEBA50D3614CA1685DF385097671DDA73AC64578CC7CF3CCC9E5
+      E34B3F5F2CDA730CD8CD2468A300532794E4D85915EA7ECBB93826B799343E5E
+      C3C5E9C35EBF0569399BC273B070792AD66D01824F00CBB601813B810D1102B8
+      BB9414595AE46B0859CBE129FD9C27A7AF5CB138A770F30601560594C3D93D33
+      679677B22EF14B18EB1B02CCF2073C99F86F16C0C3BD387B9871969AF5B0CF6A
+      1E6E3939EB022AE03B0718675B8CE14393569A993EE3E7F096E6D075F6C4090F
+      C67904B071C302C0890DA1BD9732BF6616962FF12B2EF75F014CB6072C8CF360
+      6AF8DAB7B67CB11E83A5E31C5138C517B0F700AC1C80496C1032761CD0475920
+      50EDF339DDC2F4EDD21FAE6B50AB6CD54DB124AAC7C04AC8F7013A4A02E26C96
+      D4AC495E49DB3F1F1BFF6C2ED7802B6DFC67CBA22893519590EE0974E852C5B7
+      FEB3124D44DF668A70B77F70CE6145C7668DCBAF0DB113404907682FC3B8F695
+      68DD1A68FB271B5B342D414391FB8175D1229CC0C1D81250B160617607DAB1B8
+      37127D57D64434BEF4CF66402B264D443FA191C82DCFEFD90A0D6D13E4E88D67
+      71EE0774EA0DFCD12C23BB117753AD31774BADB14842B65813A0259346DCC327
+      0DB97D9D6BC45B5DB14765F65036F092D606A434597CA50468C87DD2146A303F
+      341A8B7C2A22BE59E31C8870378757EF5BD81421835959A9D800F2FA40573516
+      F61FF9D1DFC691F9A1D3582435BB65F372888ABE59C9714FF93622D3A92ACDBD
+      59DA154D28EC0A16C75CA3DACBE7A9A658F352346D9A08119167FDF9B51D0D71
+      51420A393D06B3B05504682C5AECDB98CB6F58573E8B8A26DC146B5946FCA4EA
+      3D1FDBE1E29FAD2B41F2F319FFAB564D9AA4DE63FC829AF37FF6BC6EB77DFBF6
+      77478E1C493A7EFC78A250587F90C8EC120F1F3ECC0B1B4324D2F861EBD6AD99
+      A1A1A197843C7B7677A27EE76797F03947FDE58E1D3B5E08F96BD7AE75A2E736
+      5DC2FDFF48A7E6B8877E939BD0BC61C38667D57B0C5DB9D289C58FB7A7E7B370
+      FFC06FC74EC2F773740F0A0AAAE62F5DBAD4E9D0A143BC3D8DC184632F215B5B
+      5C6AF2ECB9CA874FE1D1BB387AC6930E8D25A94F14C6BB265F33FEACEFED447B
+      0A529C69AC40FD198D3759BEC0DF7F35EBF7B2BE8BFFA64D9BAA7996F79DE859
+      4F1CF1D46FD2F9D57B77EFC6B973E7AAF755AC997F212121D53C8B7B27EA17C8
+      3D2D2D9D3FEB7AFBD6AD080B0DE5ED84E351F2A7369ED5914E57AF5EA573BCF8
+      F1D3B6F070040404F0635ACA8F9AE35A21CFEA4F351F1575BAD3C993A759B8F1
+      D8B373273F7EA6BE9E38F243380F11CE81BE4DFF2C4FCF41346EA07193FF2A7F
+      7EDC4E1CBD0FA57BCD787CCB2F59B6B42BCBFFBBA759FED39983345FA17E9AC6
+      FC74273F68EE208C8790DFB871E3B3912346B63871FCC4D11B6C8E1A1818C0E7
+      3BBF6F790DA6E658BE66FE53FA7575F4662CF0F5CB777272CA3F72F4A880C64D
+      6CCC5E2D6CDC0EAA97D436E8CEE61AD8C9F2279CE52FE3DF35FBA3F9B8F6EDC5
+      F7999898689D3B7B562F2C2CCC70F3E6CD862C6EBCB03A6AB866CD1AC3B56BD7
+      F2C2CAC490CDCD0CB76CD962C2E609EADF3E1D424D9A5AECB1118F38EC289F16
+      E9D9B78084CC64476E753D55768D1017DB36BCF5B95BEBCCF0F1B227B29E0622
+      F7D5465EC84C76E4463AA45B933D38AE73F343E3BB24C49D9985BC77E1C87CB2
+      16C937E621397A66953033D9911BE9902E31427EBFADC4990F17FD901FBB0349
+      D15EC8BC648B82683B145C9B5825CC4C76E4463AA44B0CB187ED3A983FDE3A11
+      85EF7722F1921BF22E8F61773F6CDDFE1A2E81E085CC6457E5E6C6EB1243EC19
+      B7EEDBD2EE0521FD860F72AE4FC5A7F37E705C02D8CC07A62C12F04266B22337
+      D2215D6288BDB154372DF7C93A64DE5C84A2BB33B178D133A88C607DCAE022D6
+      0F570999C98EDC48877489F96BA95EDABD75C6C585AFC391C77E27ED37448BAE
+      E5682D5D868E0A45E8AC542564263B72231DD22D604C0C639F868E2C2E8CDD89
+      DC1B2E885D278F46CD2BD1A97339BA742962F72AA93297F36EA443BAC5B1BBF0
+      346444F1938D6669B931BECCCE15C9BBFB4347E614449BB27EBC5D1E24DA16F0
+      4266B22337D2215D629E6E324B7BB456735BD68D19C8BD331782C78E38E4D487
+      3F274BA4111B43B428E385CC64476EA443BAC4107B7F453FF3A4A8492878BC04
+      798F96A2FCCE18ECB5EF01F5AEBBD0B859092F64263B72231DD2258658FEE0B5
+      4D83CEE43EF045E1B355287AB61A78330B1F76AAE2DE22795EC84C76E4463AA4
+      4B8CB0FE3D0FD66CFE7E975942FED3E5287EB50E852F0251191F0C246FE285CC
+      64476EA443BAC4D46C036F4275C4E2761A9CCBBAE981A2E701287EBBE92B213B
+      72231DD2ADAB1DC66DD7B6483A3A2C22256A4C5AFA7987021232931DB97DABEF
+      E7E797E1E3E3032F6F6F9D69AEAE7DA64C75EAE33071A2A4FD04870363EDC6C1
+      6AB4CDDB21432DBA99989BF5D3373450D235D057D0D3D74DD2D2D62ED41C3448
+      8FD83973E79E77B59FA830C37E92969BFD04ADE963C7CBBAD8DACF721E3D769A
+      93B5ADFBA45136BD278CB0D277186EA932DAD8BC8F8E96B68FBA863AD4060E34
+      65ACF6B4710E92538D869AAD9A3EEBF66A772F921826578412E0EE7597C9ED80
+      9973EECEB1B2F31EAEA9FB47FF01034C54D554C55CDDDDBB3B8EB0D6F7B2B68B
+      A9A8ACA87AEE7E794EF3CF7BBECF29E6FB2DEABDF7066D8289DA209D3EBDFB98
+      F7EDABC2394D9BDA7DD2082B83B9A31D6EE7B2E735CDFF5EB1B96F6CEC1BFE3F
+      1BEA0B925392F9E77A39F37FDF86907223554D9DEE3D94CD7BF6ECC5394E99A2
+      E5603152D17BB4430C3DEB5FB23E372EEE1D123E25E0EEDDBBB877EF1EFF3F84
+      705DCE818D5B2A870DD2ED25AB206FA2A0A0203671F26430DE8D857FB980C537
+      363696EF3FB359BF43E788CE9E3D1B0FEEDFFFFBBFC38D612572D2D266B27272
+      909393331D37DE3EC76EF03007167E34A597FEBF4B4C4CE4FB1E4F4F4FBE0FA5
+      FFE21E3E7850F5DFDFA62DA54AD2B206D252529F65A4A5F56C6CC728D99A0CE9
+      E53D66C23DEA1B13589AD3D252F93C737777E7FDA13E8BFA541AC79CDD7DA0C2
+      A8FFC07EE212125A12E2E20D2C860FEB3EDA78B026E363CAD8D8258DF5BB1477
+      BA667ACCAC5ECF437D6268F8162C9B31BBC25C5347F38FE6CDF9F98C99C510C5
+      D14666C6DEA3C75FCFCAC84402EBFF93591C8AF3F231C3CDFDABF5408F58FF3E
+      C96102E4BA4A19366BDE7C24F12683CDC60F3734917334B2D076B31ABBC5D5D2
+      76CB2C1BFB8871A61641A6FA86FC419E54A614773A4B931311896EDCA4718B96
+      2D5B3A8A8A88C89B989A40574FEF83C120ADFEBA83B44C3507AA9B6A0F54EF26
+      27271FC2F433691CC2F2992F175A9B45DF21B56EDD26B46D9BB6B4DEC94A5F5F
+      FFAEB696F65B4DCD417D06A8AA4AF4555191505656FE534951D1CFD8D8E81563
+      77D32B4A1515153E21B6B6B625A2A2A2596262626F441B34D0613CC7784E6B90
+      16A7A6A6C6F5EBD78FEBDDAB17A7A4A4C8E9EAEA720D1A549D71D9AC59337FD6
+      8F63C080018FBF7C1B44E784B7F819DF4878C8E497A5BE5FCE8AA7B911F5FDED
+      FE1F831CFDF8
     }
   end
   object SaveDataDlg: TSaveDialog
@@ -6204,7 +6274,7 @@ object DigitMainForm: TDigitMainForm
     Left = 432
     Top = 408
     Bitmap = {
-      4C7A2C0000002000000020000000EEF000000000000078DAECBD055495CBF706
+      4C7A2F0000002000000020000000A90101000000000078DAECBD055495CBF706
       3C8484081CBA1BE96E10C1C66E115BECEE46AF81796D11506CE5DA81DDA88881
       A8D81888948081012AA0C8F3ED790F208A78AFF75E7FFF6F7DDF3D6B3D6BDE98
       773F7BF6ECD933F39E99730030FC87AFB07FFF7EFC2AFC55FE7FF3F3F9F36794
@@ -8068,71 +8138,204 @@ object DigitMainForm: TDigitMainForm
       F37AE9FA7150B79FF1BAFCFC351DDC61672BE774A7580C1B1209A7A26CC343C1
       55DDCFAFE83E735A778D43B0CFEB8D8205D9F659E1DA7ECED7CDC322C5CA7C8F
       626B7FE060BDBA1E3033BD2FEF392C38A2EBCB35DD7EEFAE83B7AC2BA050B170
-      28B93DDCCDACBD4E98E5F543E932FF5F7B670314D57505E0C78F8E3A48156140
-      21CB2E4150975D346F970D48238E30360B1A8A824908A36D480A36D5B6695ACC
-      D8D6A9E2BEDD35D1A44445210825D6D44933C1261A27E9A483F2A3C0B212C408
-      1194AA2038363F76AAFB737ACEDBB7BAEB40D38CBC7D9DBA77E6CCEEBBB3EF7E
-      E79E73EEB9F732CCBDA4C3A0300F5885DCDC2AB4718CCFE13366F6C0DCF84E08
-      9EFCF6058631DDD1215E76941B1AB0C11BBB40F0ED31C1CE6DC21C423E267F5C
-      02990C40167F8DDA1E6282CEC58486F7631BA75A66460D42928ADEBF26FCF6AC
-      A06F9BD0962B6692E70DC12EC30D48D51E6F74FBE17B8F352547459F8458B905
-      6D6F156CD78ED22DF8F602CA08C4A29DE312AF539B98534F2903279F6766465E
-      C4362CB8886A6B8F88EA87450B49877F0AF356AFD0463BDFE6ACB00E8888EA80
-      5991AD981F3E7ECA351E7ECF642E6EC2CF0F30571DBC1911D9013173FE2EBC47
-      3EA5BCF31524E0FCAD481CA57915E792AE2426C082EF7430615197F0D38A53C9
-      195CBC9F699F39AB0F342CE9708BB797AB8D6ECC5F57604E74B7309E1AF25CF9
-      7517CF5FFE58B3B0A67D474B711B11DD07B367DF10D85F83420E302786D7C9CE
-      049CD33181671917DF72971FD885759F6182EDEE0F0D431DB46E3B5C84E8C87F
-      C043B27EC107477023522FAC1D5F73D93FA345C887247FCD247F85860F00AB76
-      C2CAC701E4F3BEC0F73EFF92093CBF0C05A7CE71F88198EA827A71FD70EE6C58
-      E4202C580038F69C30FBA1CB824FFFB6DEB5767E4B583BBF3E069FE68216B4C3
-      999B7575B7A1AD85F63F5746D09F8B98209CCE82FE033F08F9C17DF8FD735C4C
-      F47668178FC2E632BB10BFADD8EF93F81EF10F7E131FA52F69E9B211287A86F7
-      C342E463DBFF259FF4642E4E67538707366E20DBF5E6637C32E3F35BEFF2697F
-      C7D0731F237FF8DAB268D9D0728619C0FA816FC9BFC484845D991F1B3F5C8863
-      91E1F90163F32B2A2A62ABABAB5BF6ECD963DFBD7B37F8428845CCCACA4A197E
-      B69E3E7DDAEEBEB7C8178558C4ACAAAA6A265D7CC9BE73B7A0CD4676B0913DDC
-      6764F3FF1DE3A3424CB73FE83BB1490A0AA4E1BBFB3FD6B9EDBEE20706067A9D
-      17EE6B7E50509064FC848404080808E0EF3294824FF7454D9A3409AE5EBD2A99
-      FDA74C99C29F152B157FEAD4A9FC59C952F1A74D9B3661F79E7C5BFEF4E9D3F9
-      F82B2E2E96844F670A878484F0677B4B65FFD0D050FE5C63A9F83366CCE0CF59
-      96824F5CE28F77AFAED87CB23DC51FDD6B2795FDC3C3C3F933AFA5E247444448
-      CA8F8C8CE4CF7697824F778052FFE9BE4129F8898989101C1CCCDF3F2995FDA3
-      A3A3251B7F5462626224E5CB6432FECE0329D7BF8383835EBF2B2C2CF47AA6BB
-      07CACACABCEAE83ECC9D3B777AD5F5F4F4D0BD7A5E759E6BFBF1D6FF2E614490
-      BBED7BF23DF75F63ED7F684C7896CB972FF37EF22C6D6D6DA0D3E9BCEA8E1C39
-      02B9B9B95E759EEDBBF75FB40F9572FF497B60F73ED487FB6FEA7713B1FD2720
-      F8CB835C4671BE2149D1A879F1D5F3FF0ADF5DEF2B7BDFCB939A7FAF3D2C3D5D
-      20868CC7939A7FAF3DC4E67F93FF7DCDF7FBDFEF7FBFFFFDFEF7FBFFC19EFF1F
-      D4F59FBFF88B5845A749CA4AD1AA4E62DCDDD469D403299AE4573394CA10DF8C
-      73D50BC875AECDD73B766CDE00DCCB1B216B59BAFD518DAA576C1D5856294B61
-      D5B79E5F9D0507CDBF82DA6D3F85F72A0D70F4ADBD90B934CDAED3AA7788C556
-      2A9593B5ACDA8CFD779A4AF3C0FCA31550921A053FC99043C33E236C7DA91474
-      1AD505516CCE269760DB5729CFAC5EFA88C3F45C0EFC7AF5A33C9FA4DEF02270
-      BF2CC13CA4FA5A047C808E550F63DBB0F6BB0FC3A62716C16F0AD2E0C5E5F360
-      F32A1D6F07F245616E960363B2498CFE976C2831A6A7B1B0449B04A54BE450B6
-      7221FC764D1A901D76ACCF83D2822C571E6617664F347B9BD1F842B9897336FC
-      A50196A4A740468A92D781EC90BF44EDD4B12A078E418ABD4D22B0D713BBB3CB
-      CAFF7DB3B1E904A4A769781DD6A52BB0BF2AA756935CC9B2AA7913CDDE6EE24A
-      89DD61EDE4D9C3D747A0EDD34ED8CA953B16A7B214EB24A3A9A9A953279C6D36
-      3E8BE26CB75A9C6E76FBA756D85BBDDF81F5FF5AB7AEA804F3C00DB4F9C68966
-      979B0C3F2476C7E913CE5B5F8EC2D0E8B0177BABD990E9CA45EC24B1D896E3F5
-      4E4BCDCFA1B7F14FD0DE6D857D35D5C4BE5D6EE6B2C5CA6FDB8DC61F8CC9AEAD
-      7620D726261BFBBD8E677F583B06DB68DB6E32E588C636734F629C3B3A3FACF3
-      62EF3FF026CFDE66E65688C5DE6632ACF1629F38EC62D7BAD8E8939522F6BB00
-      6D6EFFE4EDD781D8E7857E57D5D650AC89CA76F59D7334D4BDC2F7BBEFE49F7D
-      CA76C51C078D877680E5F801E8387B06AAEA6A1C58674776AE2FD651C43F545F
-      09EF1D7B9FFCED14D879BE5A4312DF436C188BABFE5FD7CB5B32E4530C7AF9CF
-      503E31E8155F18B2155F717AF9754EAF3865D0C7EEDFAE5714952F8F9D2D169F
-      CB567C645C1177FB8FBFC8757E605A0F8737AD82BD852AA8C89F0FAFE6CEB5A1
-      2E76D4CD899FCDA8DBF35B56CC993661795D1F97C33D2E7736566F81FED6A377
-      A4F9C0EFA0FE390D2F7F2866A1AA480DAFAD4A74A2AE76DE467AC54B951330C7
-      71FAB87777E5CDB5F736BEEBC5A76737DF53EA9E7D04763FB900B86CB9DD98AD
-      A8BF7FBE6264CF534ABEBF9EFCA69A2D63F2ABD72643C59AF980ECDB5C8EBC79
-      22F8AFE4C6DB2BB04F87CBF2E0A8F9C7F0CECBF9B0AF2819F63DA386CAA793E0
-      8D028C83EF27D8D0F6368C03C038F80CDFDBCC65C67DE7BEFD9F139B8A6D1E32
-      E4C8AD14F314FBBC20876765CB6FE07317F2AAD0E7C5182F09FE1DF6FD977F03
-      0186D21C
+      28B93DDCCDACBD4E98E5F543E932FF5F7B57025755B5F5AF439A3D2D877C5AA6
+      A2CFA79563212A646A89F5722873ACCCB4B44233B3B4722C2B95CB648AB38222
+      52A2880A2A83A8A0C8A4CCC83CCFF378992ED3FF5B6BDF7B08FC502F25F0BE2F
+      CFEFB77EE7DC33ECFF9AF6DA6B1DD8FB300FA9EA7120441D9BFDD46DB88818DE
+      BD4724FE3D24181D3B9D4A90C98CEB791832C0599E95548D7DBBA0B6AD8B5ACF
+      FEEA31846DCCF648C18001C0802139DC7696AC43D4734F3E9D486DDCF2EDD137
+      152346F2F339EA7B23D4FCFAABDB52F9CCE8E7B3B0CBB010BA3A973D253BFC67
+      92F7E8BEFDBC30502B88741FA2D65D0051B8DAB60944B918487A1E3C2C9FDBA4
+      987A6B78FB4E31B21E7D92A98D204AA2FC037AF74DC44B63988772F5B815AB6E
+      2340B4D9AB67207AF70D44AF3E7E141FAEBEAFEA0F7B64FAAF78D3DE8962D5EF
+      65BDFB04E2B967D3D4CFB14D39EE283094C6EF41C3F2785CA5B1246C84AC5D10
+      3D1328EBD93785F62134948452F21E1AD0A3571CC66A330F4AA12F551BE114BF
+      32F06CBF70757F729CA38AAFBB04FE9B937CD439ADBD0EFB6DEF7E7178E69942
+      357629066901CF3E2778AA91B58B1A2F6B1F2153E107FD81DF3E8CCE4553800D
+      4F7CB227F1A023E92119FDFA14A1FF8044B50D2E502162A3CE1D77ABF43FC557
+      1D0F99AEE9B3BD9E7C3A09DAA3EAF0F65B80D6F3C5F45C7C89AC7DCC54221A3A
+      EF81DF9E425D8758CA1FA2227AF649C58B2F82FA5E1D9EE99FAEB6E9F595AADC
+      F93775EE6CDE043E8F05BEA487D0326BEB2AF8FB72FD93914BF67C49D68186B3
+      0EF7C1EF40F81DE3E8389E9289D8409D57F2B0797D8DDA7FFD486E2F7A8EF17F
+      7F103E51DC88D7A6E662F187C20E63089FDAD6109FF9942577D3D6CD4EFA6A35
+      EB2E763EF9A7ECDEF87E7FE0737D27E3DF7132AD7FE54CED3720EB4D992C89CE
+      2735133F45D6B567C60B0387642FA2BE2813F8ED9AC6DFBB77EF404B4B4BDF03
+      070ED4ECDFBF1FAD418CC598870E1D1A407BBFDBB76FD748DF2D6A8D8DB118D3
+      C2C2C28779694DECFA6F0B5657B31EAA591FD21AD9E2BF635A69634CC91E7CCC
+      D84C0B16B40DBE247F53EBB6B7167EFBF6ED1BAD17DEDAF81D3A746833FCA143
+      87A25DBB76E25B866D81CFDF8B7AECB1C7909999D966FA7FFCF1C7C55AB16D85
+      DFA54B17B156725BE13FF1C4130FEDBB27CDC5EFD6AD9BF0BFE5CB97B7093EAF
+      29DCB56B57B1B6775BE9FFC9279F14EB1AB7157EF7EEDDC53ACB6D81CFB88C7F
+      AFEFEAB6343EEB9EFD8FBF6BD756FA7FFAE9A7C59AD76D85DFBB77EF36C5EFD3
+      A78F58DBBD2DF0F91BA02C3F7F6FB02DF0870D1B868E1D3B8AEF4FB695FEFBF5
+      EBD766FD8FB7E79E7BAE4DF1070C1820BE79D096F96F6A6A6AA3FB162D5AD4E8
+      377F7B60FDFAF58DCEF1F7307FFDF5D746E7222323F9BB7A8DCE35CCEDEF95FF
+      AB48D602F447FB0DF11BD65F4DD53FDC271A6EE9E9E9C24E0D377F7F7F8C1F3F
+      BED1B90B172E60F6ECD98DCE356C5FAABFB80E6DCBFA936B60A90E6DC5FA9BE5
+      F666EC472B203CDAFECE5B1E8D374CE3C68E12D45ABFFF5BF0A5F3ADA5EFBBF1
+      DA1AFF6E7D044586A125E85E786D8D7FB73E5A1AFF41F66F6DFC47F67F64FF47
+      F67F64FF47F6FF7B8FFF7FD7FCEFD1F6686BA96DFCD811D3C6E98CF422BF2B1B
+      3F7654D2B8B1A3774E193EBC6BEBF4F391AB08B76EC9FCE9B5A69B5743BEF12B
+      4C9B3AB166C2D891B12DCD83B6F6F001E3B447293F9B370DBF9B7C8FE3DBD6C0
+      E190219C7F3B08FDD7F46AC6EB8C326D29ECE1C38777D2D11E6542F2D719AF98
+      0393CF67C140B72FBE9CA205C7C346F8E5DB15183F7664428BE85C7BB401B59D
+      C97166DE6B2FD71A7F3A135BE64D10F84C36866B21FFCE80E2D0C8D216806F37
+      5E7B5436B58D25AFFE0B1BDE79093F2CD0C3DA379FC7E6B9E3851ED8168B664F
+      AB259FF46E09F90D561B184DD4D3C6649D115831590BEBDF1E831F17EA81F560
+      BA720E562C98A68AC3DA63663C6CEC6D4646ABB61BCBEB1C2F3A62F2C4719832
+      6EB8E081F5307FF2A8BAF1DA236BA90FB2EF6D6801EC958C1D1C1622DE6F7A7A
+      DFC444BDB18287A5130791BC23EB74C68E3EA4AD3DF2F9878DBDC358BE82B103
+      43820576767E2EFCEF04E317F9F6DA5774B5D9D799F2747575BB3C746C13A365
+      4475012141751276C09D101CB43C524BE72B972E5D6C4071A09074FED5C3C6DE
+      6E6CF8096307DEBE59A72CC943565E7623EC5F4C0CF555B148FBB196C20EBA6C
+      531774EC1BC47A9E464078080E1FB364ECAAED26F2192D15DF7618197DDC24F6
+      71CB5AC2AD6E496C927BA9C0763DDE04B651F50E63E3992D866D227F8FFCBC36
+      D8D5BA11F611ABA3027B9B897C564B616F33365CD808FBA69D0AFBB80A9B6CF2
+      760BCABD80745EE371CA1C8C1DA396DBE2F831F6B516C556C92EAF75B4361372
+      C7799D6D556C95CFC9E1696B8AA0CB56088C088585F5B15A3A5743D8B35B238F
+      627C5B9B437070B9C4F6AE5363CF69AD1C92F11B5035F9E2DCFFAFF9F2D6295A
+      8F1B4ED7FA9AC8C370FAA062C3198314F2E95AF9F2E9836E194E1F7864C7F441
+      8BB7BF39F09996C297CF1874C568D6E0AA93EB66D73919AF84DD86B938B86824
+      F6CE7F013B67FFBB9A78A921DEEA68EF43BC7DB675D6B34F3CB4B83E7DF04CF9
+      5B5A759E965B91E8E75C4F3E563FC3E6D3B1824E2CD786C5E251D83D77581DF1
+      5A2374347DD0B7871EC218279F3EF8DCAE39FFAE89F53CD7089F7F4BF80DC97A
+      D9CBD8FFDE8B90CFD0AA319A31C8E6AFE30FCA3DF0FE70216F437CEF635B9BC4
+      B75C321A7B17BE00C2AE92CFD4F27918F866B387D4EC2599ECD6CF81B3C917B0
+      DF381F87178FC6E10F47E1D00723B06F01F9C1BB43AB49F7D5E407203F88A6E7
+      36CBF5073FF597ED3F73A02EB5696B38532B847D9E7D5F10E108AC195A85F43B
+      8CF02CC8E6CBC95F863EAAB01F6DCF1717F7D22B2A32900D1CD8F781376F3CF4
+      8CF6D5709F7FE8BFF3C1C3C07DBDB272EDEADADAB85D94FB8FB7B6B6BAEF03A6
+      8E4FEBC595FAEADA3A15C83A76D4FBABB85FD4D6C6EE21DC634456443BF8FF07
+      E7CF5F782FECF11179376704C6A37DAFBE0632D504D8E6E1A6A5F57ABDAAAA11
+      EE11A2436A621E96A4A424CB7AF57A96EF777777EFE8EFE939C0DED3FFDD29A1
+      995EEFA416A0F3C8093CC9B07963C6D75F7719E5E0F0A58152196B7E17EE41A2
+      FD44CCCF81EA6A58D5D4E0DB8B172F7B5CBE6C5E989FEB97945FACD898568665
+      4AE07B67EFDC4E32D98BCD817ECECC6CDCCCA8A86B666ADCC30DF0F6D5D6E208
+      E19DACA8801B51645111CA2BFEF8DF69FE6F22A394327C560A6CC8A842715151
+      F5D0C183276A846B6E3EEECDDBB76D36575757B29C071897B02CABAA60575E8E
+      EBE5158820ACDC4A25AA9B982E50535B87A3E965D858062C8B8846F20D13717E
+      F1E2259B1E242FE36EACACACB4A0FB7F233CC7B2327813566C65158A6A557235
+      F82F2A3AA100720381A8D340DC492A82DD6097510263C25E1C9B073F8BF524C0
+      8740592E2CAD6D78A25BC7BB71C72A952FBD111C7C62B35259C9B6F524CCE4D2
+      329412581D03F2FF44672500C157017FC2093E055C33069C7F004E7E0E587E02
+      9CFD098875C2B58428EC2FAEC3C729E5B8604D72EF5B02EC258ABE86F8D48CFC
+      CE9D3B0F6E88FD929BDB37D44A19CB7B94C85CA944585131C945981176C07539
+      60BF12B0594437CC257A979C6136D13CA205F49BC861359064833B092E385654
+      8755E473BFDB6F074ECC016CDF43F9910F90692717BA7BF5D5571735C47F76E9
+      D275EC4F966A9FDE4D76BE96570854E6036E9348C6D1C0E5F1C0155D22BDA6C9
+      7D024A5D757022EC3AB613EB720F537A56077557F591663D1F973ED7C56FEF0C
+      A1D66BB176EDB7BFDEA5FE3E73BCBD23ACD4F87B89CEE6E6A3AE9A7C3981EC76
+      6714E941A73185338D5551E458D4D23D816EDFE340623976DC0C40BAFD7A445B
+      AE849F7C1ECE7EA48763937BC272422794C506E282D3657EF7D6451D83FEC10C
+      749F3A75C976EA4F47D5BE6E919B8B8A4AD25621F953EA2A206D2D90CEB44E7D
+      4CFB8C0D445B509BBE09F17EC6B8E2E0828327CC7068DF7BD8BFFD2DEC5BA507
+      ABB92FE0E4F4FEB0D6EF893DA364F039F003C263E2CBBA76EDCAB5D34B4423D4
+      3AE832E9D4A92B47D57D7C5F7131320A4B00651250EC0C945C4575C975D494DC
+      205FF44555B91F32E99C5FA615DC428EE2A6D375FCB467055EDFD415E3BE9661
+      EC9732CCDC3000ABF64DC01AB36198FFD5539834B73D167FA18DE8A818E8EBEB
+      F324E07F4AF2F3D6F98517F4BF2B29A9E438634EFE1F9A9DAD72FE3A554C09CF
+      BA8DC33E9BE1107104FBFDB760A3E77B30BBB302EE379CB0C37C35A6EEEC8E49
+      3F7781F6FBEDF1F1A657F0A3C372BC77521723E4FF80D6A732F47F4B8611531F
+      4761690E76ED32B76BA2FB77D43D7AD49975B09BFAC08D8C0CFE4745286B9450
+      54162138FD3A363BCFC3CFEE1F619BD762CC771C86237E8771F8A81C934D9EC2
+      98F532BCFCF1535867BE1C862E1BB0E8801EF40D7B63F296F698F7B10C5F12BE
+      7C5A471486BBC2EB56602CE1F5BA9B81CECF3F3FED3B8542C4BC0B1999A85014
+      2132CB172E11C77031FC08ECA3F660ADD35BF8C2590F73CF9B63A6B32BC69874
+      C390D5324C98DF0E3BD74DC6E5831FC376871E1CBF1D02CF95FF44C0079D10F7
+      E334641E5A89CC03AB9078E85B145754D5F4EFDFFFD5A6DE218F3034B4E2186F
+      939985FC826CC4E404E06CD83E6C749D8F756EF3F0D1056DCC38A00FBD0DB6D0
+      F9790C96AFEB8EC35F0D87EF779311BF610A92BED343CAB7AF206E8D0E82970D
+      43C4CF0BA1880B014FEBCA3B6F862CD337843DDF5FB4684B9341B8478FE1CB52
+      52F38E96962297E28077CC59EC775E0AB3E313B1F78036ACF7BD8CF3BB97E09A
+      D95244EC5E8882FD06A83CB80265FB3F418EF952A4EF5A8244A3F710FBC3BB48
+      DC340315D72C5013ED44BE1C49F6CC46A9CBFB4041140E5A58B9C9FE5810A3D1
+      D6CF60E536231A4362720A907DFB0C120E2E42E125332843DC2826849333DE40
+      8DF729285D0FA2F492398ACE9BA2C0F627149ED88C228B35283D6900A5DB4228
+      6F4C4175DC17A82DF5426D7124CABD6D90FAE11328BFBC0F1109A905148B8734
+      A983CE9DFF3527283437202707B5254540150DE0A4C0DAA21C28C3AEA0C2C30A
+      0AA7DD2871B340B9D719286F9D85D2DD1CE557BF47659001AA52DF4765F44C94
+      384C45A1F51414DBFF0405F19AB55917593F4E42F9EDF3E0595663C68C9977AF
+      B1F0A9A5CBB79D26F9AB0A725172D11485C7BF4601C5B4E2335BA170DE8DB2EB
+      16A8F03E88CAE03DA45A6328E37E24CCEF49C62FA1B8F019DDFF390A8EAD22BD
+      6C45B1EB7E9487BB03A579AA51937C219BFAF7AC59B3B6DD67387E66F149FB98
+      D2E202143B1A4371E9579479DBA232DC1955F14449F644D6A8BCB31B157E4628
+      7537217DEC4589D7292882DD5199164D3657CD252AA3613A21251DE71C2EE46F
+      DABC2568DAB469B67DFAF459CFAF87EF970F0C1D37614D06C5E2EABC34D41664
+      A02637115531A47FFFE328BD41581E87514CBA2C89F0454536DD43F9424D1D50
+      5446F949742C7E3B699BB376ED3AFF49932659F7E8D1E31B6AF23F32D542241A
+      FDFDAD53A74EC30242EE9456C4FAA1F8F41614D86F43FE154B14045E46514A2C
+      4A4B4A842E15155508080AA9B53C7A346BE5CA2FFCC68D1B77B45BB76EAB65AA
+      45BFB49A9D7336E88DE71C2F4695C6072237E4068A72732826515E52A1444676
+      0E7C7C7DF97FB6D3DE7EFB6D77C293CB548B87F16227DD1F5279D361A799D965
+      FEE34246560EC25352601D95800F376E8D7BE1C517F751FF5946F7704ED94F3D
+      A63EF44D4747E7CBF73F33F05D19168B050111B5EDA7BDCD0BA870ECECDC4A25
+      1E2F8AF34C87773E30930D1EFAA34CB5484F5B6C9DEF152FFF2F6FFF6DEB013A
+      3A3AA65FB870219DF7E7CF9F177B2607078746C4D71AD2DDD799A4B61AD283F0
+      F91E9E83CBF380A53D13CF1761E2B91B3C479B89E7B0349CAFCEC77C9EEFE17B
+      F9F90AAA0D794E279326F8CC735BE2B7A4FC172F5ED4089FE720F3B33A479CF0
+      865F069685A662C6F11BD0B18FC754A7044CBB148DB72EC762FAD558CC0BCCC1
+      A75975F5F3A6249E1AF2C0ED316982CFF730CFFCDC6C8F106CA293BF13ADF388
+      C1CC3BC0526A61711C604043F9A774BC8E52F4AD749DE70FDE3DBF4BE241224D
+      F02F5DBA24F099DF371C7D604065C09E2AC288AA00553ED846B453FD0E826BE5
+      539C2B13454747FFAFB513241E247B71DB9AC8CFB6627C7DC75B58456510BFDF
+      DAB46B2FB6EDDE8B2DC6A6D86A628A6DA66690EFDC0993DDBB60B677AF98B77F
+      2F7F90362727278DE4677CD6C1ABA76EE29374554DEAEAEA2A6CF2677C52DA34
+      919FEFE1B9E08C3FD1D6071F531944D534ECCF3BD4FB517379F833F8AC03DDDF
+      FCB0245DF56ECFD6FE1C24BF9078F0F4F44442420292929270EDDA35713D83EA
+      B67BF1A0293ECFC5661EC6597963619CCABF4F9E3D2FDA67F2F1F111FD8DE70A
+      37D4035F73777717CF36C58326F8EC23F5F8D6015894026CE07751E71C21F945
+      4C4CCC7D6DC1BE18121252CF4373F1150A85988FAE7B2E011F513FDF42178E9F
+      BB28F03D3C3CEAF5702F1EF837F328F94373FCBF217E7FA35B18E5A2C4EB11C0
+      BEDFCF089DA4A5A5D5EBE17E3CB06D580F7F069F9F651E02020204B1BD795E2E
+      B7C7F34FA578DE140F121FEC878181816838AF52537C5E838179E0BD74CC1414
+      1424E497FCE37E7CE452DD121616267421D9A139F84CAE2E2EC8CBCB1332F3BC
+      74DE73DDC6F8FC9BEF61BD302FBC671EF81CF3C0FC72DF64DD49F8CECECE0FC4
+      E77BA4B68D8D8DC5BA28A1A1A1A28FB34F9B9A9A222B2B4BE8213E3E5EC4FD1C
+      AA9359567E86E7AFB3EC94478839C0070F1E143660D2447EC697E4654C9E5B2C
+      F123D981AF4B3E7A2F5B707C605DF1BD7F169FDB6039F958E281E9E6CD9B62CE
+      6F533C701CE4E798076E87ED22C5054DF5CFCF31B1BF858787D7DB5FC29774C1
+      7D83E30163F07C63F6159E9F2CE9816DC724F54B4DE5E7F61893FB10DB5AE2E7
+      6E3D48F6603DF06F490F922EB81DBE5FC2D7547E7E8EE9CE9D3B427E899FFBE1
+      37650B963D3939B93E2EB8B8B86884CF73F019F3F6EDDBC296AC078E3DAC0B26
+      F62BF67926FECD3CF175E681AF314FDC06DB82FB8584AF89FCCC233FCBB466CD
+      1AA1038E63DCCFA2A2A2449EC77B968DF7DC3EF3C7BEC2CFF0FDCC53444404BC
+      BDBDB169D3A6FAB8A4293EFB11B7C57BE958D2C99FB14573F0F91E8E1F8C2BED
+      FF2A0F524CD0D4FFDB129FF56F6767E772EAD429575B5B5B57DEDF8B9ABA7EFA
+      F4E946446DB99E39734610B7FB68CDFF47F5FFA3FA5FB3FAFFEE9C52531E0476
+      45E95FAEFF9BCA6B1FC403FFAE5014405190D5E8FEE6D4FF52FDDD309F7C902D
+      F8585941CF95523E5A982D9EC9C8CCA178A86876FDCFB155C2F7F2F21263DFFD
+      78107A2E5720F2F615845E3E4ED7556BD81DB24FC5B5EB01CDAEFF79CCE2B8CE
+      7AE031342D2D55E4D24DD5FFFC5B91978AA0F3C638F1C3024406F90A9E323232
+      71DACE4E8CC7CDAF7F15029BC70E0F0F7714913E6262A2456EDD500F7C9C4AF9
+      B1EBEECFB06BE56B38B367134A1525C2175C4362B1DCF29A187F9B8DDF60EC0A
+      27FEB3B339C729A07C3F4EE41F8CCBD738FF30369263F3E2D771E09BD908F1F7
+      157CB1ADB7F8E7E1172B27F5DF9BEA04698A2FC64EF518CA98ACFF3C1A8B8B0A
+      0B1019112EFC81EB9A5F7EF945F0F3DB096BB8383B0B9E58F739F98578F76615
+      3C3C7D546BBB5109C8D4DCFA5BE0539E9523F2BD6CC1435A6A0A685C85919191
+      D003E7E0767667449D20F984FB9D384CFD3D51E4828C5F44D845CDC097720851
+      C3518DC5F906EB8165B6B6B6068DFB08A67C8FEB31E685FB08DB59C2FFD52B0E
+      4BF75F1576A8267DE4564390E6F577310A0993F1E3E262A9064BE6DC8DD7ED01
+      8D75C44F3ECAC847FDFCFC70F2E4C9FA1C4FEA174BDCF36173D659D8A2ACAA16
+      999510D49CFA97736B969B6B48AB63C76024970B1DB35EB826E4FCD7DEDE5EF4
+      4FCED3A57E11129784B7CEA68BEBAC8B42650DD2A80B30698ACFB89CF3B1FDCC
+      CCCC68DC724422F5FF12758DC3F189F5C0B55761613EF9E41D84518DCC3CECB9
+      1E8A0F8EDCACEFA3D915D5482DAA12A4293EE7EF9CD373FEC932B21D591FAC17
+      05D98463C1F1E3C7A9D6BC2AFC222E361A6121C1A4AB082C774B81B1F525815F
+      525E89B4D26A6414960BD234FFE69A896B178E815CCF32BEAAAE29163CD9D8D8
+      88FA828FE3C93F52539290919A8C8098184C3D9B0BBFDB014217F9E54A249754
+      23AFB04490A6F9B75467B19E7D7D7D852CD27B05B637BF77647D487D84DF4314
+      E766E1525A09F4AD627183F4C2F89965F45C7E054AF83EA2E6D4FF8CC57BC62B
+      2F2F2379C3050E13DB866B0129E7E7FBE2A3C26116ACC0C6D301C84B8E46605C
+      0A724A2B919CABA8CF3F9AF3FE45F27F6F6F2F81919BCBEF584285EF4B3CB08D
+      52291E31A5A725E3B04324AE79FAA3AAB20285F9D9F0482C41B1A2ACD9F50FCB
+      23E1736C51D098C231B8B090FB45AE38CFFC6464A4130F6948217F89A1FE666C
+      7109A1C181C44F3272D312111D1B8FAB14839B5BFF4BEFB958C75CFFBBB9B909
+      DF665EAE5CB9825BB76E89F72FEC83AC038E4FAC93A8A848242725222A360E57
+      E2B2E0702B0ED769FC6C6EFDCFF249F8521DCCF53D1FDFFD2EA6401D27FFA8FD
+      C81F28E7C9282E476E41B1B07B73EB7F6E93FD9F71D90E6C7396B3217EC3F77F
+      7C9EFBA6F047A2ACE252C4E494212D53D5479A5BFF737B123EE3F231F7877BD5
+      BED27949072985A588CD229FCDCB176385E47F9ADA5FD23763B2FC9AD4DF921E
+      0A8B291EE4291097A97A67C5F15AB295A6FEDF96F87FB7FAFF7F0040F438DA
     }
   end
 end

@@ -103,7 +103,7 @@ type
     function GetRect: TRect;
 
     procedure SetNumVertices(const Value: Integer);
-    procedure SetVertex(Index: Integer; const Value: TCurvePoint);
+    procedure SetVertex(Index: Integer; const Value: TCurvePoint); virtual;
   protected
     { Protected declarations }
   public
@@ -130,14 +130,23 @@ type
   private
     { Private declarations }
     FPolarCoordinates: Boolean;
+    FRecalculateDirect: Boolean;
+    FRecalculateInverse: Boolean;
+
+    FDMat: Array of Array of Double;
+    FIMat: Array of Array of Double;
 
     function GetPolygonPoints: ArrayOfTPointF; override;
+
+    procedure SetVertex(Index: Integer; const Value: TCurvePoint); override;
   protected
     { Protected declarations }
   public
     { Public declarations }
     {@exclude}
     constructor Create;
+    {@exclude}
+    destructor Destroy; override;
 
     function Contains(p: TCurvePoint): Boolean; override;
 
@@ -891,6 +900,19 @@ begin
   inherited Create(4);
 
   FPolarCoordinates := False;
+  FRecalculateDirect := True;
+  FRecalculateInverse := True;
+
+  SetLength(FDMat, 3, 3);
+  SetLength(FIMat, 3, 3);
+end;
+
+destructor TPlotQuad.Destroy;
+begin
+  SetLength(FDMat, 0);
+  SetLength(FIMat, 0);
+
+  inherited Destroy;
 end;
 
 function TPlotQuad.GetPolygonPoints: ArrayOfTPointF;
@@ -898,14 +920,14 @@ const
   NumEllipsePoints = 360;
 var
   l, m, u: Double;
-  Mat: Array of Array of Double;
   Dn, xp, yp, zp: Double;
   a, b, c, d: TCurvePoint;
   t: Integer;
 begin
   if PolarCoordinates then
   begin
-    try
+    if FRecalculateDirect then
+    begin
       // Project a circle inscribed in the square x = [-1..1], y = [-1..1]
       // to the polygon. Only works for a convex polygon.
       a := Vertex[0];
@@ -913,42 +935,48 @@ begin
       c := Vertex[2];
       d := Vertex[3];
 
-      SetLength(Mat, 3, 3);
-
       Dn := a.X*(b.Y - c.Y) + b.X*(c.Y - a.Y) + c.X*(a.Y - b.Y);
       l := (b.X*(c.Y - d.Y) + c.X*(d.Y - b.Y) + d.X*(b.Y - c.Y))/Dn;
       m := (a.X*(d.Y - c.Y) + c.X*(a.Y - d.Y) + d.X*(c.Y - a.Y))/Dn;
       u := (a.X*(b.Y - d.Y) + b.X*(d.Y - a.Y) + d.X*(a.Y - b.Y))/Dn;
 
-      Mat[0, 0] := -(a.X*l + b.X*m);
-      Mat[0, 1] := b.X*m + c.X*u;
-      Mat[0, 2] := a.X*l + c.X*u;
+      FDMat[0, 0] := -(a.X*l + b.X*m);
+      FDMat[0, 1] := b.X*m + c.X*u;
+      FDMat[0, 2] := a.X*l + c.X*u;
 
-      Mat[1, 0] := -(a.Y*l + b.Y*m);
-      Mat[1, 1] := b.Y*m + c.Y*u;
-      Mat[1, 2] := a.Y*l + c.Y*u;
+      FDMat[1, 0] := -(a.Y*l + b.Y*m);
+      FDMat[1, 1] := b.Y*m + c.Y*u;
+      FDMat[1, 2] := a.Y*l + c.Y*u;
 
-      Mat[2, 0] := -(l + m);
-      Mat[2, 1] := m + u;
-      Mat[2, 2] := l + u;
+      FDMat[2, 0] := -(l + m);
+      FDMat[2, 1] := m + u;
+      FDMat[2, 2] := l + u;
+
+      FRecalculateDirect := False;
+    end;
 
 
-      Setlength(Result, NumEllipsePoints);
-      for t := Low(Result) to High(Result) do
-      begin
-        xp := cos(t*arctan(1)/45);
-        yp := sin(t*arctan(1)/45);
-        zp := xp*Mat[2, 0] + yp*Mat[2, 1] + Mat[2, 2];
+    Setlength(Result, NumEllipsePoints);
+    for t := Low(Result) to High(Result) do
+    begin
+      xp := cos(t*arctan(1)/45);
+      yp := sin(t*arctan(1)/45);
+      zp := xp*FDMat[2, 0] + yp*FDMat[2, 1] + FDMat[2, 2];
 
-        Result[t].X := (xp*Mat[0, 0] + yp*Mat[0, 1] + Mat[0, 2])/zp;
-        Result[t].Y := (xp*Mat[1, 0] + yp*Mat[1, 1] + Mat[1, 2])/zp;
-      end;
-    finally
-      SetLength(Mat, 0);
+      Result[t].X := (xp*FDMat[0, 0] + yp*FDMat[0, 1] + FDMat[0, 2])/zp;
+      Result[t].Y := (xp*FDMat[1, 0] + yp*FDMat[1, 1] + FDMat[1, 2])/zp;
     end;
   end
   else
     Result := inherited GetPolygonPoints;
+end;
+
+procedure TPlotQuad.SetVertex(Index: Integer; const Value: TCurvePoint);
+begin
+  FRecalculateDirect := True;
+  FRecalculateInverse := True;
+
+  inherited SetVertex(Index, Value);
 end;
 
 function TPlotQuad.Contains(p: TCurvePoint): Boolean;
@@ -960,7 +988,8 @@ var
 begin
   if PolarCoordinates then
   begin
-    try
+    if FRecalculateInverse then
+    begin
       // Project the point p to the square x = [-1..1], y = [-1..1] and check
       // that it falls within the inscribed circle
       a := Vertex[0];
@@ -968,34 +997,32 @@ begin
       c := Vertex[2];
       d := Vertex[3];
 
-      SetLength(Mat, 3, 3);
-
       Dn := a.X*(b.Y - c.Y) + b.X*(c.Y - a.Y) + c.X*(a.Y - b.Y);
       l := (b.X*(c.Y - d.Y) + c.X*(d.Y - b.Y) + d.X*(b.Y - c.Y))/Dn;
       m := (a.X*(d.Y - c.Y) + c.X*(a.Y - d.Y) + d.X*(c.Y - a.Y))/Dn;
       u := (a.X*(b.Y - d.Y) + b.X*(d.Y - a.Y) + d.X*(a.Y - b.Y))/Dn;
 
-      Mat[0, 0] := a.Y*l*(m + u) - b.Y*m*(l + u) + c.Y*u*(m - l);
-      Mat[0, 1] := -a.X*l*(m + u) + b.X*m*(l + u) + c.X*u*(l - m);
-      Mat[0, 2] := a.X*l*(b.Y*m + c.Y*u) - b.X*m*(a.Y*l + c.Y*u) + c.X*u*(b.Y*m - a.Y*l);
+      FIMat[0, 0] := a.Y*l*(m + u) - b.Y*m*(l + u) + c.Y*u*(m - l);
+      FIMat[0, 1] := -a.X*l*(m + u) + b.X*m*(l + u) + c.X*u*(l - m);
+      FIMat[0, 2] := a.X*l*(b.Y*m + c.Y*u) - b.X*m*(a.Y*l + c.Y*u) + c.X*u*(b.Y*m - a.Y*l);
 
-      Mat[1, 0] := a.Y*l*(m - u) - b.Y*m*(l + u) + c.Y*u*(l + m);
-      Mat[1, 1] := a.X*l*(u - m) + b.X*m*(l + u) - c.X*u*(l + m);
-      Mat[1, 2] := a.X*l*(b.Y*m - c.Y*u) - b.X*m*(a.Y*l + c.Y*u) + c.X*u*(a.Y*l + b.Y*m);
+      FIMat[1, 0] := a.Y*l*(m - u) - b.Y*m*(l + u) + c.Y*u*(l + m);
+      FIMat[1, 1] := a.X*l*(u - m) + b.X*m*(l + u) - c.X*u*(l + m);
+      FIMat[1, 2] := a.X*l*(b.Y*m - c.Y*u) - b.X*m*(a.Y*l + c.Y*u) + c.X*u*(a.Y*l + b.Y*m);
 
-      Mat[2, 0] := a.Y*l*(m + u) + b.Y*m*(u - l) - c.Y*u*(l + m);
-      Mat[2, 1] := -a.X*l*(m + u) + b.X*m*(l - u) + c.X*u*(l + m);
-      Mat[2, 2] := a.X*l*(b.Y*m + c.Y*u) + b.X*m*(c.Y*u - a.Y*l) - c.X*u*(a.Y*l + b.Y*m);
+      FIMat[2, 0] := a.Y*l*(m + u) + b.Y*m*(u - l) - c.Y*u*(l + m);
+      FIMat[2, 1] := -a.X*l*(m + u) + b.X*m*(l - u) + c.X*u*(l + m);
+      FIMat[2, 2] := a.X*l*(b.Y*m + c.Y*u) + b.X*m*(c.Y*u - a.Y*l) - c.X*u*(a.Y*l + b.Y*m);
 
-      zp := p.X*Mat[2, 0] + p.Y*Mat[2, 1] + Mat[2, 2];
-      xp := (p.X*Mat[0, 0] + p.Y*Mat[0, 1] + Mat[0, 2])/zp;
-      yp := (p.X*Mat[1, 0] + p.Y*Mat[1, 1] + Mat[1, 2])/zp;
-
-      // Check that the point is inside the circle
-      Result := (xp*xp + yp*yp) <= 1;
-    finally
-      SetLength(Mat, 0);
+      FRecalculateInverse := False;
     end;
+
+    zp := p.X*FIMat[2, 0] + p.Y*FIMat[2, 1] + FIMat[2, 2];
+    xp := (p.X*FIMat[0, 0] + p.Y*FIMat[0, 1] + FIMat[0, 2])/zp;
+    yp := (p.X*FIMat[1, 0] + p.Y*FIMat[1, 1] + FIMat[1, 2])/zp;
+
+    // Check that the point is inside the circle
+    Result := (xp*xp + yp*yp) <= 1;
   end
   else
   Result := inherited Contains(p);

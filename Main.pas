@@ -17,6 +17,14 @@ type
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
+    btnBackground: TColorButton;
+    btnBackgroundColor: TSpeedButton;
+    btnColor: TColorButton;
+    btnMajorGrid: TColorButton;
+    btnMajorGridColor: TSpeedButton;
+    btnMinorGrid: TColorButton;
+    btnMinorGridColor: TSpeedButton;
+    EditCopyImage: TAction;
     btnAddCurve: TToolButton;
     btnAdjustCurve: TToolButton;
     btnClear: TToolButton;
@@ -50,6 +58,12 @@ type
     EditVY2: TBCTrackbarUpdown;
     EditVY3: TBCTrackbarUpdown;
     EditVY4: TBCTrackbarUpdown;
+    edtGridThreshold: TBCTrackbarUpdown;
+    edtGridTolerance: TBCTrackbarUpdown;
+    edtInterval: TBCTrackbarUpdown;
+    edtSpread: TBCTrackbarUpdown;
+    edtStep: TBCTrackbarUpdown;
+    edtTolerance: TBCTrackbarUpdown;
     edtX: TEdit;
     edtY: TEdit;
     gbCoord: TGroupBox;
@@ -62,15 +76,25 @@ type
     gbVertex4: TGroupBox;
     gbX: TGroupBox;
     gbY: TGroupBox;
+    lblBackground: TLabel;
+    lblColor: TLabel;
+    lblGridThreshold: TLabel;
+    lblGridTolerance: TLabel;
     lblImg1: TLabel;
     lblImg2: TLabel;
     lblImg3: TLabel;
+    lblInterval: TLabel;
+    lblMajorGrid: TLabel;
+    lblMinorGrid: TLabel;
     lblPlt1: TLabel;
     lblPlt2: TLabel;
     lblPlt3: TLabel;
     lblSpace1: TLabel;
     lblSpace2: TLabel;
     lblSpace3: TLabel;
+    lblSpread: TLabel;
+    lblStep: TLabel;
+    lblTolerance: TLabel;
     lblVX1: TLabel;
     lblVX2: TLabel;
     lblVX3: TLabel;
@@ -93,31 +117,8 @@ type
     ModeBackgroundColor: TAction;
     ModeMinorGridColor: TAction;
     ModeMajorGridColor: TAction;
-    btnMajorGridColor: TBitBtn;
-    btnMinorGridColor: TBitBtn;
-    btnBackgroundColor: TBitBtn;
     GridShowHide: TAction;
     GridRemoval: TAction;
-    edtSpread: TBCTrackbarUpdown;
-    edtTolerance: TBCTrackbarUpdown;
-    edtInterval: TBCTrackbarUpdown;
-    edtStep: TBCTrackbarUpdown;
-    edtGridTolerance: TBCTrackbarUpdown;
-    btnColor: TColorButton;
-    btnMinorGrid: TColorButton;
-    btnBackground: TColorButton;
-    btnMajorGrid: TColorButton;
-    edtGridThreshold: TBCTrackbarUpdown;
-    lblGridTolerance: TLabel;
-    lblColor: TLabel;
-    lblBackground: TLabel;
-    lblGridThreshold: TLabel;
-    lblMinorGrid: TLabel;
-    lblInterval: TLabel;
-    lblMajorGrid: TLabel;
-    lblSpread: TLabel;
-    lblStep: TLabel;
-    lblTolerance: TLabel;
     ModeDeletePointsItem: TMenuItem;
     ModeGroupPointsItem: TMenuItem;
     ModeDeletePoints: TAction;
@@ -137,6 +138,8 @@ type
     ScrollBox: TScrollBox;
     sbScale: TScrollBox;
     sbPlotBox: TScrollBox;
+    sbCurve: TScrollBox;
+    sbGrid: TScrollBox;
     sep07: TToolButton;
     SpeedButton1: TSpeedButton;
     tsPlotBox: TTabSheet;
@@ -941,7 +944,10 @@ begin
   end;
 
   if (PlotImage.Scale.CoordSystem <> TCoordSystem(cbbCoords.ItemIndex)) then
+  begin
     PlotImage.Scale.CoordSystem := TCoordSystem(cbbCoords.ItemIndex);
+    PlotImage.PlotBox.PolarCoordinates := (PlotImage.Scale.CoordSystem = csPolar);
+  end;
 end;
 
 procedure TDigitMainForm.btnMajorGridColorChanged(Sender: TObject);
@@ -1895,7 +1901,7 @@ end;
 procedure TDigitMainForm.PlotImageMouseLeave(Sender: TObject);
 begin
   ClearZoomImage;
-  ZoomImage.Visible := False;
+  //ZoomImage.Visible := False;
 
   StatusBar.Panels[1].Text := '';
   StatusBar.Panels[2].Text := '';
@@ -1906,7 +1912,7 @@ procedure TDigitMainForm.PlotImageMouseMove(Sender: TObject; Shift: TShiftState;
 var
   Pt: TCurvePoint;
 begin
-  ZoomImage.Visible := True;
+  //ZoomImage.Visible := True;
   UpdateZoomImage(X, Y);
 
   StatusBar.Panels[1].Text := IntToStr(X) + ', ' + IntToStr(Y);
