@@ -6,7 +6,8 @@ interface
 
 uses {$ifdef windows}Windows,{$endif} Forms, Classes, Controls, Graphics,
      ExtDlgs, Fgl, ComCtrls, SysUtils, DOM, XMLWrite, XMLRead, math, curves,
-     coordinates, Dialogs, Types, Base64, BGRABitmap, BGRABitmapTypes;
+     coordinates, Dialogs, Types, Base64, BGRABitmap, BGRABitmapTypes,
+     BGRAreadTiff;
 
 type
   TPlotImageState = (piSetCurve, piSetScale, piSetPlotBox, piSetGrid);
@@ -82,7 +83,7 @@ type
   protected
     FOldCursor: TCursor;
 
-    InMouseMove: boolean;
+    InMouseMove: Boolean;
     MouseMovePos: TPoint;
 
     FState: TPlotImageState;
@@ -199,6 +200,8 @@ type
     function ConvertCoords(X, Y: Double): TCurvePoint; overload;
 
     procedure SwitchGrid;
+
+    procedure PasteImage(Stream: TStream);
 
     procedure AddMarker(Position: TPoint; NewMarker: Boolean = True); overload;
     procedure AddMarker(Marker: TMarker; NewMarker: Boolean = True); overload;
@@ -1700,6 +1703,27 @@ procedure TPlotImage.SwitchGrid;
 begin
   GridMask.IsActive := not GridMask.IsActive;
   IsChanged := True;
+end;
+
+procedure TPlotImage.PasteImage(Stream: TStream);
+var
+  TmpBmp: TBGRABitmap;
+  NewStream: TMemoryStream;
+begin
+  try
+    TmpBmp := TBGRABitmap.Create(Stream);
+    NewStream := TMemoryStream.Create;
+
+    NewStream.Clear;
+    NewStream.Position := 0;
+    TmpBmp.SaveToStreamAsPng(NewStream);
+
+    LoadImage(NewStream);
+
+  finally
+    TmpBmp.Free;
+    NewStream.Free;
+  end;
 end;
 
 procedure TPlotImage.AddMarker(Position: TPoint; NewMarker: Boolean = True);

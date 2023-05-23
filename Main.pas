@@ -1,6 +1,12 @@
 unit Main;
 
 {$mode objfpc}{$H+}
+{$IFDEF DARWIN}
+  {$DEFINE TIFF_CLIPBOARD_FORMAT}
+{$ELSE}
+  {$DEFINE BMP_CLIPBOARD_FORMAT}
+  {$DEFINE PNG_CLIPBOARD_FORMAT}
+{$ENDIF}
 
 interface
 
@@ -8,7 +14,7 @@ uses LCLIntf, LCLType, SysUtils, Classes, Graphics, Forms, Controls, Menus,
   StdCtrls, Dialogs, Buttons, ExtCtrls, ComCtrls, TATypes, TASeries, TAGraph,
   ClipBrd, ActnList, ValEdit, Spin, ExtDlgs, MaskEdit, BCTrackbarUpdown,
   FileUtil, restore, TAChartUtils, coordinates, curves, plotimage, uchartscale,
-  IniFiles;
+  IniFiles, BGRABitmapTypes, GraphType;
 
 type
   TMouseMode = (mdCursor, mdMarkers, mdColor, mdSteps, mdSegments,
@@ -17,6 +23,7 @@ type
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
+    EditPasteImage: TAction;
     btnBackground: TColorButton;
     btnBackgroundColor: TSpeedButton;
     btnColor: TColorButton;
@@ -114,6 +121,8 @@ type
     lblY3: TLabel;
     lblYScale: TLabel;
     MainPlot: TChart;
+    EditPasteImageItem: TMenuItem;
+    N7: TMenuItem;
     ModeBackgroundColor: TAction;
     ModeMinorGridColor: TAction;
     ModeMajorGridColor: TAction;
@@ -142,6 +151,7 @@ type
     sbGrid: TScrollBox;
     sep07: TToolButton;
     SpeedButton1: TSpeedButton;
+    BtnPasteImage: TToolButton;
     tsPlotBox: TTabSheet;
     tsScale: TTabSheet;
     tbPlot: TToolBar;
@@ -306,6 +316,7 @@ type
     procedure EditCopyExecute(Sender: TObject);
     procedure EditIX1Change(Sender: TObject; AByUser: boolean);
     procedure EditIY1Change(Sender: TObject; AByUser: boolean);
+    procedure EditPasteImageExecute(Sender: TObject);
     procedure EditPX1EditingDone(Sender: TObject);
     procedure EditPY1EditingDone(Sender: TObject);
     procedure EditVX1Change(Sender: TObject; AByUser: boolean);
@@ -478,6 +489,12 @@ const
 var
   DigitMainForm: TDigitMainForm;
   MustOpen: Boolean;
+  {$IFDEF TIFF_CLIPBOARD_FORMAT}
+  tiffClipboardFormat: TClipboardFormat;
+  {$ENDIF}
+  {$IFDEF PNG_CLIPBOARD_FORMAT}
+  pngClipboardFormat: TClipboardFormat;
+  {$ENDIF}
 
 implementation
 
@@ -1009,6 +1026,49 @@ begin
     begin
       PlotImage.AxesPoint[Tag] := ImagePoint[Tag];
     end;
+end;
+
+procedure TDigitMainForm.EditPasteImageExecute(Sender: TObject);
+var
+  i: integer;
+
+  function GetImgFromClipboard: Boolean;
+  var
+    Stream: TMemoryStream;
+  begin
+    Result := False;
+
+    Stream := TMemoryStream.Create;
+    Clipboard.GetFormat(Clipboard.Formats[i], Stream);
+    Stream.Position := 0;
+    try
+      PlotImage.PasteImage(Stream);
+      Result := True;
+    except
+      on ex: Exception do
+      begin
+        Result := False;
+      end;
+    end;
+    Stream.Free;
+  end;
+
+begin
+  {$IFDEF TIFF_CLIPBOARD_FORMAT}
+  for i := 0 to Clipboard.FormatCount - 1 do
+    if Clipboard.Formats[i] = tiffClipboardFormat then
+      if GetImgFromClipboard then Exit;
+  {$ENDIF}
+
+  {$IFDEF PNG_CLIPBOARD_FORMAT}
+  for i := 0 to Clipboard.FormatCount - 1 do
+    if Clipboard.Formats[i] = pngClipboardFormat then
+      if GetImgFromClipboard then Exit;
+  {$ENDIF}
+
+  for i := 0 to Clipboard.FormatCount - 1 do
+    if (Clipboard.Formats[i] = PredefinedClipboardFormat(pcfBitmap)) then
+      if GetImgFromClipboard then Exit;
 end;
 
 procedure TDigitMainForm.EditPX1EditingDone(Sender: TObject);
@@ -2356,5 +2416,14 @@ begin
   CurveToGUI;
 end;
 //End of the action functions
+
+initialization
+
+{$IFDEF TIFF_CLIPBOARD_FORMAT}
+  tiffClipboardFormat := RegisterClipboardFormat({$IFDEF DARWIN}'public.tiff'{$ELSE}'image/tiff'{$ENDIF});
+{$ENDIF}
+{$IFDEF PNG_CLIPBOARD_FORMAT}
+  pngClipboardFormat := RegisterClipboardFormat({$IFDEF DARWIN}'public.png'{$ELSE}{$IFDEF WINDOWS}'PNG'{$ELSE}'image/png'{$ENDIF}{$ENDIF});
+{$ENDIF}
 
 end.
