@@ -45,6 +45,8 @@ type
     FBckgndColor: TColor;
     FTolerance: Integer;
     FThreshold: Double;
+    FFixCurve: Boolean;
+    FMaskSize: Integer;
 
     FIsValid: Boolean;
     FIsActive: Boolean;
@@ -56,7 +58,11 @@ type
     procedure SetSize(Width, Height: Integer);
 
     procedure RemoveCartesianGrid(PlotImg: TBGRABitmap; PlotBox: TPlotQuad);
-    procedure RemovePolarGrid(PlotImg: TBGRABitmap; PlotBox: TPlotQuad; Pc: TCurvePoint);
+    procedure RemovePolarGrid(PlotImg: TBGRABitmap; PlotBox: TPlotQuad;
+                              Pc: TCurvePoint);
+
+    procedure RebuildCurve(PlotImg: TBGRABitmap; PlotBox: TPlotQuad;
+                           CurveColor: TColor);
 
     function ImportFromXML(Item: TDOMNode): Boolean;
     function ExportToXML(Doc: TXMLDocument): TDOMNode;
@@ -67,6 +73,8 @@ type
     property BckgndColor: TColor read FBckgndColor write FBckgndColor;
     property Tolerance: Integer read FTolerance write FTolerance;
     property Threshold: Double read FThreshold write FThreshold;
+    property FixCurve: Boolean read FFixCurve write FFixCurve;
+    property MaskSize: Integer read FMaskSize write FMaskSize;
     property IsValid: Boolean read FIsValid write FIsValid;
     property IsActive: Boolean read FIsActive write FIsActive;
   end;
@@ -108,6 +116,7 @@ type
 
     FCurves: TCurveList;
     FCurveIndex: Integer;
+    FAllCurvePoints: TIsland;
 
     FScale: TScale;
     FPlotBox: TPlotQuad;
@@ -187,12 +196,22 @@ type
 
     procedure Reset;
 
-    function FindNextPoint(var Pv: TCurvePoint; Interval: Integer; ScanX: Boolean = False): Boolean;
-    procedure DigitizeSpectrum(Pi: TCurvePoint; ProgressBar: TProgressBar = nil); overload;
+    procedure FindCurvePoints;
+
+    function FindNextPoint(var Pv: TCurvePoint; Interval: Integer;
+                           ScanX: Boolean = False): Boolean;
+    procedure DigitizeSpectrum(Pi: TCurvePoint;
+                               ProgressBar: TProgressBar = nil;
+                               FillCurvePoints: Boolean = True); overload;
     procedure DigitizeSpectrum(ProgressBar: TProgressBar = nil); overload;
 
-    procedure FillIsland(Pi: TCurvePoint; var Island: TIsland; JustInY: Boolean = True; MaxPoints: Integer = 1000); overload;
-    procedure FillIsland(Xi, Yi: Double; var Island: TIsland; JustInY: Boolean = True; MaxPoints: Integer = 1000); overload;
+    procedure FillIsland(Pi: TCurvePoint; var Island: TIsland;
+                         JustInY: Boolean = True;
+                         MaxPoints: Integer = 1000;
+                         FillCurvePoints: Boolean = True); overload;
+    procedure FillIsland(Xi, Yi: Double; var Island: TIsland;
+                         JustInY: Boolean = True;
+                         MaxPoints: Integer = 1000); overload;
     procedure AdjustCurve(ProgressBar: TProgressBar = nil);
     procedure ConvertCurveToSymbols(ProgressBar: TProgressBar = nil);
 
@@ -235,7 +254,8 @@ type
     procedure CorrectCurve(Region: TRect; IsStep: Boolean = True); overload;
     procedure CorrectCurve(IsStep: Boolean = True); overload;
     procedure RemoveGrid(LineColor1, LineColor2, BckgndColor: TColor;
-                         Tolerance: Integer = 10; Threshold: Double = 0.5);
+                         Tolerance: Integer = 10; Threshold: Double = 0.5;
+                         FixCurve: Boolean = False; MaskSize: Integer = 5);
     procedure GroupPoints(Region: TRect);
     procedure DeletePoints(Region: TRect);
     procedure MoveCurveUp;
@@ -488,8 +508,8 @@ var
   max_count_vert: Integer;
 begin
   try
-    C1 := ColorToRGB(FMajorGridColor);
-    C2 := ColorToRGB(FMinorGridColor);
+    C1 := ColorToRGB(MajorGridColor);
+    C2 := ColorToRGB(MinorGridColor);
 
     R1 := Red(C1);
     G1 := Green(C1);
@@ -726,8 +746,8 @@ var
   radius_max_count: Integer;
 begin
   try
-    C1 := ColorToRGB(FMajorGridColor);
-    C2 := ColorToRGB(FMinorGridColor);
+    C1 := ColorToRGB(MajorGridColor);
+    C2 := ColorToRGB(MinorGridColor);
 
     R1 := Red(C1);
     G1 := Green(C1);
@@ -925,6 +945,142 @@ begin
   end;
 end;
 
+procedure TGridMask.RebuildCurve(PlotImg: TBGRABitmap; PlotBox: TPlotQuad;
+                                 CurveColor: TColor);
+var
+  i, j, k, l: Integer;
+  p: PBGRAPixel;
+
+  curve_points: Array of Array of Boolean;
+
+  C1: LongInt;
+  R1, G1, B1 : Byte;
+
+  top_pixels: TIsland;
+  bottom_pixels: TIsland;
+  left_pixels: TIsland;
+  right_pixels: TIsland;
+
+  function is_masked(x, y: Integer): Boolean;
+  begin
+    p := Mask.Scanline[y];
+    inc(p, x);
+    Result := (p^.alpha > 0);
+  end;
+
+begin
+  try
+    C1 := ColorToRGB(CurveColor);
+
+    R1 := Red(C1);
+    G1 := Green(C1);
+    B1 := Blue(C1);
+
+    // Put the canvas values in an array for faster access
+    SetLength(curve_points, PlotImg.Width, PlotImg.Height);
+    for j := 0 to PlotImg.Height - 1 do
+    begin
+      p := PlotImg.Scanline[j];
+      for i := 0 to PlotImg.Width - 1 do
+      begin
+        curve_points[i, j] := PlotBox.Contains(GetCurvePoint(i, j)) and
+                              AreSimilar(p^.red, p^.green, p^.blue,
+                                         R1, G1, B1, Tolerance);
+
+        inc(p);
+      end;
+    end;
+
+    top_pixels := TIsland.Create;
+    bottom_pixels := TIsland.Create;
+    left_pixels := TIsland.Create;
+    right_pixels := TIsland.Create;
+
+    for i := 0 to PlotImg.Width - 1 do
+      for j := 0 to PlotImg.Height - 1 do
+      begin
+        top_pixels.Clear;
+        bottom_pixels.Clear;
+        left_pixels.Clear;
+        right_pixels.Clear;
+
+        if curve_points[i, j] and is_masked(i, j) then
+        begin
+          // Find the pixels at the edges
+          for k := max(1, i - MaskSize) to min(PlotImg.Width - 2, i + MaskSize) do
+            for l := max(1, j - MaskSize) to min(PlotImg.Height - 2, j + MaskSize) do
+            begin
+              if curve_points[k, l] and (not is_masked(k, l)) then
+              begin
+                if is_masked(k + 1, l) then
+                  left_pixels.AddPoint(k, l);
+                if is_masked(k - 1, l) then
+                  right_pixels.AddPoint(k, l);
+                if is_masked(k, l + 1) then
+                  bottom_pixels.AddPoint(k, l);
+                if is_masked(k, l - 1) then
+                  top_pixels.AddPoint(k, l);
+                if is_masked(k + 1, l + 1) then
+                begin
+                  left_pixels.AddPoint(k, l);
+                  bottom_pixels.AddPoint(k, l);
+                end;
+                if is_masked(k + 1, l - 1) then
+                begin
+                  left_pixels.AddPoint(k, l);
+                  top_pixels.AddPoint(k, l);
+                end;
+                if is_masked(k - 1, l - 1) then
+                begin
+                  right_pixels.AddPoint(k, l);
+                  top_pixels.AddPoint(k, l);
+                end;
+                if is_masked(k - 1, l + 1) then
+                begin
+                  right_pixels.AddPoint(k, l);
+                  bottom_pixels.AddPoint(k, l);
+                end;
+              end;
+            end;
+          // Connect the edge pixels
+          for k := 0 to top_pixels.Count - 1 do
+            for l := 0 to bottom_pixels.Count - 1 do
+            begin
+              Mask.DrawLine(Round(top_pixels.Point[k].X),
+                            Round(top_pixels.Point[k].Y),
+                            Round(bottom_pixels.Point[l].X),
+                            Round(bottom_pixels.Point[l].Y),
+                            BGRAPixelTransparent,//BGRA(R1, G1, B1, 255),
+                            True, dmSet);
+            end;
+
+          for k := 0 to left_pixels.Count - 1 do
+            for l := 0 to right_pixels.Count - 1 do
+            begin
+              //ShowMessage(IntToStr(k) + ', ' + IntToStr(l) + ', ' + IntToStr(i) + ', ' + IntToStr(j));
+              //ShowMessage(FloatToStr(left_pixels.Point[k].X) + ', ' +
+              //            FloatToStr(left_pixels.Point[k].Y) + ', ' +
+              //            FloatToStr(right_pixels.Point[l].X) + ', ' +
+              //            FloatToStr(right_pixels.Point[l].Y));
+              Mask.DrawLine(Round(left_pixels.Point[k].X),
+                            Round(left_pixels.Point[k].Y),
+                            Round(right_pixels.Point[l].X),
+                            Round(right_pixels.Point[l].Y),
+                            BGRAPixelTransparent,//BGRA(R1, G1, B1, 255),
+                            True, dmSet);
+            end;
+        end;
+      end;
+  finally
+    SetLength(curve_points, 0);
+
+    top_pixels.Free;
+    bottom_pixels.Free;
+    left_pixels.Free;
+    right_pixels.Free;
+  end;
+end;
+
 function TGridMask.ImportFromXML(Item: TDOMNode): Boolean;
 var
   i, w, h: Integer;
@@ -937,6 +1093,8 @@ begin
   try
     IsValid := False;
     IsActive := False;
+
+    FixCurve := False;
 
     // Create the stream to save the image
     Stream := TMemoryStream.Create;
@@ -963,6 +1121,10 @@ begin
           Tolerance := StrToInt(UTF8Encode(Item[i].NodeValue));
         if (Item[i].CompareName('Threshold') = 0) then
           Threshold := StrToFloat(UTF8Encode(Item[i].NodeValue));
+        if (Item[i].CompareName('FixCurve') = 0) then
+          FixCurve := StrToBool(UTF8Encode(Item[i].NodeValue));
+        if (Item[i].CompareName('MaskSize') = 0) then
+          MaskSize := StrToInt(UTF8Encode(Item[i].NodeValue));
       end;
     end;
 
@@ -1020,6 +1182,8 @@ begin
       SetAttribute('BckgndColor', UTF8Decode('$' + IntToHex(BckgndColor, 6)));
       SetAttribute('Tolerance', UTF8Decode(IntToStr(Tolerance)));
       SetAttribute('Threshold', UTF8Decode(FloatToStr(Threshold)));
+      SetAttribute('FixCurve', UTF8Decode(BoolToStr(FixCurve, True)));
+      SetAttribute('MaskSize', UTF8Decode(IntToStr(MaskSize)));
     end;
 
     DataNode := Doc.CreateElement('data');
@@ -1057,6 +1221,7 @@ begin
   FMarkerList := TCurve.Create;
 
   FCurves := TCurveList.Create;
+  FAllCurvePoints := TIsland.Create;
   FScale := TScale.Create;
   FPlotBox := TPlotQuad.Create;
 
@@ -1073,6 +1238,7 @@ begin
   FMarkerList.Free;
 
   FCurves.Free;
+  FAllCurvePoints.Free;
   FScale.Free;
   FPlotBox.Free;
 
@@ -1113,41 +1279,73 @@ begin
   FIsChanged := False;
 end;
 
-
-function TPlotImage.FindNextPoint(var Pv: TCurvePoint; Interval: Integer; ScanX: Boolean = False): Boolean;
+procedure TPlotImage.FindCurvePoints;
 var
   // Maximum difference allowed (in shadows of grey)
   Tolerance: Integer;
+
+  i, j: Integer;
+  p, p1, p2: PBGRAPixel;
+  C1: LongInt;
+  R1, G1, B1: Byte;
+begin
+  Tolerance := DigitCurve.Tolerance;
+  C1 := ColorToRGB(DigitCurve.Color);
+
+  R1 := Red(C1);
+  G1 := Green(C1);
+  B1 := Blue(C1);
+
+  FAllCurvePoints.Clear;
+  for j := 0 to PlotImg.Height - 1 do
+  begin
+    p1 := GridMask.Mask.Scanline[j];
+    p2 := PlotImg.Scanline[j];
+
+    for i := 0 to PlotImg.Width - 1 do
+    begin
+      if PlotBox.Contains(GetCurvePoint(i, j)) then
+      begin
+        if GridMask.IsValid and GridMask.IsActive and (p1^.alpha > 0) then
+          p := p1
+        else
+          p := p2;
+
+        if AreSimilar(p^.red, p^.green, p^.blue, R1, G1, B1, Tolerance) then
+          FAllCurvePoints.AddPoint(GetCurvePoint(i, j));
+          //FAllCurvePoints.AddPoint(Scale.FromImgToPlot(i, j));
+      end;
+
+      inc(p1);
+      inc(p2);
+    end;
+  end;
+  //FAllCurvePoints.SortCurve;
+end;
+
+function TPlotImage.FindNextPoint(var Pv: TCurvePoint; Interval: Integer;
+                                  ScanX: Boolean = False): Boolean;
+var
   // Number of pixels that the line is expected to spread
   Spread: Integer;
 
   P: TCurvePoint;
   dX, dY: Integer;
-  C1, C2: LongInt;
   NoPnts: Integer;
   FoundUp, FoundDown: Boolean;
 
 function CheckPlotPoint(const Pi: TCurvePoint; var P: TCurvePoint; var nP: Integer): Boolean;
 begin
-  Result := False;
-  if PlotBox.Contains(Pi) then
+  Result := FAllCurvePoints.Contains(Pi);
+  if Result then
   begin
-    // Point to the pixel location
-    C2 := GetPixel(Pi);
-    if AreSimilar(C1, C2, Tolerance) then
-    begin
-      inc(nP);
-      P := P + Pi;
-      Result := True;
-    end;
+    inc(nP);
+    P := P + Pi;
   end;
 end;
 
 begin
-  Tolerance := DigitCurve.Tolerance;
   Spread := DigitCurve.Spread;
-
-  C1 := ColorToRGB(DigitCurve.Color);
 
   P := GetcurvePoint(0, 0);
   NoPnts := 0;
@@ -1172,7 +1370,7 @@ begin
 
     inc(dY);
   until (NoPnts >= 1 + 2*Spread) or (dY >= Interval) or
-        ((NoPnts > 0) and (not FoundUp) and ( not FoundDown));
+        ((NoPnts > 0) and (not FoundUp) and (not FoundDown));
 
   if (NoPnts > 0) then
   begin
@@ -1181,10 +1379,12 @@ begin
   end;
 end;
 
-procedure TPlotImage.DigitizeSpectrum(Pi: TCurvePoint; ProgressBar: TProgressBar = nil);
+procedure TPlotImage.DigitizeSpectrum(Pi: TCurvePoint;
+                                      ProgressBar: TProgressBar = nil;
+                                      FillCurvePoints: Boolean = True);
 var
   i : Integer;
-  Delta, L, mx, my: Double;
+  Delta, L: Double;
   Pp: TCurvePoint;
   PNew: TCurvePoint;
 
@@ -1217,6 +1417,9 @@ begin
 end;
 
 begin
+  if FillCurvePoints then
+    FindCurvePoints;
+
   PixelStep := DigitCurve.Step;
   Interval := DigitCurve.Interval;
 
@@ -1307,7 +1510,7 @@ begin
         end;
       Application.ProcessMessages;
     end;
-  until ((Scale.CoordSystem = csCartesian) and (not PlotBox.Contains(Pi))) or
+  until (not PlotBox.Contains(Pi)) or
         ((Scale.CoordSystem = csPolar) and (Abs(Delta) > 360)) or
         ((ML.Count > 2) and (i >= ML.Count - 1));
 
@@ -1323,6 +1526,8 @@ procedure TPlotImage.DigitizeSpectrum(ProgressBar: TProgressBar = nil);
 var
   Pi : TCurvePoint;
 begin
+  FindCurvePoints;
+
   // Estimate the first point
   if (Markers.Count > 0) then
   begin
@@ -1349,40 +1554,40 @@ begin
   end;
 
 
-  DigitizeSpectrum(Pi, ProgressBar);
+  DigitizeSpectrum(Pi, ProgressBar, False);
 end;
 
-procedure TPlotImage.FillIsland(Pi: TCurvePoint; var Island: TIsland; JustInY: Boolean = True; MaxPoints: Integer = 1000);
-var
-  // Maximum difference allowed (in shadows of grey)
-  Tolerance: Integer;
-  C1, C2: LongInt;
+procedure TPlotImage.FillIsland(Pi: TCurvePoint; var Island: TIsland;
+                                JustInY: Boolean = True;
+                                MaxPoints: Integer = 1000;
+                                FillCurvePoints: Boolean = True);
 begin
   // Make sure that the program doesn't freezes due to bad configuration
   // We want an island, not a continent ;-)
   if (Island.Count < MaxPoints) then
   begin
-    Tolerance := DigitCurve.Tolerance;
+    if FillCurvePoints then
+      FindCurvePoints;
 
-    C1 := ColorToRGB(DigitCurve.Color);
-    C2 := GetPixel(Pi);
-    if (not Island.Contains(Pi)) and AreSimilar(C1, C2, Tolerance) then
+    if (not Island.Contains(Pi)) and FAllCurvePoints.Contains(Pi) then
     begin
       Island.AddPoint(Pi);
-      FillIsland(Pi - Scale.Ny(Pi), Island, JustInY);
-      FillIsland(Pi + Scale.Ny(Pi), Island, JustInY);
+      FillIsland(Pi - Scale.Ny(Pi), Island, JustInY, MaxPoints, False);
+      FillIsland(Pi + Scale.Ny(Pi), Island, JustInY, MaxPoints, False);
       if (not JustInY) then
       begin
-        FillIsland(Pi - Scale.Nx(Pi), Island, JustInY);
-        FillIsland(Pi + Scale.Nx(Pi), Island, JustInY);
+        FillIsland(Pi - Scale.Nx(Pi), Island, JustInY, MaxPoints, False);
+        FillIsland(Pi + Scale.Nx(Pi), Island, JustInY, MaxPoints, False);
       end;
     end;
   end;
 end;
 
-procedure TPlotImage.FillIsland(Xi, Yi: Double; var Island: TIsland; JustInY: Boolean = True; MaxPoints: Integer = 1000);
+procedure TPlotImage.FillIsland(Xi, Yi: Double; var Island: TIsland;
+                                JustInY: Boolean = True;
+                                MaxPoints: Integer = 1000);
 begin
-  FillIsland(GetCurvePoint(Xi, Yi), Island, JustInY);
+  FillIsland(GetCurvePoint(Xi, Yi), Island, JustInY, MaxPoints);
 end;
 
 procedure TPlotImage.AdjustCurve(ProgressBar: TProgressBar = nil);
@@ -1395,6 +1600,7 @@ begin
   // Only if there is a curve
   if HasPoints then
   begin
+    FindCurvePoints;
     try
       NewPoints := TPointList.Create;
       NewPoints.Clear;
@@ -1419,7 +1625,7 @@ begin
         if (not Island.Contains(Pi)) then
         begin
           Island.Clear;
-          FillIsland(Pi, Island, True);
+          FillIsland(Pi, Island, True, 1000, False);
           if (Island.Count > 0) then
             NewPoints.Add(Island.MeanValue)
           else
@@ -1452,6 +1658,7 @@ begin
   // Only if there is a curve
   if HasPoints then
   begin
+    FindCurvePoints;
     try
       NewPoints := TPointList.Create;
       NewPoints.Clear;
@@ -1476,7 +1683,7 @@ begin
         if (not Island.Contains(Pi)) then
         begin
           Island.Clear;
-          FillIsland(Pi, Island, False);
+          FillIsland(Pi, Island, False, 1000, False);
           if (Island.Count > 0) then
             NewPoints.Add(Island.MeanValue);
         end;
@@ -1503,11 +1710,13 @@ var
   c: TBGRAPixel;
 begin
     if GridMask.IsValid and GridMask.IsActive then
-      c := GridMask.Mask.GetPixel(X, Y)
-    else
-      c := BGRAPixelTransparent;
+    begin
+      c := GridMask.Mask.GetPixel(X, Y);
 
-    if (c = BGRAPixelTransparent) then
+      if (c = BGRAPixelTransparent) then
+        c := PlotImg.GetPixel(X, Y);
+    end
+    else
       c := PlotImg.GetPixel(X, Y);
 
     Result := ColorToRGB(c);
@@ -2651,7 +2860,12 @@ begin
 end;
 
 procedure TPlotImage.RemoveGrid(LineColor1, LineColor2, BckgndColor: TColor;
-                                Tolerance: Integer = 10; Threshold: Double = 0.5);
+                                Tolerance: Integer = 10;
+                                Threshold: Double = 0.5;
+                                FixCurve: Boolean = False;
+                                MaskSize: Integer = 5);
+var
+  i: Integer;
 begin
   try
     GridMask.MajorGridColor := LineColor1;
@@ -2659,6 +2873,8 @@ begin
     GridMask.BckgndColor := BckgndColor;
     GridMask.Tolerance := Tolerance;
     GridMask.Threshold := Threshold;
+    GridMask.FixCurve := FixCurve;
+    GridMask.MaskSize := MaskSize;
 
     PlotBox.PolarCoordinates := (Scale.CoordSystem = csPolar);
 
@@ -2666,6 +2882,12 @@ begin
       GridMask.RemoveCartesianGrid(PlotImg, PlotBox)
     else
       GridMask.RemovePolarGrid(PlotImg, PlotBox, Scale.ImagePoint[2]);
+
+    if GridMask.FixCurve then
+    begin
+      for i := 0 to FCurves.Count - 1 do
+        GridMask.RebuildCurve(PlotImg, PlotBox, FCurves[i].Color);
+    end;
   finally
     IsChanged := True;
   end;

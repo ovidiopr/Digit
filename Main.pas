@@ -23,6 +23,7 @@ type
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
+    chbRebuildCurve: TCheckBox;
     EditPasteImage: TAction;
     btnBackground: TColorButton;
     btnBackgroundColor: TSpeedButton;
@@ -31,7 +32,6 @@ type
     btnMajorGridColor: TSpeedButton;
     btnMinorGrid: TColorButton;
     btnMinorGridColor: TSpeedButton;
-    EditCopyImage: TAction;
     btnAddCurve: TToolButton;
     btnAdjustCurve: TToolButton;
     btnClear: TToolButton;
@@ -66,6 +66,7 @@ type
     EditVY3: TBCTrackbarUpdown;
     EditVY4: TBCTrackbarUpdown;
     edtGridThreshold: TBCTrackbarUpdown;
+    edtGridMask: TBCTrackbarUpdown;
     edtGridTolerance: TBCTrackbarUpdown;
     edtInterval: TBCTrackbarUpdown;
     edtSpread: TBCTrackbarUpdown;
@@ -86,6 +87,7 @@ type
     lblBackground: TLabel;
     lblColor: TLabel;
     lblGridThreshold: TLabel;
+    lblGridMask: TLabel;
     lblGridTolerance: TLabel;
     lblImg1: TLabel;
     lblImg2: TLabel;
@@ -184,7 +186,7 @@ type
     btnStepsMode: TToolButton;
     btnSymbols: TToolButton;
     FileImportDigit: TAction;
-    EditCopy: TAction;
+    EditCopyCurve: TAction;
     EditCopyItem: TMenuItem;
     FileImportDigitItem: TMenuItem;
     N5: TMenuItem;
@@ -312,8 +314,9 @@ type
     procedure cbbCoordsChange(Sender: TObject);
     procedure cbbXScaleChange(Sender: TObject);
     procedure cbbYScaleChange(Sender: TObject);
+    procedure chbRebuildCurveChange(Sender: TObject);
     procedure DigitizeFromHereItemClick(Sender: TObject);
-    procedure EditCopyExecute(Sender: TObject);
+    procedure EditCopyCurveExecute(Sender: TObject);
     procedure EditIX1Change(Sender: TObject; AByUser: boolean);
     procedure EditIY1Change(Sender: TObject; AByUser: boolean);
     procedure EditPasteImageExecute(Sender: TObject);
@@ -321,6 +324,7 @@ type
     procedure EditPY1EditingDone(Sender: TObject);
     procedure EditVX1Change(Sender: TObject; AByUser: boolean);
     procedure EditVY1Change(Sender: TObject; AByUser: boolean);
+    procedure edtGridMaskChange(Sender: TObject; AByUser: boolean);
     procedure edtGridThresholdChange(Sender: TObject; AByUser: boolean);
     procedure edtGridToleranceChange(Sender: TObject; AByUser: boolean);
     procedure edtXEditingDone(Sender: TObject);
@@ -399,6 +403,7 @@ type
     PlotImage: TPlotImage;
 
     function CheckSaveStatus: Boolean;
+    procedure SetPlotPointMarkers(ResetPoints: Boolean = False);
 
     function GetIsSaved: Boolean;
     function GetCurveCount: Integer;
@@ -573,7 +578,7 @@ begin
 
     EditUndo.Enabled := (State = piSetCurve) and CanUndo;
     EditRedo.Enabled := (State = piSetCurve) and CanRedo;
-    EditCopy.Enabled := (State = piSetCurve) and HasPoints;
+    EditCopyCurve.Enabled := (State = piSetCurve) and HasPoints;
   end;
 end;
 
@@ -800,74 +805,17 @@ end;
 
 procedure TDigitMainForm.InsertImage(FileName: TFileName);
 var
-  i: Integer;
   ResetPoints: Boolean;
-
-function PutInside(p: TCurvePoint; w, h: Integer; d: Integer = 0): TCurvePoint;
 begin
-  Result := p;
+  ResetPoints := not (PlotImage.ImageIsLoaded and FileExists(DigitFileName));
 
-  if (Result.X < d) then Result.X := d;
-  if (Result.Y < d) then Result.Y := d;
-  if (Result.X > w - d) then Result.X := w - d;
-  if (Result.Y > h - d) then Result.Y := h - d;
-end;
+  PlotImage.ImageName := FileName;
 
-begin
-  with PlotImage do
+  if PlotImage.ImageIsLoaded then
   begin
-    ResetPoints := not (ImageIsLoaded and FileExists(DigitFileName));
+    SetPlotPointMarkers(ResetPoints);
 
-    ImageName := FileName;
-
-    if ImageIsLoaded then
-    begin
-      if ResetPoints then
-      begin
-        AxesPoint[1] := TPoint.Create(6, 6);
-        AxesPoint[2] := TPoint.Create(6, Height - 6);
-        AxesPoint[3] := TPoint.Create(Width - 6, Height - 6);
-
-        Scale.PlotPoint[1] := GetCurvePoint(0, 1);
-        Scale.PlotPoint[2] := GetCurvePoint(0, 0);
-        Scale.PlotPoint[3] := GetCurvePoint(1, 0);
-
-        BoxVertex[1] := GetCurvePoint(6, 6);
-        BoxVertex[2] := GetCurvePoint(Width - 6, 6);
-        BoxVertex[3] := GetCurvePoint(Width - 6, Height - 6);
-        BoxVertex[4] := GetCurvePoint(6, Height - 6);
-      end
-      else
-      begin
-        AxesPoint[1] := PutInside(AxesPoint[1], Width, Height, 6);
-        AxesPoint[2] := PutInside(AxesPoint[2], Width, Height, 6);
-        AxesPoint[3] := PutInside(AxesPoint[3], Width, Height, 6);
-
-        BoxVertex[1] := PutInside(BoxVertex[1], Width, Height, 6);
-        BoxVertex[2] := PutInside(BoxVertex[2], Width, Height, 6);
-        BoxVertex[3] := PutInside(BoxVertex[3], Width, Height, 6);
-        BoxVertex[4] := PutInside(BoxVertex[4], Width, Height, 6);
-      end;
-
-      State := piSetCurve;
-
-      // Now, update the limits in the relevant controls
-      EditIX1.MaxValue := Width - 1;
-      EditIY1.MaxValue := Height - 1;
-      EditIX2.MaxValue := Width - 1;
-      EditIY2.MaxValue := Height - 1;
-      EditIX3.MaxValue := Width - 1;
-      EditIY3.MaxValue := Height - 1;
-
-      EditVX1.MaxValue := Width - 1;
-      EditVY1.MaxValue := Height - 1;
-      EditVX2.MaxValue := Width - 1;
-      EditVY2.MaxValue := Height - 1;
-      EditVX3.MaxValue := Width - 1;
-      EditVY3.MaxValue := Height - 1;
-      EditVX4.MaxValue := Width - 1;
-      EditVY4.MaxValue := Height - 1;
-    end;
+    PlotImage.State := piSetCurve;
   end;
 
   if not FileExists(DigitFileName) then
@@ -1006,7 +954,16 @@ begin
     PlotImage.Scale.YScale := TScaleType(cbbYScale.ItemIndex);
 end;
 
-procedure TDigitMainForm.EditCopyExecute(Sender: TObject);
+procedure TDigitMainForm.chbRebuildCurveChange(Sender: TObject);
+begin
+  if (PlotImage.GridMask.FixCurve <> chbRebuildCurve.Checked) then
+  begin
+    PlotImage.GridMask.FixCurve := chbRebuildCurve.Checked;
+    PlotImage.IsChanged := True;
+  end;
+end;
+
+procedure TDigitMainForm.EditCopyCurveExecute(Sender: TObject);
 begin
   leData.CopyToClipboard(False);
 end;
@@ -1031,6 +988,7 @@ end;
 procedure TDigitMainForm.EditPasteImageExecute(Sender: TObject);
 var
   i: integer;
+  ResetPoints: Boolean;
 
   function GetImgFromClipboard: Boolean;
   var
@@ -1042,13 +1000,20 @@ var
     Clipboard.GetFormat(Clipboard.Formats[i], Stream);
     Stream.Position := 0;
     try
-      PlotImage.PasteImage(Stream);
       Result := True;
+
+      ResetPoints := not PlotImage.ImageIsLoaded;
+
+      if PlotImage.ImageIsLoaded and
+         (MessageDlg('You are about to replace the current plot image.' +
+                     ' This action cannot be undone. Continue?',
+                    mtWarning, [mbYes, mbNo], 0) = mrNo) then Exit;
+
+      PlotImage.PasteImage(Stream);
+      SetPlotPointMarkers(ResetPoints);
     except
       on ex: Exception do
-      begin
         Result := False;
-      end;
     end;
     Stream.Free;
   end;
@@ -1121,6 +1086,15 @@ begin
     begin
       PlotImage.BoxVertex[Tag] := GetCurvePoint(PlotImage.BoxVertex[Tag].X, Value);
     end;
+end;
+
+procedure TDigitMainForm.edtGridMaskChange(Sender: TObject; AByUser: boolean);
+begin
+  if AByUser and (PlotImage.GridMask.MaskSize <> edtGridMask.Value) then
+  begin
+    PlotImage.GridMask.MaskSize := edtGridMask.Value;
+    PlotImage.IsChanged := True;
+  end;
 end;
 
 procedure TDigitMainForm.edtGridThresholdChange(Sender: TObject;
@@ -1259,6 +1233,25 @@ begin
   end;
 
   Initialize;
+
+  // Update shortcuts to MacOS style
+  {$IFDEF DARWIN}
+  // File shortcuts
+  FileNew.ShortCut := scMeta + VK_N; // Command + N
+  FileOpen.ShortCut := scMeta + VK_O; // Command + O
+  FileSave.ShortCut := scMeta + VK_S; // Command + S
+  FileImage.ShortCut := scMeta + VK_I; // Command + I
+  FileExport.ShortCut := scMeta + VK_E; // Command + E
+  FileExit.ShortCut := scMeta + scAlt + VK_X; // Command + Alt + X
+  // Edit shortcuts
+  EditUndo.ShortCut := scMeta + VK_Z; // Command + Z
+  EditRedo.ShortCut := scMeta + VK_R; // Command + R
+  EditCopyCurve.ShortCut := scMeta + VK_C; // Command + C
+  EditPasteImage.ShortCut := scMeta + VK_V; // Command + V
+  // Tools shortcuts
+  ToolCurveAdd.ShortCut := scMeta + VK_T; // Command + T
+  ToolCurveDelete.ShortCut := scMeta + VK_W; // Command + W
+  {$ENDIF}
 end;
 
 procedure TDigitMainForm.FormClose(Sender: TObject;
@@ -1347,7 +1340,8 @@ procedure TDigitMainForm.GridRemovalExecute(Sender: TObject);
 begin
   PlotImage.RemoveGrid(btnMajorGrid.ButtonColor, btnMinorGrid.ButtonColor,
                        btnBackground.ButtonColor,
-                       edtGridTolerance.Value, edtGridThreshold.Value/100.0);
+                       edtGridTolerance.Value, edtGridThreshold.Value/100.0,
+                       chbRebuildCurve.Checked, edtGridMask.Value);
   CurveToGUI;
 end;
 
@@ -1429,6 +1423,8 @@ begin
       btnBackground.ButtonColor := PlotImage.GridMask.BckgndColor;
       edtGridTolerance.Value := PlotImage.GridMask.Tolerance;
       edtGridThreshold.Value := Round(100*PlotImage.GridMask.Threshold);
+      chbRebuildCurve.Checked := PlotImage.GridMask.FixCurve;
+      edtGridMask.Value := PlotImage.GridMask.MaskSize;
     end;
   end;
 
@@ -1441,11 +1437,75 @@ begin
   if (not IsSaved) then
     case MessageDlg('The file ' + ExtractFileName(DigitFileName) +
                     ' was modified. Do you want to save it?',
-                    mtInformation,[mbYes, mbNo, mbCancel], 0) of
+                    mtInformation, [mbYes, mbNo, mbCancel], 0) of
 
       mrYes: FileSaveExecute(DigitMainForm);
       mrCancel: Result := False;
     end;
+end;
+
+procedure TDigitMainForm.SetPlotPointMarkers(ResetPoints: Boolean = False);
+
+  function PutInside(p: TCurvePoint; w, h: Integer; d: Integer = 0): TCurvePoint;
+  begin
+    Result := p;
+
+    if (Result.X < d) then Result.X := d;
+    if (Result.Y < d) then Result.Y := d;
+    if (Result.X > w - d) then Result.X := w - d;
+    if (Result.Y > h - d) then Result.Y := h - d;
+  end;
+
+begin
+  with PlotImage do
+  begin
+    if ImageIsLoaded then
+    begin
+      if ResetPoints then
+      begin
+        AxesPoint[1] := TPoint.Create(6, 6);
+        AxesPoint[2] := TPoint.Create(6, Height - 6);
+        AxesPoint[3] := TPoint.Create(Width - 6, Height - 6);
+
+        Scale.PlotPoint[1] := GetCurvePoint(0, 1);
+        Scale.PlotPoint[2] := GetCurvePoint(0, 0);
+        Scale.PlotPoint[3] := GetCurvePoint(1, 0);
+
+        BoxVertex[1] := GetCurvePoint(6, 6);
+        BoxVertex[2] := GetCurvePoint(Width - 6, 6);
+        BoxVertex[3] := GetCurvePoint(Width - 6, Height - 6);
+        BoxVertex[4] := GetCurvePoint(6, Height - 6);
+      end
+      else
+      begin
+        AxesPoint[1] := PutInside(AxesPoint[1], Width, Height, 6);
+        AxesPoint[2] := PutInside(AxesPoint[2], Width, Height, 6);
+        AxesPoint[3] := PutInside(AxesPoint[3], Width, Height, 6);
+
+        BoxVertex[1] := PutInside(BoxVertex[1], Width, Height, 6);
+        BoxVertex[2] := PutInside(BoxVertex[2], Width, Height, 6);
+        BoxVertex[3] := PutInside(BoxVertex[3], Width, Height, 6);
+        BoxVertex[4] := PutInside(BoxVertex[4], Width, Height, 6);
+      end;
+
+      // Now, update the limits in the relevant controls
+      EditIX1.MaxValue := Width - 1;
+      EditIY1.MaxValue := Height - 1;
+      EditIX2.MaxValue := Width - 1;
+      EditIY2.MaxValue := Height - 1;
+      EditIX3.MaxValue := Width - 1;
+      EditIY3.MaxValue := Height - 1;
+
+      EditVX1.MaxValue := Width - 1;
+      EditVY1.MaxValue := Height - 1;
+      EditVX2.MaxValue := Width - 1;
+      EditVY2.MaxValue := Height - 1;
+      EditVX3.MaxValue := Width - 1;
+      EditVY3.MaxValue := Height - 1;
+      EditVX4.MaxValue := Width - 1;
+      EditVY4.MaxValue := Height - 1;
+    end;
+  end;
 end;
 
 function TDigitMainForm.GetIsSaved: Boolean;
@@ -2075,6 +2135,7 @@ begin
 
   edtGridTolerance.Invalidate;
   edtGridThreshold.Invalidate;
+  edtGridMask.Invalidate;
   {$endif}
 end;
 

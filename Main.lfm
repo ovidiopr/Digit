@@ -1288,14 +1288,14 @@ object DigitMainForm: TDigitMainForm
       ShowHint = True
     end
     object BtnExport: TToolButton
-      Left = 225
+      Left = 229
       Top = 2
       Action = FileExport
       ParentShowHint = False
       ShowHint = True
     end
     object sep04: TToolButton
-      Left = 637
+      Left = 641
       Height = 36
       Top = 2
       Caption = 'sep04'
@@ -1303,51 +1303,51 @@ object DigitMainForm: TDigitMainForm
       Style = tbsSeparator
     end
     object BtnUndo: TToolButton
-      Left = 645
+      Left = 649
       Top = 2
       Action = EditUndo
       ParentShowHint = False
       ShowHint = True
     end
     object BtnRedo: TToolButton
-      Left = 681
+      Left = 685
       Top = 2
       Action = EditRedo
       ParentShowHint = False
       ShowHint = True
     end
     object sep05: TToolButton
-      Left = 753
+      Left = 757
       Height = 36
       Top = 2
       Caption = 'sep05'
       Style = tbsSeparator
     end
     object btnAbout: TToolButton
-      Left = 805
+      Left = 809
       Top = 2
       Action = HelpAbout
       ParentShowHint = False
       ShowHint = True
     end
     object btnScaleOptions: TToolButton
-      Left = 761
+      Left = 765
       Top = 2
       Action = ToolScaleOptions
       ParentShowHint = False
       ShowHint = True
     end
     object sep06: TToolButton
-      Left = 797
+      Left = 801
       Height = 36
       Top = 2
       Caption = 'sep06'
       Style = tbsSeparator
     end
     object btnCopy: TToolButton
-      Left = 717
+      Left = 721
       Top = 2
-      Action = EditCopy
+      Action = EditCopyCurve
       ParentShowHint = False
       ShowHint = True
     end
@@ -1359,84 +1359,84 @@ object DigitMainForm: TDigitMainForm
       ShowHint = True
     end
     object btnCursorMode: TToolButton
-      Left = 269
+      Left = 273
       Top = 2
       Action = ModeCursor
       ParentShowHint = False
       ShowHint = True
     end
     object btnMarkersMode: TToolButton
-      Left = 305
+      Left = 309
       Top = 2
       Action = ModeMarkers
       ParentShowHint = False
       ShowHint = True
     end
     object btnColorMode: TToolButton
-      Left = 341
+      Left = 345
       Top = 2
       Action = ModeColor
       ParentShowHint = False
       ShowHint = True
     end
     object btnStepsMode: TToolButton
-      Left = 377
+      Left = 381
       Top = 2
       Action = ModeSteps
       ParentShowHint = False
       ShowHint = True
     end
     object btnSegmentMode: TToolButton
-      Left = 413
+      Left = 417
       Top = 2
       Action = ModeSegment
       ParentShowHint = False
       ShowHint = True
     end
     object sep02: TToolButton
-      Left = 261
+      Left = 265
       Height = 36
       Top = 2
       Caption = 'sep02'
       Style = tbsSeparator
     end
     object sep03: TToolButton
-      Left = 521
+      Left = 525
       Height = 36
       Top = 2
       Caption = 'sep03'
       Style = tbsSeparator
     end
     object btnResample: TToolButton
-      Left = 529
+      Left = 533
       Top = 2
       Action = ToolResample
       ParentShowHint = False
       ShowHint = True
     end
     object btnSmooth: TToolButton
-      Left = 565
+      Left = 569
       Top = 2
       Action = ToolSmooth
       ParentShowHint = False
       ShowHint = True
     end
     object btnSymbols: TToolButton
-      Left = 601
+      Left = 605
       Top = 2
       Action = ToolConvertToSymbols
       ParentShowHint = False
       ShowHint = True
     end
     object btnGroupPointsmode: TToolButton
-      Left = 449
+      Left = 453
       Top = 2
       Action = ModeGroupPoints
       ParentShowHint = False
       ShowHint = True
     end
     object btnDeletePointsMode: TToolButton
-      Left = 485
+      Left = 489
       Top = 2
       Action = ModeDeletePoints
       ParentShowHint = False
@@ -3919,7 +3919,7 @@ object DigitMainForm: TDigitMainForm
           Top = 40
           Width = 214
           HorzScrollBar.Page = 145
-          VertScrollBar.Page = 135
+          VertScrollBar.Page = 179
           Align = alClient
           ClientHeight = 223
           ClientWidth = 212
@@ -4285,6 +4285,130 @@ object DigitMainForm: TDigitMainForm
             BorderSpacing.Left = 5
             BorderSpacing.Right = 5
             TabOrder = 1
+            TabStop = True
+            UseDockManager = False
+          end
+          object chbRebuildCurve: TCheckBox
+            AnchorSideLeft.Control = edtGridThreshold
+            AnchorSideTop.Control = edtGridThreshold
+            AnchorSideTop.Side = asrBottom
+            AnchorSideRight.Control = sbGrid
+            AnchorSideRight.Side = asrBottom
+            Left = 65
+            Height = 18
+            Top = 137
+            Width = 142
+            Anchors = [akTop, akLeft, akRight]
+            BorderSpacing.Top = 2
+            BorderSpacing.Right = 5
+            Caption = 'Rebuild curve'
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Name = 'Default'
+            Font.Style = [fsBold]
+            OnChange = chbRebuildCurveChange
+            ParentFont = False
+            TabOrder = 2
+          end
+          object lblGridMask: TLabel
+            AnchorSideLeft.Control = sbGrid
+            AnchorSideTop.Control = edtGridMask
+            AnchorSideTop.Side = asrCenter
+            Left = 0
+            Height = 13
+            Top = 162
+            Width = 59
+            BorderSpacing.Top = 12
+            Caption = 'Mask size:'
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Style = [fsBold]
+            ParentColor = False
+            ParentFont = False
+          end
+          object edtGridMask: TBCTrackbarUpdown
+            AnchorSideLeft.Control = lblGridMask
+            AnchorSideLeft.Side = asrBottom
+            AnchorSideTop.Control = chbRebuildCurve
+            AnchorSideTop.Side = asrBottom
+            AnchorSideRight.Control = sbGrid
+            AnchorSideRight.Side = asrBottom
+            Left = 64
+            Height = 22
+            Top = 157
+            Width = 143
+            AllowNegativeValues = False
+            BarExponent = 1
+            Increment = 1
+            LongTimeInterval = 400
+            MinValue = 0
+            MaxValue = 40
+            OnChange = edtGridMaskChange
+            Value = 5
+            ShortTimeInterval = 100
+            Background.Color = clWindow
+            Background.Gradient1.StartColor = clWhite
+            Background.Gradient1.EndColor = clBlack
+            Background.Gradient1.GradientType = gtLinear
+            Background.Gradient1.Point1XPercent = 0
+            Background.Gradient1.Point1YPercent = 0
+            Background.Gradient1.Point2XPercent = 0
+            Background.Gradient1.Point2YPercent = 100
+            Background.Gradient2.StartColor = clWhite
+            Background.Gradient2.EndColor = clBlack
+            Background.Gradient2.GradientType = gtLinear
+            Background.Gradient2.Point1XPercent = 0
+            Background.Gradient2.Point1YPercent = 0
+            Background.Gradient2.Point2XPercent = 0
+            Background.Gradient2.Point2YPercent = 100
+            Background.Gradient1EndPercent = 35
+            Background.Style = bbsColor
+            ButtonBackground.Gradient1.StartColor = clBtnShadow
+            ButtonBackground.Gradient1.EndColor = clBtnFace
+            ButtonBackground.Gradient1.GradientType = gtLinear
+            ButtonBackground.Gradient1.Point1XPercent = 0
+            ButtonBackground.Gradient1.Point1YPercent = -50
+            ButtonBackground.Gradient1.Point2XPercent = 0
+            ButtonBackground.Gradient1.Point2YPercent = 50
+            ButtonBackground.Gradient2.StartColor = clBtnFace
+            ButtonBackground.Gradient2.EndColor = clBtnShadow
+            ButtonBackground.Gradient2.GradientType = gtLinear
+            ButtonBackground.Gradient2.Point1XPercent = 0
+            ButtonBackground.Gradient2.Point1YPercent = 50
+            ButtonBackground.Gradient2.Point2XPercent = 0
+            ButtonBackground.Gradient2.Point2YPercent = 150
+            ButtonBackground.Gradient1EndPercent = 50
+            ButtonBackground.Style = bbsGradient
+            ButtonDownBackground.Color = clBtnShadow
+            ButtonDownBackground.Gradient1.StartColor = clWhite
+            ButtonDownBackground.Gradient1.EndColor = clBlack
+            ButtonDownBackground.Gradient1.GradientType = gtLinear
+            ButtonDownBackground.Gradient1.Point1XPercent = 0
+            ButtonDownBackground.Gradient1.Point1YPercent = 0
+            ButtonDownBackground.Gradient1.Point2XPercent = 0
+            ButtonDownBackground.Gradient1.Point2YPercent = 100
+            ButtonDownBackground.Gradient2.StartColor = clWhite
+            ButtonDownBackground.Gradient2.EndColor = clBlack
+            ButtonDownBackground.Gradient2.GradientType = gtLinear
+            ButtonDownBackground.Gradient2.Point1XPercent = 0
+            ButtonDownBackground.Gradient2.Point1YPercent = 0
+            ButtonDownBackground.Gradient2.Point2XPercent = 0
+            ButtonDownBackground.Gradient2.Point2YPercent = 100
+            ButtonDownBackground.Gradient1EndPercent = 35
+            ButtonDownBackground.Style = bbsColor
+            Border.Color = clWindowText
+            Border.Style = bboSolid
+            Rounding.RoundX = 1
+            Rounding.RoundY = 1
+            Font.Color = clWindowText
+            Font.Name = 'Arial'
+            HasTrackBar = True
+            ArrowColor = clBtnText
+            Anchors = [akTop, akLeft, akRight]
+            BorderSpacing.Left = 5
+            BorderSpacing.Top = 2
+            BorderSpacing.Right = 5
+            TabOrder = 3
             TabStop = True
             UseDockManager = False
           end
@@ -4909,7 +5033,7 @@ object DigitMainForm: TDigitMainForm
         Caption = '-'
       end
       object EditCopyItem: TMenuItem
-        Action = EditCopy
+        Action = EditCopyCurve
       end
       object N7: TMenuItem
         Caption = '-'
@@ -5073,6 +5197,9 @@ object DigitMainForm: TDigitMainForm
       Hint = 'Undo|Undo the last change'
       ImageIndex = 8
       OnExecute = EditUndoExecute
+      SecondaryShortCuts.Strings = (
+        'Cmd+Z'
+      )
       ShortCut = 16474
     end
     object EditRedo: TAction
@@ -5199,12 +5326,12 @@ object DigitMainForm: TDigitMainForm
       ImageIndex = 16
       OnExecute = ModeSegmentExecute
     end
-    object EditCopy: TAction
+    object EditCopyCurve: TAction
       Category = 'Edit'
       Caption = '&Copy curve'
       Hint = 'Copy curve|Copy curve data to clipboard'
       ImageIndex = 10
-      OnExecute = EditCopyExecute
+      OnExecute = EditCopyCurveExecute
       ShortCut = 16451
     end
     object FileSave: TAction
@@ -5323,7 +5450,7 @@ object DigitMainForm: TDigitMainForm
       Hint = 'Add curve|Add a new curve to the digitization'
       ImageIndex = 25
       OnExecute = ToolCurveAddExecute
-      ShortCut = 32875
+      ShortCut = 16468
     end
     object ToolCurveDelete: TAction
       Category = 'Tools'
@@ -5331,7 +5458,7 @@ object DigitMainForm: TDigitMainForm
       Hint = 'Delete curve|Delete the active curve from the digitization'
       ImageIndex = 26
       OnExecute = ToolCurveDeleteExecute
-      ShortCut = 32877
+      ShortCut = 16471
     end
     object ToolCurveName: TAction
       Category = 'Tools'
@@ -5399,12 +5526,6 @@ object DigitMainForm: TDigitMainForm
       Hint = 'Background color selection|Background color selection mode'
       ImageIndex = 14
       OnExecute = ModeBackgroundColorExecute
-    end
-    object EditCopyImage: TAction
-      Category = 'Edit'
-      Caption = '&Copy image'
-      Hint = 'Copy image|Copy plot image to clipboard'
-      ImageIndex = 44
     end
     object EditPasteImage: TAction
       Category = 'Edit'
