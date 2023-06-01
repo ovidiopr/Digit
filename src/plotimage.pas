@@ -317,6 +317,8 @@ type
     property IsChanged: Boolean read GetIsChanged write SetIsChanged;
     property CanUndo: Boolean read GetCanUndo;
     property CanRedo: Boolean read GetCanRedo;
+
+    property AllCurvePoints: TIsland read FAllCurvePoints;
   published
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnRegionSelected: TSelectRegionEvent read FOnRegionSelected write FOnRegionSelected;
@@ -1296,7 +1298,7 @@ begin
   G1 := Green(C1);
   B1 := Blue(C1);
 
-  FAllCurvePoints.Clear;
+  AllCurvePoints.Clear;
   for j := 0 to PlotImg.Height - 1 do
   begin
     p1 := GridMask.Mask.Scanline[j];
@@ -1312,15 +1314,15 @@ begin
           p := p2;
 
         if AreSimilar(p^.red, p^.green, p^.blue, R1, G1, B1, Tolerance) then
-          FAllCurvePoints.AddPoint(GetCurvePoint(i, j));
-          //FAllCurvePoints.AddPoint(Scale.FromImgToPlot(i, j));
+          AllCurvePoints.AddPoint(GetCurvePoint(i, j));
+          //AllCurvePoints.AddPoint(Scale.FromImgToPlot(i, j));
       end;
 
       inc(p1);
       inc(p2);
     end;
   end;
-  //FAllCurvePoints.SortCurve;
+  AllCurvePoints.SortCurve;
 end;
 
 function TPlotImage.FindNextPoint(var Pv: TCurvePoint; Interval: Integer;
@@ -1336,7 +1338,7 @@ var
 
 function CheckPlotPoint(const Pi: TCurvePoint; var P: TCurvePoint; var nP: Integer): Boolean;
 begin
-  Result := FAllCurvePoints.Contains(Pi);
+  Result := AllCurvePoints.Contains(Pi);
   if Result then
   begin
     inc(nP);
@@ -1432,6 +1434,13 @@ begin
   DigitCurve.NextCurve(False);
   Curve.AddPoint(Pi);
 
+  //for i := 0 to AllCurvePoints.Count - 1 do
+  //  Curve.AddPoint(Scale.FromImgToPlot(AllCurvePoints.Point[i]));
+  //Curve.SortCurve;
+  //for i := 0 to Curve.Count - 1 do
+  //  Curve.Point[i] := Scale.FromPlotToImg(Curve.Point[i]);
+  //Exit;
+
   Delta := 0;
   if PixelStep > 0 then
     L := Width - Pi.X
@@ -1508,8 +1517,9 @@ begin
         else
           ProgressBar.Position := Round(i/(ML.Count - 1));
         end;
-      Application.ProcessMessages;
     end;
+
+    Application.ProcessMessages;
   until (not PlotBox.Contains(Pi)) or
         ((Scale.CoordSystem = csPolar) and (Abs(Delta) > 360)) or
         ((ML.Count > 2) and (i >= ML.Count - 1));
@@ -1569,7 +1579,7 @@ begin
     if FillCurvePoints then
       FindCurvePoints;
 
-    if (not Island.Contains(Pi)) and FAllCurvePoints.Contains(Pi) then
+    if (not Island.Contains(Pi)) and AllCurvePoints.Contains(Pi) then
     begin
       Island.AddPoint(Pi);
       FillIsland(Pi - Scale.Ny(Pi), Island, JustInY, MaxPoints, False);
