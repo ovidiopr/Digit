@@ -1004,6 +1004,7 @@ end;
 function TPlotQuad.Contains(p: TCurvePoint): Boolean;
 var
   l, m, u: Double;
+  Mat: Array of Array of Double;
   Dn, xp, yp, zp: Double;
   a, b, c, d: TCurvePoint;
 begin
