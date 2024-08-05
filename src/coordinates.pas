@@ -6,7 +6,7 @@ unit coordinates;
 interface
 
 uses
-  Classes, SysUtils, Math, DOM;
+  Classes, SysUtils, Math, DOM, Types;
 
 type
   TCoordSystem = (csCartesian, csPolar);
@@ -27,6 +27,8 @@ type
   TBasis = Array [1..2] of TCurvePoint;
   TBasisChangeMtrx = Array [1..2, 1..2] of Double;
   TScalePoints = Array [1..3] of TCurvePoint;
+
+  ArrayOfTPointF = Array of TPointF;
 
   TScale = class(TObject)
   private
@@ -69,8 +71,12 @@ type
     function FromPlotToImg(p: TCurvePoint): TCurvePoint; overload;
     function FromPlotToImg(X, Y: Double): TCurvePoint; overload;
 
+    function Distance(P1, P2: TCurvePoint): Double;
+
     function Nx(Pi: TCurvePoint): TCurvePoint;
     function Ny(Pi: TCurvePoint): TCurvePoint;
+    function dx(Pi: TCurvePoint): Double;
+    function dy(Pi: TCurvePoint): Double;
 
     function ImportFromXML(Item: TDOMNode): Boolean;
     function ExportToXML(Doc: TXMLDocument): TDOMNode;
@@ -88,6 +94,67 @@ type
     property PointIsSet[Index: Integer]: Boolean read GetPointIsSet;
     property AllPointsAreSet: Boolean read GetPointsAreSet;
     property IsValid: Boolean read GetIsValidScale;
+  end;
+
+  TPlotPoly = class(TObject)
+  private
+    { Private declarations }
+    FVertices: Array of TCurvePoint;
+
+    function GetNumvertices: Integer;
+    function GetVertex(Index: Integer): TCurvePoint;
+    function GetPolygonPoints: ArrayOfTPointF; virtual;
+    function GetRect: TRect;
+
+    procedure SetNumVertices(const Value: Integer);
+    procedure SetVertex(Index: Integer; const Value: TCurvePoint); virtual;
+  protected
+    { Protected declarations }
+  public
+    { Public declarations }
+    {@exclude}
+    constructor Create(NumVert: Integer = 4);
+    {@exclude}
+    destructor Destroy; override;
+
+    procedure Reset;
+
+    function Contains(p: TCurvePoint): Boolean; virtual;
+
+    function ImportFromXML(Item: TDOMNode): Boolean;
+    function ExportToXML(Doc: TXMLDocument): TDOMNode;
+
+    property NumVertices: Integer read GetNumvertices write SetNumVertices;
+    property Vertex[Index: Integer]: TCurvePoint read GetVertex write SetVertex;
+    property PolygonPoints: ArrayOfTPointF read GetPolygonPoints;
+    property Rect: TRect read GetRect;
+  end;
+
+  TPlotQuad = class(TPlotPoly)
+  private
+    { Private declarations }
+    FPolarCoordinates: Boolean;
+    FRecalculateDirect: Boolean;
+    FRecalculateInverse: Boolean;
+
+    FDMat: Array of Array of Double;
+    FIMat: Array of Array of Double;
+
+    function GetPolygonPoints: ArrayOfTPointF; override;
+
+    procedure SetVertex(Index: Integer; const Value: TCurvePoint); override;
+  protected
+    { Protected declarations }
+  public
+    { Public declarations }
+    {@exclude}
+    constructor Create;
+    {@exclude}
+    destructor Destroy; override;
+
+    function Contains(p: TCurvePoint): Boolean; override;
+
+    property PolarCoordinates: Boolean read FPolarCoordinates write FPolarCoordinates;
   end;
 
 const
@@ -172,12 +239,13 @@ end;
 //===============================| TScale |===============================//
 constructor TScale.Create;
 begin
+  inherited Create;
   Reset;
 end;
 
 destructor TScale.Destroy;
 begin
-  inherited;
+  inherited Destroy;
 end;
 
 procedure TScale.Reset;
@@ -386,6 +454,14 @@ begin
   Result := FromPlotToImg(GetCurvePoint(X, Y));
 end;
 
+function TScale.Distance(P1, P2: TCurvePoint): Double;
+begin
+  if (CoordSystem = csCartesian) then
+    Result := Sqrt(Power(P2.X - P1.X, 2) + Power(P2.Y - P1.Y, 2))
+  else
+    Result := Sqrt(P1.Y*P1.Y + P2.Y*P2.Y - 2*P1.Y*P2.Y*Cos(PI*(P2.X - P1.X)/180));
+end;
+
 function TScale.Nx(Pi: TCurvePoint): TCurvePoint;
 begin
   Result := Normalize(FromPlotToImg(FromImgToPlot(Pi) + GetCurvePoint(1, 0)) - Pi)
@@ -394,6 +470,16 @@ end;
 function TScale.Ny(Pi: TCurvePoint): TCurvePoint;
 begin
   Result := Normalize(FromPlotToImg(FromImgToPlot(Pi) + GetCurvePoint(0, 1)) - Pi)
+end;
+
+function TScale.dx(Pi: TCurvePoint): Double;
+begin
+  Result := Distance(FromImgToPlot(Pi + Nx(Pi)), FromImgToPlot(Pi - Nx(Pi)))/2;
+end;
+
+function TScale.dy(Pi: TCurvePoint): Double;
+begin
+  Result := Distance(FromImgToPlot(Pi + Ny(Pi)), FromImgToPlot(Pi - Ny(Pi)))/2;
 end;
 
 function TScale.GetImagePoint(Index: Integer): TCurvePoint;
@@ -630,6 +716,341 @@ begin
 end;
 
 //===============================| TScale |===============================//
+
+
+//==============================| TPlotPoly |==============================//
+
+constructor TPlotPoly.Create(NumVert: Integer = 4);
+begin
+  inherited Create;
+
+  NumVertices := NumVert;
+
+  Reset;
+end;
+
+destructor TPlotPoly.Destroy;
+begin
+  SetLength(FVertices, 0);
+
+  inherited Destroy;
+end;
+
+procedure TPlotPoly.Reset;
+var
+  i: Integer;
+begin
+  for i := 0 to NumVertices - 1 do
+    Vertex[i] := GetCurvePoint(-1, -1);
+end;
+
+function TPlotPoly.GetNumVertices: Integer;
+begin
+  Result :=  Length(FVertices);
+end;
+
+function TPlotPoly.GetVertex(Index: Integer): TCurvePoint;
+begin
+  if (Index >= 0) and (Index < NumVertices) then
+    Result := FVertices[Index]
+  else
+    Result :=  GetCurvePoint(-1, -1);
+end;
+
+function TPlotPoly.GetPolygonPoints: ArrayOfTPointF;
+var i: Integer;
+begin
+  Setlength(Result, NumVertices);
+  for i := Low(Result) to High(Result) do
+  begin
+    Result[i].X := FVertices[i].X;
+    Result[i].Y := FVertices[i].Y;
+  end;
+end;
+
+function TPlotPoly.GetRect: TRect;
+var
+  i, Xo, Yo, Xf, Yf: Integer;
+begin
+  Result := TRect.Create(0, 0, 0, 0);
+
+  if (NumVertices > 0) then
+  begin
+    Xo := Round(FVertices[0].X);
+    Yo := Round(FVertices[0].Y);
+    Xf := Round(FVertices[0].X);
+    Yf := Round(FVertices[0].Y);
+    for i := 1 to NumVertices -1 do
+    begin
+      if (FVertices[i].X < Xo) then Xo := Round(FVertices[i].X);
+      if (FVertices[i].Y < Yo) then Yo := Round(FVertices[i].Y);
+      if (FVertices[i].X > Xf) then Xf := Round(FVertices[i].X);
+      if (FVertices[i].Y > Yf) then Yf := Round(FVertices[i].Y);
+    end;
+
+    Result := TRect.Create(Xo, Yo, Xf, Yf);
+  end;
+end;
+
+procedure TPlotPoly.SetNumVertices(const Value: Integer);
+begin
+  SetLength(FVertices, Value);
+end;
+
+procedure TPlotPoly.SetVertex(Index: Integer; const Value: TCurvePoint);
+begin
+  if (Index >= 0) and (Index < NumVertices) then
+    FVertices[Index] := Value;
+end;
+
+function TPlotPoly.Contains(p: TCurvePoint): Boolean;
+var
+  i, j: Integer;
+begin
+  Result := False;
+
+  j := NumVertices - 1;
+  for i := 0 to NumVertices - 1 do
+  begin
+    // The point lies in an horizontal edge
+    if  (Vertex[i].Y = p.Y) and (Vertex[j].Y = p.Y) and
+       ((Vertex[i].X >= p.X) xor (Vertex[j].X >= p.X)) then
+    begin
+      Result := True;
+      Exit;
+    end;
+
+    // The point lies in a non-horizontal edge
+    if ((Vertex[i].Y >= p.Y) xor (Vertex[j].Y >= p.Y)) and
+       ((Vertex[j].X - p.X)*(Vertex[j].Y - Vertex[i].Y) =
+        (Vertex[j].X - Vertex[i].X)*(Vertex[j].Y - p.Y)) then
+    begin
+      Result := True;
+      Exit;
+    end;
+
+    // General case, the line crosses an edge
+    if ((Vertex[i].Y > p.Y) xor (Vertex[j].Y > p.Y)) and
+       ((Vertex[j].X - p.X)*abs(Vertex[j].Y - Vertex[i].Y) <
+        (Vertex[j].X - Vertex[i].X)*abs(Vertex[j].Y - p.Y)) then
+      Result := not Result;
+
+    j := i;
+  end;
+end;
+
+function TPlotPoly.ImportFromXML(Item: TDOMNode): Boolean;
+var
+  i, j: Integer;
+  X, Y: Double;
+  Child: TDOMNode;
+begin
+  Result := False;
+  try
+    with Item.Attributes do
+    begin
+      for i := 0 to Length - 1 do
+      begin
+        if (Item[i].CompareName('NumVertices') = 0) then
+          NumVertices := StrToInt(UTF8Encode(Item[i].NodeValue));
+      end;
+    end;
+    Child := Item.FirstChild;
+    while Assigned(Child) do
+    begin
+      for i := 1 to NumVertices do
+      begin
+        // Vertex points
+        if (Child.CompareName(UTF8Decode('VertexPoint' + IntToStr(i))) = 0) then
+        begin
+          X := 0.0;
+          Y := 0.0;
+          for j := 0 to Child.Attributes.Length - 1 do
+          begin
+            if (Child.Attributes.Item[j].CompareName('X') = 0) then
+              X := StrToFloat(UTF8Encode(Child.Attributes.Item[j].NodeValue));
+            if (Child.Attributes.Item[j].CompareName('Y') = 0) then
+              Y := StrToFloat(UTF8Encode(Child.Attributes.Item[j].NodeValue));
+          end;
+
+          Vertex[i - 1] := GetCurvePoint(X, Y);
+        end;
+      end;
+
+      // Go for the next vertex point
+      Child := Child.NextSibling;
+    end;
+
+    Result := True;
+  except
+    // Do nothing, just catch the error
+  end;
+end;
+
+function TPlotPoly.ExportToXML(Doc: TXMLDocument): TDOMNode;
+var
+  i: Integer;
+  VertexNode: TDOMNode;
+begin
+  try
+    // Create scale node
+    Result := Doc.CreateElement('PlotBox');
+    with TDOMElement(Result) do
+    begin
+      SetAttribute('NumVertices', UTF8Decode(IntToStr(NumVertices)));
+    end;
+    // Vertex points
+    for i := 1 to NumVertices do
+    begin
+      VertexNode := Doc.CreateElement(UTF8Decode('VertexPoint' + IntToStr(i)));
+      TDOMElement(VertexNode).SetAttribute('X', UTF8Decode(FloatToStr(Vertex[i - 1].X)));
+      TDOMElement(VertexNode).SetAttribute('Y', UTF8Decode(FloatToStr(Vertex[i - 1].Y)));
+      Result.Appendchild(VertexNode);
+    end;
+  except
+    Result := nil;
+  end;
+end;
+
+//==============================| TPlotPoly |==============================//
+
+
+//==============================| TPlotQuad |==============================//
+
+constructor TPlotQuad.Create;
+begin
+  inherited Create(4);
+
+  FPolarCoordinates := False;
+  FRecalculateDirect := True;
+  FRecalculateInverse := True;
+
+  SetLength(FDMat, 3, 3);
+  SetLength(FIMat, 3, 3);
+end;
+
+destructor TPlotQuad.Destroy;
+begin
+  SetLength(FDMat, 0);
+  SetLength(FIMat, 0);
+
+  inherited Destroy;
+end;
+
+function TPlotQuad.GetPolygonPoints: ArrayOfTPointF;
+const
+  NumEllipsePoints = 360;
+var
+  l, m, u: Double;
+  Dn, xp, yp, zp: Double;
+  a, b, c, d: TCurvePoint;
+  t: Integer;
+begin
+  if PolarCoordinates then
+  begin
+    if FRecalculateDirect then
+    begin
+      // Project a circle inscribed in the square x = [-1..1], y = [-1..1]
+      // to the polygon. Only works for a convex polygon.
+      a := Vertex[0];
+      b := Vertex[1];
+      c := Vertex[2];
+      d := Vertex[3];
+
+      Dn := a.X*(b.Y - c.Y) + b.X*(c.Y - a.Y) + c.X*(a.Y - b.Y);
+      l := (b.X*(c.Y - d.Y) + c.X*(d.Y - b.Y) + d.X*(b.Y - c.Y))/Dn;
+      m := (a.X*(d.Y - c.Y) + c.X*(a.Y - d.Y) + d.X*(c.Y - a.Y))/Dn;
+      u := (a.X*(b.Y - d.Y) + b.X*(d.Y - a.Y) + d.X*(a.Y - b.Y))/Dn;
+
+      FDMat[0, 0] := -(a.X*l + b.X*m);
+      FDMat[0, 1] := b.X*m + c.X*u;
+      FDMat[0, 2] := a.X*l + c.X*u;
+
+      FDMat[1, 0] := -(a.Y*l + b.Y*m);
+      FDMat[1, 1] := b.Y*m + c.Y*u;
+      FDMat[1, 2] := a.Y*l + c.Y*u;
+
+      FDMat[2, 0] := -(l + m);
+      FDMat[2, 1] := m + u;
+      FDMat[2, 2] := l + u;
+
+      FRecalculateDirect := False;
+    end;
+
+
+    Setlength(Result, NumEllipsePoints);
+    for t := Low(Result) to High(Result) do
+    begin
+      xp := cos(t*arctan(1)/45);
+      yp := sin(t*arctan(1)/45);
+      zp := xp*FDMat[2, 0] + yp*FDMat[2, 1] + FDMat[2, 2];
+
+      Result[t].X := (xp*FDMat[0, 0] + yp*FDMat[0, 1] + FDMat[0, 2])/zp;
+      Result[t].Y := (xp*FDMat[1, 0] + yp*FDMat[1, 1] + FDMat[1, 2])/zp;
+    end;
+  end
+  else
+    Result := inherited GetPolygonPoints;
+end;
+
+procedure TPlotQuad.SetVertex(Index: Integer; const Value: TCurvePoint);
+begin
+  FRecalculateDirect := True;
+  FRecalculateInverse := True;
+
+  inherited SetVertex(Index, Value);
+end;
+
+function TPlotQuad.Contains(p: TCurvePoint): Boolean;
+var
+  l, m, u: Double;
+  Dn, xp, yp, zp: Double;
+  a, b, c, d: TCurvePoint;
+begin
+  if PolarCoordinates then
+  begin
+    if FRecalculateInverse then
+    begin
+      // Project the point p to the square x = [-1..1], y = [-1..1] and check
+      // that it falls within the inscribed circle
+      a := Vertex[0];
+      b := Vertex[1];
+      c := Vertex[2];
+      d := Vertex[3];
+
+      Dn := a.X*(b.Y - c.Y) + b.X*(c.Y - a.Y) + c.X*(a.Y - b.Y);
+      l := (b.X*(c.Y - d.Y) + c.X*(d.Y - b.Y) + d.X*(b.Y - c.Y))/Dn;
+      m := (a.X*(d.Y - c.Y) + c.X*(a.Y - d.Y) + d.X*(c.Y - a.Y))/Dn;
+      u := (a.X*(b.Y - d.Y) + b.X*(d.Y - a.Y) + d.X*(a.Y - b.Y))/Dn;
+
+      FIMat[0, 0] := a.Y*l*(m + u) - b.Y*m*(l + u) + c.Y*u*(m - l);
+      FIMat[0, 1] := -a.X*l*(m + u) + b.X*m*(l + u) + c.X*u*(l - m);
+      FIMat[0, 2] := a.X*l*(b.Y*m + c.Y*u) - b.X*m*(a.Y*l + c.Y*u) + c.X*u*(b.Y*m - a.Y*l);
+
+      FIMat[1, 0] := a.Y*l*(m - u) - b.Y*m*(l + u) + c.Y*u*(l + m);
+      FIMat[1, 1] := a.X*l*(u - m) + b.X*m*(l + u) - c.X*u*(l + m);
+      FIMat[1, 2] := a.X*l*(b.Y*m - c.Y*u) - b.X*m*(a.Y*l + c.Y*u) + c.X*u*(a.Y*l + b.Y*m);
+
+      FIMat[2, 0] := a.Y*l*(m + u) + b.Y*m*(u - l) - c.Y*u*(l + m);
+      FIMat[2, 1] := -a.X*l*(m + u) + b.X*m*(l - u) + c.X*u*(l + m);
+      FIMat[2, 2] := a.X*l*(b.Y*m + c.Y*u) + b.X*m*(c.Y*u - a.Y*l) - c.X*u*(a.Y*l + b.Y*m);
+
+      FRecalculateInverse := False;
+    end;
+
+    zp := p.X*FIMat[2, 0] + p.Y*FIMat[2, 1] + FIMat[2, 2];
+    xp := (p.X*FIMat[0, 0] + p.Y*FIMat[0, 1] + FIMat[0, 2])/zp;
+    yp := (p.X*FIMat[1, 0] + p.Y*FIMat[1, 1] + FIMat[1, 2])/zp;
+
+    // Check that the point is inside the circle
+    Result := (xp*xp + yp*yp) <= 1;
+  end
+  else
+  Result := inherited Contains(p);
+end;
+
+//==============================| TPlotQuad |==============================//
+
 
 function GetCurvePoint(X, Y: Double): TCurvePoint;
 begin

@@ -26,6 +26,7 @@ backup/
 *.bak
 lib/
 build/
+releases/
 Installer/
 *.dSYM/
 

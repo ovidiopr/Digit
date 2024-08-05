@@ -5,13 +5,38 @@ unit utils;
 interface
 
 uses
-  Classes, SysUtils, coordinates, typ, ipf, math, inv, Dialogs;
+  Classes, SysUtils, coordinates, typ, ipf, math, inv, Graphics;
 
+type
+  THough1DMap = Array of LongWord;
+  THough2DMap = Array of Array of LongWord;
+
+
+function AreSimilar(R1, G1, B1, R2, G2, B2, Tolerance: Byte): Boolean; overload;
+function AreSimilar(R1, G1, B1: Byte; C2: LongWord; Tolerance: Byte): Boolean; overload;
+function AreSimilar(C1, C2: LongWord; Tolerance: Byte): Boolean; overload;
 function BSpline(Points: Array of TCurvePoint; Degree: Integer; Xval: Double): Double;
 procedure SavitzkyGolay(Kernel, Degree, Deriv: Integer; var Points: Array of TCurvePoint);
 
+
 implementation
 
+function AreSimilar(R1, G1, B1, R2, G2, B2, Tolerance: Byte): Boolean;
+begin
+  Result := (Abs(R1 - R2) + Abs(G1 - G2) + Abs(B1 - B2) <= 3*Tolerance);
+end;
+
+function AreSimilar(R1, G1, B1: Byte; C2: LongWord; Tolerance: Byte): Boolean;
+begin
+  Result := AreSimilar(R1, G1, B1, Red(C2), Green(C2), Blue(C2), Tolerance);
+end;
+
+function AreSimilar(C1, C2: LongWord; Tolerance: Byte): Boolean;
+begin
+  //Check for the trivial case first
+  Result := (C1 = C2) or AreSimilar(Red(C1), Green(C1), Blue(C1),
+                                    Red(C2), Green(C2), Blue(C2), Tolerance);
+end;
 
 function WeightedAverage(X1, X2, Coeff: Double): Double;
 begin
@@ -76,27 +101,33 @@ var
     pp: TCurvePoint;
     xval, yval, coeff: Array of ArbFloat;
   begin
-    n := 10;
-    SetLength(xval, n + 1);
-    SetLength(yval, n + 1);
-    SetLength(coeff, n + 1);
-    // Calculate pivots
-    for i:=0 to n do begin
-      pp := CalcSpline(i/n);
-      xval[i] := pp.X;
-      yval[i] := i/n;
+    try
+      n := 10;
+      SetLength(xval, n + 1);
+      SetLength(yval, n + 1);
+      SetLength(coeff, n + 1);
+      // Calculate pivots
+      for i:=0 to n do begin
+        pp := CalcSpline(i/n);
+        xval[i] := pp.X;
+        yval[i] := i/n;
+      end;
+      ok := 0;
+      // Calc interpolation spline coefficients
+      ipfisn(N, xval[0], yval[0], coeff[0], ok);
+      assert(ok = 1, 'Error: Calculation of spline coefficients failed.');
+
+      // Calc interpolation spline value at Xint
+      t := ipfspn(High(coeff), xval[0], yval[0], coeff[0], Xint, ok);
+      assert(ok = 1, 'Error: Interpolation with spline failed.');
+
+      // Calc B-Spline value at t
+      Result := CalcSpline(t);
+    finally
+      SetLength(xval, 0);
+      SetLength(yval, 0);
+      SetLength(coeff, 0);
     end;
-    ok := 0;
-    // Calc interpolation spline coefficients
-    ipfisn(N, xval[0], yval[0], coeff[0], ok);
-    assert(ok = 1, 'Error: Calculation of spline coefficients failed.');
-
-    // Calc interpolation spline value at Xint
-    t := ipfspn(High(coeff), xval[0], yval[0], coeff[0], Xint, ok);
-    assert(ok = 1, 'Error: Interpolation with spline failed.');
-
-    // Calc B-Spline value at t
-    Result := CalcSpline(t);
   end;
 
 begin
@@ -104,28 +135,32 @@ begin
 
   if (Length(Points) > 0) then
   begin
-    SetLength(p, Degree + 1);
-    while NextNumberSeq(Points, splineStart, splineEnd) do
-    begin
-      startIndex := splineStart;
-      pStart := CalcSpline(0.0);
-      while startIndex <= splineEnd + Degree - 1 do
+    try
+      SetLength(p, Degree + 1);
+      while NextNumberSeq(Points, splineStart, splineEnd) do
       begin
-        pEnd := CalcSpline(1.0);
-        // Find interval
-        if (Xval = pStart.X) and (pStart.X = pEnd.X) then
-          Result := pStart.Y
-        else
-        if InRange(Xval, pStart.X, pEnd.X) and (pStart.X <> pEnd.X) then
+        startIndex := splineStart;
+        pStart := CalcSpline(0.0);
+        while startIndex <= splineEnd + Degree - 1 do
         begin
-          // Calculate B-spline Y value by interpolation
-          Result := Interpolate(Xval).Y;
-          Exit;
+          pEnd := CalcSpline(1.0);
+          // Find interval
+          if (Xval = pStart.X) and (pStart.X = pEnd.X) then
+            Result := pStart.Y
+          else
+          if InRange(Xval, pStart.X, pEnd.X) and (pStart.X <> pEnd.X) then
+          begin
+            // Calculate B-spline Y value by interpolation
+            Result := Interpolate(Xval).Y;
+            Exit;
+          end;
+          pStart := pEnd;
+          inc(startIndex);
         end;
-        pStart := pEnd;
-        inc(startIndex);
+        Result := pEnd.Y;
       end;
-      Result := pEnd.Y;
+    finally
+      SetLength(p, 0);
     end;
   end;
 end;
@@ -191,55 +226,62 @@ var
   A, B, tA, tAA: TMatrix;
   Yold: Array of Double;
 begin
-  Size := Length(Points);
-  assert(Size >= Kernel, 'Error: The curve does not have enough points for this kernel.');
+  try
+    Size := Length(Points);
+    assert(Size >= Kernel, 'Error: The curve does not have enough points for this kernel.');
 
-  HalfKernel := Kernel div 2;
-  // A polynomial of degree n has n + 1 coefficients
-  Order := Degree + 1;
+    HalfKernel := Kernel div 2;
+    // A polynomial of degree n has n + 1 coefficients
+    Order := Degree + 1;
 
-  SetLength(Yold, Size);
-  for i := 0 to Size - 1 do
-    Yold[i] := Points[i].Y;
+    SetLength(Yold, Size);
+    for i := 0 to Size - 1 do
+      Yold[i] := Points[i].Y;
 
-  SetLength(A, Kernel, Order);
-  SetLength(B, Order, Kernel);
-  SetLength(tA, Order, Kernel);
-  SetLength(tAA, Order, Order);
+    SetLength(A, Kernel, Order);
+    SetLength(B, Order, Kernel);
+    SetLength(tA, Order, Kernel);
+    SetLength(tAA, Order, Order);
 
-  // Do the smoothing thing
-  for i := Low(Points) to High(Points) do
-  begin
-    // Build A and tA
-    for j := -HalfKernel to HalfKernel do
+    // Do the smoothing thing
+    for i := Low(Points) to High(Points) do
     begin
-      r := 1.0;
-      t := Points[i].X - Points[Index(i + j, Low(Points), High(Points))].X;
-      for k := 0 to Order - 1 do
+      // Build A and tA
+      for j := -HalfKernel to HalfKernel do
       begin
-        A[j + HalfKernel, k] := r;
-        tA[k, j + HalfKernel] := r;
-        r := r*t;
+        r := 1.0;
+        t := Points[i].X - Points[Index(i + j, Low(Points), High(Points))].X;
+        for k := 0 to Order - 1 do
+        begin
+          A[j + HalfKernel, k] := r;
+          tA[k, j + HalfKernel] := r;
+          r := r*t;
+        end;
       end;
+
+      // Calculate product tA.A
+      MatMult(tA, A, tAA, Order, Kernel, Order);
+
+      // Calculate (tA.A)-¹
+      MatInv(tAA, Order);
+
+      // Calculate product (tA.A)-¹.tA
+      MatMult(tAA, tA, B, Order, Order, Kernel);
+
+      // Compute the polynomial's value at the center of the sample
+      Points[i].Y := 0.0;
+      for j := -HalfKernel to HalfKernel do
+        Points[i].Y := Points[i].Y + B[Deriv, j + HalfKernel]*
+                       Yold[Index(i + j, Low(Points), High(Points))];
     end;
-
-    // Calculate product tA.A
-    MatMult(tA, A, tAA, Order, Kernel, Order);
-
-    // Calculate (tA.A)-¹
-    MatInv(tAA, Order);
-
-    // Calculate product (tA.A)-¹.tA
-    MatMult(tAA, tA, B, Order, Order, Kernel);
-
-    // Compute the polynomial's value at the center of the sample
-    Points[i].Y := 0.0;
-    for j := -HalfKernel to HalfKernel do
-      Points[i].Y := Points[i].Y + B[Deriv, j + HalfKernel]*
-                     Yold[Index(i + j, Low(Points), High(Points))];
+  finally
+    SetLength(Yold, 0);
+    SetLength(A, 0);
+    SetLength(B, 0);
+    SetLength(tA, 0);
+    SetLength(tAA, 0);
   end;
 end;
-
 
 end.
 
