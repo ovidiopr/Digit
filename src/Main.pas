@@ -23,6 +23,9 @@ type
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
+    DigitizeItem: TMenuItem;
+    Interpolate: TMenuItem;
+    ToolMarkers: TAction;
     chbRebuildCurve: TCheckBox;
     EditPasteImage: TAction;
     btnBackground: TColorButton;
@@ -145,6 +148,7 @@ type
     MainPanel: TPanel;
     PageControl: TPageControl;
     pcInput: TPageControl;
+    DigitPopupMenu2: TPopupMenu;
     rgDirection: TRadioGroup;
     ScrollBox: TScrollBox;
     sbScale: TScrollBox;
@@ -388,6 +392,7 @@ type
     procedure ToolCurveNameExecute(Sender: TObject);
     procedure ToolCurveRightExecute(Sender: TObject);
     procedure ToolDigitExecute(Sender: TObject);
+    procedure ToolMarkersExecute(Sender: TObject);
     procedure ToolResampleExecute(Sender: TObject);
     procedure ToolScaleOptionsExecute(Sender: TObject);
     procedure ToolSmoothExecute(Sender: TObject);
@@ -548,6 +553,7 @@ begin
     ModeBackgroundColor.Enabled := ImageIsLoaded and (State = piSetGrid);
 
     ToolDigit.Enabled := Scale.IsValid and ColorIsSet and (State = piSetCurve);
+    ToolMarkers.Enabled := ToolDigit.Enabled and (Markers.Count > 0);
     ToolAdjustCurve.Enabled := (State = piSetCurve) and HasPoints;
     ToolResample.Enabled := (State = piSetCurve) and HasPoints;
     ToolSmooth.Enabled := (State = piSetCurve) and HasPoints;
@@ -2350,6 +2356,14 @@ begin
   GUIToCurve;
   //Digitize curve
   PlotImage.DigitizeSpectrum(ProgressBar);
+  CurveToGUI;
+end;
+
+procedure TDigitMainForm.ToolMarkersExecute(Sender: TObject);
+begin
+  GUIToCurve;
+  //Fill curve from markers
+  PlotImage.DigitizeMarkers;
   CurveToGUI;
 end;
 

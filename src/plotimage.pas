@@ -205,6 +205,8 @@ type
                                FillCurvePoints: Boolean = True); overload;
     procedure DigitizeSpectrum(ProgressBar: TProgressBar = nil); overload;
 
+    procedure DigitizeMarkers;
+
     procedure FillIsland(Pi: TCurvePoint; var Island: TIsland;
                          JustInY: Boolean = True;
                          MaxPoints: Integer = 1000;
@@ -1880,6 +1882,23 @@ begin
   DigitizeSpectrum(Pi, ProgressBar, False);
 end;
 
+procedure TPlotImage.DigitizeMarkers;
+var
+  i: Integer;
+begin
+  if (State = piSetCurve) and (Markers.Count > 0) then
+  begin
+    DigitCurve.NextCurve(False);
+
+    for i := 0 to Markers.Count - 1 do
+      Curve.AddPoint(Markers[i].Position);
+
+    Curve.SortCurve;
+
+    IsChanged := True;
+  end;
+end;
+
 procedure TPlotImage.FillIsland(Pi: TCurvePoint; var Island: TIsland;
                                 JustInY: Boolean = True;
                                 MaxPoints: Integer = 1000;
@@ -2786,12 +2805,21 @@ end;
 
 procedure TPlotImage.SetState(Value: TPlotImageState);
 begin
-  FState := Value;
-  UpdateMarkersInImage;
+  if (FState <> Value) then
+  begin
+    // Update the markers in the curve
+    UpdateMarkersInCurve;
 
-  // Notify the parent that the state has changed
-  if assigned(OnStateChanged) then
-    OnStateChanged(Self, Value);
+    // Change the state
+    FState := Value;
+
+    // Update the markers in the image
+    UpdateMarkersInImage;
+
+    // Notify the parent that the state has changed
+    if assigned(OnStateChanged) then
+      OnStateChanged(Self, Value);
+  end;
 end;
 
 procedure TPlotImage.SetCurveIndex(Value: Integer);

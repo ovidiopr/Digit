@@ -4950,6 +4950,7 @@ object DigitMainForm: TDigitMainForm
         Left = 117
         Top = 2
         Action = ToolDigit
+        DropdownMenu = DigitPopupMenu2
         ParentShowHint = False
         ShowHint = True
       end
@@ -5006,7 +5007,7 @@ object DigitMainForm: TDigitMainForm
   end
   object MainMenu: TMainMenu
     Images = ImageList
-    Left = 368
+    Left = 312
     Top = 408
     object FileMenu: TMenuItem
       Caption = '&File'
@@ -5187,7 +5188,7 @@ object DigitMainForm: TDigitMainForm
   end
   object ActionList: TActionList
     Images = ImageList
-    Left = 400
+    Left = 344
     Top = 408
     object FileNew: TAction
       Category = 'File'
@@ -5232,14 +5233,6 @@ object DigitMainForm: TDigitMainForm
       OnExecute = EditRedoExecute
       ShortCut = 16466
     end
-    object ToolDigit: TAction
-      Category = 'Tools'
-      Caption = 'D&igitize'
-      Hint = 'Digitize|Digitize the current plot'
-      ImageIndex = 17
-      OnExecute = ToolDigitExecute
-      ShortCut = 116
-    end
     object ModeCursor: TAction
       Tag = 1
       Category = 'Mode'
@@ -5276,54 +5269,6 @@ object DigitMainForm: TDigitMainForm
       Hint = 'Correct steps|Step correction mode'
       ImageIndex = 15
       OnExecute = ModeStepsExecute
-    end
-    object ToolAdjustCurve: TAction
-      Category = 'Tools'
-      Caption = '&Adjust curve'
-      Hint = 'Adjust curve|Adjust curve to the current plot'
-      ImageIndex = 18
-      OnExecute = ToolAdjustCurveExecute
-      ShortCut = 117
-    end
-    object ToolResample: TAction
-      Category = 'Tools'
-      Caption = '&Resample'
-      Hint = 'Resample|Resample digitization'
-      ImageIndex = 19
-      OnExecute = ToolResampleExecute
-      ShortCut = 118
-    end
-    object ToolSmooth: TAction
-      Category = 'Tools'
-      Caption = '&Smooth'
-      Hint = 'Smooth|Smooth digitization'
-      ImageIndex = 20
-      OnExecute = ToolSmoothExecute
-      ShortCut = 119
-    end
-    object ToolConvertToSymbols: TAction
-      Category = 'Tools'
-      Caption = 'Convert to &symbols'
-      Hint = 'Convert to symbols|Convert digitization to symbols'
-      ImageIndex = 21
-      OnExecute = ToolConvertToSymbolsExecute
-      ShortCut = 120
-    end
-    object ToolClear: TAction
-      Category = 'Tools'
-      Caption = '&Clear'
-      Hint = 'Clear|Clear digitization'
-      ImageIndex = 22
-      OnExecute = ToolClearExecute
-      ShortCut = 32776
-    end
-    object ToolCurveUp: TAction
-      Category = 'Tools'
-      Caption = '&Up'
-      Hint = 'Move up|Move digitization one pixel up'
-      ImageIndex = 23
-      OnExecute = ToolCurveUpExecute
-      ShortCut = 32806
     end
     object PlotExport: TAction
       Category = 'Chart'
@@ -5442,60 +5387,6 @@ object DigitMainForm: TDigitMainForm
       OnExecute = MarkersDeleteExecute
       ShortCut = 8200
     end
-    object ToolCurveDown: TAction
-      Category = 'Tools'
-      Caption = 'D&own'
-      Hint = 'Move down|Move digitization one pixel down'
-      ImageIndex = 24
-      OnExecute = ToolCurveDownExecute
-      ShortCut = 32808
-    end
-    object ToolCurveLeft: TAction
-      Category = 'Tools'
-      Caption = '&Left'
-      Hint = 'Move left|Move digitization one pixel left'
-      ImageIndex = 30
-      OnExecute = ToolCurveLeftExecute
-      ShortCut = 32805
-    end
-    object ToolCurveRight: TAction
-      Category = 'Tools'
-      Caption = '&Right'
-      Hint = 'Move right|Move digitization one pixel right'
-      ImageIndex = 31
-      OnExecute = ToolCurveRightExecute
-      ShortCut = 32807
-    end
-    object ToolCurveAdd: TAction
-      Category = 'Tools'
-      Caption = '&Add curve'
-      Hint = 'Add curve|Add a new curve to the digitization'
-      ImageIndex = 25
-      OnExecute = ToolCurveAddExecute
-      ShortCut = 16468
-    end
-    object ToolCurveDelete: TAction
-      Category = 'Tools'
-      Caption = '&Delete curve'
-      Hint = 'Delete curve|Delete the active curve from the digitization'
-      ImageIndex = 26
-      OnExecute = ToolCurveDeleteExecute
-      ShortCut = 16471
-    end
-    object ToolCurveName: TAction
-      Category = 'Tools'
-      Caption = 'Edit &name'
-      Hint = 'Edit name|Edit the name of the active curve'
-      ImageIndex = 27
-      OnExecute = ToolCurveNameExecute
-    end
-    object ToolScaleOptions: TAction
-      Category = 'Tools'
-      Caption = 'Scale &options'
-      Hint = 'Scale options|Edit scale options'
-      ImageIndex = 11
-      OnExecute = ToolScaleOptionsExecute
-    end
     object ModeGroupPoints: TAction
       Tag = 6
       Category = 'Mode'
@@ -5557,9 +5448,127 @@ object DigitMainForm: TDigitMainForm
       OnExecute = EditPasteImageExecute
       ShortCut = 16470
     end
+    object ToolDigit: TAction
+      Category = 'Tools'
+      Caption = 'D&igitize'
+      Hint = 'Digitize|Digitize the current plot'
+      ImageIndex = 17
+      OnExecute = ToolDigitExecute
+      ShortCut = 116
+    end
+    object ToolMarkers: TAction
+      Category = 'Tools'
+      Caption = '&Markers'
+      Hint = 'Digitize markers|Generate curve from markers in the current plot'
+      ImageIndex = 19
+      OnExecute = ToolMarkersExecute
+      ShortCut = 117
+    end
+    object ToolAdjustCurve: TAction
+      Category = 'Tools'
+      Caption = '&Adjust curve'
+      Hint = 'Adjust curve|Adjust curve to the current plot'
+      ImageIndex = 18
+      OnExecute = ToolAdjustCurveExecute
+      ShortCut = 118
+    end
+    object ToolResample: TAction
+      Category = 'Tools'
+      Caption = '&Resample'
+      Hint = 'Resample|Resample digitization'
+      ImageIndex = 19
+      OnExecute = ToolResampleExecute
+      ShortCut = 119
+    end
+    object ToolSmooth: TAction
+      Category = 'Tools'
+      Caption = '&Smooth'
+      Hint = 'Smooth|Smooth digitization'
+      ImageIndex = 20
+      OnExecute = ToolSmoothExecute
+      ShortCut = 120
+    end
+    object ToolConvertToSymbols: TAction
+      Category = 'Tools'
+      Caption = 'Convert to &symbols'
+      Hint = 'Convert to symbols|Convert digitization to symbols'
+      ImageIndex = 21
+      OnExecute = ToolConvertToSymbolsExecute
+      ShortCut = 121
+    end
+    object ToolClear: TAction
+      Category = 'Tools'
+      Caption = '&Clear'
+      Hint = 'Clear|Clear digitization'
+      ImageIndex = 22
+      OnExecute = ToolClearExecute
+      ShortCut = 32776
+    end
+    object ToolCurveUp: TAction
+      Category = 'Tools'
+      Caption = '&Up'
+      Hint = 'Move up|Move digitization one pixel up'
+      ImageIndex = 23
+      OnExecute = ToolCurveUpExecute
+      ShortCut = 32806
+    end
+    object ToolCurveDown: TAction
+      Category = 'Tools'
+      Caption = 'D&own'
+      Hint = 'Move down|Move digitization one pixel down'
+      ImageIndex = 24
+      OnExecute = ToolCurveDownExecute
+      ShortCut = 32808
+    end
+    object ToolCurveLeft: TAction
+      Category = 'Tools'
+      Caption = '&Left'
+      Hint = 'Move left|Move digitization one pixel left'
+      ImageIndex = 30
+      OnExecute = ToolCurveLeftExecute
+      ShortCut = 32805
+    end
+    object ToolCurveRight: TAction
+      Category = 'Tools'
+      Caption = '&Right'
+      Hint = 'Move right|Move digitization one pixel right'
+      ImageIndex = 31
+      OnExecute = ToolCurveRightExecute
+      ShortCut = 32807
+    end
+    object ToolCurveAdd: TAction
+      Category = 'Tools'
+      Caption = '&Add curve'
+      Hint = 'Add curve|Add a new curve to the digitization'
+      ImageIndex = 25
+      OnExecute = ToolCurveAddExecute
+      ShortCut = 16468
+    end
+    object ToolCurveDelete: TAction
+      Category = 'Tools'
+      Caption = '&Delete curve'
+      Hint = 'Delete curve|Delete the active curve from the digitization'
+      ImageIndex = 26
+      OnExecute = ToolCurveDeleteExecute
+      ShortCut = 16471
+    end
+    object ToolCurveName: TAction
+      Category = 'Tools'
+      Caption = 'Edit &name'
+      Hint = 'Edit name|Edit the name of the active curve'
+      ImageIndex = 27
+      OnExecute = ToolCurveNameExecute
+    end
+    object ToolScaleOptions: TAction
+      Category = 'Tools'
+      Caption = 'Scale &options'
+      Hint = 'Scale options|Edit scale options'
+      ImageIndex = 11
+      OnExecute = ToolScaleOptionsExecute
+    end
   end
   object ImageList: TImageList
-    Left = 463
+    Left = 407
     Top = 408
     Bitmap = {
       4C7A340000001000000010000000E46800000000000078DAECBD055455DFDAF6
@@ -6410,7 +6419,7 @@ object DigitMainForm: TDigitMainForm
     Filter = 'CSV files|*.csv|All files|*.*'
     FilterIndex = 0
     Options = [ofEnableSizing]
-    Left = 530
+    Left = 474
     Top = 408
   end
   object OpenProjectDlg: TOpenDialog
@@ -6418,7 +6427,7 @@ object DigitMainForm: TDigitMainForm
     DefaultExt = '.dig'
     Filter = 'Digitization project|*.dig|All files|*.*'
     Options = [ofHideReadOnly, ofEnableSizing]
-    Left = 563
+    Left = 507
     Top = 408
   end
   object SaveProjectDlg: TSaveDialog
@@ -6427,12 +6436,12 @@ object DigitMainForm: TDigitMainForm
     Filter = 'Digitization project|*.dig|All files|*.*'
     FilterIndex = 0
     Options = [ofEnableSizing]
-    Left = 597
+    Left = 541
     Top = 408
   end
   object DigitPopupMenu: TPopupMenu
     Images = ImageList
-    Left = 672
+    Left = 616
     Top = 408
     object DigitizeFromHereItem: TMenuItem
       Caption = '&Digitize from here'
@@ -6442,18 +6451,18 @@ object DigitMainForm: TDigitMainForm
     end
   end
   object OpenPictureDlg: TOpenPictureDialog
-    Left = 499
+    Left = 443
     Top = 408
   end
   object SavePlotDlg: TSaveDialog
     Filter = 'PGN image (*.png)|*.png|JPEG image (*.jpg, *.jpeg, *.jpe)|*.jpg;*.jpeg;*.jpe|X PixMap image (*.xpm)|*.xpm|PPM image (*.ppm)|*.ppm|BitMap image (*.bmp)|*.bmp'
-    Left = 632
+    Left = 576
     Top = 408
   end
   object LargeImageList: TImageList
     Height = 32
     Width = 32
-    Left = 432
+    Left = 376
     Top = 408
     Bitmap = {
       4C7A300000002000000020000000300901000000000078DAECBD055495CBF706
@@ -8580,5 +8589,16 @@ object DigitMainForm: TDigitMainForm
       C9F2AB537F8B7AC897533CC851203643F9CC8AE3B5682B75FDBF39F1FFD7EAFF
       FF03F858CD0B
     }
+  end
+  object DigitPopupMenu2: TPopupMenu
+    Images = ImageList
+    Left = 648
+    Top = 408
+    object DigitizeItem: TMenuItem
+      Action = ToolDigit
+    end
+    object Interpolate: TMenuItem
+      Action = ToolMarkers
+    end
   end
 end
