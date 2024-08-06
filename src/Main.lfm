@@ -1450,13 +1450,13 @@ object DigitMainForm: TDigitMainForm
   end
   object InputPanel: TPanel
     Left = 0
-    Height = 520
+    Height = 515
     Top = 40
     Width = 220
     Align = alLeft
     BevelOuter = bvNone
     BevelWidth = 2
-    ClientHeight = 520
+    ClientHeight = 515
     ClientWidth = 220
     Font.Color = clBlack
     Font.Height = -11
@@ -1468,16 +1468,16 @@ object DigitMainForm: TDigitMainForm
     object ZoomImage: TImage
       Left = 0
       Height = 220
-      Top = 300
+      Top = 295
       Width = 220
       Align = alBottom
     end
     object pcInput: TPageControl
       Left = 0
-      Height = 295
+      Height = 290
       Top = 5
       Width = 220
-      ActivePage = tsCurve
+      ActivePage = tsScale
       Align = alClient
       AutoSize = True
       BorderSpacing.Top = 5
@@ -1486,28 +1486,28 @@ object DigitMainForm: TDigitMainForm
       ParentShowHint = False
       ShowHint = True
       Style = tsButtons
-      TabIndex = 0
+      TabIndex = 1
       TabOrder = 0
       OnChange = pcInputChange
       Options = [nboMultiLine]
       object tsCurve: TTabSheet
         Hint = 'Curve options|Options to configure the digitization of the current curve'
         Caption = 'Curve'
-        ClientHeight = 259
-        ClientWidth = 214
+        ClientHeight = 203
+        ClientWidth = 212
         ImageIndex = 17
         ParentShowHint = False
         ShowHint = True
         object sbCurve: TScrollBox
           Left = 0
-          Height = 259
+          Height = 203
           Top = 0
-          Width = 214
-          HorzScrollBar.Page = 168
+          Width = 212
+          HorzScrollBar.Page = 153
           VertScrollBar.Page = 181
           Align = alClient
-          ClientHeight = 257
-          ClientWidth = 212
+          ClientHeight = 199
+          ClientWidth = 208
           ParentBackground = False
           TabOrder = 0
           object lblColor: TLabel
@@ -1517,7 +1517,7 @@ object DigitMainForm: TDigitMainForm
             Left = 5
             Height = 13
             Top = 8
-            Width = 34
+            Width = 31
             BorderSpacing.Left = 5
             BorderSpacing.Top = 9
             Caption = 'Color:'
@@ -1532,10 +1532,10 @@ object DigitMainForm: TDigitMainForm
             AnchorSideLeft.Side = asrBottom
             AnchorSideRight.Control = sbCurve
             AnchorSideRight.Side = asrBottom
-            Left = 44
+            Left = 41
             Height = 25
             Top = 2
-            Width = 163
+            Width = 162
             Anchors = [akTop, akLeft, akRight]
             BorderSpacing.Left = 5
             BorderSpacing.Top = 2
@@ -1557,7 +1557,7 @@ object DigitMainForm: TDigitMainForm
             Left = 5
             Height = 56
             Top = 29
-            Width = 202
+            Width = 198
             Anchors = [akTop, akLeft, akRight]
             AutoFill = True
             BorderSpacing.Left = 5
@@ -1571,8 +1571,8 @@ object DigitMainForm: TDigitMainForm
             ChildSizing.ShrinkVertical = crsScaleChilds
             ChildSizing.Layout = cclLeftToRightThenTopToBottom
             ChildSizing.ControlsPerLine = 1
-            ClientHeight = 29
-            ClientWidth = 192
+            ClientHeight = 38
+            ClientWidth = 194
             Font.Color = clBlack
             Font.Height = -11
             Font.Name = 'Default'
@@ -1593,7 +1593,7 @@ object DigitMainForm: TDigitMainForm
             Left = 5
             Height = 13
             Top = 95
-            Width = 30
+            Width = 26
             BorderSpacing.Left = 5
             BorderSpacing.Top = 10
             Caption = 'Step:'
@@ -1611,7 +1611,7 @@ object DigitMainForm: TDigitMainForm
             AnchorSideTop.Side = asrCenter
             AnchorSideRight.Control = sbCurve
             AnchorSideRight.Side = asrBottom
-            Left = 40
+            Left = 36
             Height = 22
             Top = 90
             Width = 167
@@ -1696,7 +1696,7 @@ object DigitMainForm: TDigitMainForm
             Left = 5
             Height = 13
             Top = 118
-            Width = 47
+            Width = 42
             BorderSpacing.Left = 5
             BorderSpacing.Top = 10
             Caption = 'Interval:'
@@ -1714,10 +1714,10 @@ object DigitMainForm: TDigitMainForm
             AnchorSideTop.Side = asrCenter
             AnchorSideRight.Control = sbCurve
             AnchorSideRight.Side = asrBottom
-            Left = 57
+            Left = 52
             Height = 22
             Top = 113
-            Width = 150
+            Width = 151
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -1799,7 +1799,7 @@ object DigitMainForm: TDigitMainForm
             Left = 5
             Height = 13
             Top = 141
-            Width = 59
+            Width = 52
             BorderSpacing.Left = 5
             BorderSpacing.Top = 10
             Caption = 'Tolerance:'
@@ -1817,10 +1817,10 @@ object DigitMainForm: TDigitMainForm
             AnchorSideTop.Side = asrCenter
             AnchorSideRight.Control = sbCurve
             AnchorSideRight.Side = asrBottom
-            Left = 69
+            Left = 62
             Height = 22
             Top = 136
-            Width = 138
+            Width = 141
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -1901,7 +1901,7 @@ object DigitMainForm: TDigitMainForm
             Left = 5
             Height = 13
             Top = 164
-            Width = 69
+            Width = 63
             BorderSpacing.Left = 5
             BorderSpacing.Top = 10
             Caption = 'Line spread:'
@@ -1919,10 +1919,10 @@ object DigitMainForm: TDigitMainForm
             AnchorSideTop.Side = asrCenter
             AnchorSideRight.Control = sbCurve
             AnchorSideRight.Side = asrBottom
-            Left = 79
+            Left = 73
             Height = 22
             Top = 159
-            Width = 128
+            Width = 130
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -2002,34 +2002,34 @@ object DigitMainForm: TDigitMainForm
         Hint = 'Set scale|Set plot scale'
         AutoSize = True
         Caption = 'Scale'
-        ClientHeight = 259
-        ClientWidth = 214
+        ClientHeight = 203
+        ClientWidth = 212
         ImageIndex = 41
         ParentShowHint = False
         ShowHint = True
         object sbScale: TScrollBox
           Left = 0
-          Height = 259
+          Height = 203
           Top = 0
-          Width = 214
-          HorzScrollBar.Page = 181
-          VertScrollBar.Page = 257
+          Width = 212
+          HorzScrollBar.Page = 173
+          VertScrollBar.Page = 199
           Align = alClient
           ChildSizing.EnlargeHorizontal = crsScaleChilds
           ChildSizing.ShrinkHorizontal = crsScaleChilds
-          ClientHeight = 257
-          ClientWidth = 197
+          ClientHeight = 199
+          ClientWidth = 191
           ParentBackground = False
           TabOrder = 0
           object gbCoord: TGroupBox
             Left = 0
-            Height = 40
+            Height = 39
             Top = 0
-            Width = 197
+            Width = 191
             Align = alTop
             AutoSize = True
             Caption = 'Coordinates'
-            ClientHeight = 13
+            ClientHeight = 21
             ClientWidth = 187
             Font.Color = clBlack
             Font.Height = -11
@@ -2040,13 +2040,13 @@ object DigitMainForm: TDigitMainForm
             TabOrder = 0
             object cbbCoords: TComboBox
               Left = 0
-              Height = 20
+              Height = 21
               Top = 0
               Width = 187
               Align = alClient
               Font.Height = -11
               Font.Style = [fsBold]
-              ItemHeight = 26
+              ItemHeight = 13
               ItemIndex = 0
               Items.Strings = (
                 'Cartesian'
@@ -2061,9 +2061,9 @@ object DigitMainForm: TDigitMainForm
           end
           object gbX: TGroupBox
             Left = 0
-            Height = 68
-            Top = 40
-            Width = 197
+            Height = 62
+            Top = 39
+            Width = 191
             Align = alTop
             AutoSize = True
             Caption = 'X axis'
@@ -2072,7 +2072,7 @@ object DigitMainForm: TDigitMainForm
             ChildSizing.EnlargeHorizontal = crsScaleChilds
             ChildSizing.Layout = cclLeftToRightThenTopToBottom
             ChildSizing.ControlsPerLine = 2
-            ClientHeight = 41
+            ClientHeight = 44
             ClientWidth = 187
             Font.Height = -11
             Font.Style = [fsBold]
@@ -2083,9 +2083,9 @@ object DigitMainForm: TDigitMainForm
               AnchorSideTop.Side = asrCenter
               AnchorSideBottom.Side = asrBottom
               Left = 0
-              Height = 20
+              Height = 21
               Top = 0
-              Width = 47
+              Width = 44
               Alignment = taRightJustify
               Caption = 'Scale:'
               Font.Height = -11
@@ -2097,13 +2097,13 @@ object DigitMainForm: TDigitMainForm
             object cbbXScale: TComboBox
               AnchorSideLeft.Side = asrBottom
               AnchorSideRight.Side = asrBottom
-              Left = 49
-              Height = 20
+              Left = 46
+              Height = 21
               Top = 0
-              Width = 138
+              Width = 141
               Font.Height = -11
               Font.Style = [fsBold]
-              ItemHeight = 26
+              ItemHeight = 13
               ItemIndex = 0
               Items.Strings = (
                 'Linear'
@@ -2120,9 +2120,9 @@ object DigitMainForm: TDigitMainForm
             object lblX: TLabel
               AnchorSideTop.Side = asrCenter
               Left = 0
-              Height = 19
-              Top = 22
-              Width = 47
+              Height = 21
+              Top = 23
+              Width = 44
               Alignment = taRightJustify
               Caption = 'Label:'
               Font.Color = clBlack
@@ -2137,10 +2137,10 @@ object DigitMainForm: TDigitMainForm
               AnchorSideLeft.Side = asrBottom
               AnchorSideTop.Side = asrBottom
               AnchorSideRight.Side = asrBottom
-              Left = 49
-              Height = 19
-              Top = 22
-              Width = 138
+              Left = 46
+              Height = 21
+              Top = 23
+              Width = 141
               Font.Color = clBlack
               Font.Height = -11
               Font.Name = 'Default'
@@ -2153,16 +2153,16 @@ object DigitMainForm: TDigitMainForm
           end
           object gbY: TGroupBox
             Left = 0
-            Height = 66
-            Top = 108
-            Width = 197
+            Height = 60
+            Top = 101
+            Width = 191
             Align = alTop
             AutoSize = True
             Caption = 'Y axis'
             ChildSizing.EnlargeHorizontal = crsScaleChilds
             ChildSizing.Layout = cclLeftToRightThenTopToBottom
             ChildSizing.ControlsPerLine = 2
-            ClientHeight = 39
+            ClientHeight = 42
             ClientWidth = 187
             Font.Height = -11
             Font.Style = [fsBold]
@@ -2173,9 +2173,9 @@ object DigitMainForm: TDigitMainForm
               AnchorSideTop.Side = asrCenter
               AnchorSideBottom.Side = asrBottom
               Left = 0
-              Height = 20
+              Height = 21
               Top = 0
-              Width = 47
+              Width = 44
               Alignment = taRightJustify
               Caption = 'Scale:'
               Font.Height = -11
@@ -2187,13 +2187,13 @@ object DigitMainForm: TDigitMainForm
             object cbbYScale: TComboBox
               AnchorSideLeft.Side = asrBottom
               AnchorSideRight.Side = asrBottom
-              Left = 47
-              Height = 20
+              Left = 44
+              Height = 21
               Top = 0
-              Width = 140
+              Width = 143
               Font.Height = -11
               Font.Style = [fsBold]
-              ItemHeight = 26
+              ItemHeight = 13
               ItemIndex = 0
               Items.Strings = (
                 'Linear'
@@ -2210,9 +2210,9 @@ object DigitMainForm: TDigitMainForm
             object lblY: TLabel
               AnchorSideTop.Side = asrCenter
               Left = 0
-              Height = 19
-              Top = 20
-              Width = 47
+              Height = 21
+              Top = 21
+              Width = 44
               Alignment = taRightJustify
               Caption = 'Label:'
               Font.Color = clBlack
@@ -2227,10 +2227,10 @@ object DigitMainForm: TDigitMainForm
               AnchorSideLeft.Side = asrBottom
               AnchorSideTop.Side = asrBottom
               AnchorSideRight.Side = asrBottom
-              Left = 47
-              Height = 19
-              Top = 20
-              Width = 140
+              Left = 44
+              Height = 21
+              Top = 21
+              Width = 143
               Font.Color = clBlack
               Font.Height = -11
               Font.Name = 'Default'
@@ -2243,9 +2243,9 @@ object DigitMainForm: TDigitMainForm
           end
           object gbPoint1: TGroupBox
             Left = 0
-            Height = 88
-            Top = 174
-            Width = 197
+            Height = 85
+            Top = 161
+            Width = 191
             Align = alTop
             AutoSize = True
             Caption = 'Vector 1 (top)'
@@ -2254,7 +2254,7 @@ object DigitMainForm: TDigitMainForm
             ChildSizing.EnlargeHorizontal = crsScaleChilds
             ChildSizing.Layout = cclLeftToRightThenTopToBottom
             ChildSizing.ControlsPerLine = 3
-            ClientHeight = 61
+            ClientHeight = 67
             ClientWidth = 187
             Font.Color = clBlack
             Font.Height = -11
@@ -2267,7 +2267,7 @@ object DigitMainForm: TDigitMainForm
               Left = 0
               Height = 13
               Top = 0
-              Width = 14
+              Width = 11
               Font.Color = clBlack
               Font.Height = -11
               Font.Name = 'Default'
@@ -2276,10 +2276,10 @@ object DigitMainForm: TDigitMainForm
               ParentFont = False
             end
             object lblImg1: TLabel
-              Left = 16
+              Left = 13
               Height = 13
               Top = 0
-              Width = 82
+              Width = 83
               Caption = 'Image'
               Font.Color = clBlack
               Font.Height = -11
@@ -2289,18 +2289,18 @@ object DigitMainForm: TDigitMainForm
               ParentFont = False
             end
             object lblPlt1: TLabel
-              Left = 100
+              Left = 98
               Height = 13
               Top = 0
-              Width = 87
+              Width = 89
               Caption = 'Plot'
               ParentColor = False
             end
             object lblX1: TLabel
               Left = 0
-              Height = 22
+              Height = 25
               Top = 15
-              Width = 14
+              Width = 11
               Alignment = taRightJustify
               Caption = 'X:'
               Font.Color = clBlack
@@ -2313,10 +2313,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditIX1: TBCTrackbarUpdown
               Tag = 1
-              Left = 16
+              Left = 13
               Height = 22
               Top = 15
-              Width = 82
+              Width = 83
               AllowNegativeValues = False
               BarExponent = 1
               Increment = 1
@@ -2393,10 +2393,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditPX1: TEdit
               Tag = 1
-              Left = 100
-              Height = 22
+              Left = 98
+              Height = 25
               Top = 15
-              Width = 87
+              Width = 89
               Font.Color = clBlack
               Font.Height = -13
               Font.Name = 'Default'
@@ -2407,9 +2407,9 @@ object DigitMainForm: TDigitMainForm
             end
             object lblY1: TLabel
               Left = 0
-              Height = 22
-              Top = 39
-              Width = 14
+              Height = 25
+              Top = 42
+              Width = 11
               Alignment = taRightJustify
               Caption = 'Y:'
               Layout = tlCenter
@@ -2417,10 +2417,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditIY1: TBCTrackbarUpdown
               Tag = 1
-              Left = 16
+              Left = 13
               Height = 22
-              Top = 39
-              Width = 82
+              Top = 42
+              Width = 83
               AllowNegativeValues = False
               BarExponent = 1
               Increment = 1
@@ -2497,10 +2497,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditPY1: TEdit
               Tag = 1
-              Left = 100
-              Height = 22
-              Top = 39
-              Width = 87
+              Left = 98
+              Height = 25
+              Top = 42
+              Width = 89
               Font.Color = clBlack
               Font.Height = -13
               Font.Name = 'Default'
@@ -2512,9 +2512,9 @@ object DigitMainForm: TDigitMainForm
           end
           object gbPoint2: TGroupBox
             Left = 0
-            Height = 88
-            Top = 262
-            Width = 197
+            Height = 85
+            Top = 246
+            Width = 191
             Align = alTop
             AutoSize = True
             Caption = 'Origin'
@@ -2523,7 +2523,7 @@ object DigitMainForm: TDigitMainForm
             ChildSizing.EnlargeHorizontal = crsScaleChilds
             ChildSizing.Layout = cclLeftToRightThenTopToBottom
             ChildSizing.ControlsPerLine = 3
-            ClientHeight = 61
+            ClientHeight = 67
             ClientWidth = 187
             Font.Color = clBlack
             Font.Height = -11
@@ -2536,7 +2536,7 @@ object DigitMainForm: TDigitMainForm
               Left = 0
               Height = 13
               Top = 0
-              Width = 14
+              Width = 11
               Font.Color = clBlack
               Font.Height = -11
               Font.Name = 'Default'
@@ -2545,10 +2545,10 @@ object DigitMainForm: TDigitMainForm
               ParentFont = False
             end
             object lblImg2: TLabel
-              Left = 16
+              Left = 13
               Height = 13
               Top = 0
-              Width = 82
+              Width = 83
               Caption = 'Image'
               Font.Color = clBlack
               Font.Height = -11
@@ -2558,18 +2558,18 @@ object DigitMainForm: TDigitMainForm
               ParentFont = False
             end
             object lblPlt2: TLabel
-              Left = 100
+              Left = 98
               Height = 13
               Top = 0
-              Width = 87
+              Width = 89
               Caption = 'Plot'
               ParentColor = False
             end
             object lblX2: TLabel
               Left = 0
-              Height = 22
+              Height = 25
               Top = 15
-              Width = 14
+              Width = 11
               Alignment = taRightJustify
               Caption = 'X:'
               Font.Color = clBlack
@@ -2582,10 +2582,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditIX2: TBCTrackbarUpdown
               Tag = 2
-              Left = 16
+              Left = 13
               Height = 22
               Top = 15
-              Width = 82
+              Width = 83
               AllowNegativeValues = False
               BarExponent = 1
               Increment = 1
@@ -2662,10 +2662,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditPX2: TEdit
               Tag = 2
-              Left = 100
-              Height = 22
+              Left = 98
+              Height = 25
               Top = 15
-              Width = 87
+              Width = 89
               Font.Color = clBlack
               Font.Height = -13
               Font.Name = 'Default'
@@ -2676,9 +2676,9 @@ object DigitMainForm: TDigitMainForm
             end
             object lblY2: TLabel
               Left = 0
-              Height = 22
-              Top = 39
-              Width = 14
+              Height = 25
+              Top = 42
+              Width = 11
               Alignment = taRightJustify
               Caption = 'Y:'
               Layout = tlCenter
@@ -2686,10 +2686,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditIY2: TBCTrackbarUpdown
               Tag = 2
-              Left = 16
+              Left = 13
               Height = 22
-              Top = 39
-              Width = 82
+              Top = 42
+              Width = 83
               AllowNegativeValues = False
               BarExponent = 1
               Increment = 1
@@ -2766,10 +2766,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditPY2: TEdit
               Tag = 2
-              Left = 100
-              Height = 22
-              Top = 39
-              Width = 87
+              Left = 98
+              Height = 25
+              Top = 42
+              Width = 89
               Font.Color = clBlack
               Font.Height = -13
               Font.Name = 'Default'
@@ -2781,9 +2781,9 @@ object DigitMainForm: TDigitMainForm
           end
           object gbPoint3: TGroupBox
             Left = 0
-            Height = 88
-            Top = 350
-            Width = 197
+            Height = 85
+            Top = 331
+            Width = 191
             Align = alTop
             AutoSize = True
             Caption = 'Vector 2 (right)'
@@ -2792,7 +2792,7 @@ object DigitMainForm: TDigitMainForm
             ChildSizing.EnlargeHorizontal = crsScaleChilds
             ChildSizing.Layout = cclLeftToRightThenTopToBottom
             ChildSizing.ControlsPerLine = 3
-            ClientHeight = 61
+            ClientHeight = 67
             ClientWidth = 187
             Font.Color = clBlack
             Font.Height = -11
@@ -2805,7 +2805,7 @@ object DigitMainForm: TDigitMainForm
               Left = 0
               Height = 13
               Top = 0
-              Width = 14
+              Width = 11
               Font.Color = clBlack
               Font.Height = -11
               Font.Name = 'Default'
@@ -2814,10 +2814,10 @@ object DigitMainForm: TDigitMainForm
               ParentFont = False
             end
             object lblImg3: TLabel
-              Left = 16
+              Left = 13
               Height = 13
               Top = 0
-              Width = 82
+              Width = 83
               Caption = 'Image'
               Font.Color = clBlack
               Font.Height = -11
@@ -2827,18 +2827,18 @@ object DigitMainForm: TDigitMainForm
               ParentFont = False
             end
             object lblPlt3: TLabel
-              Left = 100
+              Left = 98
               Height = 13
               Top = 0
-              Width = 87
+              Width = 89
               Caption = 'Plot'
               ParentColor = False
             end
             object lblX3: TLabel
               Left = 0
-              Height = 22
+              Height = 25
               Top = 15
-              Width = 14
+              Width = 11
               Alignment = taRightJustify
               Caption = 'X:'
               Font.Color = clBlack
@@ -2851,10 +2851,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditIX3: TBCTrackbarUpdown
               Tag = 3
-              Left = 16
+              Left = 13
               Height = 22
               Top = 15
-              Width = 82
+              Width = 83
               AllowNegativeValues = False
               BarExponent = 1
               Increment = 1
@@ -2931,10 +2931,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditPX3: TEdit
               Tag = 3
-              Left = 100
-              Height = 22
+              Left = 98
+              Height = 25
               Top = 15
-              Width = 87
+              Width = 89
               Font.Color = clBlack
               Font.Height = -13
               Font.Name = 'Default'
@@ -2945,9 +2945,9 @@ object DigitMainForm: TDigitMainForm
             end
             object lblY3: TLabel
               Left = 0
-              Height = 22
-              Top = 39
-              Width = 14
+              Height = 25
+              Top = 42
+              Width = 11
               Alignment = taRightJustify
               Caption = 'Y:'
               Layout = tlCenter
@@ -2955,10 +2955,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditIY3: TBCTrackbarUpdown
               Tag = 3
-              Left = 16
+              Left = 13
               Height = 22
-              Top = 39
-              Width = 82
+              Top = 42
+              Width = 83
               AllowNegativeValues = False
               BarExponent = 1
               Increment = 1
@@ -3035,10 +3035,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditPY3: TEdit
               Tag = 3
-              Left = 100
-              Height = 22
-              Top = 39
-              Width = 87
+              Left = 98
+              Height = 25
+              Top = 42
+              Width = 89
               Font.Color = clBlack
               Font.Height = -13
               Font.Name = 'Default'
@@ -3053,28 +3053,28 @@ object DigitMainForm: TDigitMainForm
       object tsPlotBox: TTabSheet
         Hint = 'Set plot box|Set plot box'
         Caption = 'Box'
-        ClientHeight = 259
-        ClientWidth = 214
+        ClientHeight = 203
+        ClientWidth = 212
         ImageIndex = 42
         ParentShowHint = False
         ShowHint = True
         object sbPlotBox: TScrollBox
           Left = 0
-          Height = 259
+          Height = 203
           Top = 0
-          Width = 214
-          HorzScrollBar.Page = 97
-          VertScrollBar.Page = 257
+          Width = 212
+          HorzScrollBar.Page = 89
+          VertScrollBar.Page = 199
           Align = alClient
-          ClientHeight = 257
-          ClientWidth = 212
+          ClientHeight = 199
+          ClientWidth = 191
           ParentBackground = False
           TabOrder = 0
           object gbVertex1: TGroupBox
             Left = 0
-            Height = 71
+            Height = 62
             Top = 0
-            Width = 212
+            Width = 191
             Align = alTop
             AutoSize = True
             Caption = 'Vertex 1'
@@ -3082,7 +3082,7 @@ object DigitMainForm: TDigitMainForm
             ChildSizing.Layout = cclLeftToRightThenTopToBottom
             ChildSizing.ControlsPerLine = 2
             ClientHeight = 44
-            ClientWidth = 202
+            ClientWidth = 187
             Font.Color = clBlack
             Font.Height = -11
             Font.Name = 'Default'
@@ -3094,7 +3094,7 @@ object DigitMainForm: TDigitMainForm
               Left = 0
               Height = 22
               Top = 0
-              Width = 28
+              Width = 22
               Alignment = taRightJustify
               Caption = 'X:'
               Font.Color = clBlack
@@ -3107,10 +3107,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditVX1: TBCTrackbarUpdown
               Tag = 1
-              Left = 28
+              Left = 22
               Height = 22
               Top = 0
-              Width = 174
+              Width = 165
               AllowNegativeValues = False
               BarExponent = 1
               Increment = 1
@@ -3189,7 +3189,7 @@ object DigitMainForm: TDigitMainForm
               Left = 0
               Height = 22
               Top = 22
-              Width = 28
+              Width = 22
               Alignment = taRightJustify
               Caption = 'Y:'
               Layout = tlCenter
@@ -3197,10 +3197,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditVY1: TBCTrackbarUpdown
               Tag = 1
-              Left = 28
+              Left = 22
               Height = 22
               Top = 22
-              Width = 174
+              Width = 165
               AllowNegativeValues = False
               BarExponent = 1
               Increment = 1
@@ -3278,9 +3278,9 @@ object DigitMainForm: TDigitMainForm
           end
           object gbVertex2: TGroupBox
             Left = 0
-            Height = 71
-            Top = 71
-            Width = 212
+            Height = 62
+            Top = 62
+            Width = 191
             Align = alTop
             AutoSize = True
             Caption = 'Vertex 2'
@@ -3288,7 +3288,7 @@ object DigitMainForm: TDigitMainForm
             ChildSizing.Layout = cclLeftToRightThenTopToBottom
             ChildSizing.ControlsPerLine = 2
             ClientHeight = 44
-            ClientWidth = 202
+            ClientWidth = 187
             Font.Color = clBlack
             Font.Height = -11
             Font.Name = 'Default'
@@ -3300,7 +3300,7 @@ object DigitMainForm: TDigitMainForm
               Left = 0
               Height = 22
               Top = 0
-              Width = 28
+              Width = 22
               Alignment = taRightJustify
               Caption = 'X:'
               Font.Color = clBlack
@@ -3313,10 +3313,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditVX2: TBCTrackbarUpdown
               Tag = 2
-              Left = 28
+              Left = 22
               Height = 22
               Top = 0
-              Width = 174
+              Width = 165
               AllowNegativeValues = False
               BarExponent = 1
               Increment = 1
@@ -3395,7 +3395,7 @@ object DigitMainForm: TDigitMainForm
               Left = 0
               Height = 22
               Top = 22
-              Width = 28
+              Width = 22
               Alignment = taRightJustify
               Caption = 'Y:'
               Layout = tlCenter
@@ -3403,10 +3403,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditVY2: TBCTrackbarUpdown
               Tag = 2
-              Left = 28
+              Left = 22
               Height = 22
               Top = 22
-              Width = 174
+              Width = 165
               AllowNegativeValues = False
               BarExponent = 1
               Increment = 1
@@ -3484,9 +3484,9 @@ object DigitMainForm: TDigitMainForm
           end
           object gbVertex3: TGroupBox
             Left = 0
-            Height = 71
-            Top = 142
-            Width = 212
+            Height = 62
+            Top = 124
+            Width = 191
             Align = alTop
             AutoSize = True
             Caption = 'Vertex 3'
@@ -3494,7 +3494,7 @@ object DigitMainForm: TDigitMainForm
             ChildSizing.Layout = cclLeftToRightThenTopToBottom
             ChildSizing.ControlsPerLine = 2
             ClientHeight = 44
-            ClientWidth = 202
+            ClientWidth = 187
             Font.Color = clBlack
             Font.Height = -11
             Font.Name = 'Default'
@@ -3506,7 +3506,7 @@ object DigitMainForm: TDigitMainForm
               Left = 0
               Height = 22
               Top = 0
-              Width = 28
+              Width = 22
               Alignment = taRightJustify
               Caption = 'X:'
               Font.Color = clBlack
@@ -3519,10 +3519,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditVX3: TBCTrackbarUpdown
               Tag = 3
-              Left = 28
+              Left = 22
               Height = 22
               Top = 0
-              Width = 174
+              Width = 165
               AllowNegativeValues = False
               BarExponent = 1
               Increment = 1
@@ -3601,7 +3601,7 @@ object DigitMainForm: TDigitMainForm
               Left = 0
               Height = 22
               Top = 22
-              Width = 28
+              Width = 22
               Alignment = taRightJustify
               Caption = 'Y:'
               Layout = tlCenter
@@ -3609,10 +3609,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditVY3: TBCTrackbarUpdown
               Tag = 3
-              Left = 28
+              Left = 22
               Height = 22
               Top = 22
-              Width = 174
+              Width = 165
               AllowNegativeValues = False
               BarExponent = 1
               Increment = 1
@@ -3690,9 +3690,9 @@ object DigitMainForm: TDigitMainForm
           end
           object gbVertex4: TGroupBox
             Left = 0
-            Height = 71
-            Top = 213
-            Width = 212
+            Height = 62
+            Top = 186
+            Width = 191
             Align = alTop
             AutoSize = True
             Caption = 'Vertex 4'
@@ -3700,7 +3700,7 @@ object DigitMainForm: TDigitMainForm
             ChildSizing.Layout = cclLeftToRightThenTopToBottom
             ChildSizing.ControlsPerLine = 2
             ClientHeight = 44
-            ClientWidth = 202
+            ClientWidth = 187
             Font.Color = clBlack
             Font.Height = -11
             Font.Name = 'Default'
@@ -3712,7 +3712,7 @@ object DigitMainForm: TDigitMainForm
               Left = 0
               Height = 22
               Top = 0
-              Width = 28
+              Width = 22
               Alignment = taRightJustify
               Caption = 'X:'
               Font.Color = clBlack
@@ -3725,10 +3725,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditVX4: TBCTrackbarUpdown
               Tag = 4
-              Left = 28
+              Left = 22
               Height = 22
               Top = 0
-              Width = 174
+              Width = 165
               AllowNegativeValues = False
               BarExponent = 1
               Increment = 1
@@ -3807,7 +3807,7 @@ object DigitMainForm: TDigitMainForm
               Left = 0
               Height = 22
               Top = 22
-              Width = 28
+              Width = 22
               Alignment = taRightJustify
               Caption = 'Y:'
               Layout = tlCenter
@@ -3815,10 +3815,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditVY4: TBCTrackbarUpdown
               Tag = 4
-              Left = 28
+              Left = 22
               Height = 22
               Top = 22
-              Width = 174
+              Width = 165
               AllowNegativeValues = False
               BarExponent = 1
               Increment = 1
@@ -3899,8 +3899,8 @@ object DigitMainForm: TDigitMainForm
       object tsGrid: TTabSheet
         Hint = 'Grid options|Options to remove the grid from the plot'
         Caption = 'Grid'
-        ClientHeight = 259
-        ClientWidth = 214
+        ClientHeight = 203
+        ClientWidth = 212
         ImageIndex = 38
         ParentShowHint = False
         ShowHint = True
@@ -3908,7 +3908,7 @@ object DigitMainForm: TDigitMainForm
           Left = 0
           Height = 40
           Top = 0
-          Width = 214
+          Width = 212
           ButtonHeight = 36
           ButtonWidth = 32
           Caption = 'tbGrid'
@@ -3930,14 +3930,14 @@ object DigitMainForm: TDigitMainForm
         end
         object sbGrid: TScrollBox
           Left = 0
-          Height = 219
+          Height = 163
           Top = 40
-          Width = 214
-          HorzScrollBar.Page = 145
-          VertScrollBar.Page = 179
+          Width = 212
+          HorzScrollBar.Page = 140
+          VertScrollBar.Page = 159
           Align = alClient
-          ClientHeight = 217
-          ClientWidth = 212
+          ClientHeight = 159
+          ClientWidth = 191
           ParentBackground = False
           TabOrder = 1
           object lblMajorGrid: TLabel
@@ -3946,7 +3946,7 @@ object DigitMainForm: TDigitMainForm
             Left = 0
             Height = 13
             Top = 14
-            Width = 61
+            Width = 58
             BorderSpacing.Top = 14
             Caption = 'Major grid:'
             Font.Color = clBlack
@@ -3961,10 +3961,10 @@ object DigitMainForm: TDigitMainForm
             AnchorSideTop.Control = lblMajorGrid
             AnchorSideTop.Side = asrCenter
             AnchorSideRight.Control = btnMajorGridColor
-            Left = 66
+            Left = 63
             Height = 25
             Top = 8
-            Width = 111
+            Width = 93
             Anchors = [akTop, akLeft, akRight]
             BorderSpacing.Left = 5
             BorderWidth = 2
@@ -3981,7 +3981,7 @@ object DigitMainForm: TDigitMainForm
             AnchorSideTop.Side = asrCenter
             AnchorSideRight.Control = sbGrid
             AnchorSideRight.Side = asrBottom
-            Left = 177
+            Left = 156
             Height = 25
             Top = 8
             Width = 30
@@ -4000,7 +4000,7 @@ object DigitMainForm: TDigitMainForm
             Left = 0
             Height = 13
             Top = 41
-            Width = 61
+            Width = 59
             BorderSpacing.Top = 14
             Caption = 'Minor grid:'
             Font.Color = clBlack
@@ -4015,10 +4015,10 @@ object DigitMainForm: TDigitMainForm
             AnchorSideTop.Control = lblMinorGrid
             AnchorSideTop.Side = asrCenter
             AnchorSideRight.Control = btnMinorGridColor
-            Left = 66
+            Left = 64
             Height = 25
             Top = 35
-            Width = 111
+            Width = 92
             Anchors = [akTop, akLeft, akRight]
             BorderSpacing.Left = 5
             BorderWidth = 2
@@ -4035,7 +4035,7 @@ object DigitMainForm: TDigitMainForm
             AnchorSideTop.Side = asrCenter
             AnchorSideRight.Control = sbGrid
             AnchorSideRight.Side = asrBottom
-            Left = 177
+            Left = 156
             Height = 25
             Top = 35
             Width = 30
@@ -4054,7 +4054,7 @@ object DigitMainForm: TDigitMainForm
             Left = 0
             Height = 13
             Top = 68
-            Width = 71
+            Width = 66
             BorderSpacing.Top = 14
             Caption = 'Background:'
             Font.Color = clBlack
@@ -4069,10 +4069,10 @@ object DigitMainForm: TDigitMainForm
             AnchorSideTop.Control = lblBackground
             AnchorSideTop.Side = asrCenter
             AnchorSideRight.Control = btnMinorGridColor
-            Left = 76
+            Left = 71
             Height = 25
             Top = 62
-            Width = 101
+            Width = 85
             Anchors = [akTop, akLeft, akRight]
             BorderSpacing.Left = 5
             BorderSpacing.Top = 3
@@ -4090,7 +4090,7 @@ object DigitMainForm: TDigitMainForm
             AnchorSideTop.Side = asrCenter
             AnchorSideRight.Control = sbGrid
             AnchorSideRight.Side = asrBottom
-            Left = 177
+            Left = 156
             Height = 25
             Top = 62
             Width = 30
@@ -4109,7 +4109,7 @@ object DigitMainForm: TDigitMainForm
             Left = 0
             Height = 13
             Top = 93
-            Width = 59
+            Width = 52
             BorderSpacing.Top = 12
             Caption = 'Tolerance:'
             Font.Color = clBlack
@@ -4125,10 +4125,10 @@ object DigitMainForm: TDigitMainForm
             AnchorSideTop.Side = asrCenter
             AnchorSideRight.Control = sbGrid
             AnchorSideRight.Side = asrBottom
-            Left = 64
+            Left = 57
             Height = 22
             Top = 88
-            Width = 143
+            Width = 129
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -4210,7 +4210,7 @@ object DigitMainForm: TDigitMainForm
             Left = 0
             Height = 13
             Top = 118
-            Width = 60
+            Width = 55
             BorderSpacing.Top = 12
             Caption = 'Threshold:'
             Font.Color = clBlack
@@ -4226,10 +4226,10 @@ object DigitMainForm: TDigitMainForm
             AnchorSideTop.Side = asrCenter
             AnchorSideRight.Control = sbGrid
             AnchorSideRight.Side = asrBottom
-            Left = 65
+            Left = 60
             Height = 22
             Top = 113
-            Width = 142
+            Width = 126
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -4310,10 +4310,10 @@ object DigitMainForm: TDigitMainForm
             AnchorSideTop.Side = asrBottom
             AnchorSideRight.Control = sbGrid
             AnchorSideRight.Side = asrBottom
-            Left = 65
-            Height = 18
+            Left = 60
+            Height = 17
             Top = 137
-            Width = 142
+            Width = 126
             Anchors = [akTop, akLeft, akRight]
             BorderSpacing.Top = 2
             BorderSpacing.Right = 5
@@ -4332,8 +4332,8 @@ object DigitMainForm: TDigitMainForm
             AnchorSideTop.Side = asrCenter
             Left = 0
             Height = 13
-            Top = 162
-            Width = 59
+            Top = 161
+            Width = 53
             BorderSpacing.Top = 12
             Caption = 'Mask size:'
             Font.Color = clBlack
@@ -4349,10 +4349,10 @@ object DigitMainForm: TDigitMainForm
             AnchorSideTop.Side = asrBottom
             AnchorSideRight.Control = sbGrid
             AnchorSideRight.Side = asrBottom
-            Left = 64
+            Left = 58
             Height = 22
-            Top = 157
-            Width = 143
+            Top = 156
+            Width = 128
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -4434,19 +4434,19 @@ object DigitMainForm: TDigitMainForm
   end
   object LeftSplitter: TSplitter
     Left = 220
-    Height = 520
+    Height = 515
     Top = 40
     Width = 5
     MinSize = 150
   end
   object pnlData: TPanel
     Left = 726
-    Height = 520
+    Height = 515
     Top = 40
     Width = 163
     Align = alRight
     BevelOuter = bvNone
-    ClientHeight = 520
+    ClientHeight = 515
     ClientWidth = 163
     Font.Color = clBlack
     Font.Height = -11
@@ -4461,8 +4461,8 @@ object DigitMainForm: TDigitMainForm
       Width = 163
       Align = alTop
       Caption = 'Smooth'
-      ClientHeight = 54
-      ClientWidth = 161
+      ClientHeight = 51
+      ClientWidth = 159
       Font.Color = clBlack
       Font.Height = -11
       Font.Name = 'Default'
@@ -4474,8 +4474,8 @@ object DigitMainForm: TDigitMainForm
         AnchorSideTop.Control = seSGKernel
         AnchorSideTop.Side = asrCenter
         Left = 2
-        Height = 14
-        Top = 7
+        Height = 13
+        Top = 6
         Width = 35
         BorderSpacing.Left = 2
         Caption = 'Kernel:'
@@ -4492,9 +4492,9 @@ object DigitMainForm: TDigitMainForm
         AnchorSideRight.Control = gbSmooth
         AnchorSideRight.Side = asrBottom
         Left = 39
-        Height = 25
+        Height = 21
         Top = 2
-        Width = 120
+        Width = 118
         Anchors = [akTop, akLeft, akRight]
         BorderSpacing.Left = 2
         BorderSpacing.Top = 2
@@ -4515,9 +4515,9 @@ object DigitMainForm: TDigitMainForm
         AnchorSideRight.Control = pnlData
         AnchorSideRight.Side = asrBottom
         Left = 2
-        Height = 14
-        Top = 34
-        Width = 39
+        Height = 13
+        Top = 29
+        Width = 40
         BorderSpacing.Left = 2
         BorderSpacing.Right = 2
         Caption = 'Degree:'
@@ -4534,10 +4534,10 @@ object DigitMainForm: TDigitMainForm
         AnchorSideTop.Side = asrBottom
         AnchorSideRight.Control = gbSmooth
         AnchorSideRight.Side = asrBottom
-        Left = 43
-        Height = 25
-        Top = 29
-        Width = 116
+        Left = 44
+        Height = 21
+        Top = 25
+        Width = 113
         Anchors = [akTop, akLeft, akRight]
         BorderSpacing.Left = 2
         BorderSpacing.Top = 2
@@ -4559,8 +4559,8 @@ object DigitMainForm: TDigitMainForm
       Width = 163
       Align = alTop
       Caption = 'Resample'
-      ClientHeight = 55
-      ClientWidth = 161
+      ClientHeight = 52
+      ClientWidth = 159
       Font.Color = clBlack
       Font.Height = -11
       Font.Name = 'Default'
@@ -4573,9 +4573,9 @@ object DigitMainForm: TDigitMainForm
         AnchorSideTop.Control = seInterpPoints
         AnchorSideTop.Side = asrCenter
         Left = 2
-        Height = 14
-        Top = 8
-        Width = 33
+        Height = 13
+        Top = 6
+        Width = 35
         BorderSpacing.Left = 2
         BorderSpacing.Top = 5
         Caption = 'Points:'
@@ -4591,10 +4591,10 @@ object DigitMainForm: TDigitMainForm
         AnchorSideTop.Control = gbResample
         AnchorSideRight.Control = gbResample
         AnchorSideRight.Side = asrBottom
-        Left = 37
-        Height = 26
+        Left = 39
+        Height = 21
         Top = 2
-        Width = 122
+        Width = 118
         Anchors = [akTop, akLeft, akRight]
         BorderSpacing.Left = 2
         BorderSpacing.Top = 2
@@ -4615,9 +4615,9 @@ object DigitMainForm: TDigitMainForm
         AnchorSideRight.Control = pnlData
         AnchorSideRight.Side = asrBottom
         Left = 2
-        Height = 14
-        Top = 36
-        Width = 10
+        Height = 13
+        Top = 29
+        Width = 9
         BorderSpacing.Left = 2
         BorderSpacing.Right = 2
         Caption = 'X:'
@@ -4632,9 +4632,9 @@ object DigitMainForm: TDigitMainForm
         AnchorSideLeft.Side = asrBottom
         AnchorSideTop.Control = seInterpPoints
         AnchorSideTop.Side = asrBottom
-        Left = 14
-        Height = 26
-        Top = 30
+        Left = 13
+        Height = 21
+        Top = 25
         Width = 71
         BorderSpacing.Left = 2
         BorderSpacing.Top = 2
@@ -4653,10 +4653,10 @@ object DigitMainForm: TDigitMainForm
         AnchorSideTop.Control = seXo
         AnchorSideTop.Side = asrCenter
         AnchorSideRight.Side = asrBottom
-        Left = 87
-        Height = 14
-        Top = 36
-        Width = 3
+        Left = 86
+        Height = 13
+        Top = 29
+        Width = 4
         BorderSpacing.Left = 2
         Caption = '-'
         Font.Color = clBlack
@@ -4673,9 +4673,9 @@ object DigitMainForm: TDigitMainForm
         AnchorSideRight.Control = gbResample
         AnchorSideRight.Side = asrBottom
         Left = 92
-        Height = 26
-        Top = 30
-        Width = 67
+        Height = 21
+        Top = 25
+        Width = 65
         Anchors = [akTop, akLeft, akRight]
         BorderSpacing.Left = 2
         BorderSpacing.Right = 2
@@ -4691,13 +4691,13 @@ object DigitMainForm: TDigitMainForm
     end
     object gbData: TGroupBox
       Left = 0
-      Height = 381
+      Height = 376
       Top = 139
       Width = 163
       Align = alClient
       Caption = 'Data'
-      ClientHeight = 354
-      ClientWidth = 153
+      ClientHeight = 358
+      ClientWidth = 159
       Font.Color = clBlack
       Font.Height = -11
       Font.Name = 'Default'
@@ -4706,9 +4706,9 @@ object DigitMainForm: TDigitMainForm
       TabOrder = 2
       object leData: TValueListEditor
         Left = 0
-        Height = 354
+        Height = 358
         Top = 0
-        Width = 161
+        Width = 159
         Align = alClient
         FixedCols = 0
         Font.Color = clBlack
@@ -4727,14 +4727,14 @@ object DigitMainForm: TDigitMainForm
         )
         ColWidths = (
           64
-          89
+          91
         )
       end
     end
   end
   object RightSplitter: TSplitter
     Left = 721
-    Height = 520
+    Height = 515
     Top = 40
     Width = 5
     Align = alRight
@@ -4743,8 +4743,8 @@ object DigitMainForm: TDigitMainForm
   end
   object StatusBar: TStatusBar
     Left = 0
-    Height = 18
-    Top = 560
+    Height = 23
+    Top = 555
     Width = 889
     AutoHint = True
     Panels = <    
@@ -4773,8 +4773,8 @@ object DigitMainForm: TDigitMainForm
     AnchorSideBottom.Control = StatusBar
     AnchorSideBottom.Side = asrBottom
     Left = 540
-    Height = 16
-    Top = 561
+    Height = 21
+    Top = 556
     Width = 170
     Anchors = [akTop, akLeft, akBottom]
     BorderSpacing.Top = 1
@@ -4787,18 +4787,18 @@ object DigitMainForm: TDigitMainForm
   end
   object MainPanel: TPanel
     Left = 225
-    Height = 520
+    Height = 515
     Top = 40
     Width = 496
     Align = alClient
     BevelOuter = bvNone
-    ClientHeight = 520
+    ClientHeight = 515
     ClientWidth = 496
     ParentBackground = False
     TabOrder = 7
     object PageControl: TPageControl
       Left = 0
-      Height = 480
+      Height = 475
       Top = 40
       Width = 496
       ActivePage = tsPicture
@@ -4813,25 +4813,25 @@ object DigitMainForm: TDigitMainForm
       TabPosition = tpBottom
       object tsPicture: TTabSheet
         Caption = 'Picture'
-        ClientHeight = 452
-        ClientWidth = 490
+        ClientHeight = 449
+        ClientWidth = 488
         Font.Color = clBlack
         Font.Height = -11
         Font.Name = 'Default'
         ParentFont = False
         object tcCurves: TTabControl
           Left = 0
-          Height = 452
+          Height = 449
           Top = 0
-          Width = 490
+          Width = 488
           OnChange = tcCurvesChange
           Align = alClient
           TabOrder = 0
           object ScrollBox: TScrollBox
             Left = 2
-            Height = 384
-            Top = 30
-            Width = 480
+            Height = 444
+            Top = 3
+            Width = 484
             HorzScrollBar.Page = 1
             VertScrollBar.Page = 1
             Align = alClient
@@ -4842,8 +4842,8 @@ object DigitMainForm: TDigitMainForm
       end
       object tsPlot: TTabSheet
         Caption = 'Plot'
-        ClientHeight = 452
-        ClientWidth = 490
+        ClientHeight = 449
+        ClientWidth = 488
         Font.Color = clBlack
         Font.Height = -11
         Font.Name = 'Default'
@@ -4851,9 +4851,9 @@ object DigitMainForm: TDigitMainForm
         ParentFont = False
         object MainPlot: TChart
           Left = 0
-          Height = 452
+          Height = 449
           Top = 0
-          Width = 490
+          Width = 488
           AxisList = <          
             item
               Grid.Style = psClear

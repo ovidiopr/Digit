@@ -968,18 +968,15 @@ end;
 procedure TDigitMainForm.EditIX1Change(Sender: TObject; AByUser: boolean);
 begin
   if AByUser then
-  begin
-    PlotImage.AxesPoint[Tag] := ImagePoint[Tag];
-  end;
+    with TBCTrackbarUpdown(Sender) do
+      PlotImage.AxesPoint[Tag] := ImagePoint[Tag];
 end;
 
 procedure TDigitMainForm.EditIY1Change(Sender: TObject; AByUser: boolean);
 begin
   if AByUser then
     with TBCTrackbarUpdown(Sender) do
-    begin
       PlotImage.AxesPoint[Tag] := ImagePoint[Tag];
-    end;
 end;
 
 procedure TDigitMainForm.EditPasteImageExecute(Sender: TObject);
@@ -1071,18 +1068,14 @@ procedure TDigitMainForm.EditVX1Change(Sender: TObject; AByUser: boolean);
 begin
   if AByUser then
     with TBCTrackbarUpdown(Sender) do
-    begin
       PlotImage.BoxVertex[Tag] := GetCurvePoint(Value, PlotImage.BoxVertex[Tag].Y);
-    end;
 end;
 
 procedure TDigitMainForm.EditVY1Change(Sender: TObject; AByUser: boolean);
 begin
   if AByUser then
     with TBCTrackbarUpdown(Sender) do
-    begin
       PlotImage.BoxVertex[Tag] := GetCurvePoint(PlotImage.BoxVertex[Tag].X, Value);
-    end;
 end;
 
 procedure TDigitMainForm.edtGridMaskChange(Sender: TObject; AByUser: boolean);
