@@ -81,6 +81,8 @@ type
 
   TMarkerList = specialize TFPGObjectList<TMarker>;
 
+  TShowProgressEvent = procedure(Sender: TObject; Progress: Cardinal) of Object;
+  THideProgressEvent = procedure(Sender: TObject) of Object;
   TSelectRegionEvent = procedure(Sender: TObject; RegionRect: TRect) of Object;
   TStateChangeEvent = procedure(Sender: TObject; NewState: TPlotImageState) of Object;
   TMarkerDraggedEvent = procedure(Sender: TObject; Marker: TMarker) of Object;
@@ -126,6 +128,8 @@ type
     FIsChanged: Boolean;
     FOnChange: TNotifyEvent;
 
+    FOnShowProgress: TShowProgressEvent;
+    FOnHideProgress: THideProgressEvent;
     FOnRegionSelected: TSelectRegionEvent;
     FOnStateChanged: TStateChangeEvent;
     FOnMarkerDragged: TMarkerDraggedEvent;
@@ -196,14 +200,13 @@ type
 
     procedure Reset;
 
-    procedure FindCurvePoints(ProgressBar: TProgressBar = nil);
+    procedure FindCurvePoints;
 
     function FindNextPoint(var Pv: TCurvePoint; Interval: Integer;
                            ScanX: Boolean = False): Boolean;
     procedure DigitizeSpectrum(Pi: TCurvePoint;
-                               ProgressBar: TProgressBar = nil;
                                FillCurvePoints: Boolean = True); overload;
-    procedure DigitizeSpectrum(ProgressBar: TProgressBar = nil); overload;
+    procedure DigitizeSpectrum; overload;
 
     procedure DigitizeMarkers;
 
@@ -214,8 +217,8 @@ type
     procedure FillIsland(Xi, Yi: Double; var Island: TIsland;
                          JustInY: Boolean = True;
                          MaxPoints: Integer = 1000); overload;
-    procedure AdjustCurve(ProgressBar: TProgressBar = nil);
-    procedure ConvertCurveToSymbols(ProgressBar: TProgressBar = nil);
+    procedure AdjustCurve;
+    procedure ConvertCurveToSymbols;
 
     function ConvertCoords(p: TCurvePoint): TCurvePoint; overload;
     function ConvertCoords(X, Y: Double): TCurvePoint; overload;
@@ -323,6 +326,8 @@ type
     property AllCurvePoints: TIsland read FAllCurvePoints;
   published
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    property OnShowProgress: TShowProgressEvent read FOnShowProgress write FOnShowProgress;
+    property OnHideProgress: THideProgressEvent read FOnHideProgress write FOnHideProgress;
     property OnRegionSelected: TSelectRegionEvent read FOnRegionSelected write FOnRegionSelected;
     property OnStateChanged: TStateChangeEvent read FOnStateChanged write FOnStateChanged;
     property OnMarkerDragged: TMarkerDraggedEvent read FOnMarkerDragged write FOnMarkerDragged;
@@ -1283,7 +1288,7 @@ begin
   FIsChanged := False;
 end;
 
-procedure TPlotImage.FindCurvePoints(ProgressBar: TProgressBar = nil);
+procedure TPlotImage.FindCurvePoints;
 var
   // Maximum difference allowed (in shadows of grey)
   Tolerance: Integer;
@@ -1293,11 +1298,9 @@ var
   C1: LongInt;
   R1, G1, B1: Byte;
 begin
-  if Assigned(ProgressBar) then
-  begin
-    ProgressBar.Visible := True;
-    ProgressBar.Position := 0;
-  end;
+  // Notify the parent that must show the progress bar
+  if Assigned(OnShowProgress) then
+    OnShowProgress(Self, 0);
 
   Tolerance := DigitCurve.Tolerance;
   C1 := ColorToRGB(DigitCurve.Color);
@@ -1329,17 +1332,19 @@ begin
       inc(p1);
       inc(p2);
 
-      if Assigned(ProgressBar) then
-        ProgressBar.Position := Round(100*(j*PlotImg.Width + i)/
-                                      (PlotImg.Width*PlotImg.Height));
+      // Notify the parent that must update the progress bar
+      if Assigned(OnShowProgress) then
+        OnShowProgress(Self, Round(100*(j*PlotImg.Width + i)/
+                                   (PlotImg.Width*PlotImg.Height)));
 
       Application.ProcessMessages;
     end;
   end;
   //AllCurvePoints.SortCurve;
 
-  if Assigned(ProgressBar) then
-    ProgressBar.Visible := False;
+  // Notify the parent that must hide the progress bar
+  if Assigned(OnHideProgress) then
+    OnHideProgress(Self);
 end;
 
 //function TPlotImage.FindNextPoint(var Pv: TCurvePoint; Interval: Integer;
@@ -1697,7 +1702,6 @@ end;
 //end;
 
 procedure TPlotImage.DigitizeSpectrum(Pi: TCurvePoint;
-                                      ProgressBar: TProgressBar = nil;
                                       FillCurvePoints: Boolean = True);
 var
   i : Integer;
@@ -1735,16 +1739,14 @@ end;
 
 begin
   if FillCurvePoints then
-    FindCurvePoints(ProgressBar);
+    FindCurvePoints;
 
   PixelStep := DigitCurve.Step;
   Interval := DigitCurve.Interval;
 
-  if Assigned(ProgressBar) then
-  begin
-    ProgressBar.Visible := True;
-    ProgressBar.Position := 0;
-  end;
+  // Notify the parent that must show the progress bar
+  if Assigned(OnShowProgress) then
+    OnShowProgress(Self, 0);
 
   DigitCurve.NextCurve(False);
   Curve.AddPoint(Pi);
@@ -1815,22 +1817,23 @@ begin
       Curve.AddPoint(Pi);
     end;
 
-    if Assigned(ProgressBar) then
+    // Notify the parent that must update the progress bar
+    if Assigned(OnShowProgress) then
     begin
       case ML.Count of
         0..2: begin
           if (Scale.CoordSystem = csCartesian) then
           begin
             if PixelStep > 0 then
-              ProgressBar.Position := Round(100*Pi.X/L)
+              OnShowProgress(Self, Round(100*Pi.X/L))
             else
-              ProgressBar.Position := Round(100*(1 - Pi.X/L));
+              OnShowProgress(Self, Round(100*(1 - Pi.X/L)));
           end
           else
-            ProgressBar.Position := Round(100*Abs(Delta)/360);
+            OnShowProgress(Self, Round(100*Abs(Delta)/360));
         end
         else
-          ProgressBar.Position := Round(i/(ML.Count - 1));
+          OnShowProgress(Self, Round(i/(ML.Count - 1)));
         end;
     end;
 
@@ -1839,19 +1842,20 @@ begin
         ((Scale.CoordSystem = csPolar) and (Abs(Delta) > 360)) or
         ((ML.Count > 2) and (i >= ML.Count - 1));
 
-  if Assigned(ProgressBar) then
-    ProgressBar.Visible := False;
+  // Notify the parent that must hide the progress bar
+  if Assigned(OnHideProgress) then
+    OnHideProgress(Self);
 
   SortCurve;
 
   IsChanged := True;
 end;
 
-procedure TPlotImage.DigitizeSpectrum(ProgressBar: TProgressBar = nil);
+procedure TPlotImage.DigitizeSpectrum;
 var
   Pi : TCurvePoint;
 begin
-  FindCurvePoints(ProgressBar);
+  FindCurvePoints;
 
   // Estimate the first point
   if (Markers.Count > 0) then
@@ -1879,7 +1883,7 @@ begin
   end;
 
 
-  DigitizeSpectrum(Pi, ProgressBar, False);
+  DigitizeSpectrum(Pi, False);
 end;
 
 procedure TPlotImage.DigitizeMarkers;
@@ -1889,6 +1893,7 @@ begin
   if (State = piSetCurve) and (Markers.Count > 0) then
   begin
     DigitCurve.NextCurve(False);
+    Curve.ShowAsSymbols := True;
 
     for i := 0 to Markers.Count - 1 do
       Curve.AddPoint(Markers[i].Position);
@@ -1932,7 +1937,7 @@ begin
   FillIsland(GetCurvePoint(Xi, Yi), Island, JustInY, MaxPoints);
 end;
 
-procedure TPlotImage.AdjustCurve(ProgressBar: TProgressBar = nil);
+procedure TPlotImage.AdjustCurve;
 var
   i: Integer;
   Pi: TCurvePoint;
@@ -1942,24 +1947,23 @@ begin
   // Only if there is a curve
   if HasPoints then
   begin
-    FindCurvePoints(ProgressBar);
+    FindCurvePoints;
     try
       NewPoints := TPointList.Create;
       NewPoints.Clear;
 
-      if Assigned(ProgressBar) then
-      begin
-        ProgressBar.Visible := True;
-        ProgressBar.Position := 0;
-      end;
+      // Notify the parent that must show the progress bar
+      if Assigned(OnShowProgress) then
+        OnShowProgress(Self, 0);
 
       Island := TIsland.Create;
       Island.Clear;
       for i := 0 to Curve.Count - 1 do
       begin
-        if Assigned(ProgressBar) then
+        // Notify the parent that must update the progress bar
+        if Assigned(OnShowProgress) then
         begin
-          ProgressBar.Position := Round(100*(i + 1)/Curve.Count);
+          OnShowProgress(Self, Round(100*(i + 1)/Curve.Count));
           Application.ProcessMessages;
         end;
 
@@ -1979,8 +1983,9 @@ begin
       for i := 0 to NewPoints.Count - 1 do
         Curve.AddPoint(NewPoints[i]);
 
-      if Assigned(ProgressBar) then
-        ProgressBar.Visible := False;
+      // Notify the parent that must hide the progress bar
+      if Assigned(OnHideProgress) then
+        OnHideProgress(Self);
     finally
       NewPoints.Free;
       Island.Free;
@@ -1990,7 +1995,7 @@ begin
   end;
 end;
 
-procedure TPlotImage.ConvertCurveToSymbols(ProgressBar: TProgressBar = nil);
+procedure TPlotImage.ConvertCurveToSymbols;
 var
   i: Integer;
   Pi: TCurvePoint;
@@ -2000,24 +2005,23 @@ begin
   // Only if there is a curve
   if HasPoints then
   begin
-    FindCurvePoints(ProgressBar);
+    FindCurvePoints;
     try
       NewPoints := TPointList.Create;
       NewPoints.Clear;
 
-      if Assigned(ProgressBar) then
-      begin
-        ProgressBar.Visible := True;
-        ProgressBar.Position := 0;
-      end;
+      // Notify the parent that must show the progress bar
+      if Assigned(OnShowProgress) then
+        OnShowProgress(Self, 0);
 
       Island := TIsland.Create;
       Island.Clear;
       for i := 0 to Curve.Count - 1 do
       begin
-        if Assigned(ProgressBar) then
+        // Notify the parent that must update the progress bar
+        if Assigned(OnShowProgress) then
         begin
-          ProgressBar.Position := Round(100*(i + 1)/Curve.Count);
+          OnShowProgress(Self, Round(100*(i + 1)/Curve.Count));
           Application.ProcessMessages;
         end;
 
@@ -2036,8 +2040,9 @@ begin
       for i := 0 to NewPoints.Count - 1 do
         Curve.AddPoint(NewPoints[i]);
 
-      if Assigned(ProgressBar) then
-        ProgressBar.Visible := False;
+      // Notify the parent that must hide the progress bar
+      if Assigned(OnHideProgress) then
+        OnHideProgress(Self);
     finally
       NewPoints.Free;
       Island.Free;

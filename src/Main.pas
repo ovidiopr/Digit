@@ -25,6 +25,7 @@ type
   TDigitMainForm = class(TForm)
     DigitizeItem: TMenuItem;
     Interpolate: TMenuItem;
+    ToolDigitMarkersItem: TMenuItem;
     ToolMarkers: TAction;
     chbRebuildCurve: TCheckBox;
     EditPasteImage: TAction;
@@ -148,7 +149,7 @@ type
     MainPanel: TPanel;
     PageControl: TPageControl;
     pcInput: TPageControl;
-    DigitPopupMenu2: TPopupMenu;
+    DigitizeMenu: TPopupMenu;
     rgDirection: TRadioGroup;
     ScrollBox: TScrollBox;
     sbScale: TScrollBox;
@@ -363,6 +364,8 @@ type
     procedure PlotImageMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure PlotImageChange(Sender: TObject);
+    procedure PlotImageShowProgress(Sender: TObject; Progress: Cardinal);
+    procedure PlotImageHideProgress(Sender: TObject);
     procedure PlotImageRegionSelected(Sender: TObject; RegionRect: TRect);
     procedure PlotImageStateChanged(Sender: TObject; NewState: TPlotImageState);
     procedure PlotImageMarkerDragged(Sender: TObject; Marker: TMarker);
@@ -876,7 +879,7 @@ begin
   begin
     GUIToCurve;
 
-    PlotImage.DigitizeSpectrum(TmpPoint, ProgressBar);
+    PlotImage.DigitizeSpectrum(TmpPoint);
 
     CurveToGUI;
   end;
@@ -1223,6 +1226,8 @@ begin
     OnMouseUp := @PlotImageMouseUp;
     OnMouseLeave := @PlotImageMouseLeave;
     OnChange := @PlotImageChange;
+    OnShowProgress := @PlotImageShowProgress;
+    OnHideProgress := @PlotImageHideProgress;
     OnRegionSelected := @PlotImageRegionSelected;
     OnStateChanged := @PlotImageStateChanged;
     OnMarkerDragged := @PlotImageMarkerDragged;
@@ -2052,6 +2057,17 @@ begin
   IsSaved := False;
 end;
 
+procedure TDigitMainForm.PlotImageShowProgress(Sender: TObject; Progress: Cardinal);
+begin
+  ProgressBar.Visible := True;
+  ProgressBar.Position := Progress;
+end;
+
+procedure TDigitMainForm.PlotImageHideProgress(Sender: TObject);
+begin
+  ProgressBar.Visible := False;
+end;
+
 procedure TDigitMainForm.PlotImageRegionSelected(Sender: TObject; RegionRect: TRect);
 begin
   case MouseMode of
@@ -2300,7 +2316,7 @@ end;
 procedure TDigitMainForm.ToolAdjustCurveExecute(Sender: TObject);
 begin
   GUIToCurve;
-  PlotImage.AdjustCurve(ProgressBar);
+  PlotImage.AdjustCurve;
   PlotImage.Invalidate;
   CurveToGUI;
 end;
@@ -2308,7 +2324,7 @@ end;
 procedure TDigitMainForm.ToolConvertToSymbolsExecute(Sender: TObject);
 begin
   GUIToCurve;
-  PlotImage.ConvertCurveToSymbols(ProgressBar);
+  PlotImage.ConvertCurveToSymbols;
   CurveToGUI;
 end;
 
@@ -2355,7 +2371,7 @@ procedure TDigitMainForm.ToolDigitExecute(Sender: TObject);
 begin
   GUIToCurve;
   //Digitize curve
-  PlotImage.DigitizeSpectrum(ProgressBar);
+  PlotImage.DigitizeSpectrum;
   CurveToGUI;
 end;
 
