@@ -12,6 +12,8 @@ const
   HistItems = 20;
 
 type
+  TInterpolation = (itpBSpline, itpSpline);
+
   TIntegerList = specialize TFPGList<Integer>;
   TFloatList = specialize TFPGList<Double>;
 
@@ -108,13 +110,13 @@ type
     {Interpolates new points using B-Splines:
         @param(n: Number of points.)
     }
-    procedure Interpolate(n: Integer); overload;
+    procedure Interpolate(n: Integer; IntType: TInterpolation = itpBSpline); overload;
     {Interpolates new points using B-Splines:
         @param(Xo: Lower limit.)
         @param(Xf: Upper limit.)
         @param(n: Number of points.)
     }
-    procedure Interpolate(Xo, Xf: Double; n: Integer); overload;
+    procedure Interpolate(Xo, Xf: Double; n: Integer; IntType: TInterpolation = itpBSpline); overload;
 
     {Number of points in the curve}
     property Count: Integer read GetCount;
@@ -605,13 +607,13 @@ begin
   end;
 end;
 
-procedure TCurve.Interpolate(n: Integer);
+procedure TCurve.Interpolate(n: Integer; IntType: TInterpolation = itpBSpline);
 begin
   if (n > 2) then
-    Interpolate(GetMinX, GetMaxX, n)
+    Interpolate(GetMinX, GetMaxX, n, IntType)
 end;
 
-procedure TCurve.Interpolate(Xo, Xf: Double; n: Integer);
+procedure TCurve.Interpolate(Xo, Xf: Double; n: Integer; IntType: TInterpolation = itpBSpline);
 const
  Degree = 3;
 var
@@ -639,7 +641,14 @@ begin
     for i := 0 to n - 1 do
     begin
       Xint := Xo + i*dx;
-      Yint :=  BSpline(Pnts, Degree, Xint);
+
+      case IntType of
+        itpBSpline: Yint :=  BSpline(Pnts, Degree, Xint);
+        itpSpline: Yint :=  Spline(Pnts, Degree, Xint);
+        else
+          Yint :=  BSpline(Pnts, Degree, Xint);
+      end;
+
       AddPoint(Xint, Yint);
     end;
   end;

@@ -250,10 +250,10 @@ type
     procedure SortCurve(Index: Integer); overload;
     procedure Smooth(k, d: Integer; Index: Integer); overload;
     procedure Smooth(k, d: Integer; AllCurves: Boolean = False); overload;
-    procedure Interpolate(n: Integer; Index: Integer); overload;
-    procedure Interpolate(n: Integer; AllCurves: Boolean = False); overload;
-    procedure Interpolate(Xo, Xf: Double; n: Integer; Index: Integer); overload;
-    procedure Interpolate(Xo, Xf: Double; n: Integer; AllCurves: Boolean = False); overload;
+    procedure Interpolate(n: Integer; Index: Integer; IntType: TInterpolation = itpBSpline); overload;
+    procedure Interpolate(n: Integer; AllCurves: Boolean = False; IntType: TInterpolation = itpBSpline); overload;
+    procedure Interpolate(Xo, Xf: Double; n: Integer; Index: Integer; IntType: TInterpolation = itpBSpline); overload;
+    procedure Interpolate(Xo, Xf: Double; n: Integer; AllCurves: Boolean = False; IntType: TInterpolation = itpBSpline); overload;
     procedure CorrectCurve(Po, Pf: TPoint; IsStep: Boolean = True); overload;
     procedure CorrectCurve(Po, Pf: TCurvePoint; IsStep: Boolean = True); overload;
     procedure CorrectCurve(Region: TRect; IsStep: Boolean = True); overload;
@@ -2490,6 +2490,7 @@ var
   Marker, HitMarker: TMarker;
 begin
   inherited MouseDown(Button, Shift, X, Y);
+
   if Button = mbLeft then
   begin
     HitMarker := nil;
@@ -2637,8 +2638,36 @@ var
   i: Integer;
 begin
   if not Dragging then
+    inherited MouseUp(Button, Shift, X, Y);
+
+  if Button = mbLeft then
   begin
-    if Button = mbLeft then
+    if Dragging then
+    begin
+      if (State = piSetScale) and Assigned(FClickedMarker) then
+        for i := 1 to 3 do
+          if (FClickedMarker = AxesMarkers[i]) then
+            Scale.ImagePoint[i] := FClickedMarker.Position;
+
+      if Assigned(OnMarkerDragged) and Assigned(FClickedMarker) then
+      begin
+        // Notify that neighboring markers have moved
+        if (State = piSetPlotBox) and (ssShift in Shift) then
+          for i := 1 to PlotBox.NumVertices do
+            if (FClickedMarker = BoxMarkers[i]) then
+            begin
+              OnMarkerDragged(Self, BoxMarkers[xm[i]]);
+              OnMarkerDragged(Self, BoxMarkers[ym[i]]);
+            end;
+        // Notify that the marker has been dragged
+        OnMarkerDragged(Self, FClickedMarker);
+      end;
+
+      Dragging := False;
+
+      IsChanged := True;
+    end
+    else
     begin
       if SelectingRegion and (State = piSetCurve) then
       begin
@@ -2652,46 +2681,14 @@ begin
         SelectingRegion := False;
         UpdateRegion;
       end;
-    end;
 
-    inherited MouseUp(Button, Shift, X, Y);
-  end;
-
-  if Button = mbLeft then
-  begin
-    if Dragging then
-    begin
-      if (State = piSetScale) and Assigned(FClickedMarker) then
-        for i := 1 to 3 do
-          if (FClickedMarker = AxesMarkers[i]) then
-            Scale.ImagePoint[i] := FClickedMarker.Position;
-
-      Dragging := False;
-
-      // Notify the parent that the marker has been dragged
-      if Assigned(OnMarkerDragged) and Assigned(FClickedMarker) then
-      begin
-        OnMarkerDragged(Self, FClickedMarker);
-        // Notify that neighboring markers have also moved
-        if (State = piSetPlotBox) and (ssShift in Shift) then
-          for i := 1 to PlotBox.NumVertices do
-            if (FClickedMarker = BoxMarkers[i]) then
-            begin
-              OnMarkerDragged(Self, BoxMarkers[xm[i]]);
-              OnMarkerDragged(Self, BoxMarkers[ym[i]]);
-            end;
-      end;
-
-      IsChanged := True;
-    end
-    else
-    begin
       if Assigned(FClickedMarker) then
       begin
         Markers.Move(Markers.IndexOf(FClickedMarker), 0);
         UpdateMarker(FClickedMarker);
       end;
     end;
+
     FClickedMarker := nil;
   end;
 end;
@@ -3140,7 +3137,7 @@ begin
       Smooth(k, d, i);
 end;
 
-procedure TPlotImage.Interpolate(n: Integer; Index: Integer);
+procedure TPlotImage.Interpolate(n: Integer; Index: Integer; IntType: TInterpolation = itpBSpline);
 var
   i: Integer;
   TmpCurve: TCurve;
@@ -3149,12 +3146,13 @@ begin
     TmpCurve := PlotCurves[Index];
 
     TmpCurve.SortCurve;
-    TmpCurve.Interpolate(n);
+    TmpCurve.Interpolate(n, IntType);
 
     if (Index = CurveIndex) then
       EraseCurve(DigitCurve);
 
     FCurves[Index].NextCurve(False);
+    FCurves[Index].ShowAsSymbols := False;
     for i := 0 to TmpCurve.Count - 1 do
       FCurves[Index].Curve.AddPoint(FScale.FromPlotToImg(TmpCurve.Point[i]));
 
@@ -3167,18 +3165,18 @@ begin
   end;
 end;
 
-procedure TPlotImage.Interpolate(n: Integer; AllCurves: Boolean = False);
+procedure TPlotImage.Interpolate(n: Integer; AllCurves: Boolean = False; IntType: TInterpolation = itpBSpline);
 var
   i: Integer;
 begin
   if not AllCurves then
-    Interpolate(n, CurveIndex)
+    Interpolate(n, CurveIndex, IntType)
   else
     for i := 0 to Count - 1 do
-      Interpolate(n, i);
+      Interpolate(n, i, IntType);
 end;
 
-procedure TPlotImage.Interpolate(Xo, Xf: Double; n: Integer; Index: Integer);
+procedure TPlotImage.Interpolate(Xo, Xf: Double; n: Integer; Index: Integer; IntType: TInterpolation = itpBSpline);
 var
   i: Integer;
   TmpCurve: TCurve;
@@ -3187,12 +3185,13 @@ begin
     TmpCurve := PlotCurves[Index];
 
     TmpCurve.SortCurve;
-    TmpCurve.Interpolate(Xo, Xf, n);
+    TmpCurve.Interpolate(Xo, Xf, n, IntType);
 
     if (Index = CurveIndex) then
       EraseCurve(DigitCurve);
 
     FCurves[Index].NextCurve(False);
+    FCurves[Index].ShowAsSymbols := False;
     for i := 0 to TmpCurve.Count - 1 do
       FCurves[Index].Curve.AddPoint(FScale.FromPlotToImg(TmpCurve.Point[i]));
 
@@ -3205,15 +3204,15 @@ begin
   end;
 end;
 
-procedure TPlotImage.Interpolate(Xo, Xf: Double; n: Integer; AllCurves: Boolean = False);
+procedure TPlotImage.Interpolate(Xo, Xf: Double; n: Integer; AllCurves: Boolean = False; IntType: TInterpolation = itpBSpline);
 var
   i: Integer;
 begin
   if not AllCurves then
-    Interpolate(Xo, Xf, n, CurveIndex)
+    Interpolate(Xo, Xf, n, CurveIndex,IntType)
   else
     for i := 0 to Count - 1 do
-      Interpolate(Xo, Xf, n, i);
+      Interpolate(Xo, Xf, n, i, IntType);
 end;
 
 procedure TPlotImage.CorrectCurve(Po, Pf: TPoint; IsStep: Boolean = True);
@@ -3698,6 +3697,9 @@ begin
 
       State := piSetCurve;
     end;
+
+    // Update markers in plot
+    UpdateMarkersInImage;
 
     Result := True;
   finally

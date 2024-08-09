@@ -23,8 +23,11 @@ type
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
+    ToolSpline: TAction;
     DigitizeItem: TMenuItem;
     Interpolate: TMenuItem;
+    DigitMainItem: TMenuItem;
+    btnSpline: TToolButton;
     ToolDigitMarkersItem: TMenuItem;
     ToolMarkers: TAction;
     chbRebuildCurve: TCheckBox;
@@ -185,7 +188,7 @@ type
     btnColorMode: TToolButton;
     btnCursorMode: TToolButton;
     btnMarkersMode: TToolButton;
-    btnResample: TToolButton;
+    btnBSpline: TToolButton;
     btnSegmentMode: TToolButton;
     btnSmooth: TToolButton;
     btnStepsMode: TToolButton;
@@ -237,7 +240,7 @@ type
     OpenPictureDlg: TOpenPictureDialog;
     ProgressBar: TProgressBar;
     StatusBar: TStatusBar;
-    ToolResample: TAction;
+    ToolBSpline: TAction;
     seInterpPoints: TSpinEdit;
     seSGKernel: TSpinEdit;
     gbSmooth: TGroupBox;
@@ -396,7 +399,7 @@ type
     procedure ToolCurveRightExecute(Sender: TObject);
     procedure ToolDigitExecute(Sender: TObject);
     procedure ToolMarkersExecute(Sender: TObject);
-    procedure ToolResampleExecute(Sender: TObject);
+    procedure ToolBSplineExecute(Sender: TObject);
     procedure ToolScaleOptionsExecute(Sender: TObject);
     procedure ToolSmoothExecute(Sender: TObject);
     procedure ToolCurveUpExecute(Sender: TObject);
@@ -404,6 +407,7 @@ type
     procedure ToolClearExecute(Sender: TObject);
     procedure EditUndoExecute(Sender: TObject);
     procedure EditRedoExecute(Sender: TObject);
+    procedure ToolSplineExecute(Sender: TObject);
   private
     { Private declarations }
     FIsSaved: Boolean;
@@ -558,7 +562,7 @@ begin
     ToolDigit.Enabled := Scale.IsValid and ColorIsSet and (State = piSetCurve);
     ToolMarkers.Enabled := ToolDigit.Enabled and (Markers.Count > 0);
     ToolAdjustCurve.Enabled := (State = piSetCurve) and HasPoints;
-    ToolResample.Enabled := (State = piSetCurve) and HasPoints;
+    ToolBSpline.Enabled := (State = piSetCurve) and HasPoints;
     ToolSmooth.Enabled := (State = piSetCurve) and HasPoints;
     ToolConvertToSymbols.Enabled := (State = piSetCurve) and HasPoints;
     ToolCurveUp.Enabled := (State = piSetCurve) and HasPoints;
@@ -2383,7 +2387,7 @@ begin
   CurveToGUI;
 end;
 
-procedure TDigitMainForm.ToolResampleExecute(Sender: TObject);
+procedure TDigitMainForm.ToolBSplineExecute(Sender: TObject);
 begin
   GUIToCurve;
   //Replace the curve by interpolated values
@@ -2496,6 +2500,15 @@ begin
   PlotImage.RedoCurveChanges;
   CurveToGUI;
 end;
+
+procedure TDigitMainForm.ToolSplineExecute(Sender: TObject);
+begin
+  GUIToCurve;
+  //Replace the curve by interpolated values
+  PlotImage.Interpolate(seXo.Value, seXf.Value, seInterpPoints.Value, False, itpSpline);
+  CurveToGUI;
+end;
+
 //End of the action functions
 
 initialization

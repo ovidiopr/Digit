@@ -15,6 +15,7 @@ type
 function AreSimilar(R1, G1, B1, R2, G2, B2, Tolerance: Byte): Boolean; overload;
 function AreSimilar(R1, G1, B1: Byte; C2: LongWord; Tolerance: Byte): Boolean; overload;
 function AreSimilar(C1, C2: LongWord; Tolerance: Byte): Boolean; overload;
+function Spline(Points: Array of TCurvePoint; Degree: Integer; Xval: Double): Double;
 function BSpline(Points: Array of TCurvePoint; Degree: Integer; Xval: Double): Double;
 procedure SavitzkyGolay(Kernel, Degree, Deriv: Integer; var Points: Array of TCurvePoint);
 
@@ -56,6 +57,53 @@ begin
          IsNan(Points[EndIdx + 1].y)) do
     inc(EndIdx);
   Result := StartIdx <= High(Points);
+end;
+
+function Spline(Points: Array of TCurvePoint; Degree: Integer; Xval: Double): Double;
+var
+  i, j, n, d: Integer;
+  dup: Boolean;
+  term: ArbInt;
+  xi, yi, d2s: Array of ArbFloat;
+begin
+  if (Length(Points) > 0) then
+  begin
+    try
+      n := Length(Points) - 1;
+      SetLength(xi, n + 1);
+      SetLength(yi, n + 1);
+      SetLength(d2s, n - 1);
+
+      d := 0;
+      for i := 0 to n do
+      begin
+        dup := False;
+        for j := 0 to i - 1 do
+          if xi[j] = Points[i].X then
+            dup := True;
+
+        if dup then
+          inc(d)
+        else
+        begin
+          xi[i - d] := Points[i].X;
+          yi[i - d] := Points[i].Y;
+        end;
+      end;
+
+      n := n - d;
+
+      // Interpolation parameters
+      ipfisn(n, xi[0], yi[0], d2s[0], term);
+
+      // Calculate interpolation
+      Result := ipfspn(n, xi[0], yi[0], d2s[0], Xval, term);
+    finally
+      SetLength(xi, 0);
+      SetLength(yi, 0);
+      SetLength(d2s, 0);
+    end;
+  end;
 end;
 
 // This function has been adapted from the function 'TBSplineSeries.Calculate'
@@ -243,7 +291,7 @@ begin
     SetLength(tA, Order, Kernel);
     SetLength(tAA, Order, Order);
 
-    // Do the smoothing thing
+    // Do the smoothing
     for i := Low(Points) to High(Points) do
     begin
       // Build A and tA
