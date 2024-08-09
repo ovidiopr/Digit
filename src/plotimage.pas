@@ -2489,8 +2489,6 @@ var
   i: Integer;
   Marker, HitMarker: TMarker;
 begin
-  inherited MouseDown(Button, Shift, X, Y);
-
   if Button = mbLeft then
   begin
     HitMarker := nil;
@@ -2515,6 +2513,8 @@ begin
       FSelectionRect := TRect.Create(X, Y, X, Y);
     end;
   end;
+
+  inherited MouseDown(Button, Shift, X, Y);
 end;
 
 procedure TPlotImage.MouseMove(Shift: TShiftState; X, Y: Integer);
