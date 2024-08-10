@@ -2385,6 +2385,7 @@ end;
 
 procedure TPlotImage.RedrawMarkers;
 begin
+  UpdateMarkersInCurve;
   UpdateMarkersInImage;
 end;
 
