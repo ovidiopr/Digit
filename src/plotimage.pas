@@ -353,6 +353,8 @@ begin
   begin
     case Symbol of
       'x', 'X': begin
+        DrawLineAntialias(0, 0, Width - 1, Height - 1, InvertColor(Color), LineWith + 2);
+        DrawLineAntialias(0, Height - 1, Width - 1, 0, InvertColor(Color), LineWith + 2);
         DrawLineAntialias(0, 0, Width - 1, Height - 1, Color, LineWith);
         DrawLineAntialias(0, Height - 1, Width - 1, 0, Color, LineWith);
       end;
