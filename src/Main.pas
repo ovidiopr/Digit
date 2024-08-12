@@ -14,7 +14,7 @@ uses LCLIntf, LCLType, SysUtils, Classes, Graphics, Forms, Controls, Menus,
   StdCtrls, Dialogs, Buttons, ExtCtrls, ComCtrls, TATypes, TASeries, TAGraph,
   ClipBrd, ActnList, ValEdit, Spin, ExtDlgs, MaskEdit, BCTrackbarUpdown,
   FileUtil, restore, TAChartUtils, coordinates, curves, plotimage, uchartscale,
-  IniFiles, BGRABitmapTypes, GraphType;
+  IniFiles, BGRABitmapTypes, GraphType, Grids;
 
 type
   TMouseMode = (mdCursor, mdMarkers, mdColor, mdSteps, mdSegments,
@@ -355,6 +355,8 @@ type
     procedure GridShowHideExecute(Sender: TObject);
     procedure HelpAboutExecute(Sender: TObject);
     procedure FileExitExecute(Sender: TObject);
+    procedure leDataValidateEntry(Sender: TObject; aCol, aRow: Integer;
+      const OldValue: string; var NewValue: String);
     procedure ModeBackgroundColorExecute(Sender: TObject);
     procedure ModeMajorGridColorExecute(Sender: TObject);
     procedure ModeMinorGridColorExecute(Sender: TObject);
@@ -435,7 +437,8 @@ type
     function GetPlotPoint(Index: Integer): TCurvePoint;
 
     procedure SetDigitFileName(Value: TFileName);
-    procedure SetIsSaved(Value: Boolean);
+    procedure SetIsSaved(Value: Boolean); overload;
+    procedure SetIsSaved(Value, UpdateTable: Boolean); overload;
     procedure SetMouseMode(Value: TMouseMode);
     procedure SetCurveCount(Value: Integer);
     procedure SetManualZoom(Value: Boolean);
@@ -629,21 +632,24 @@ end;
 procedure TDigitMainForm.UpdateValues;
 var
   i: Integer;
-  PtCv: TCurve;
 begin
-  //Copy the values to the table
+  // Avoid loops
+  leData.OnValidateEntry := Nil;
+  leData.EditorMode:=False;
+
+  // Copy the values to the table
   leData.Strings.Clear;
-  if (PlotImage.Scale.IsValid and PlotImage.HasPoints) then
+  with PlotImage do
   begin
-    try
-      PtCv := PlotImage.PlotCurve;
-      for i := 0 to PtCv.Count - 1 do
-        leData.InsertRow(Format('%.5g', [PtCv.X[i]]), Format('%.5g', [PtCv.Y[i]]), True);
-    finally
-      PtCv.Free;
-    end;
+    if (Scale.IsValid and HasPoints) then
+      for i := 0 to NumPoints - 1 do
+        leData.InsertRow(Format('%.5g', [Point[i].X]),
+                         Format('%.5g', [Point[i].Y]), True);
   end;
-  leData.Row := 1;
+  leData.Row := 0;
+
+  // Restore data validation
+  leData.OnValidateEntry := @leDataValidateEntry;
 end;
 
 procedure TDigitMainForm.SavePlot(FName: TFileName; FType: Integer);
@@ -1372,6 +1378,36 @@ begin
   Close;
 end;
 
+procedure TDigitMainForm.leDataValidateEntry(Sender: TObject; aCol,
+  aRow: Integer; const OldValue: string; var NewValue: String);
+var
+  X, Y: Double;
+begin
+  if (aCol = 1) then
+  begin
+    if TryStrToFloat(NewValue, Y) then
+    begin
+      with leData do
+        if (PlotImage.NumPoints >= Row) and (NewValue <> OldValue) then
+        begin
+          X := PlotImage.Point[Row - 1].X;
+          PlotImage.Point[Row - 1] := GetCurvePoint(X, Y);
+
+          NewValue := Format('%.5g', [Y]);
+
+          // Inform that the curve changed, but don't update the table
+          SetIsSaved(False, False);
+        end;
+    end
+    else
+    begin
+      // If the value entered is not a float, then set the old value
+      NewValue := OldValue;
+      raise EAbort.Create('Invalid value.');
+    end;
+  end;
+end;
+
 procedure TDigitMainForm.ModeBackgroundColorExecute(Sender: TObject);
 begin
   MouseMode := mdBackgroundColor;
@@ -1642,6 +1678,11 @@ end;
 
 procedure TDigitMainForm.SetIsSaved(Value: Boolean);
 begin
+  SetIsSaved(Value, True)
+end;
+
+procedure TDigitMainForm.SetIsSaved(Value, UpdateTable: Boolean);
+begin
   if (FDigitFileName = '') then
     Caption := AppFullName
   else
@@ -1654,7 +1695,7 @@ begin
 
   CurveCount := PlotImage.Count;
 
-  UpdateView;
+  if UpdateTable then UpdateView;
   UpdateControls;
 end;
 

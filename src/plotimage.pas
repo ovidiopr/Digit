@@ -5,9 +5,9 @@ unit plotimage;
 interface
 
 uses {$ifdef windows}Windows,{$endif} Forms, Classes, Controls, Graphics,
-     ExtDlgs, Fgl, ComCtrls, SysUtils, DOM, XMLWrite, XMLRead, math, curves,
-     coordinates, Dialogs, Types, Base64, BGRABitmap, BGRABitmapTypes,
-     BGRAreadTiff;
+     ExtDlgs, Fgl, ComCtrls, SysUtils, DOM, XMLWrite, XMLRead, Dialogs, Types,
+     Base64, BGRABitmap, BGRABitmapTypes, BGRAreadTiff,
+     math, curves, coordinates;
 
 type
   TPlotImageState = (piSetCurve, piSetScale, piSetPlotBox, piSetGrid);
@@ -157,6 +157,9 @@ type
     function GetPlotCurves(Index: Integer): TCurve;
     function GetPlotCurve: TCurve;
 
+    function GetNumPoints: Integer;
+    function GetPoint(Index: Integer): TCurvePoint;
+
     function GetLeftMarker: TMarker;
     function GetRightMarker: TMarker;
     function GetTopMarker: TMarker;
@@ -182,6 +185,8 @@ type
 
     procedure SetCurveIndex(Value: Integer);
     procedure SetIsChanged(Value: Boolean);
+
+    procedure SetPoint(Index: Integer; const Value: TCurvePoint);
 
     procedure ClearMarkers;
     procedure UpdateMarkersInCurve;
@@ -314,6 +319,10 @@ type
     {Return the active curve converted to plot scale}
     property PlotCurve: TCurve read GetPlotCurve;
     property ImageIsLoaded: Boolean read FImageIsLoaded write FImageIsLoaded;
+
+    {Return the number of points in the active curve}
+    property NumPoints: Integer read GetNumPoints;
+    property Point[Index: Integer]: TCurvePoint read GetPoint write SetPoint;
 
     property Scale: TScale read FScale;
     property PlotBox: TPlotQuad read FPlotBox;
@@ -2746,6 +2755,11 @@ begin
   Result := FCurves.Count;
 end;
 
+function TPlotImage.GetNumPoints: Integer;
+begin
+  Result := DigitCurve.Curve.Count;
+end;
+
 function TPlotImage.GetCurve(Index: Integer): TDigitCurve;
 begin
   if (Index >= 0) and (Index < Count) then
@@ -2776,6 +2790,11 @@ end;
 function TPlotImage.GetPlotCurve: TCurve;
 begin
   Result := GetPlotCurves(CurveIndex);
+end;
+
+function TPlotImage.GetPoint(Index: Integer): TCurvePoint;
+begin
+  Result := FScale.FromImgToPlot(FCurves[CurveIndex].Curve.Point[Index]);
 end;
 
 function TPlotImage.GetDigitCurve: TDigitCurve;
@@ -2853,6 +2872,18 @@ begin
 
   if (Assigned(FOnChange) and FIsChanged) then
     FOnChange(Self);
+end;
+
+procedure TPlotImage.SetPoint(Index: Integer; const Value: TCurvePoint);
+begin
+  if (FScale.FromPlotToImg(Value) <> DigitCurve.Curve.Point[Index]) then
+  begin
+    EraseCurve(DigitCurve);
+    DigitCurve.Curve.Point[Index] := FScale.FromPlotToImg(Value);
+    DigitCurve.Draw(Canvas);
+
+    FIsChanged := True;
+  end;
 end;
 
 procedure TPlotImage.ClearMarkers;
@@ -3390,7 +3421,9 @@ begin
     ZoomImg.CanvasBGRA.CopyRect(TRect.Create(0, 0, Region.Width, Region.Height),
                                 WhiteBoard, Region);
 
-    BGRAReplace(ZoomImg, ZoomImg.Resample(w, h, rmSimpleStretch));
+    //BGRAReplace(ZoomImg, ZoomImg.Resample(w, h, rmSimpleStretch));
+    ZoomImg.ResampleFilter := rfSpline;
+    BGRAReplace(ZoomImg, ZoomImg.Resample(w, h, rmFineResample));
     ZoomImg.Draw(Result.Canvas, 0, 0, True);
   finally
     ZoomImg.Free;

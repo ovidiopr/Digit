@@ -1295,7 +1295,7 @@ object DigitMainForm: TDigitMainForm
       ShowHint = True
     end
     object sep04: TToolButton
-      Left = 673
+      Left = 677
       Height = 36
       Top = 2
       Caption = 'sep04'
@@ -1303,49 +1303,49 @@ object DigitMainForm: TDigitMainForm
       Style = tbsSeparator
     end
     object BtnUndo: TToolButton
-      Left = 681
+      Left = 685
       Top = 2
       Action = EditUndo
       ParentShowHint = False
       ShowHint = True
     end
     object BtnRedo: TToolButton
-      Left = 717
+      Left = 721
       Top = 2
       Action = EditRedo
       ParentShowHint = False
       ShowHint = True
     end
     object sep05: TToolButton
-      Left = 789
+      Left = 793
       Height = 36
       Top = 2
       Caption = 'sep05'
       Style = tbsSeparator
     end
     object btnAbout: TToolButton
-      Left = 841
+      Left = 845
       Top = 2
       Action = HelpAbout
       ParentShowHint = False
       ShowHint = True
     end
     object btnScaleOptions: TToolButton
-      Left = 797
+      Left = 801
       Top = 2
       Action = ToolScaleOptions
       ParentShowHint = False
       ShowHint = True
     end
     object sep06: TToolButton
-      Left = 833
+      Left = 837
       Height = 36
       Top = 2
       Caption = 'sep06'
       Style = tbsSeparator
     end
     object btnCopy: TToolButton
-      Left = 753
+      Left = 757
       Top = 2
       Action = EditCopyCurve
       ParentShowHint = False
@@ -1415,14 +1415,14 @@ object DigitMainForm: TDigitMainForm
       ShowHint = True
     end
     object btnSmooth: TToolButton
-      Left = 601
+      Left = 605
       Top = 2
       Action = ToolSmooth
       ParentShowHint = False
       ShowHint = True
     end
     object btnSymbols: TToolButton
-      Left = 637
+      Left = 641
       Top = 2
       Action = ToolConvertToSymbols
       ParentShowHint = False
@@ -2028,13 +2028,13 @@ object DigitMainForm: TDigitMainForm
           TabOrder = 0
           object gbCoord: TGroupBox
             Left = 0
-            Height = 47
+            Height = 40
             Top = 0
             Width = 197
             Align = alTop
             AutoSize = True
             Caption = 'Coordinates'
-            ClientHeight = 20
+            ClientHeight = 13
             ClientWidth = 187
             Font.Color = clBlack
             Font.Height = -11
@@ -2067,7 +2067,7 @@ object DigitMainForm: TDigitMainForm
           object gbX: TGroupBox
             Left = 0
             Height = 68
-            Top = 47
+            Top = 40
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2159,7 +2159,7 @@ object DigitMainForm: TDigitMainForm
           object gbY: TGroupBox
             Left = 0
             Height = 66
-            Top = 115
+            Top = 108
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2249,7 +2249,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint1: TGroupBox
             Left = 0
             Height = 88
-            Top = 181
+            Top = 174
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2518,7 +2518,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint2: TGroupBox
             Left = 0
             Height = 88
-            Top = 269
+            Top = 262
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2787,7 +2787,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint3: TGroupBox
             Left = 0
             Height = 88
-            Top = 357
+            Top = 350
             Width = 197
             Align = alTop
             AutoSize = True
@@ -4715,6 +4715,7 @@ object DigitMainForm: TDigitMainForm
         Top = 0
         Width = 153
         Align = alClient
+        AutoEdit = False
         FixedCols = 0
         Font.Color = clBlack
         Font.Height = -11
@@ -4722,7 +4723,8 @@ object DigitMainForm: TDigitMainForm
         ParentFont = False
         RowCount = 2
         TabOrder = 0
-        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goRowSelect, goAlwaysShowEditor, goThumbTracking]
+        OnValidateEntry = leDataValidateEntry
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing, goRowSelect, goThumbTracking]
         Strings.Strings = (
           ''
         )

@@ -281,7 +281,7 @@ begin
   FShowAsSymbols := False;
 end;
 
-destructor  TCurve.Destroy;
+destructor TCurve.Destroy;
 begin
   FPoints.Free;
   inherited;
