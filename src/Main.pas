@@ -23,11 +23,18 @@ type
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
-    ToolSpline: TAction;
+    ToolAdjustNoise: TAction;
+    BSplinesItem: TMenuItem;
+    btnAdjustNoise: TToolButton;
+    ToolSplinesItem: TMenuItem;
+    ToolBSplinesItem: TMenuItem;
+    ResampleMenu: TPopupMenu;
+    SplinesItem: TMenuItem;
+    ToolResample: TAction;
+    ToolSplines: TAction;
     DigitizeItem: TMenuItem;
     Interpolate: TMenuItem;
     DigitMainItem: TMenuItem;
-    btnSpline: TToolButton;
     ToolDigitMarkersItem: TMenuItem;
     ToolMarkers: TAction;
     chbRebuildCurve: TCheckBox;
@@ -240,7 +247,7 @@ type
     OpenPictureDlg: TOpenPictureDialog;
     ProgressBar: TProgressBar;
     StatusBar: TStatusBar;
-    ToolBSpline: TAction;
+    ToolBSplines: TAction;
     seInterpPoints: TSpinEdit;
     seSGKernel: TSpinEdit;
     gbSmooth: TGroupBox;
@@ -393,6 +400,7 @@ type
     procedure PlotScaleExecute(Sender: TObject);
     procedure tcCurvesChange(Sender: TObject);
     procedure ToolAdjustCurveExecute(Sender: TObject);
+    procedure ToolAdjustNoiseExecute(Sender: TObject);
     procedure ToolConvertToSymbolsExecute(Sender: TObject);
     procedure ToolCurveAddExecute(Sender: TObject);
     procedure ToolCurveDeleteExecute(Sender: TObject);
@@ -401,7 +409,8 @@ type
     procedure ToolCurveRightExecute(Sender: TObject);
     procedure ToolDigitExecute(Sender: TObject);
     procedure ToolMarkersExecute(Sender: TObject);
-    procedure ToolBSplineExecute(Sender: TObject);
+    procedure ToolBSplinesExecute(Sender: TObject);
+    procedure ToolResampleExecute(Sender: TObject);
     procedure ToolScaleOptionsExecute(Sender: TObject);
     procedure ToolSmoothExecute(Sender: TObject);
     procedure ToolCurveUpExecute(Sender: TObject);
@@ -409,7 +418,7 @@ type
     procedure ToolClearExecute(Sender: TObject);
     procedure EditUndoExecute(Sender: TObject);
     procedure EditRedoExecute(Sender: TObject);
-    procedure ToolSplineExecute(Sender: TObject);
+    procedure ToolSplinesExecute(Sender: TObject);
   private
     { Private declarations }
     FIsSaved: Boolean;
@@ -565,7 +574,10 @@ begin
     ToolDigit.Enabled := Scale.IsValid and ColorIsSet and (State = piSetCurve);
     ToolMarkers.Enabled := ToolDigit.Enabled and (Markers.Count > 0);
     ToolAdjustCurve.Enabled := (State = piSetCurve) and HasPoints;
-    ToolBSpline.Enabled := (State = piSetCurve) and HasPoints;
+    ToolAdjustNoise.Enabled := (State = piSetCurve) and HasPoints;
+    ToolResample.Enabled := (State = piSetCurve) and HasPoints;
+    ToolBSplines.Enabled := (State = piSetCurve) and HasPoints;
+    ToolSplines.Enabled := (State = piSetCurve) and HasPoints;
     ToolSmooth.Enabled := (State = piSetCurve) and HasPoints;
     ToolConvertToSymbols.Enabled := (State = piSetCurve) and HasPoints;
     ToolCurveUp.Enabled := (State = piSetCurve) and HasPoints;
@@ -2366,6 +2378,14 @@ begin
   CurveToGUI;
 end;
 
+procedure TDigitMainForm.ToolAdjustNoiseExecute(Sender: TObject);
+begin
+  GUIToCurve;
+  PlotImage.AdjustCurve(True);
+  PlotImage.Invalidate;
+  CurveToGUI;
+end;
+
 procedure TDigitMainForm.ToolConvertToSymbolsExecute(Sender: TObject);
 begin
   GUIToCurve;
@@ -2428,7 +2448,15 @@ begin
   CurveToGUI;
 end;
 
-procedure TDigitMainForm.ToolBSplineExecute(Sender: TObject);
+procedure TDigitMainForm.ToolBSplinesExecute(Sender: TObject);
+begin
+  GUIToCurve;
+  //Replace the curve by interpolated values
+  PlotImage.Interpolate(seXo.Value, seXf.Value, seInterpPoints.Value, False, itpBSpline);
+  CurveToGUI;
+end;
+
+procedure TDigitMainForm.ToolResampleExecute(Sender: TObject);
 begin
   GUIToCurve;
   //Replace the curve by interpolated values
@@ -2542,7 +2570,7 @@ begin
   CurveToGUI;
 end;
 
-procedure TDigitMainForm.ToolSplineExecute(Sender: TObject);
+procedure TDigitMainForm.ToolSplinesExecute(Sender: TObject);
 begin
   GUIToCurve;
   //Replace the curve by interpolated values

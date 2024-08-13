@@ -217,12 +217,16 @@ type
 
     procedure FillIsland(Pi: TCurvePoint; var Island: TIsland;
                          JustInY: Boolean = True;
+                         MoveUp: Boolean = True;
+                         MoveDown: Boolean = True;
                          MaxPoints: Integer = 1000;
                          FillCurvePoints: Boolean = True); overload;
     procedure FillIsland(Xi, Yi: Double; var Island: TIsland;
                          JustInY: Boolean = True;
+                         MoveUp: Boolean = True;
+                         MoveDown: Boolean = True;
                          MaxPoints: Integer = 1000); overload;
-    procedure AdjustCurve;
+    procedure AdjustCurve(Noisy: Boolean = False);
     procedure ConvertCurveToSymbols;
 
     function ConvertCoords(p: TCurvePoint): TCurvePoint; overload;
@@ -1917,6 +1921,8 @@ end;
 
 procedure TPlotImage.FillIsland(Pi: TCurvePoint; var Island: TIsland;
                                 JustInY: Boolean = True;
+                                MoveUp: Boolean = True;
+                                MoveDown: Boolean = True;
                                 MaxPoints: Integer = 1000;
                                 FillCurvePoints: Boolean = True);
 begin
@@ -1930,12 +1936,18 @@ begin
     if (not Island.Contains(Pi)) and AllCurvePoints.Contains(Pi) then
     begin
       Island.AddPoint(Pi);
-      FillIsland(Pi - Scale.Ny(Pi), Island, JustInY, MaxPoints, False);
-      FillIsland(Pi + Scale.Ny(Pi), Island, JustInY, MaxPoints, False);
+      if MoveDown then
+        FillIsland(Pi - Scale.Ny(Pi), Island, JustInY,
+                   MoveUp, MoveDown, MaxPoints, False);
+      if MoveUp then
+        FillIsland(Pi + Scale.Ny(Pi), Island, JustInY,
+                   MoveUp, MoveDown, MaxPoints, False);
       if (not JustInY) then
       begin
-        FillIsland(Pi - Scale.Nx(Pi), Island, JustInY, MaxPoints, False);
-        FillIsland(Pi + Scale.Nx(Pi), Island, JustInY, MaxPoints, False);
+        FillIsland(Pi - Scale.Nx(Pi), Island, JustInY,
+                   MoveUp, MoveDown, MaxPoints, False);
+        FillIsland(Pi + Scale.Nx(Pi), Island, JustInY,
+                   MoveUp, MoveDown, MaxPoints, False);
       end;
     end;
   end;
@@ -1943,17 +1955,22 @@ end;
 
 procedure TPlotImage.FillIsland(Xi, Yi: Double; var Island: TIsland;
                                 JustInY: Boolean = True;
+                                MoveUp: Boolean = True;
+                                MoveDown: Boolean = True;
                                 MaxPoints: Integer = 1000);
 begin
-  FillIsland(GetCurvePoint(Xi, Yi), Island, JustInY, MaxPoints);
+  FillIsland(GetCurvePoint(Xi, Yi), Island, JustInY, MoveUp, MoveDown, MaxPoints);
 end;
 
-procedure TPlotImage.AdjustCurve;
+procedure TPlotImage.AdjustCurve(Noisy: Boolean = False);
+const
+  min_diff = 0.05;
 var
   i: Integer;
   Pi: TCurvePoint;
   NewPoints: TPointList;
   Island: TIsland;
+  Up, Down: Boolean;
 begin
   // Only if there is a curve
   if HasPoints then
@@ -1981,8 +1998,47 @@ begin
         Pi := Curve.Point[i];
         if (not Island.Contains(Pi)) then
         begin
+          if Noisy then
+          begin
+            case i of
+              0: begin
+                // The point is '100*min_diff'% larger than its neighbour
+                Up := (min_diff <= (Pi.Y - Curve.Point[1].Y)/abs(Pi.Y));
+                // The point is '100*min_diff'% smaller than its neighbour
+                Down := (-min_diff >= (Pi.Y - Curve.Point[1].Y)/abs(Pi.Y));
+              end;
+              else
+              begin
+                if (i = (Curve.Count - 1)) then
+                begin
+                  // The point is '100*min_diff'% larger than its neighbour
+                  Up := (min_diff <= (Pi.Y - Curve.Point[i - 1].Y)/abs(Pi.Y));
+                  // The point is '100*min_diff'% smaller than its neighbour
+                  Down := (-min_diff >= (Pi.Y - Curve.Point[i - 1].Y)/abs(Pi.Y));
+                end
+                else
+                begin
+                  // The point is '100*min_diff'% larger than its neighbours
+                  Up := (min_diff <= (2*Pi.Y - Curve.Point[i - 1].Y - Curve.Point[i + 1].Y)/abs(Pi.Y));
+                  // The point is '100*min_diff'% smaller than its neighbours
+                  Down := (-min_diff >= (2*Pi.Y - Curve.Point[i - 1].Y - Curve.Point[i + 1].Y)/abs(Pi.Y));
+                end;
+              end;
+            end;
+            // The point is neither a maximum nor a minimum
+            if (not Up) and (not Down) then
+            begin
+              Up := True;
+              Down := True;
+            end;
+          end
+          else
+          begin
+            Up := True;
+            Down := True;
+          end;
           Island.Clear;
-          FillIsland(Pi, Island, True, 1000, False);
+          FillIsland(Pi, Island, True, Up, Down, 1000, False);
           if (Island.Count > 0) then
             NewPoints.Add(Island.MeanValue)
           else
@@ -2040,7 +2096,7 @@ begin
         if (not Island.Contains(Pi)) then
         begin
           Island.Clear;
-          FillIsland(Pi, Island, False, 1000, False);
+          FillIsland(Pi, Island, False, True, True, 1000, False);
           if (Island.Count > 0) then
             NewPoints.Add(Island.MeanValue);
         end;
