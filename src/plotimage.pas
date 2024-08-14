@@ -107,6 +107,7 @@ type
     FMarkerList: TCurve;
     FAxesMarkers: Array [1..3] of TMarker;
     FBoxMarkers: Array [1..4] of TMarker;
+    FEdgeMarkers: Array [1..4] of TMarker;
     FMarkerUnderCursor: TMarker;
     FActiveMarker: TMarker;
     FClickedMarker: TMarker;
@@ -149,6 +150,7 @@ type
     function GetBoxVertex(Index: Integer): TCurvePoint;
     function GetAxesMarkers(Index: Integer): TMarker;
     function GetBoxMarkers(Index: Integer): TMarker;
+    function GetEdgeMarkers(Index: Integer): TMarker;
 
     function GetCount: Integer;
     function GetCurve(Index: Integer): TDigitCurve;
@@ -297,6 +299,7 @@ type
     property AxesMarkers[Index: Integer]: TMarker read GetAxesMarkers;
     property BoxVertex[Index: Integer]: TCurvePoint read GetBoxVertex write SetBoxVertex;
     property BoxMarkers[Index: Integer]: TMarker read GetBoxMarkers;
+    property EdgeMarkers[Index: Integer]: TMarker read GetEdgeMarkers;
     property MarkerUnderCursor: TMarker read FMarkerUnderCursor write SetMarkerUnderCursor;
     property ActiveMarker: TMarker read FActiveMarker write SetActiveMarker;
     property LeftMarker: TMarker read GetLeftMarker;
@@ -1289,7 +1292,10 @@ begin
   for i := 1 to 3 do
     FAxesMarkers[i] := nil;
   for i := 1 to 4 do
+  begin
     FBoxMarkers[i] := nil;
+    FEdgeMarkers[i] := nil;
+  end;
 
   FOldCursor := Cursor;
 
@@ -2153,7 +2159,7 @@ end;
 
 function TPlotImage.GetBoxVertex(Index: Integer): TCurvePoint;
 begin
-  Result := PlotBox.Vertex[Index - 1];
+  Result := PlotBox[Index - 1];
 end;
 
 function TPlotImage.GetAxesMarkers(Index: Integer): TMarker;
@@ -2172,6 +2178,14 @@ begin
     Result := nil;
 end;
 
+function TPlotImage.GetEdgeMarkers(Index: Integer): TMarker;
+begin
+  if (Index >= 1) and (Index <= 4) and Assigned(FEdgeMarkers[Index]) then
+    Result := FEdgeMarkers[Index]
+  else
+    Result := nil;
+end;
+
 procedure TPlotImage.SetAxesPoint(Index: Integer; const Value: TCurvePoint);
 begin
   if (Index >= 1) and (Index <= 3) and (Scale.ImagePoint[Index] <> Value) then
@@ -2186,13 +2200,19 @@ begin
 end;
 
 procedure TPlotImage.SetBoxVertex(Index: Integer; const Value: TCurvePoint);
+const
+  idxo: Array [1..4] of Integer = (0, 1, 2, 3);
+  idxf: Array [1..4] of Integer = (1, 2, 3, 0);
 begin
-  if (Index >= 1) and (Index <= 4) and (PlotBox.Vertex[Index - 1] <> Value) then
+  if (Index >= 1) and (Index <= 4) and (PlotBox[Index - 1] <> Value) then
   begin
     if Assigned(FBoxMarkers[Index]) then
       FBoxMarkers[Index].Position := Value;
 
-    PlotBox.Vertex[Index - 1] := Value;
+    PlotBox[Index - 1] := Value;
+
+    if Assigned(FEdgeMarkers[Index]) then
+      FEdgeMarkers[Index].Position := (PlotBox[idxo[Index]] + PlotBox[idxf[Index]])/2;
 
     IsChanged := True;
   end;
@@ -2395,8 +2415,12 @@ begin
         FAxesMarkers[i] := nil;
 
     for i := 1 to PlotBox.NumVertices do
+    begin
       if (FBoxMarkers[i] = Marker) then
         FBoxMarkers[i] := nil;
+      if (FEdgeMarkers[i] = Marker) then
+        FEdgeMarkers[i] := nil;
+    end;
 
     Markers.Remove(Marker);
 
@@ -2442,7 +2466,7 @@ begin
     begin
       UpdateRegion(PlotBox.Rect);
       if (ActiveMarker = BoxMarkers[i]) then
-        PlotBox.Vertex[i - 1] := BoxMarkers[i].Position;
+        PlotBox[i - 1] := BoxMarkers[i].Position;
       UpdateRegion(PlotBox.Rect);
     end;
 
@@ -2586,9 +2610,41 @@ begin
 end;
 
 procedure TPlotImage.MouseMove(Shift: TShiftState; X, Y: Integer);
+
+  function CalcVertexPos(Pn, Po, Pf, Pa: TCurvePoint): TCurvePoint;
+  var
+    a, b, m1, m2: Double;
+  begin
+    if (abs(Pf.X - Po.X) > abs(Pf.Y - Po.Y)) then
+    begin
+      m1 := (Pf.X - Pa.X)/(Pf.Y - Pa.Y);
+      m2 := (Pf.Y - Po.Y)/(Pf.X - Po.X);
+      a := Pa.X - m1*Pa.Y;
+      b := Pn.Y - m2*Pn.X;
+    end
+    else
+    begin
+      m1 := (Pf.X - Po.X)/(Pf.Y - Po.Y);
+      m2 := (Pf.Y - Pa.Y)/(Pf.X - Pa.X);
+      a := Pn.X - m1*Pn.Y;
+      b := Pa.Y - m2*Pa.X;
+    end;
+
+    Result.X := (-a - b*m1)/(m1*m2 - 1);
+    Result.Y := (-a*m2 - b)/(m1*m2 - 1);
+  end;
+
 const
   xm: Array [1..4] of Integer = (4, 3, 2, 1);
   ym: Array [1..4] of Integer = (2, 1, 4, 3);
+  EPV: Array [1..4] of Integer = (1, 2, 3, 4);
+  ENV: Array [1..4] of Integer = (2, 3, 4, 1);
+  VPV: Array [1..4] of Integer = (4, 1, 2, 3);
+  VNV: Array [1..4] of Integer = (2, 3, 4, 1);
+  EPE: Array [1..4] of Integer = (4, 1, 2, 3);
+  ENE: Array [1..4] of Integer = (2, 3, 4, 1);
+  VPE: Array [1..4] of Integer = (4, 1, 2, 3);
+  VNE: Array [1..4] of Integer = (1, 2, 3, 4);
   //
   // 1 |--------------| 2
   //   |              |
@@ -2602,6 +2658,7 @@ var
   Marker, HitMarker: TMarker;
   TmpRect: TRect;
   Newpos: TPoint;
+  P1, P2: TCurvePoint;
 begin
   MouseMovePos := TPoint.Create(X, Y);
 
@@ -2636,18 +2693,49 @@ begin
       if (State = piSetPlotBox) then
       begin
         for i := 1 to PlotBox.NumVertices do
+        begin
           if (FClickedMarker = BoxMarkers[i]) then
           begin
-            PlotBox.Vertex[i - 1] := NewPos;
+            PlotBox[i - 1] := NewPos;
             if (ssShift in Shift) then
             begin
               BoxMarkers[xm[i]].Move(GetCurvePoint(NewPos.X, BoxMarkers[xm[i]].Position.Y));
               BoxMarkers[ym[i]].Move(GetCurvePoint(BoxMarkers[ym[i]].Position.X, NewPos.Y));
 
-              PlotBox.Vertex[xm[i] - 1] := BoxMarkers[xm[i]].Position;
-              PlotBox.Vertex[ym[i] - 1] := BoxMarkers[ym[i]].Position;
+              PlotBox[xm[i] - 1] := BoxMarkers[xm[i]].Position;
+              PlotBox[ym[i] - 1] := BoxMarkers[ym[i]].Position;
             end;
+
+            EdgeMarkers[VPE[i]].Move((PlotBox[i - 1] + PlotBox[VPV[i] - 1])/2);
+            EdgeMarkers[VNE[i]].Move((PlotBox[i - 1] + PlotBox[VNV[i] - 1])/2);
           end;
+
+          if (FClickedMarker = EdgeMarkers[i]) then
+          begin
+            P1 := CalcVertexPos(NewPos, BoxMarkers[EPV[i]].Position,
+                                BoxMarkers[ENV[i]].Position,
+                                BoxMarkers[VNV[ENV[i]]].Position);
+            P2 := CalcVertexPos(NewPos, BoxMarkers[ENV[i]].Position,
+                                BoxMarkers[EPV[i]].Position,
+                                BoxMarkers[VPV[EPV[i]]].Position);
+
+            // Check that no marker moves out of the image
+            if ClientRect.Contains(P1) and ClientRect.Contains(P2) then
+            begin
+              PlotBox[ENV[i] - 1] := P1;
+              PlotBox[EPV[i] - 1] := P2;
+
+              BoxMarkers[ENV[i]].Move(P1);
+              BoxMarkers[EPV[i]].Move(P2);
+
+              EdgeMarkers[EPE[i]].Move((PlotBox[EPV[i] - 1] + PlotBox[VPV[EPV[i]] - 1])/2);
+              EdgeMarkers[ENE[i]].Move((PlotBox[ENV[i] - 1] + PlotBox[VNV[ENV[i]] - 1])/2);
+            end;
+
+            NewPos := (PlotBox[ENV[i] - 1] + PlotBox[EPV[i] - 1])/2;
+            FClickedMarker.Move(NewPos);
+          end;
+        end;
       end;
 
       UpdateMarker(FClickedMarker);
@@ -2965,6 +3053,9 @@ begin
 end;
 
 procedure TPlotImage.UpdateMarkersInImage;
+const
+  idxo: Array [1..4] of Integer = (0, 1, 2, 3);
+  idxf: Array [1..4] of Integer = (1, 2, 3, 0);
 var
   i: Integer;
 begin
@@ -2985,19 +3076,16 @@ begin
       AddMarker(AxesMarkers[3], False);
     end;
     piSetPlotBox: begin
-      FBoxMarkers[1] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'1', clBlack, 3),
-                                       PlotBox.Vertex[0], True);
-      FBoxMarkers[2] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'1', clBlack, 3),
-                                       PlotBox.Vertex[1], True);
-      FBoxMarkers[3] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'1', clBlack, 3),
-                                       PlotBox.Vertex[2], True);
-      FBoxMarkers[4] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'1', clBlack, 3),
-                                       PlotBox.Vertex[3], True);
+      for i := 1 to 4 do
+      begin
+        FBoxMarkers[i] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'1', clBlack, 3),
+                                         PlotBox[i - 1], True);
+        AddMarker(BoxMarkers[i], False);
 
-      AddMarker(BoxMarkers[1], False);
-      AddMarker(BoxMarkers[2], False);
-      AddMarker(BoxMarkers[3], False);
-      AddMarker(BoxMarkers[4], False);
+        FEdgeMarkers[i] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'0', clBlack, 3),
+                                          (PlotBox[idxo[i]] + PlotBox[idxf[i]])/2, True);
+        AddMarker(EdgeMarkers[i], False);
+      end;
     end;
     piSetCurve: begin
       for i := 0 to DigitCurve.MarkerCount - 1 do
@@ -3781,10 +3869,10 @@ begin
     begin
       if not PlotBoxLoaded then
       begin
-        PlotBox.Vertex[0] := GetCurvePoint(0, 0);
-        PlotBox.Vertex[1] := GetCurvePoint(0, Height);
-        PlotBox.Vertex[2] := GetCurvePoint(Width, Height);
-        PlotBox.Vertex[3] := GetCurvePoint(Width, 0);
+        PlotBox[0] := GetCurvePoint(0, 0);
+        PlotBox[1] := GetCurvePoint(0, Height);
+        PlotBox[2] := GetCurvePoint(Width, Height);
+        PlotBox[3] := GetCurvePoint(Width, 0);
       end;
 
       State := piSetCurve;

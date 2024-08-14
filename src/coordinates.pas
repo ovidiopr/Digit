@@ -125,7 +125,7 @@ type
     function ExportToXML(Doc: TXMLDocument): TDOMNode;
 
     property NumVertices: Integer read GetNumvertices write SetNumVertices;
-    property Vertex[Index: Integer]: TCurvePoint read GetVertex write SetVertex;
+    property Vertex[Index: Integer]: TCurvePoint read GetVertex write SetVertex; default;
     property PolygonPoints: ArrayOfTPointF read GetPolygonPoints;
     property Rect: TRect read GetRect;
   end;
