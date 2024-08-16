@@ -15,6 +15,9 @@ type
   TCurvePoint = record
     X: Double;
     Y: Double;
+
+    constructor Create(Xi, Yi: Double);
+
     class operator = (a, b: TCurvePoint): Boolean;
     class operator + (a, b: TCurvePoint): TCurvePoint;
     class operator - (a: TCurvePoint): TCurvePoint;
@@ -23,6 +26,8 @@ type
     class operator / (a: TCurvePoint; b: Double): TCurvePoint;
     class operator := (a: TPoint) b: TCurvePoint;
     class operator := (a: TCurvePoint) b: TPoint;
+
+    function DistanceTo(a: TCurvePoint): Double;
   end;
   TBasis = Array [1..2] of TCurvePoint;
   TBasisChangeMtrx = Array [1..2, 1..2] of Double;
@@ -184,6 +189,12 @@ const
 
 implementation
 
+constructor TCurvePoint.Create(Xi, Yi: Double);
+begin
+  X := Xi;
+  Y := Yi;
+end;
+
 class operator TCurvePoint.= (a, b: TCurvePoint): Boolean;
 begin
   Result := (a.X = b.X) and (a.Y = b.Y);
@@ -228,6 +239,11 @@ end;
 class operator TCurvePoint.:= (a: TCurvePoint) b: TPoint;
 begin
   b := TPoint.Create(Round(a.X), Round(a.Y));
+end;
+
+function TCurvePoint.DistanceTo(a: TCurvePoint): Double;
+begin
+  Result := Sqrt(Power(X - a.X, 2) + Power(Y - a.Y, 2))
 end;
 
 function TCurvePointComparator(const a, b: TCurvePoint): Integer;

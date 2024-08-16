@@ -206,6 +206,7 @@ type
     destructor Destroy; override;
 
     procedure Reset;
+    procedure SetPlotPointMarkers(ResetPoints: Boolean = False);
 
     procedure FindCurvePoints;
 
@@ -283,6 +284,8 @@ type
     procedure DrawMarker(Marker: TMarker);
     procedure MoveMarker(Marker: TMarker; Point: TPoint); overload;
     procedure MoveMarker(Marker: TMarker; X, Y: Double); overload;
+
+    procedure UndistortImage;
 
     function GetZoomImage(w, h: Integer; Region: TRect): TBitmap;
 
@@ -1307,6 +1310,50 @@ begin
   InMouseMove := false;
 
   FIsChanged := False;
+end;
+
+procedure TPlotImage.SetPlotPointMarkers(ResetPoints: Boolean = False);
+
+  function PutInside(p: TCurvePoint; w, h: Integer; d: Integer = 0): TCurvePoint;
+  begin
+    Result := p;
+
+    if (Result.X < d) then Result.X := d;
+    if (Result.Y < d) then Result.Y := d;
+    if (Result.X > w - d) then Result.X := w - d;
+    if (Result.Y > h - d) then Result.Y := h - d;
+  end;
+
+begin
+  if ImageIsLoaded then
+  begin
+    if ResetPoints then
+    begin
+      AxesPoint[1] := TPoint.Create(6, 6);
+      AxesPoint[2] := TPoint.Create(6, Height - 6);
+      AxesPoint[3] := TPoint.Create(Width - 6, Height - 6);
+
+      Scale.PlotPoint[1] := GetCurvePoint(0, 1);
+      Scale.PlotPoint[2] := GetCurvePoint(0, 0);
+      Scale.PlotPoint[3] := GetCurvePoint(1, 0);
+
+      BoxVertex[1] := GetCurvePoint(6, 6);
+      BoxVertex[2] := GetCurvePoint(Width - 6, 6);
+      BoxVertex[3] := GetCurvePoint(Width - 6, Height - 6);
+      BoxVertex[4] := GetCurvePoint(6, Height - 6);
+    end
+    else
+    begin
+      AxesPoint[1] := PutInside(AxesPoint[1], Width, Height, 6);
+      AxesPoint[2] := PutInside(AxesPoint[2], Width, Height, 6);
+      AxesPoint[3] := PutInside(AxesPoint[3], Width, Height, 6);
+
+      BoxVertex[1] := PutInside(BoxVertex[1], Width, Height, 6);
+      BoxVertex[2] := PutInside(BoxVertex[2], Width, Height, 6);
+      BoxVertex[3] := PutInside(BoxVertex[3], Width, Height, 6);
+      BoxVertex[4] := PutInside(BoxVertex[4], Width, Height, 6);
+    end;
+  end;
 end;
 
 procedure TPlotImage.FindCurvePoints;
@@ -2792,9 +2839,9 @@ const
   //
 var
   i: Integer;
+  WasDragging: Boolean;
 begin
-  if not Dragging then
-    inherited MouseUp(Button, Shift, X, Y);
+  WasDragging := Dragging;
 
   if Button = mbLeft then
   begin
@@ -2847,6 +2894,9 @@ begin
 
     FClickedMarker := nil;
   end;
+
+  if not WasDragging then
+    inherited MouseUp(Button, Shift, X, Y);
 end;
 
 procedure TPlotImage.SetMarkerUnderCursor(Marker: TMarker);
@@ -3550,6 +3600,53 @@ end;
 procedure TPlotImage.MoveMarker(Marker: TMarker; X, Y: Double);
 begin
   MoveMarker(Marker,TPoint.Create(Round(X), Round(Y)));
+end;
+
+procedure TPlotImage.UndistortImage;
+  function GetPointF(a: TCurvePoint): TPointF;
+  begin
+    Result := PointF(a.X, a.Y);
+  end;
+
+var
+  w, h: Integer;
+  Stream: TMemoryStream;
+  NewImg: TBGRABitmap;
+begin
+  try
+    w := Round(max(PlotBox[0].DistanceTo(PlotBox[1]),
+                   PlotBox[2].DistanceTo(PlotBox[3])));
+    h := Round(max(PlotBox[0].DistanceTo(PlotBox[3]),
+                   PlotBox[1].DistanceTo(PlotBox[2])));
+
+    NewImg := TBGRABitmap.Create(w, h, BGRABlack);
+
+    NewImg.FillPolyLinearMapping([PointF(0, 0), PointF(w - 1, 0),
+                                  PointF(w - 1, h - 1), PointF(0, h - 1)],
+                                 PlotImg,
+                                 [GetPointF(PlotBox[0]), GetPointF(PlotBox[1]),
+                                  GetPointF(PlotBox[2]), GetPointF(PlotBox[3])],
+                                 True);
+
+    Stream := TMemoryStream.Create;
+    Stream.Clear;
+    Stream.Position := 0;
+
+    NewImg.SaveToStreamAsPng(Stream);
+
+    // Reset the plot
+    Reset;
+    // Load image
+    LoadImage(Stream);
+    // Reset markers
+    SetPlotPointMarkers(True);
+    State := piSetPlotBox;
+
+    IsChanged := True;
+  finally
+    NewImg.Free;
+    Stream.Free;
+  end;
 end;
 
 function TPlotImage.GetZoomImage(w, h: Integer; Region: TRect): TBitmap;

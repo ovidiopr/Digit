@@ -1,7 +1,7 @@
 object DigitMainForm: TDigitMainForm
-  Left = 354
+  Left = 348
   Height = 520
-  Top = 1221
+  Top = 225
   Width = 889
   AllowDropFiles = True
   Caption = 'Digitizer'
@@ -3065,7 +3065,7 @@ object DigitMainForm: TDigitMainForm
           Height = 201
           Top = 0
           Width = 214
-          HorzScrollBar.Page = 97
+          HorzScrollBar.Page = 196
           VertScrollBar.Page = 199
           Align = alClient
           ClientHeight = 199
@@ -3075,7 +3075,7 @@ object DigitMainForm: TDigitMainForm
           object gbVertex1: TGroupBox
             Left = 0
             Height = 71
-            Top = 0
+            Top = 40
             Width = 197
             Align = alTop
             AutoSize = True
@@ -3210,7 +3210,7 @@ object DigitMainForm: TDigitMainForm
               MinValue = 0
               MaxValue = 100
               OnChange = EditVY1Change
-              Value = 50
+              Value = 56
               ShortTimeInterval = 100
               Background.Color = clWindow
               Background.Gradient1.StartColor = clWhite
@@ -3281,7 +3281,7 @@ object DigitMainForm: TDigitMainForm
           object gbVertex2: TGroupBox
             Left = 0
             Height = 71
-            Top = 71
+            Top = 111
             Width = 197
             Align = alTop
             AutoSize = True
@@ -3487,7 +3487,7 @@ object DigitMainForm: TDigitMainForm
           object gbVertex3: TGroupBox
             Left = 0
             Height = 71
-            Top = 142
+            Top = 182
             Width = 197
             Align = alTop
             AutoSize = True
@@ -3693,7 +3693,7 @@ object DigitMainForm: TDigitMainForm
           object gbVertex4: TGroupBox
             Left = 0
             Height = 71
-            Top = 213
+            Top = 253
             Width = 197
             Align = alTop
             AutoSize = True
@@ -3894,6 +3894,44 @@ object DigitMainForm: TDigitMainForm
               TabOrder = 1
               TabStop = True
               UseDockManager = False
+            end
+          end
+          object tbBox: TToolBar
+            Left = 0
+            Height = 40
+            Top = 0
+            Width = 197
+            ButtonHeight = 36
+            ButtonWidth = 32
+            Caption = 'tbBox'
+            Images = LargeImageList
+            ParentShowHint = False
+            TabOrder = 4
+            object tbCorrectDistortion: TToolButton
+              Left = 1
+              Top = 2
+              Action = ToolCorrectDistortion
+              ParentShowHint = False
+            end
+            object lblWarning: TLabel
+              AnchorSideLeft.Side = asrBottom
+              AnchorSideTop.Side = asrCenter
+              AnchorSideRight.Side = asrBottom
+              AnchorSideBottom.Side = asrBottom
+              Left = 37
+              Height = 36
+              Top = 2
+              Width = 159
+              AutoSize = False
+              BorderSpacing.Left = 4
+              Caption = 'Warning: Cannot be undone!'
+              Font.Color = clRed
+              Font.Height = 11
+              Font.Name = 'Default'
+              Font.Style = [fsBold]
+              Layout = tlCenter
+              OptimalFill = True
+              ParentFont = False
             end
           end
         end
@@ -5608,6 +5646,13 @@ object DigitMainForm: TDigitMainForm
       Hint = 'Scale options|Edit scale options'
       ImageIndex = 11
       OnExecute = ToolScaleOptionsExecute
+    end
+    object ToolCorrectDistortion: TAction
+      Category = 'Tools'
+      Caption = 'Correct distortion'
+      Hint = 'Correct distortion|Correct plot distortion'
+      ImageIndex = 42
+      OnExecute = ToolCorrectDistortionExecute
     end
   end
   object ImageList: TImageList

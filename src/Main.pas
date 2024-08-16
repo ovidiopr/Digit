@@ -23,6 +23,10 @@ type
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
+    lblWarning: TLabel;
+    ToolCorrectDistortion: TAction;
+    tbBox: TToolBar;
+    tbCorrectDistortion: TToolButton;
     ToolAdjustNoise: TAction;
     BSplinesItem: TMenuItem;
     btnAdjustNoise: TToolButton;
@@ -375,6 +379,7 @@ type
       X, Y: Integer);
     procedure PlotImageMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure PlotImageResize(Sender: TObject);
     procedure PlotImageChange(Sender: TObject);
     procedure PlotImageShowProgress(Sender: TObject; Progress: Cardinal);
     procedure PlotImageHideProgress(Sender: TObject);
@@ -402,6 +407,7 @@ type
     procedure ToolAdjustCurveExecute(Sender: TObject);
     procedure ToolAdjustNoiseExecute(Sender: TObject);
     procedure ToolConvertToSymbolsExecute(Sender: TObject);
+    procedure ToolCorrectDistortionExecute(Sender: TObject);
     procedure ToolCurveAddExecute(Sender: TObject);
     procedure ToolCurveDeleteExecute(Sender: TObject);
     procedure ToolCurveLeftExecute(Sender: TObject);
@@ -426,7 +432,6 @@ type
     PlotImage: TPlotImage;
 
     function CheckSaveStatus: Boolean;
-    procedure SetPlotPointMarkers(ResetPoints: Boolean = False);
 
     function GetIsSaved: Boolean;
     function GetCurveCount: Integer;
@@ -844,7 +849,7 @@ begin
   PlotImage.ImageName := FileName;
 
   if PlotImage.ImageIsLoaded then
-    SetPlotPointMarkers(ResetPoints);
+    PlotImage.SetPlotPointMarkers(ResetPoints);
 
   if not FileExists(DigitFileName) then
     DigitFileName := ChangeFileExt(FileName, '.dig');
@@ -1029,13 +1034,16 @@ var
 
       ResetPoints := not PlotImage.ImageIsLoaded;
 
-      if PlotImage.ImageIsLoaded and
-         (MessageDlg('You are about to replace the current plot image.' +
-                     ' This action cannot be undone. Continue?',
-                    mtWarning, [mbYes, mbNo], 0) = mrNo) then Exit;
+      with PlotImage do
+      begin
+        if ImageIsLoaded and
+           (MessageDlg('You are about to replace the current plot image.' +
+                       ' This action cannot be undone. Continue?',
+                      mtWarning, [mbYes, mbNo], 0) = mrNo) then Exit;
 
-      PlotImage.PasteImage(Stream);
-      SetPlotPointMarkers(ResetPoints);
+        PasteImage(Stream);
+        SetPlotPointMarkers(ResetPoints);
+      end;
     except
       on ex: Exception do
         Result := False;
@@ -1247,6 +1255,7 @@ begin
     OnMouseMove := @PlotImageMouseMove;
     OnMouseUp := @PlotImageMouseUp;
     OnMouseLeave := @PlotImageMouseLeave;
+    OnResize := @PlotImageResize;
     OnChange := @PlotImageChange;
     OnShowProgress := @PlotImageShowProgress;
     OnHideProgress := @PlotImageHideProgress;
@@ -1495,70 +1504,6 @@ begin
       mrYes: FileSaveExecute(DigitMainForm);
       mrCancel: Result := False;
     end;
-end;
-
-procedure TDigitMainForm.SetPlotPointMarkers(ResetPoints: Boolean = False);
-
-  function PutInside(p: TCurvePoint; w, h: Integer; d: Integer = 0): TCurvePoint;
-  begin
-    Result := p;
-
-    if (Result.X < d) then Result.X := d;
-    if (Result.Y < d) then Result.Y := d;
-    if (Result.X > w - d) then Result.X := w - d;
-    if (Result.Y > h - d) then Result.Y := h - d;
-  end;
-
-begin
-  with PlotImage do
-  begin
-    if ImageIsLoaded then
-    begin
-      if ResetPoints then
-      begin
-        AxesPoint[1] := TPoint.Create(6, 6);
-        AxesPoint[2] := TPoint.Create(6, Height - 6);
-        AxesPoint[3] := TPoint.Create(Width - 6, Height - 6);
-
-        Scale.PlotPoint[1] := GetCurvePoint(0, 1);
-        Scale.PlotPoint[2] := GetCurvePoint(0, 0);
-        Scale.PlotPoint[3] := GetCurvePoint(1, 0);
-
-        BoxVertex[1] := GetCurvePoint(6, 6);
-        BoxVertex[2] := GetCurvePoint(Width - 6, 6);
-        BoxVertex[3] := GetCurvePoint(Width - 6, Height - 6);
-        BoxVertex[4] := GetCurvePoint(6, Height - 6);
-      end
-      else
-      begin
-        AxesPoint[1] := PutInside(AxesPoint[1], Width, Height, 6);
-        AxesPoint[2] := PutInside(AxesPoint[2], Width, Height, 6);
-        AxesPoint[3] := PutInside(AxesPoint[3], Width, Height, 6);
-
-        BoxVertex[1] := PutInside(BoxVertex[1], Width, Height, 6);
-        BoxVertex[2] := PutInside(BoxVertex[2], Width, Height, 6);
-        BoxVertex[3] := PutInside(BoxVertex[3], Width, Height, 6);
-        BoxVertex[4] := PutInside(BoxVertex[4], Width, Height, 6);
-      end;
-
-      // Now, update the limits in the relevant controls
-      EditIX1.MaxValue := Width - 1;
-      EditIY1.MaxValue := Height - 1;
-      EditIX2.MaxValue := Width - 1;
-      EditIY2.MaxValue := Height - 1;
-      EditIX3.MaxValue := Width - 1;
-      EditIY3.MaxValue := Height - 1;
-
-      EditVX1.MaxValue := Width - 1;
-      EditVY1.MaxValue := Height - 1;
-      EditVX2.MaxValue := Width - 1;
-      EditVY2.MaxValue := Height - 1;
-      EditVX3.MaxValue := Width - 1;
-      EditVY3.MaxValue := Height - 1;
-      EditVX4.MaxValue := Width - 1;
-      EditVY4.MaxValue := Height - 1;
-    end;
-  end;
 end;
 
 function TDigitMainForm.GetIsSaved: Boolean;
@@ -2109,6 +2054,29 @@ begin
   UpdateZoomImage(X, Y);
 end;
 
+procedure TDigitMainForm.PlotImageResize(Sender: TObject);
+begin
+  with TPlotImage(Sender) do
+  begin
+    // Update the limits in the relevant controls
+    EditIX1.MaxValue := Width - 1;
+    EditIY1.MaxValue := Height - 1;
+    EditIX2.MaxValue := Width - 1;
+    EditIY2.MaxValue := Height - 1;
+    EditIX3.MaxValue := Width - 1;
+    EditIY3.MaxValue := Height - 1;
+
+    EditVX1.MaxValue := Width - 1;
+    EditVY1.MaxValue := Height - 1;
+    EditVX2.MaxValue := Width - 1;
+    EditVY2.MaxValue := Height - 1;
+    EditVX3.MaxValue := Width - 1;
+    EditVY3.MaxValue := Height - 1;
+    EditVX4.MaxValue := Width - 1;
+    EditVY4.MaxValue := Height - 1;
+  end;
+end;
+
 procedure TDigitMainForm.PlotImageChange(Sender: TObject);
 begin
   IsSaved := False;
@@ -2144,42 +2112,48 @@ begin
 end;
 
 procedure TDigitMainForm.PlotImageMarkerDragged(Sender: TObject; Marker: TMarker);
+
+  // Avoid an update loop, values como from PlotImage
+  procedure UpdateEditors(Point: TCurvePoint; EditX, EditY: TBCTrackbarUpdown);
+  var
+    Ex, Ey: TTrackbarUpDownChangeEvent;
+  begin
+    Ex := EditX.OnChange;
+    Ey := EditY.OnChange;
+    EditX.OnChange := Nil;
+    EditY.OnChange := Nil;
+
+    EditX.Value := Round(Point.X);
+    EditY.Value := Round(Point.Y);
+
+    EditX.OnChange := Ex;
+    EditY.OnChange := Ey;
+  end;
+
 begin
   case PlotImage.State of
     piSetScale: begin
       if (Marker = PlotImage.AxesMarkers[1]) then
-        ImagePoint[1] := PlotImage.Scale.ImagePoint[1];
+        UpdateEditors(PlotImage.Scale.ImagePoint[1], EditIX1, EditIY1);
 
       if (Marker = PlotImage.AxesMarkers[2]) then
-        ImagePoint[2] := PlotImage.Scale.ImagePoint[2];
+        UpdateEditors(PlotImage.Scale.ImagePoint[2], EditIX2, EditIY2);
 
       if (Marker = PlotImage.AxesMarkers[3]) then
-        ImagePoint[3] := PlotImage.Scale.ImagePoint[3];
+        UpdateEditors(PlotImage.Scale.ImagePoint[3], EditIX3, EditIY3);
     end;
     piSetPlotBox: begin
       if (Marker = PlotImage.BoxMarkers[1]) then
-      begin
-        EditVX1.Value := Round(PlotImage.BoxVertex[1].X);
-        EditVY1.Value := Round(PlotImage.BoxVertex[1].Y);
-      end;
+        UpdateEditors(PlotImage.BoxVertex[1], EditVX1, EditVY1);
 
       if (Marker = PlotImage.BoxMarkers[2]) then
-      begin
-        EditVX2.Value := Round(PlotImage.BoxVertex[2].X);
-        EditVY2.Value := Round(PlotImage.BoxVertex[2].Y);
-      end;
+        UpdateEditors(PlotImage.BoxVertex[2], EditVX2, EditVY2);
 
       if (Marker = PlotImage.BoxMarkers[3]) then
-      begin
-        EditVX3.Value := Round(PlotImage.BoxVertex[3].X);
-        EditVY3.Value := Round(PlotImage.BoxVertex[3].Y);
-      end;
+        UpdateEditors(PlotImage.BoxVertex[3], EditVX3, EditVY3);
 
       if (Marker = PlotImage.BoxMarkers[4]) then
-      begin
-        EditVX4.Value := Round(PlotImage.BoxVertex[4].X);
-        EditVY4.Value := Round(PlotImage.BoxVertex[4].Y);
-      end;
+        UpdateEditors(PlotImage.BoxVertex[4], EditVX4, EditVY4);
     end;
   end;
 
@@ -2391,6 +2365,12 @@ begin
   GUIToCurve;
   PlotImage.ConvertCurveToSymbols;
   CurveToGUI;
+end;
+
+procedure TDigitMainForm.ToolCorrectDistortionExecute(Sender: TObject);
+begin
+  // Almost ready, but not yet
+  PlotImage.UndistortImage;
 end;
 
 procedure TDigitMainForm.ToolCurveAddExecute(Sender: TObject);
