@@ -125,6 +125,9 @@ type
     procedure Reset;
 
     function Contains(p: TCurvePoint): Boolean; virtual;
+    function IsConvex: Boolean; virtual;
+    function IsCW: Boolean; virtual;
+    function IsCCW: Boolean; virtual;
 
     function ImportFromXML(Item: TDOMNode): Boolean;
     function ExportToXML(Doc: TXMLDocument): TDOMNode;
@@ -853,6 +856,154 @@ begin
 
     j := i;
   end;
+end;
+
+// This function is adapted from:
+// https://math.stackexchange.com/questions/1743995/determine-whether-a-polygon-is-convex-based-on-its-vertices/1745427#1745427
+function TPlotPoly.IsConvex: Boolean;
+var
+  i, j, k: Integer;
+  w, wSign,
+  xSign, xFirstSign, xFlips,
+  ySign, yFirstSign, yFlips: Integer;
+  prev, curr, next: TCurvePoint;
+  ax, ay, bx, by: Double;
+begin
+  if (NumVertices < 3) then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  wSign := 0;        // First nonzero orientation (positive or negative)
+
+  xSign := 0;
+  xFirstSign := 0;   // Sign of first nonzero edge vector x
+  xFlips := 0;       // Number of sign changes in x
+
+  ySign := 0;
+  yFirstSign := 0;   // Sign of first nonzero edge vector y
+  yFlips := 0;       // Number of sign changes in y
+
+  k := NumVertices - 2; // Second-to-last vertex
+  j := NumVertices - 1; // Last vertex
+
+  for i := 0 to NumVertices - 1 do   // Each vertex, in order
+  begin
+    prev := Vertex[k];          // Previous vertex
+    curr := Vertex[j];          // Current vertex
+    next := Vertex[i];          // Next vertex
+
+    // Previous edge vector ("before"):
+    bx := curr.x - prev.x;
+    by := curr.y - prev.y;
+
+    // Next edge vector ("after"):
+    ax := next.x - curr.x;
+    ay := next.y - curr.y;
+
+    // Calculate sign flips using the next edge vector ("after"),
+    // recording the first sign.
+    if (ax > 0) then
+    begin
+      if (xSign = 0) then
+        xFirstSign := 1
+      else if (xSign < 0) then
+        inc(xFlips);
+      xSign := 1;
+    end
+    else if (ax < 0) then
+    begin
+      if (xSign = 0) then
+        xFirstSign := -1
+      else if (xSign > 0) then
+        inc(xFlips);
+      xSign := -1;
+    end;
+
+    if (xFlips > 2) then
+    begin
+      Result := False;
+      Exit;
+    end;
+
+    if (ay > 0) then
+    begin
+      if (ySign = 0) then
+        yFirstSign := 1
+      else if (ySign < 0) then
+        inc(yFlips);
+
+      ySign := 1;
+    end
+    else if (ay < 0) then
+    begin
+      if (ySign = 0) then
+        yFirstSign := -1
+      else if (ySign > 0) then
+        inc(yFlips);
+
+      ySign := -1;
+    end;
+
+    if (yFlips > 2) then
+    begin
+      Result := False;
+      Exit;
+    end;
+
+    // Find out the orientation of this pair of edges,
+    // and ensure it does not differ from previous ones.
+    w := Round(bx*ay - ax*by);
+    if (wSign = 0) and (w <> 0) then
+      wSign := w
+    else if (wSign > 0) and (w < 0) then
+    begin
+      Result := False;
+      Exit;
+    end
+    else if (wSign < 0) and (w > 0) then
+    begin
+      Result := False;
+      Exit;
+    end;
+
+    k := j;
+    j := i;
+  end;
+
+  // Final/wraparound sign flips:
+  if (xSign <> 0) and (xFirstSign <> 0) and (xSign <> xFirstSign) then
+    inc(xFlips);
+
+  if (ySign <> 0) and (yFirstSign <> 0) and (ySign <> yFirstSign) then
+    inc(yFlips);
+
+  // Concave polygons have two sign flips along each axis.
+  Result := (xFlips = 2) and (yFlips = 2);
+end;
+
+function TPlotPoly.IsCW: Boolean;
+var
+  i, j: Integer;
+  sum: Double;
+begin
+  sum := 0.0;
+
+  j := NumVertices - 1;
+  for i := 0 to NumVertices - 1 do
+  begin
+    sum := sum  + (Vertex[i].X - Vertex[j].X)*(Vertex[i].Y + Vertex[j].Y);
+
+    j := i;
+  end;
+
+  Result := (sum > 0.0);
+end;
+
+function TPlotPoly.IsCCW: Boolean;
+begin
+  Result := not IsCW;
 end;
 
 function TPlotPoly.ImportFromXML(Item: TDOMNode): Boolean;

@@ -2708,7 +2708,16 @@ begin
   if (State = piSetPlotBox) and
      not (PlotBox.Rect*PaintRect).IsEmpty then
   begin
-    PolyColor := clBlue;
+    if PlotBox.IsConvex then
+    begin
+      if PlotBox.IsCW then
+        PolyColor := clBlue
+      else
+        PolyColor := clGreen;
+    end
+    else
+      PolyColor := clRed;
+
     PolyColor.alpha := 80;
     PlotBox.PolarCoordinates := (Scale.CoordSystem = csPolar);
     WhiteBoard.DrawPolygonAntialias(PlotBox.PolygonPoints, BGRABlack, 1, PolyColor);
