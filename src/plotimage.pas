@@ -3716,11 +3716,6 @@ begin
 end;
 
 procedure TPlotImage.UndistortImage;
-  function GetPointF(a: TCurvePoint): TPointF;
-  begin
-    Result := PointF(a.X, a.Y);
-  end;
-
 var
   w, h: Integer;
   Stream: TMemoryStream;
@@ -3736,10 +3731,7 @@ begin
 
     NewImg.FillPolyLinearMapping([PointF(0, 0), PointF(w - 1, 0),
                                   PointF(w - 1, h - 1), PointF(0, h - 1)],
-                                 PlotImg,
-                                 [GetPointF(PlotBox[0]), GetPointF(PlotBox[1]),
-                                  GetPointF(PlotBox[2]), GetPointF(PlotBox[3])],
-                                 True);
+                                 PlotImg, PlotBox.PolygonPoints, True);
 
     Stream := TMemoryStream.Create;
     Stream.Clear;
