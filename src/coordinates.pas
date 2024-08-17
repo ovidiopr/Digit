@@ -105,14 +105,20 @@ type
   private
     { Private declarations }
     FVertices: Array of TCurvePoint;
+    FSlopes: Array of Double;
+    FHoriLines: Array of Boolean;
 
     function GetNumvertices: Integer;
     function GetVertex(Index: Integer): TCurvePoint;
+    function GetEdge(Index: Integer): TCurvePoint;
     function GetPolygonPoints: ArrayOfTPointF; virtual;
     function GetRect: TRect;
 
     procedure SetNumVertices(const Value: Integer);
     procedure SetVertex(Index: Integer; const Value: TCurvePoint); virtual;
+
+    procedure RecalcSlopes;
+    function CalcVertexPos(Pn, Pa: TCurvePoint; Index, Idx: Integer): TCurvePoint;
   protected
     { Protected declarations }
   public
@@ -123,6 +129,10 @@ type
     destructor Destroy; override;
 
     procedure Reset;
+    procedure MoveEdge(Index: Integer; Pn: TCurvePoint);
+
+    function NextVertIdx(Index: Integer): Integer;
+    function PrevVertIdx(Index: Integer): Integer;
 
     function Contains(p: TCurvePoint): Boolean; virtual;
     function IsConvex: Boolean; virtual;
@@ -133,7 +143,9 @@ type
     function ExportToXML(Doc: TXMLDocument): TDOMNode;
 
     property NumVertices: Integer read GetNumvertices write SetNumVertices;
+    property NumEdges: Integer read GetNumvertices; // It's the same number
     property Vertex[Index: Integer]: TCurvePoint read GetVertex write SetVertex; default;
+    property Edge[Index: Integer]: TCurvePoint read GetEdge;
     property PolygonPoints: ArrayOfTPointF read GetPolygonPoints;
     property Rect: TRect read GetRect;
   end;
@@ -751,6 +763,8 @@ end;
 destructor TPlotPoly.Destroy;
 begin
   SetLength(FVertices, 0);
+  SetLength(FSlopes, 0);
+  SetLength(FHoriLines, 0);
 
   inherited Destroy;
 end;
@@ -763,6 +777,19 @@ begin
     Vertex[i] := GetCurvePoint(-1, -1);
 end;
 
+procedure TPlotPoly.MoveEdge(Index: Integer; Pn: TCurvePoint);
+var
+  Idx1, Idx2: Integer;
+begin
+  Idx1 := NextVertIdx(Index);
+  Idx2 := NextVertIdx(NextVertIdx(Index));
+  FVertices[Idx1] := CalcVertexPos(Pn, Vertex[Idx2], Index, Idx1);
+
+  Idx1 := Index;
+  Idx2 := PrevVertIdx(Index);
+  FVertices[Idx1] := CalcVertexPos(Pn, Vertex[Idx2], Index, Idx2);
+end;
+
 function TPlotPoly.GetNumVertices: Integer;
 begin
   Result :=  Length(FVertices);
@@ -772,6 +799,19 @@ function TPlotPoly.GetVertex(Index: Integer): TCurvePoint;
 begin
   if (Index >= 0) and (Index < NumVertices) then
     Result := FVertices[Index]
+  else
+    Result :=  GetCurvePoint(-1, -1);
+end;
+
+function TPlotPoly.GetEdge(Index: Integer): TCurvePoint;
+begin
+  if (Index >= 0) and (Index < NumEdges) then
+  begin
+    if (Index = (NumEdges - 1)) then
+      Result := (FVertices[Index] + FVertices[0])/2
+    else
+      Result := (FVertices[Index] + FVertices[Index + 1])/2;
+  end
   else
     Result :=  GetCurvePoint(-1, -1);
 end;
@@ -795,31 +835,127 @@ begin
 
   if (NumVertices > 0) then
   begin
-    Xo := Round(FVertices[0].X);
-    Yo := Round(FVertices[0].Y);
-    Xf := Round(FVertices[0].X);
-    Yf := Round(FVertices[0].Y);
+    Xo := Round(Vertex[0].X);
+    Yo := Round(Vertex[0].Y);
+    Xf := Round(Vertex[0].X);
+    Yf := Round(Vertex[0].Y);
     for i := 1 to NumVertices -1 do
     begin
-      if (FVertices[i].X < Xo) then Xo := Round(FVertices[i].X);
-      if (FVertices[i].Y < Yo) then Yo := Round(FVertices[i].Y);
-      if (FVertices[i].X > Xf) then Xf := Round(FVertices[i].X);
-      if (FVertices[i].Y > Yf) then Yf := Round(FVertices[i].Y);
+      if (Vertex[i].X < Xo) then Xo := Round(Vertex[i].X);
+      if (Vertex[i].Y < Yo) then Yo := Round(Vertex[i].Y);
+      if (Vertex[i].X > Xf) then Xf := Round(Vertex[i].X);
+      if (Vertex[i].Y > Yf) then Yf := Round(Vertex[i].Y);
     end;
 
     Result := TRect.Create(Xo, Yo, Xf, Yf);
   end;
 end;
 
+function TPlotPoly.NextVertIdx(Index: Integer): Integer;
+begin
+  if (Index = NumVertices - 1) then
+    Result := 0
+  else
+    Result := Index + 1;
+end;
+
+function TPlotPoly.PrevVertIdx(Index: Integer): Integer;
+begin
+  if (Index = 0) then
+    Result := NumVertices - 1
+  else
+    Result := Index - 1;
+end;
+
 procedure TPlotPoly.SetNumVertices(const Value: Integer);
 begin
   SetLength(FVertices, Value);
+  SetLength(FSlopes, Value);
+  SetLength(FHoriLines, Value);
 end;
 
 procedure TPlotPoly.SetVertex(Index: Integer; const Value: TCurvePoint);
 begin
   if (Index >= 0) and (Index < NumVertices) then
+  begin
     FVertices[Index] := Value;
+
+    RecalcSlopes;
+  end;
+end;
+
+procedure TPlotPoly.RecalcSlopes;
+var
+  i, j: Integer;
+begin
+  j := 0;
+  for i := NumVertices - 1 downto 0 do
+  begin
+    if (Vertex[i] = Vertex[j]) then
+    begin
+      FHoriLines[i] := True;
+      FSlopes[i] := 0;
+    end
+    else
+    begin
+      FHoriLines[i] := abs(Vertex[j].X - Vertex[i].X) > abs(Vertex[j].Y - Vertex[i].Y);
+
+      if FHoriLines[i] then
+        FSlopes[i] := (Vertex[j].Y - Vertex[i].Y)/(Vertex[j].X - Vertex[i].X)
+      else
+        FSlopes[i] := (Vertex[j].X - Vertex[i].X)/(Vertex[j].Y - Vertex[i].Y);
+    end;
+
+    j := i;
+  end;
+end;
+
+function TPlotPoly.CalcVertexPos(Pn, Pa: TCurvePoint; Index, Idx: Integer): TCurvePoint;
+var
+  a, b, c: Double;
+begin
+  if FHoriLines[Index] then
+  begin
+    if FHoriLines[Idx] then
+    begin
+      a := Pn.Y/FSlopes[Index]/Pn.X;
+      b := Pa.Y/FSlopes[Idx]/Pa.X;
+      c := FSlopes[Index] - FSlopes[Idx];
+
+      Result.X := (b - a)/c;
+      Result.Y := (b*FSlopes[Index] - a*FSlopes[Idx])/c;
+    end
+    else
+    begin
+      a := Pa.X - FSlopes[Idx]*Pa.Y;
+      b := Pn.Y - FSlopes[Index]*Pn.X;
+      c := FSlopes[Index]*FSlopes[Idx] - 1;
+
+      Result.X := (-a - b*FSlopes[Idx])/c;
+      Result.Y := (-a*FSlopes[Index] - b)/c;
+    end;
+  end
+  else
+  begin
+    if FHoriLines[Idx] then
+    begin
+      a := Pn.X - FSlopes[Index]*Pn.Y;
+      b := Pa.Y - FSlopes[Idx]*Pa.X;
+      c := FSlopes[Index]*FSlopes[Idx] - 1;
+
+      Result.X := (-a - b*FSlopes[Index])/c;
+      Result.Y := (-a*FSlopes[Idx] - b)/c;
+    end
+    else
+    begin
+      a := Pn.X/FSlopes[Index]/Pn.Y;
+      b := Pa.X/FSlopes[Idx]/Pa.Y;
+      c := FSlopes[Index] - FSlopes[Idx];
+
+      Result.X := (b*FSlopes[Index] - a*FSlopes[Idx])/c;
+      Result.Y := (b - a)/c;
+    end;
+  end;
 end;
 
 function TPlotPoly.Contains(p: TCurvePoint): Boolean;
@@ -1083,6 +1219,17 @@ end;
 
 
 //==============================| TPlotQuad |==============================//
+//
+//           E0
+// V0 |--------------| V1
+//    |              |
+//    |              |
+// E3 |              | E1
+//    |              |
+//    |              |
+// V3 |--------------| V2
+//           E2
+//
 
 constructor TPlotQuad.Create;
 begin

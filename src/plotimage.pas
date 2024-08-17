@@ -117,9 +117,6 @@ type
     FSelectingRegion: Boolean;
     FSelectionRect: TRect;
 
-    FSlope: Array [0..2] of Double;
-    FHoriLine: Array [0..2] of Boolean;
-
     FCurves: TCurveList;
     FCurveIndex: Integer;
     FAllCurvePoints: TIsland;
@@ -145,9 +142,6 @@ type
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
   private
-    procedure CalcSlopes(Po, Pf, Pa, Pb: TCurvePoint);
-    function CalcVertexPos(Pn, Pa: TCurvePoint; Idx: Integer): TCurvePoint;
-
     function GetPixel(X, Y: Integer): LongInt; overload;
     function GetPixel(X, Y: Double): LongInt; overload;
     function GetPixel(P: TCurvePoint): LongInt; overload;
@@ -374,14 +368,6 @@ const
   //
   xm: Array [1..4] of Integer = (4, 3, 2, 1);
   ym: Array [1..4] of Integer = (2, 1, 4, 3);
-  EPV: Array [1..4] of Integer = (1, 2, 3, 4);
-  ENV: Array [1..4] of Integer = (2, 3, 4, 1);
-  VPV: Array [1..4] of Integer = (4, 1, 2, 3);
-  VNV: Array [1..4] of Integer = (2, 3, 4, 1);
-  EPE: Array [1..4] of Integer = (4, 1, 2, 3);
-  ENE: Array [1..4] of Integer = (2, 3, 4, 1);
-  VPE: Array [1..4] of Integer = (4, 1, 2, 3);
-  VNE: Array [1..4] of Integer = (1, 2, 3, 4);
 
 implementation
 
@@ -2201,76 +2187,6 @@ begin
   end;
 end;
 
-procedure TPlotImage.CalcSlopes(Po, Pf, Pa, Pb: TCurvePoint);
-begin
-  FHoriLine[0] := abs(Pf.X - Po.X) > abs(Pf.Y - Po.Y);
-  FHoriLine[1] := abs(Pf.X - Pa.X) > abs(Pf.Y - Pa.Y);
-  FHoriLine[2] := abs(Po.X - Pb.X) > abs(Po.Y - Pb.Y);
-
-  if FHoriLine[0] then
-    FSlope[0] := (Pf.Y - Po.Y)/(Pf.X - Po.X)
-  else
-    FSlope[0] := (Pf.X - Po.X)/(Pf.Y - Po.Y);
-
-  if FHoriLine[1] then
-    FSlope[1] := (Pf.Y - Pa.Y)/(Pf.X - Pa.X)
-  else
-    Fslope[1] := (Pf.X - Pa.X)/(Pf.Y - Pa.Y);
-
-  if FHoriLine[2] then
-    FSlope[2] := (Po.Y - Pb.Y)/(Po.X - Pb.X)
-  else
-    Fslope[2] := (Po.X - Pb.X)/(Po.Y - Pb.Y);
-end;
-
-function TPlotImage.CalcVertexPos(Pn, Pa: TCurvePoint; Idx: Integer): TCurvePoint;
-var
-  a, b, c: Double;
-begin
-  if FHoriLine[0] then
-  begin
-    if FHoriLine[Idx] then
-    begin
-      a := Pn.Y/FSlope[0]/Pn.X;
-      b := Pa.Y/FSlope[Idx]/Pa.X;
-      c := FSlope[0] - FSlope[1];
-
-      Result.X := (b - a)/c;
-      Result.Y := (b*FSlope[0] - a*FSlope[Idx])/c;
-    end
-    else
-    begin
-      a := Pa.X - FSlope[Idx]*Pa.Y;
-      b := Pn.Y - FSlope[0]*Pn.X;
-      c := FSlope[0]*FSlope[Idx] - 1;
-
-      Result.X := (-a - b*FSlope[Idx])/c;
-      Result.Y := (-a*FSlope[0] - b)/c;
-    end;
-  end
-  else
-  begin
-    if FHoriLine[Idx] then
-    begin
-      a := Pn.X - FSlope[0]*Pn.Y;
-      b := Pa.Y - FSlope[Idx]*Pa.X;
-      c := FSlope[0]*FSlope[Idx] - 1;
-
-      Result.X := (-a - b*FSlope[0])/c;
-      Result.Y := (-a*FSlope[Idx] - b)/c;
-    end
-    else
-    begin
-      a := Pn.X/FSlope[0]/Pn.Y;
-      b := Pa.X/FSlope[Idx]/Pa.Y;
-      c := FSlope[0] - FSlope[1];
-
-      Result.X := (b*FSlope[0] - a*FSlope[Idx])/c;
-      Result.Y := (b - a)/c;
-    end;
-  end;
-end;
-
 function TPlotImage.GetPixel(X, Y: Integer): LongInt;
 var
   c: TBGRAPixel;
@@ -2598,6 +2514,7 @@ procedure TPlotImage.ShiftActiveMarker(Delta: TPoint);
 var
   i: Integer;
   NewPos: TCurvePoint;
+  OldPos,
   P1, P2: TCurvePoint;
 begin
   if Assigned(ActiveMarker) then
@@ -2618,41 +2535,38 @@ begin
           UpdateRegion(PlotBox. Rect);
           PlotBox[i - 1] := NewPos;
 
-          EdgeMarkers[VPE[i]].Move((PlotBox[i - 1] + PlotBox[VPV[i] - 1])/2);
-          EdgeMarkers[VNE[i]].Move((PlotBox[i - 1] + PlotBox[VNV[i] - 1])/2);
+          EdgeMarkers[i].Move(PlotBox.Edge[i - 1]);
+          EdgeMarkers[PlotBox.PrevVertIdx(i - 1) + 1].Move(PlotBox.Edge[PlotBox.PrevVertIdx(i - 1)]);
           UpdateRegion(PlotBox. Rect);
         end;
 
         if (ActiveMarker = EdgeMarkers[i]) then
         begin
-          CalcSlopes(BoxMarkers[EPV[i]].Position,
-                     BoxMarkers[ENV[i]].Position,
-                     BoxMarkers[VNV[ENV[i]]].Position,
-                     BoxMarkers[VPV[EPV[i]]].Position);
-
-          P1 := CalcVertexPos(NewPos, BoxMarkers[VNV[ENV[i]]].Position, 1);
-          P2 := CalcVertexPos(NewPos, BoxMarkers[VPV[EPV[i]]].Position, 2);
+          OldPos := PlotBox.Edge[i - 1];
+          PlotBox.MoveEdge(i - 1, NewPos);
+          P1 := PlotBox[PlotBox.NextVertIdx(i - 1)];
+          P2 := PlotBox[i - 1];
 
           // Check that no marker moves out of the image
           if ClientRect.Contains(P1) and ClientRect.Contains(P2) then
           begin
             UpdateRegion(PlotBox. Rect);
 
-            PlotBox[ENV[i] - 1] := P1;
-            PlotBox[EPV[i] - 1] := P2;
+            BoxMarkers[PlotBox.NextVertIdx(i - 1) + 1].Move(P1);
+            BoxMarkers[i].Move(P2);
 
-            BoxMarkers[ENV[i]].Move(P1);
-            BoxMarkers[EPV[i]].Move(P2);
-
-            EdgeMarkers[EPE[i]].Move((PlotBox[EPV[i] - 1] + PlotBox[VPV[EPV[i]] - 1])/2);
-            EdgeMarkers[ENE[i]].Move((PlotBox[ENV[i] - 1] + PlotBox[VNV[ENV[i]] - 1])/2);
+            EdgeMarkers[PlotBox.NextVertIdx(i - 1) + 1].Move(PlotBox.Edge[PlotBox.NextVertIdx(i - 1)]);
+            EdgeMarkers[PlotBox.PrevVertIdx(i - 1) + 1].Move(PlotBox.Edge[PlotBox.PrevVertIdx(i - 1)]);
 
             UpdateRegion(PlotBox. Rect);
 
-            NewPos := (P1 + P2)/2;
+            NewPos := PlotBox.Edge[i - 1];
           end
           else
-            NewPos := ActiveMarker.Position;
+          begin
+            PlotBox.MoveEdge(i - 1, OldPos);
+            NewPos := OldPos;
+          end;
         end;
       end;
 
@@ -2801,20 +2715,6 @@ begin
     FClickedMarker := HitMarker;
     ActiveMarker := HitMarker;
 
-    if (State = piSetPlotBox) and Assigned(FClickedMarker) then
-    begin
-      for i := 1 to PlotBox.NumVertices do
-      begin
-        if (FClickedMarker = EdgeMarkers[i]) then
-        begin
-          CalcSlopes(BoxMarkers[EPV[i]].Position,
-                     BoxMarkers[ENV[i]].Position,
-                     BoxMarkers[VNV[ENV[i]]].Position,
-                     BoxMarkers[VPV[EPV[i]]].Position);
-        end;
-      end;
-    end;
-
     // No marker under cursor, we are selecting a region
     if (HitMarker = nil) and (State = piSetCurve) then
     begin
@@ -2832,6 +2732,7 @@ var
   Marker, HitMarker: TMarker;
   TmpRect: TRect;
   Newpos: TPoint;
+  OldPos,
   P1, P2: TCurvePoint;
 begin
   MouseMovePos := TPoint.Create(X, Y);
@@ -2882,37 +2783,41 @@ begin
 
             if (ssShift in Shift) then
             begin
-              EdgeMarkers[1].Move((PlotBox[EPV[1] - 1] + PlotBox[ENV[1] - 1])/2);
-              EdgeMarkers[2].Move((PlotBox[EPV[2] - 1] + PlotBox[ENV[2] - 1])/2);
-              EdgeMarkers[3].Move((PlotBox[EPV[3] - 1] + PlotBox[ENV[3] - 1])/2);
-              EdgeMarkers[4].Move((PlotBox[EPV[4] - 1] + PlotBox[ENV[4] - 1])/2);
+              EdgeMarkers[1].Move(PlotBox.Edge[0]);
+              EdgeMarkers[2].Move(PlotBox.Edge[1]);
+              EdgeMarkers[3].Move(PlotBox.Edge[2]);
+              EdgeMarkers[4].Move(PlotBox.Edge[3]);
             end
             else
             begin
-              EdgeMarkers[VPE[i]].Move((PlotBox[i - 1] + PlotBox[VPV[i] - 1])/2);
-              EdgeMarkers[VNE[i]].Move((PlotBox[i - 1] + PlotBox[VNV[i] - 1])/2);
+              EdgeMarkers[i].Move(PlotBox.Edge[i - 1]);
+              EdgeMarkers[PlotBox.PrevVertIdx(i - 1) + 1].Move(PlotBox.Edge[PlotBox.PrevVertIdx(i - 1)]);
             end;
           end;
 
           if (FClickedMarker = EdgeMarkers[i]) then
           begin
-            P1 := CalcVertexPos(NewPos, BoxMarkers[VNV[ENV[i]]].Position, 1);
-            P2 := CalcVertexPos(NewPos, BoxMarkers[VPV[EPV[i]]].Position, 2);
+            OldPos := PlotBox.Edge[i - 1];
+            PlotBox.MoveEdge(i - 1, NewPos);
+            P1 := PlotBox[PlotBox.NextVertIdx(i - 1)];
+            P2 := PlotBox[i - 1];
 
             // Check that no marker moves out of the image
             if ClientRect.Contains(P1) and ClientRect.Contains(P2) then
             begin
-              PlotBox[ENV[i] - 1] := P1;
-              PlotBox[EPV[i] - 1] := P2;
+              //PlotBox[ENV[i] - 1] := P1;
+              //PlotBox[EPV[i] - 1] := P2;
 
-              BoxMarkers[ENV[i]].Move(P1);
-              BoxMarkers[EPV[i]].Move(P2);
+              BoxMarkers[PlotBox.NextVertIdx(i - 1) + 1].Move(P1);
+              BoxMarkers[i].Move(P2);
 
-              EdgeMarkers[EPE[i]].Move((PlotBox[EPV[i] - 1] + PlotBox[VPV[EPV[i]] - 1])/2);
-              EdgeMarkers[ENE[i]].Move((PlotBox[ENV[i] - 1] + PlotBox[VNV[ENV[i]] - 1])/2);
-            end;
+              EdgeMarkers[PlotBox.NextVertIdx(i - 1) + 1].Move(PlotBox.Edge[PlotBox.NextVertIdx(i - 1)]);
+              EdgeMarkers[PlotBox.PrevVertIdx(i - 1) + 1].Move(PlotBox.Edge[PlotBox.PrevVertIdx(i - 1)]);
+            end
+            else
+              PlotBox.MoveEdge(i - 1, OldPos);
 
-            NewPos := (PlotBox[ENV[i] - 1] + PlotBox[EPV[i] - 1])/2;
+            NewPos := PlotBox.Edge[i - 1];
             FClickedMarker.Move(NewPos);
           end;
         end;
