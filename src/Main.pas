@@ -472,7 +472,8 @@ type
     procedure SavePreferences;
     procedure RestorePreferences;
 
-    procedure UpdateZoomImage(X, Y: Integer);
+    procedure UpdateZoomImage(X, Y: Integer); overload;
+    procedure UpdateZoomImage(P: TPoint); overload;
     procedure ClearZoomImage;
 
     procedure CurveToGUI;
@@ -1915,6 +1916,11 @@ begin
   end;
 end;
 
+procedure TDigitMainForm.UpdateZoomImage(P: TPoint);
+begin
+  UpdateZoomImage(P.X, P.Y);
+end;
+
 procedure TDigitMainForm.ClearZoomImage;
 begin
   with ZoomImage.Canvas do
@@ -2113,7 +2119,7 @@ end;
 
 procedure TDigitMainForm.PlotImageMarkerDragged(Sender: TObject; Marker: TMarker);
 
-  // Avoid an update loop, values como from PlotImage
+  // Avoid an update loop, values come from PlotImage
   procedure UpdateEditors(Point: TCurvePoint; EditX, EditY: TBCTrackbarUpdown);
   var
     Ex, Ey: TTrackbarUpDownChangeEvent;
@@ -2157,7 +2163,7 @@ begin
     end;
   end;
 
-  UpdateZoomImage(Round(Marker.Position.X), Round(Marker.Position.Y));
+  UpdateZoomImage(Marker.Position);
 end;
 
 procedure TDigitMainForm.InputPanelResize(Sender: TObject);
@@ -2201,65 +2207,45 @@ begin
     DeleteActiveMarker;
     P := ScreenToClient(Mouse.CursorPos);
     if BoundsRect.Contains(P) then
-      UpdateZoomImage(P.X, P.Y);
+      UpdateZoomImage(P);
   end;
 end;
 
 procedure TDigitMainForm.MarkersMoveDownExecute(Sender: TObject);
-var
-  P: TPoint;
 begin
   with PlotImage do
   begin
     ShiftActiveMarker(TPoint.Create(0, 1));
-    P := ScreenToClient(Mouse.CursorPos);
-    if BoundsRect.Contains(P) then
-      UpdateZoomImage(P.X, P.Y);
 
     PlotImageMarkerDragged(Self, ActiveMarker);
   end;
 end;
 
 procedure TDigitMainForm.MarkersMoveLeftExecute(Sender: TObject);
-var
-  P: TPoint;
 begin
   with PlotImage do
   begin
     ShiftActiveMarker(TPoint.Create(-1, 0));
-    P := ScreenToClient(Mouse.CursorPos);
-    if BoundsRect.Contains(P) then
-      UpdateZoomImage(P.X, P.Y);
 
     PlotImageMarkerDragged(Self, ActiveMarker);
   end;
 end;
 
 procedure TDigitMainForm.MarkersMoveRightExecute(Sender: TObject);
-var
-  P: TPoint;
 begin
   with PlotImage do
   begin
     ShiftActiveMarker(TPoint.Create(1, 0));
-    P := ScreenToClient(Mouse.CursorPos);
-    if BoundsRect.Contains(P) then
-      UpdateZoomImage(P.X, P.Y);
 
     PlotImageMarkerDragged(Self, ActiveMarker);
   end;
 end;
 
 procedure TDigitMainForm.MarkersMoveUpExecute(Sender: TObject);
-var
-  P: TPoint;
 begin
   with PlotImage do
   begin
     ShiftActiveMarker(TPoint.Create(0, -1));
-    P := ScreenToClient(Mouse.CursorPos);
-    if BoundsRect.Contains(P) then
-      UpdateZoomImage(P.X, P.Y);
 
     PlotImageMarkerDragged(Self, ActiveMarker);
   end;
