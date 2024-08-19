@@ -11,6 +11,7 @@ uses {$ifdef windows}Windows,{$endif} Forms, Classes, Controls, Graphics,
 
 type
   TPlotImageState = (piSetCurve, piSetScale, piSetPlotBox, piSetGrid);
+  TDragAction = (daNone, daVertex, daEdge, daAngle, daRotate);
 
   TMarker = class
   protected
@@ -85,7 +86,7 @@ type
   THideProgressEvent = procedure(Sender: TObject) of Object;
   TSelectRegionEvent = procedure(Sender: TObject; RegionRect: TRect) of Object;
   TStateChangeEvent = procedure(Sender: TObject; NewState: TPlotImageState) of Object;
-  TMarkerDraggedEvent = procedure(Sender: TObject; Marker: TMarker) of Object;
+  TMarkerDraggedEvent = procedure(Sender: TObject; Marker: TMarker; Zoom: Boolean) of Object;
 
   TPlotImage = class(TCustomControl)
   protected type
@@ -97,6 +98,7 @@ type
     MouseMovePos: TPoint;
 
     FState: TPlotImageState;
+    FDragAction: TDragAction;
 
     FImageName: TFileName;
     FPlotImg: TBGRABitmap;
@@ -1295,6 +1297,7 @@ var
   i: Integer;
 begin
   FState := piSetCurve;
+  FDragAction := daNone;
 
   FCurves.Clear;
   FCurves.Add(TDigitCurve.Create('Curve1'));
@@ -2694,6 +2697,19 @@ begin
 end;
 
 procedure TPlotImage.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+  function IsInArray(M: TMarker; Arr: Array of TMarker): Boolean;
+  var
+    j: Integer;
+  begin
+    for j := Low(Arr) to High(Arr) do
+      if (M = Arr[j]) then
+      begin
+        Result := True;
+        Exit;
+      end;
+    Result := False;
+  end;
+
 var
   i: Integer;
   Marker, HitMarker: TMarker;
@@ -2715,6 +2731,22 @@ begin
     FClickedMarker := HitMarker;
     ActiveMarker := HitMarker;
 
+    // Define the action to perform when dragging
+    if (State = piSetPlotBox) and Assigned(FClickedMarker) then
+    begin
+      if IsInArray(FClickedMarker, FBoxMarkers) then
+      begin
+        if (ssAlt in Shift) then
+          FDragAction := daRotate
+        else if (ssShift in Shift) then
+          FDragAction := daAngle
+        else
+          FDragAction := daVertex;
+      end
+      else if IsInArray(FClickedMarker, FEdgeMarkers) then
+        FDragAction := daEdge;
+    end;
+
     // No marker under cursor, we are selecting a region
     if (HitMarker = nil) and (State = piSetCurve) then
     begin
@@ -2728,7 +2760,7 @@ end;
 
 procedure TPlotImage.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
-  i: Integer;
+  i, j: Integer;
   Marker, HitMarker: TMarker;
   TmpRect: TRect;
   Newpos: TPoint;
@@ -2768,25 +2800,23 @@ begin
       if (State = piSetPlotBox) then
       begin
         for i := 1 to PlotBox.NumVertices do
-        begin
           if (FClickedMarker = BoxMarkers[i]) then
-          begin
+            Break;
+
+        case FDragAction of
+          daVertex, daAngle: begin
+            // Move vertex
             PlotBox[i - 1] := NewPos;
-            if (ssShift in Shift) then
+            if (FDragAction = daAngle) then
             begin
               BoxMarkers[xm[i]].Move(GetCurvePoint(NewPos.X, BoxMarkers[xm[i]].Position.Y));
               BoxMarkers[ym[i]].Move(GetCurvePoint(BoxMarkers[ym[i]].Position.X, NewPos.Y));
 
               PlotBox[xm[i] - 1] := BoxMarkers[xm[i]].Position;
               PlotBox[ym[i] - 1] := BoxMarkers[ym[i]].Position;
-            end;
 
-            if (ssShift in Shift) then
-            begin
-              EdgeMarkers[1].Move(PlotBox.Edge[0]);
-              EdgeMarkers[2].Move(PlotBox.Edge[1]);
-              EdgeMarkers[3].Move(PlotBox.Edge[2]);
-              EdgeMarkers[4].Move(PlotBox.Edge[3]);
+              for j := 1 to PlotBox.NumEdges do
+                EdgeMarkers[j].Move(PlotBox.Edge[j - 1]);
             end
             else
             begin
@@ -2794,9 +2824,34 @@ begin
               EdgeMarkers[PlotBox.PrevVertIdx(i - 1) + 1].Move(PlotBox.Edge[PlotBox.PrevVertIdx(i - 1)]);
             end;
           end;
+          daRotate: begin
+            // Rotate
+            PlotBox.Rotate(i - 1, NewPos);
 
-          if (FClickedMarker = EdgeMarkers[i]) then
-          begin
+            // Check that no marker moves out of the image
+            if not ClientRect.Contains(PlotBox.Vertex[0]) or
+               not ClientRect.Contains(PlotBox.Vertex[1]) or
+               not ClientRect.Contains(PlotBox.Vertex[2]) or
+               not ClientRect.Contains(PlotBox.Vertex[3]) then
+            begin
+              PlotBox.CancelRotation;
+            end;
+
+            for j := 1 to PlotBox.NumVertices do
+              if (i <> j) then
+                BoxMarkers[j].Move(PlotBox.Vertex[j - 1]);
+
+            for j := 1 to PlotBox.NumEdges do
+              EdgeMarkers[j].Move(PlotBox.Edge[j - 1]);
+
+            NewPos := PlotBox.Vertex[i - 1];
+            FClickedMarker.Move(NewPos);
+          end;
+          daEdge: begin
+            for i := 1 to PlotBox.NumVertices do
+              if (FClickedMarker = EdgeMarkers[i]) then
+                Break;
+
             OldPos := PlotBox.Edge[i - 1];
             PlotBox.MoveEdge(i - 1, NewPos);
             P1 := PlotBox[PlotBox.NextVertIdx(i - 1)];
@@ -2805,9 +2860,6 @@ begin
             // Check that no marker moves out of the image
             if ClientRect.Contains(P1) and ClientRect.Contains(P2) then
             begin
-              //PlotBox[ENV[i] - 1] := P1;
-              //PlotBox[EPV[i] - 1] := P2;
-
               BoxMarkers[PlotBox.NextVertIdx(i - 1) + 1].Move(P1);
               BoxMarkers[i].Move(P2);
 
@@ -2868,12 +2920,20 @@ var
   i: Integer;
   WasDragging: Boolean;
 begin
+  // Make sure that there are no previous events in the stack
+  InMouseMove := True;
+  // Empty message stack
+  Application.ProcessMessages;
+  InMouseMove := False;
+
   WasDragging := Dragging;
 
   if Button = mbLeft then
   begin
     if Dragging then
     begin
+      Dragging := False;
+
       if (State = piSetScale) and Assigned(FClickedMarker) then
         for i := 1 to 3 do
           if (FClickedMarker = AxesMarkers[i]) then
@@ -2882,18 +2942,37 @@ begin
       if Assigned(OnMarkerDragged) and Assigned(FClickedMarker) then
       begin
         // Notify that neighboring markers have moved
-        if (State = piSetPlotBox) and (ssShift in Shift) then
+        if (State = piSetPlotBox) then
+        begin
           for i := 1 to PlotBox.NumVertices do
             if (FClickedMarker = BoxMarkers[i]) then
-            begin
-              OnMarkerDragged(Self, BoxMarkers[xm[i]]);
-              OnMarkerDragged(Self, BoxMarkers[ym[i]]);
+              Break;
+
+          case FDragAction of
+            daAngle: begin
+              OnMarkerDragged(Self, BoxMarkers[xm[i]], False);
+              OnMarkerDragged(Self, BoxMarkers[ym[i]], False);
             end;
+            daRotate: begin
+              for i := 1 to PlotBox.NumVertices do
+              begin
+                BoxMarkers[i].Move(PlotBox.Vertex[i - 1]);
+
+                if (BoxMarkers[i] <> FClickedMarker) then
+                  OnMarkerDragged(Self, BoxMarkers[i], False);
+              end;
+            end;
+          end;
+        end;
+
         // Notify that the marker has been dragged
-        OnMarkerDragged(Self, FClickedMarker);
+        OnMarkerDragged(Self, FClickedMarker, True);
       end;
 
-      Dragging := False;
+      if PlotBox.Rotated then
+        PlotBox.ApplyRotation;
+
+      FDragAction := daNone;
 
       IsChanged := True;
     end

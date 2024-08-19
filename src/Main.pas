@@ -385,7 +385,7 @@ type
     procedure PlotImageHideProgress(Sender: TObject);
     procedure PlotImageRegionSelected(Sender: TObject; RegionRect: TRect);
     procedure PlotImageStateChanged(Sender: TObject; NewState: TPlotImageState);
-    procedure PlotImageMarkerDragged(Sender: TObject; Marker: TMarker);
+    procedure PlotImageMarkerDragged(Sender: TObject; Marker: TMarker; Zoom: Boolean);
     procedure InputPanelResize(Sender: TObject);
     procedure MainPlotMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
@@ -1355,7 +1355,7 @@ begin
     try
       PtCv := PlotImage.PlotCurve;
       for i := 0 to PtCv.Count - 1 do
-        Writeln(F, Format('%.5g,%.5g', [PtCv.Point[i].X, PtCv.Point[i].Y]));
+        Writeln(F, PtCv.Point[i].ToStr('%.5g'));
     finally
       PtCv.Free;
     end;
@@ -2040,6 +2040,12 @@ procedure TDigitMainForm.PlotImageMouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
 var
   Pt: TCurvePoint;
+//var
+//  i: Integer;
+//  a, b, c, Pn: TCurvePoint;
+//  X1, Y1,
+//  sin_a,
+//  cos_a: Double;
 begin
   //ZoomImage.Visible := True;
   UpdateZoomImage(X, Y);
@@ -2048,10 +2054,25 @@ begin
   if PlotImage.Scale.IsValid then
   begin
     Pt := PlotImage.ConvertCoords(X, Y);
-    StatusBar.Panels[2].Text := Format('%.3g, %.3g', [Pt.X, Pt.Y]);
+    StatusBar.Panels[2].Text := Pt.ToStr('%.3g');
   end
   else
     StatusBar.Panels[2].Text := '';
+
+
+
+  //Pn := TCurvePoint.Create(X, Y);
+  //c := PlotImage.PlotBox.Center;
+  //a := PlotImage.PlotBox[0] - c;
+  //b := Pn - c;
+  //
+  //if (Modulus(a) > 0) and (Modulus(b) > 0) then
+  //begin
+  //  cos_a := (a.X*b.X + a.Y*b.Y)/Modulus(a)/Modulus(b);
+  //  sin_a := sign(a.x*(pn.Y - c.Y) - a.y*(pn.X - c.X))*sqrt(1 - cos_a*cos_a);
+  //end;
+  //StatusBar.Panels[3].Text := Format('%.g', [ArcSin(sin_a)*45/ArcTan(1)]);
+  //StatusBar.Panels[4].Text := Format('%.g, %.g', [sin_a, cos_a]);
 end;
 
 procedure TDigitMainForm.PlotImageMouseUp(Sender: TObject;
@@ -2117,7 +2138,7 @@ begin
   end;
 end;
 
-procedure TDigitMainForm.PlotImageMarkerDragged(Sender: TObject; Marker: TMarker);
+procedure TDigitMainForm.PlotImageMarkerDragged(Sender: TObject; Marker: TMarker; Zoom: Boolean);
 
   // Avoid an update loop, values come from PlotImage
   procedure UpdateEditors(Point: TCurvePoint; EditX, EditY: TBCTrackbarUpdown);
@@ -2163,7 +2184,8 @@ begin
     end;
   end;
 
-  UpdateZoomImage(Marker.Position);
+  if Zoom then
+    UpdateZoomImage(Marker.Position);
 end;
 
 procedure TDigitMainForm.InputPanelResize(Sender: TObject);
@@ -2217,7 +2239,7 @@ begin
   begin
     ShiftActiveMarker(TPoint.Create(0, 1));
 
-    PlotImageMarkerDragged(Self, ActiveMarker);
+    PlotImageMarkerDragged(Self, ActiveMarker, True);
   end;
 end;
 
@@ -2227,7 +2249,7 @@ begin
   begin
     ShiftActiveMarker(TPoint.Create(-1, 0));
 
-    PlotImageMarkerDragged(Self, ActiveMarker);
+    PlotImageMarkerDragged(Self, ActiveMarker, True);
   end;
 end;
 
@@ -2237,7 +2259,7 @@ begin
   begin
     ShiftActiveMarker(TPoint.Create(1, 0));
 
-    PlotImageMarkerDragged(Self, ActiveMarker);
+    PlotImageMarkerDragged(Self, ActiveMarker, True);
   end;
 end;
 
@@ -2247,7 +2269,7 @@ begin
   begin
     ShiftActiveMarker(TPoint.Create(0, -1));
 
-    PlotImageMarkerDragged(Self, ActiveMarker);
+    PlotImageMarkerDragged(Self, ActiveMarker, True);
   end;
 end;
 

@@ -28,6 +28,8 @@ type
     class operator := (a: TCurvePoint) b: TPoint;
 
     function DistanceTo(a: TCurvePoint): Double;
+    function ToStr: String; overload;
+    function ToStr(Fmt: String = '%.5g'): String; overload;
   end;
   TBasis = Array [1..2] of TCurvePoint;
   TBasisChangeMtrx = Array [1..2, 1..2] of Double;
@@ -107,10 +109,14 @@ type
     FVertices: Array of TCurvePoint;
     FSlopes: Array of Double;
     FHoriLines: Array of Boolean;
+    FRotated: Boolean;
+    FSine: Double;
+    FCosine: Double;
 
     function GetNumvertices: Integer;
     function GetVertex(Index: Integer): TCurvePoint;
     function GetEdge(Index: Integer): TCurvePoint;
+    function GetCenter: TCurvePoint;
     function GetPolygonPoints: ArrayOfTPointF; virtual;
     function GetRect: TRect;
 
@@ -129,7 +135,10 @@ type
     destructor Destroy; override;
 
     procedure Reset;
-    procedure MoveEdge(Index: Integer; Pn: TCurvePoint);
+    procedure MoveEdge(Index: Integer; Pn: TCurvePoint); virtual;
+    procedure Rotate(Index: Integer; Pn: TCurvePoint); virtual;
+    procedure ApplyRotation;
+    procedure CancelRotation;
 
     function NextVertIdx(Index: Integer): Integer;
     function PrevVertIdx(Index: Integer): Integer;
@@ -146,8 +155,10 @@ type
     property NumEdges: Integer read GetNumvertices; // It's the same number
     property Vertex[Index: Integer]: TCurvePoint read GetVertex write SetVertex; default;
     property Edge[Index: Integer]: TCurvePoint read GetEdge;
+    property Center: TCurvePoint read GetCenter;
     property PolygonPoints: ArrayOfTPointF read GetPolygonPoints;
     property Rect: TRect read GetRect;
+    property Rotated: Boolean read FRotated;
   end;
 
   TPlotQuad = class(TPlotPoly)
@@ -171,6 +182,9 @@ type
     constructor Create;
     {@exclude}
     destructor Destroy; override;
+
+    procedure MoveEdge(Index: Integer; Pn: TCurvePoint); override;
+    procedure Rotate(Index: Integer; Pn: TCurvePoint); override;
 
     function Contains(p: TCurvePoint): Boolean; override;
 
@@ -259,6 +273,16 @@ end;
 function TCurvePoint.DistanceTo(a: TCurvePoint): Double;
 begin
   Result := Sqrt(Power(X - a.X, 2) + Power(Y - a.Y, 2))
+end;
+
+function TCurvePoint.ToStr: String;
+begin
+  Result := Format('X = %.5g, Y = %.5g', [X, Y]);
+end;
+
+function TCurvePoint.ToStr(Fmt: String = '%.5g'): String;
+begin
+  Result := Format(Fmt + ', ' + Fmt, [X, Y]);
 end;
 
 function TCurvePointComparator(const a, b: TCurvePoint): Integer;
@@ -773,6 +797,10 @@ procedure TPlotPoly.Reset;
 var
   i: Integer;
 begin
+  FRotated := False;
+  FSine := 0.0;
+  FCosine := 1.0;
+
   for i := 0 to NumVertices - 1 do
     Vertex[i] := GetCurvePoint(-1, -1);
 end;
@@ -783,11 +811,63 @@ var
 begin
   Idx1 := NextVertIdx(Index);
   Idx2 := NextVertIdx(NextVertIdx(Index));
-  FVertices[Idx1] := CalcVertexPos(Pn, Vertex[Idx2], Index, Idx1);
+  Vertex[Idx1] := CalcVertexPos(Pn, Vertex[Idx2], Index, Idx1);
 
   Idx1 := Index;
   Idx2 := PrevVertIdx(Index);
-  FVertices[Idx1] := CalcVertexPos(Pn, Vertex[Idx2], Index, Idx2);
+  Vertex[Idx1] := CalcVertexPos(Pn, Vertex[Idx2], Index, Idx2);
+end;
+
+procedure TPlotPoly.Rotate(Index: Integer; Pn: TCurvePoint);
+var
+  a, b, c: TCurvePoint;
+begin
+  c := Center;
+  a := FVertices[Index] - c;
+  b := Pn - c;
+
+  FRotated := (Modulus(a) > 0) and (Modulus(b) > 0);
+  if FRotated then
+  begin
+    FCosine := (a.X*b.X + a.Y*b.Y)/Modulus(a)/Modulus(b);
+    FSine := sign(a.x*(Pn.Y - c.Y) - a.y*(Pn.X - c.X))*sqrt(1 - FCosine*FCosine);
+  end
+  else
+  begin
+    FCosine := 1.0;
+    FSine := 0.0;
+   end;
+end;
+
+procedure TPlotPoly.ApplyRotation;
+var
+  i: Integer;
+  a, c: TCurvePoint;
+  X1, Y1: Double;
+begin
+  if Rotated then
+  begin
+    c := Center;
+
+    for i := 0 to NumVertices - 1 do
+    begin
+      a := FVertices[i] - c;
+      X1 := a.X*FCosine - a.Y*FSine;
+      Y1 := a.X*FSine + a.Y*FCosine;
+      FVertices[i] := c + TCurvePoint.Create(X1, Y1);
+    end;
+
+    CancelRotation;
+
+    RecalcSlopes;
+  end;
+end;
+
+procedure TPlotPoly.CancelRotation;
+begin
+  FRotated := False;
+  FSine := 0.0;
+  FCosine := 1.0;
 end;
 
 function TPlotPoly.GetNumVertices: Integer;
@@ -796,9 +876,24 @@ begin
 end;
 
 function TPlotPoly.GetVertex(Index: Integer): TCurvePoint;
+var
+  a, c: TCurvePoint;
+  X1, Y1: Double;
 begin
   if (Index >= 0) and (Index < NumVertices) then
-    Result := FVertices[Index]
+  begin
+    if Rotated then
+    begin
+      c := Center;
+
+      a := FVertices[Index] - c;
+      X1 := a.X*FCosine - a.Y*FSine;
+      Y1 := a.X*FSine + a.Y*FCosine;
+      Result := c + TCurvePoint.Create(X1, Y1);
+    end
+    else
+      Result := FVertices[Index];
+  end
   else
     Result :=  GetCurvePoint(-1, -1);
 end;
@@ -808,12 +903,37 @@ begin
   if (Index >= 0) and (Index < NumEdges) then
   begin
     if (Index = (NumEdges - 1)) then
-      Result := (FVertices[Index] + FVertices[0])/2
+      Result := (Vertex[Index] + Vertex[0])/2
     else
-      Result := (FVertices[Index] + FVertices[Index + 1])/2;
+      Result := (Vertex[Index] + Vertex[Index + 1])/2;
   end
   else
     Result :=  GetCurvePoint(-1, -1);
+end;
+
+function TPlotPoly.GetCenter: TCurvePoint;
+var
+  i, j: Integer;
+  A, Cx, Cy, C: Double;
+begin
+  A := 0;
+  Cx := 0;
+  Cy := 0;
+
+  j := NumVertices - 1;
+  for i := 0 to NumVertices - 1 do
+  begin
+    C := (FVertices[j].X*FVertices[i].Y - FVertices[i].X*FVertices[j].Y);
+
+    A := A + C;
+
+    Cx := Cx + (FVertices[j].X + FVertices[i].X)*C;
+    Cy := Cy + (FVertices[j].Y + FVertices[i].Y)*C;
+
+    j := i;
+  end;
+
+  Result := TCurvePoint.Create(Cx/A/3, Cy/A/3);
 end;
 
 function TPlotPoly.GetPolygonPoints: ArrayOfTPointF;
@@ -822,8 +942,8 @@ begin
   Setlength(Result, NumVertices);
   for i := Low(Result) to High(Result) do
   begin
-    Result[i].X := FVertices[i].X;
-    Result[i].Y := FVertices[i].Y;
+    Result[i].X := Vertex[i].X;
+    Result[i].Y := Vertex[i].Y;
   end;
 end;
 
@@ -876,7 +996,7 @@ end;
 
 procedure TPlotPoly.SetVertex(Index: Integer; const Value: TCurvePoint);
 begin
-  if (Index >= 0) and (Index < NumVertices) then
+  if (Index >= 0) and (Index < NumVertices) and (not Rotated) then
   begin
     FVertices[Index] := Value;
 
@@ -898,7 +1018,8 @@ begin
     end
     else
     begin
-      FHoriLines[i] := abs(Vertex[j].X - Vertex[i].X) > abs(Vertex[j].Y - Vertex[i].Y);
+      FHoriLines[i] := abs(Vertex[j].X - Vertex[i].X) >
+                       abs(Vertex[j].Y - Vertex[i].Y);
 
       if FHoriLines[i] then
         FSlopes[i] := (Vertex[j].Y - Vertex[i].Y)/(Vertex[j].X - Vertex[i].X)
@@ -1134,7 +1255,7 @@ begin
     j := i;
   end;
 
-  Result := (sum > 0.0);
+  Result := (sum <= 0.0);
 end;
 
 function TPlotPoly.IsCCW: Boolean;
@@ -1315,10 +1436,25 @@ begin
   inherited SetVertex(Index, Value);
 end;
 
+procedure TPlotQuad.MoveEdge(Index: Integer; Pn: TCurvePoint);
+begin
+  FRecalculateDirect := True;
+  FRecalculateInverse := True;
+
+  inherited MoveEdge(Index, Pn);
+end;
+
+procedure TPlotQuad.Rotate(Index: Integer; Pn: TCurvePoint);
+begin
+  FRecalculateDirect := True;
+  FRecalculateInverse := True;
+
+  inherited Rotate(Index, Pn);
+end;
+
 function TPlotQuad.Contains(p: TCurvePoint): Boolean;
 var
   l, m, u: Double;
-  Mat: Array of Array of Double;
   Dn, xp, yp, zp: Double;
   a, b, c, d: TCurvePoint;
 begin
@@ -1361,7 +1497,7 @@ begin
     Result := (xp*xp + yp*yp) <= 1;
   end
   else
-  Result := inherited Contains(p);
+    Result := inherited Contains(p);
 end;
 
 //==============================| TPlotQuad |==============================//
