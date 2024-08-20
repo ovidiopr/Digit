@@ -2108,7 +2108,8 @@ end;
 
 procedure TDigitMainForm.PlotImageChange(Sender: TObject);
 begin
-  IsSaved := False;
+  // Only update the table when the scale changes
+  SetIsSaved(False, PlotImage.State = piSetScale);
 end;
 
 procedure TDigitMainForm.PlotImageShowProgress(Sender: TObject; Progress: Cardinal);

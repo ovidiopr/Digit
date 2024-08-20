@@ -2777,8 +2777,6 @@ begin
     if Dragging then
     begin
       UpdateMarker(FClickedMarker);
-      if (State = piSetPlotBox) then
-        UpdateRegion(PlotBox.Rect);
 
       if ClientRect.Contains(MouseMovePos) then
         NewPos := FClickedCoord + MouseMovePos - FClickedPoint
@@ -2789,6 +2787,13 @@ begin
 
       if (State = piSetPlotBox) then
       begin
+        // Rectangle containing all the modified region
+        TmpRect := PlotBox.Rect;
+        for i := 1 to PlotBox.NumVertices do
+          TmpRect.Union(BoxMarkers[i].Rect);
+        for i := 1 to PlotBox.NumEdges do
+          TmpRect.Union(EdgeMarkers[i].Rect);
+
         for i := 1 to PlotBox.NumVertices do
           if (FClickedMarker = BoxMarkers[i]) then
             Break;
@@ -2808,33 +2813,30 @@ begin
               begin
                 BoxMarkers[PlotBox.NextVertIdx(i - 1) + 1].Move(P1);
                 BoxMarkers[PlotBox.PrevVertIdx(i - 1) + 1].Move(P2);
-
-                for j := 1 to PlotBox.NumEdges do
-                  EdgeMarkers[j].Move(PlotBox.Edge[j - 1]);
               end
               else
               begin
                 PlotBox.MoveVertex(i - 1, OldPos);
                 NewPos := OldPos;
               end;
-            end
-            else
-            begin
-              EdgeMarkers[i].Move(PlotBox.Edge[i - 1]);
-              EdgeMarkers[PlotBox.PrevVertIdx(i - 1) + 1].Move(PlotBox.Edge[PlotBox.PrevVertIdx(i - 1)]);
             end;
 
+            // Update vertex
             PlotBox[i - 1] := NewPos;
+
+            // Move edges
+            for j := 1 to PlotBox.NumEdges do
+              EdgeMarkers[j].Move(PlotBox.Edge[j - 1]);
           end;
           daRotate: begin
             // Rotate
             PlotBox.Rotate(i - 1, NewPos);
 
             // Check that no marker moves out of the image
-            if not ClientRect.Contains(PlotBox.Vertex[0]) or
-               not ClientRect.Contains(PlotBox.Vertex[1]) or
-               not ClientRect.Contains(PlotBox.Vertex[2]) or
-               not ClientRect.Contains(PlotBox.Vertex[3]) then
+            if not ClientRect.Contains(PlotBox[0]) or
+               not ClientRect.Contains(PlotBox[1]) or
+               not ClientRect.Contains(PlotBox[2]) or
+               not ClientRect.Contains(PlotBox[3]) then
             begin
               PlotBox.CancelRotation;
             end;
@@ -2875,11 +2877,18 @@ begin
             FClickedMarker.Move(NewPos);
           end;
         end;
+
+        // Include the new positions in the modified rectangle
+        TmpRect.Union(PlotBox.Rect);
+        for i := 1 to PlotBox.NumVertices do
+          TmpRect.Union(BoxMarkers[i].Rect);
+        for i := 1 to PlotBox.NumEdges do
+          TmpRect.Union(EdgeMarkers[i].Rect);
+
+        UpdateRegion(TmpRect);
       end;
 
       UpdateMarker(FClickedMarker);
-      if (State = piSetPlotBox) then
-        UpdateRegion(PlotBox.Rect);
       MarkerUnderCursor := FClickedMarker;
 
       InMouseMove := False;
@@ -2896,7 +2905,7 @@ begin
       FSelectionRect.Height := MouseMovePos.Y - FSelectionRect.Top;
 
       //Refresh the rectangle containing the old and new selection
-      UnionRect(TmpRect, TmpRect, FSelectionRect);
+      TmpRect.Union(FSelectionRect);
       UpdateRegion(TmpRect);
 
       InMouseMove := False;
