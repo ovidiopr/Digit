@@ -2728,7 +2728,7 @@ begin
       begin
         if (ssAlt in Shift) then
           FDragAction := daRotate
-        else if (ssShift in Shift) then
+        else if (ssShift in Shift) or (not PlotBox.IsConvex) then
           FDragAction := daVertex
         else
           FDragAction := daAngle;
@@ -2802,7 +2802,7 @@ begin
           daVertex, daAngle: begin
             // Move vertex
             OldPos := PlotBox[i - 1];
-            if (FDragAction = daAngle) then
+            if (FDragAction = daAngle) and PlotBox.IsConvex then
             begin
               PlotBox.MoveVertex(i - 1, NewPos);
               P1 := PlotBox[PlotBox.NextVertIdx(i - 1)];
@@ -2856,22 +2856,25 @@ begin
               if (FClickedMarker = EdgeMarkers[i]) then
                 Break;
 
-            OldPos := PlotBox.Edge[i - 1];
-            PlotBox.MoveEdge(i - 1, NewPos);
-            P1 := PlotBox[PlotBox.NextVertIdx(i - 1)];
-            P2 := PlotBox[i - 1];
-
-            // Check that no marker moves out of the image
-            if ClientRect.Contains(P1) and ClientRect.Contains(P2) then
+            if PlotBox.IsConvex then
             begin
-              BoxMarkers[PlotBox.NextVertIdx(i - 1) + 1].Move(P1);
-              BoxMarkers[i].Move(P2);
+              OldPos := PlotBox.Edge[i - 1];
+              PlotBox.MoveEdge(i - 1, NewPos);
+              P1 := PlotBox[PlotBox.NextVertIdx(i - 1)];
+              P2 := PlotBox[i - 1];
 
-              EdgeMarkers[PlotBox.NextVertIdx(i - 1) + 1].Move(PlotBox.Edge[PlotBox.NextVertIdx(i - 1)]);
-              EdgeMarkers[PlotBox.PrevVertIdx(i - 1) + 1].Move(PlotBox.Edge[PlotBox.PrevVertIdx(i - 1)]);
-            end
-            else
-              PlotBox.MoveEdge(i - 1, OldPos);
+              // Check that no marker moves out of the image
+              if ClientRect.Contains(P1) and ClientRect.Contains(P2) then
+              begin
+                BoxMarkers[PlotBox.NextVertIdx(i - 1) + 1].Move(P1);
+                BoxMarkers[i].Move(P2);
+
+                EdgeMarkers[PlotBox.NextVertIdx(i - 1) + 1].Move(PlotBox.Edge[PlotBox.NextVertIdx(i - 1)]);
+                EdgeMarkers[PlotBox.PrevVertIdx(i - 1) + 1].Move(PlotBox.Edge[PlotBox.PrevVertIdx(i - 1)]);
+              end
+              else
+                PlotBox.MoveEdge(i - 1, OldPos);
+            end;
 
             NewPos := PlotBox.Edge[i - 1];
             FClickedMarker.Move(NewPos);
