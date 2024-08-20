@@ -2864,7 +2864,8 @@ begin
               P2 := PlotBox[i - 1];
 
               // Check that no marker moves out of the image
-              if ClientRect.Contains(P1) and ClientRect.Contains(P2) then
+              if ClientRect.Contains(P1) and ClientRect.Contains(P2) and
+                 PlotBox.IsConvex then
               begin
                 BoxMarkers[PlotBox.NextVertIdx(i - 1) + 1].Move(P1);
                 BoxMarkers[i].Move(P2);
@@ -3972,10 +3973,16 @@ begin
             while Assigned(ImageChild) do
             begin
               if (ImageChild.CompareName('path') = 0) then
-                Path := UTF8Encode(ImageChild.FirstChild.NodeValue);
+                if Assigned(ImageChild.FirstChild) then
+                  Path := UTF8Encode(ImageChild.FirstChild.NodeValue)
+                else
+                  Path := '';
 
               if (ImageChild.CompareName('name') = 0) then
-                ImgName := UTF8Encode(ImageChild.FirstChild.NodeValue);
+                if Assigned(ImageChild.FirstChild) then
+                  ImgName := UTF8Encode(ImageChild.FirstChild.NodeValue)
+                else
+                  ImgName := '';
 
               // It is the data image
               if (ImageChild.CompareName('data') = 0) then

@@ -606,6 +606,9 @@ begin
     MarkersMoveRight.Enabled := ImageIsLoaded and assigned(ActiveMarker);
     MarkersDelete.Enabled := ImageIsLoaded and assigned(ActiveMarker) and not ActiveMarker.IsPersistent;
 
+    ToolCorrectDistortion.Enabled := ImageIsLoaded and (State = piSetPlotBox) and PlotImage.PlotBox.IsConvex;
+    ToolResetBox.Enabled := ImageIsLoaded and (State = piSetPlotBox);
+
     GridRemoval.Enabled := ImageIsLoaded and (State = piSetGrid) and not (GridMask.IsValid and GridMask.IsActive);
     GridShowHide.Enabled := ImageIsLoaded and (State = piSetGrid) and GridMask.IsValid;
 
@@ -2109,7 +2112,7 @@ end;
 procedure TDigitMainForm.PlotImageChange(Sender: TObject);
 begin
   // Only update the table when the scale changes
-  SetIsSaved(False, PlotImage.State = piSetScale);
+  SetIsSaved(False, PlotImage.State in [piSetCurve, piSetScale]);
 end;
 
 procedure TDigitMainForm.PlotImageShowProgress(Sender: TObject; Progress: Cardinal);
