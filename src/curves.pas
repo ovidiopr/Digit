@@ -309,7 +309,7 @@ end;
 
 procedure TCurve.AddPoint(Xv, Yv: Double);
 begin
-  AddPoint(GetCurvePoint(Xv, Yv));
+  AddPoint(TCurvePoint.Create(Xv, Yv));
 end;
 
 procedure TCurve.InsertPoint(Position: Integer; p: TCurvePoint);
@@ -329,7 +329,7 @@ end;
 
 procedure TCurve.InsertPoint(Position: Integer; Xv, Yv: Double);
 begin
-  InsertPoint(Position, GetCurvePoint(Xv, Yv));
+  InsertPoint(Position, TCurvePoint.Create(Xv, Yv));
 end;
 
 procedure TCurve.DeletePoint(Index: Integer);
@@ -345,7 +345,7 @@ end;
 
 procedure TCurve.SetX(Index: Integer; const Value: Double);
 begin
-  Point[Index] := GetCurvePoint(Value, Y[Index]);
+  Point[Index] := TCurvePoint.Create(Value, Y[Index]);
 
   if (Count <= 1) then
     FIsSorted := True
@@ -360,7 +360,7 @@ end;
 
 procedure TCurve.SetY(Index: Integer; const Value: Double);
 begin
-  Point[Index] := GetCurvePoint(X[Index], Value);
+  Point[Index] := TCurvePoint.Create(X[Index], Value);
 end;
 
 procedure TCurve.SetPoint(Index: Integer; const Value: TCurvePoint);
@@ -570,7 +570,7 @@ var
   p: TCurvePoint;
 begin
   n := 0;
-  p := GetCurvePoint(0, 0);
+  p := TCurvePoint.Create(0, 0);
   for i := Count - 1 downto 0 do
     if Region.Contains(TPoint.Create(Round(X[i]), Round(Y[i]))) then
     begin
@@ -662,7 +662,7 @@ function TIsland.GetMeanValue: TCurvePoint;
 var
   i: Integer;
 begin
-  Result := GetCurvePoint(0, 0);
+  Result := TCurvePoint.Create(0, 0);
 
   if (Count > 0) then
   begin
@@ -691,7 +691,7 @@ end;
 
 function TIsland.Contains(Xv, Yv: Double): Boolean;
 begin
-  Result := Contains(GetCurvePoint(Xv, Yv));
+  Result := Contains(TCurvePoint.Create(Xv, Yv));
 end;
 
 procedure TIsland.AddPoint(p: TCurvePoint);
@@ -912,7 +912,7 @@ end;
 
 procedure TDigitCurve.AddMarker(Xp, Yp: Double);
 begin
-  FMarkers.Add(GetCurvePoint(Xp, Yp));
+  FMarkers.Add(TCurvePoint.Create(Xp, Yp));
 end;
 
 procedure TDigitCurve.InsertMarker(Position: Integer; P: TCurvePoint);
@@ -922,7 +922,7 @@ end;
 
 procedure TDigitCurve.InsertMarker(Position: Integer; Xp, Yp: Double);
 begin
-  FMarkers.Insert(Position, GetCurvePoint(Xp, Yp));
+  FMarkers.Insert(Position, TCurvePoint.Create(Xp, Yp));
 end;
 
 procedure TDigitCurve.DeleteMarker(Index: Integer);
@@ -988,7 +988,7 @@ begin
   if (Index >= 0) and (Index < FMarkers.Count) then
     Result := FMarkers[Index]
   else
-    Result := GetCurvePoint(0, 0);
+    Result := TCurvePoint.Create(0, 0);
 end;
 
 procedure TDigitCurve.SetName(Value: String);

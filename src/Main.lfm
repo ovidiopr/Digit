@@ -2025,13 +2025,13 @@ object DigitMainForm: TDigitMainForm
           TabOrder = 0
           object gbCoord: TGroupBox
             Left = 0
-            Height = 40
+            Height = 47
             Top = 0
             Width = 197
             Align = alTop
             AutoSize = True
             Caption = 'Coordinates'
-            ClientHeight = 13
+            ClientHeight = 20
             ClientWidth = 187
             Font.Color = clBlack
             Font.Height = -11
@@ -2064,7 +2064,7 @@ object DigitMainForm: TDigitMainForm
           object gbX: TGroupBox
             Left = 0
             Height = 68
-            Top = 40
+            Top = 47
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2156,7 +2156,7 @@ object DigitMainForm: TDigitMainForm
           object gbY: TGroupBox
             Left = 0
             Height = 66
-            Top = 108
+            Top = 115
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2246,7 +2246,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint1: TGroupBox
             Left = 0
             Height = 88
-            Top = 174
+            Top = 181
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2515,7 +2515,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint2: TGroupBox
             Left = 0
             Height = 88
-            Top = 262
+            Top = 269
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2784,7 +2784,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint3: TGroupBox
             Left = 0
             Height = 88
-            Top = 350
+            Top = 357
             Width = 197
             Align = alTop
             AutoSize = True
@@ -3065,7 +3065,7 @@ object DigitMainForm: TDigitMainForm
           Height = 201
           Top = 0
           Width = 214
-          HorzScrollBar.Page = 196
+          HorzScrollBar.Page = 97
           VertScrollBar.Page = 199
           Align = alClient
           ClientHeight = 199
@@ -3913,25 +3913,10 @@ object DigitMainForm: TDigitMainForm
               Action = ToolCorrectDistortion
               ParentShowHint = False
             end
-            object lblWarning: TLabel
-              AnchorSideLeft.Side = asrBottom
-              AnchorSideTop.Side = asrCenter
-              AnchorSideRight.Side = asrBottom
-              AnchorSideBottom.Side = asrBottom
+            object tbResetBox: TToolButton
               Left = 37
-              Height = 36
               Top = 2
-              Width = 159
-              AutoSize = False
-              BorderSpacing.Left = 4
-              Caption = 'Warning: Cannot be undone!'
-              Font.Color = clRed
-              Font.Height = 11
-              Font.Name = 'Default'
-              Font.Style = [fsBold]
-              Layout = tlCenter
-              OptimalFill = True
-              ParentFont = False
+              Action = ToolResetBox
             end
           end
         end
@@ -5651,8 +5636,15 @@ object DigitMainForm: TDigitMainForm
       Category = 'Tools'
       Caption = 'Correct distortion'
       Hint = 'Correct distortion|Correct plot distortion'
-      ImageIndex = 42
+      ImageIndex = 41
       OnExecute = ToolCorrectDistortionExecute
+    end
+    object ToolResetBox: TAction
+      Category = 'Tools'
+      Caption = 'Reset box'
+      Hint = 'Reset box|Reset box to initial values'
+      ImageIndex = 42
+      OnExecute = ToolResetBoxExecute
     end
   end
   object ImageList: TImageList

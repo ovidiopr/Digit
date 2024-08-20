@@ -137,26 +137,26 @@ end;
 function TScaleDlg.GetImagePoint(Index: Integer): TCurvePoint;
 begin
   case Index of
-    1: Result := GetCurvePoint(StrToFloat(EditIX1.Text),
+    1: Result := TCurvePoint.Create(StrToFloat(EditIX1.Text),
                                StrToFloat(EditIY1.Text));
-    2: Result := GetCurvePoint(StrToFloat(EditIX2.Text),
+    2: Result := TCurvePoint.Create(StrToFloat(EditIX2.Text),
                                StrToFloat(EditIY2.Text));
-    3: Result := GetCurvePoint(StrToFloat(EditIX3.Text),
+    3: Result := TCurvePoint.Create(StrToFloat(EditIX3.Text),
                                StrToFloat(EditIY3.Text));
-    else Result := GetCurvePoint(0, 0);
+    else Result := TCurvePoint.Create(0, 0);
   end;
 end;
 
 function TScaleDlg.GetPlotPoint(Index: Integer): TCurvePoint;
 begin
   case Index of
-    1: Result := GetCurvePoint(StrToFloat(EditPX1.Text),
+    1: Result := TCurvePoint.Create(StrToFloat(EditPX1.Text),
                                StrToFloat(EditPY1.Text));
-    2: Result := GetCurvePoint(StrToFloat(EditPX2.Text),
+    2: Result := TCurvePoint.Create(StrToFloat(EditPX2.Text),
                                StrToFloat(EditPY2.Text));
-    3: Result := GetCurvePoint(StrToFloat(EditPX3.Text),
+    3: Result := TCurvePoint.Create(StrToFloat(EditPX3.Text),
                                StrToFloat(EditPY3.Text));
-    else Result := GetCurvePoint(0, 0);
+    else Result := TCurvePoint.Create(0, 0);
   end;
 end;
 
@@ -284,8 +284,8 @@ begin
 
   for i := 1 to 3 do
   begin
-    ImagePoint[i] := GetCurvePoint(0, 0);
-    PlotPoint[i] := GetCurvePoint(0, 0);
+    ImagePoint[i] := TCurvePoint.Create(0, 0);
+    PlotPoint[i] := TCurvePoint.Create(0, 0);
   end;
 end;
 
@@ -310,7 +310,7 @@ begin
   end;
 
   if EditBasis then
-    ImagePoint[ActivePoint] := GetCurvePoint(X, Y);
+    ImagePoint[ActivePoint] := TCurvePoint.Create(X, Y);
 
   EditIX1.Enabled := (Scale.PointIsSet[1] and (not EditBasis)) or (ActivePoint = 1);
   EditIY1.Enabled := (Scale.PointIsSet[1] and (not EditBasis)) or (ActivePoint = 1);

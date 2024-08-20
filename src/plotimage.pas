@@ -356,21 +356,6 @@ type
 
 function CreateMarker(Size: TPoint; Symbol: Char; Color: TColor; LineWith: Integer = 3): TBGRABitmap;
 
-const
-  //
-  //           E1
-  // V1 |--------------| V2
-  //    |              |
-  //    |              |
-  // E4 |              | E2
-  //    |              |
-  //    |              |
-  // V4 |--------------| V3
-  //           E3
-  //
-  xm: Array [1..4] of Integer = (4, 3, 2, 1);
-  ym: Array [1..4] of Integer = (2, 1, 4, 3);
-
 implementation
 
 uses utils;
@@ -473,7 +458,7 @@ end;
 
 function TMarker.GetPosition: TCurvePoint;
 begin
-  Result := GetCurvePoint(FRect.CenterPoint.X, FRect.CenterPoint.Y);
+  Result := TCurvePoint.Create(FRect.CenterPoint.X, FRect.CenterPoint.Y);
 end;
 
 function TMarker.HitTest(Point: TPoint): Boolean;
@@ -577,7 +562,7 @@ begin
         p := Scanline[j];
         for i := 0 to Width - 1 do
         begin
-          grid_points[i, j] := PlotBox.Contains(GetCurvePoint(i, j)) and
+          grid_points[i, j] := PlotBox.Contains(TCurvePoint.Create(i, j)) and
                               (AreSimilar(p^.red, p^.green, p^.blue, R1, G1, B1, Tolerance) or
                                AreSimilar(p^.red, p^.green, p^.blue, R2, G2, B2, Tolerance));
           inc(p);
@@ -816,7 +801,7 @@ begin
         for i := 0 to Width - 1 do
         begin
           //grid_points[i, j] := p^.red or (p^.green shl 8) or (p^.blue shl 16);
-          grid_points[i, j] := PlotBox.Contains(GetCurvePoint(i, j)) and
+          grid_points[i, j] := PlotBox.Contains(TCurvePoint.Create(i, j)) and
                               (AreSimilar(p^.red, p^.green, p^.blue, R1, G1, B1, Tolerance) or
                                AreSimilar(p^.red, p^.green, p^.blue, R2, G2, B2, Tolerance));
           inc(p);
@@ -1030,7 +1015,7 @@ begin
       p := PlotImg.Scanline[j];
       for i := 0 to PlotImg.Width - 1 do
       begin
-        curve_points[i, j] := PlotBox.Contains(GetCurvePoint(i, j)) and
+        curve_points[i, j] := PlotBox.Contains(TCurvePoint.Create(i, j)) and
                               AreSimilar(p^.red, p^.green, p^.blue,
                                          R1, G1, B1, Tolerance);
 
@@ -1331,6 +1316,8 @@ begin
 end;
 
 procedure TPlotImage.SetPlotPointMarkers(ResetPoints: Boolean = False);
+const
+  span = 6;
 
   function PutInside(p: TCurvePoint; w, h: Integer; d: Integer = 0): TCurvePoint;
   begin
@@ -1347,29 +1334,29 @@ begin
   begin
     if ResetPoints then
     begin
-      AxesPoint[1] := TPoint.Create(6, 6);
-      AxesPoint[2] := TPoint.Create(6, Height - 6);
-      AxesPoint[3] := TPoint.Create(Width - 6, Height - 6);
+      AxesPoint[1] := TPoint.Create(span, span);
+      AxesPoint[2] := TPoint.Create(span, Height - span - 1);
+      AxesPoint[3] := TPoint.Create(Width - span - 1, Height - span - 1);
 
-      Scale.PlotPoint[1] := GetCurvePoint(0, 1);
-      Scale.PlotPoint[2] := GetCurvePoint(0, 0);
-      Scale.PlotPoint[3] := GetCurvePoint(1, 0);
+      Scale.PlotPoint[1] := TCurvePoint.Create(0, 1);
+      Scale.PlotPoint[2] := TCurvePoint.Create(0, 0);
+      Scale.PlotPoint[3] := TCurvePoint.Create(1, 0);
 
-      BoxVertex[1] := GetCurvePoint(6, 6);
-      BoxVertex[2] := GetCurvePoint(Width - 6, 6);
-      BoxVertex[3] := GetCurvePoint(Width - 6, Height - 6);
-      BoxVertex[4] := GetCurvePoint(6, Height - 6);
+      BoxVertex[1] := TCurvePoint.Create(span, span);
+      BoxVertex[2] := TCurvePoint.Create(Width - span - 1, span);
+      BoxVertex[3] := TCurvePoint.Create(Width - span - 1, Height - span - 1);
+      BoxVertex[4] := TCurvePoint.Create(span, Height - span - 1);
     end
     else
     begin
-      AxesPoint[1] := PutInside(AxesPoint[1], Width, Height, 6);
-      AxesPoint[2] := PutInside(AxesPoint[2], Width, Height, 6);
-      AxesPoint[3] := PutInside(AxesPoint[3], Width, Height, 6);
+      AxesPoint[1] := PutInside(AxesPoint[1], Width, Height, span);
+      AxesPoint[2] := PutInside(AxesPoint[2], Width, Height, span);
+      AxesPoint[3] := PutInside(AxesPoint[3], Width, Height, span);
 
-      BoxVertex[1] := PutInside(BoxVertex[1], Width, Height, 6);
-      BoxVertex[2] := PutInside(BoxVertex[2], Width, Height, 6);
-      BoxVertex[3] := PutInside(BoxVertex[3], Width, Height, 6);
-      BoxVertex[4] := PutInside(BoxVertex[4], Width, Height, 6);
+      BoxVertex[1] := PutInside(BoxVertex[1], Width, Height, span);
+      BoxVertex[2] := PutInside(BoxVertex[2], Width, Height, span);
+      BoxVertex[3] := PutInside(BoxVertex[3], Width, Height, span);
+      BoxVertex[4] := PutInside(BoxVertex[4], Width, Height, span);
     end;
   end;
 end;
@@ -1403,7 +1390,7 @@ begin
 
     for i := 0 to PlotImg.Width - 1 do
     begin
-      if PlotBox.Contains(GetCurvePoint(i, j)) then
+      if PlotBox.Contains(TCurvePoint.Create(i, j)) then
       begin
         if GridMask.IsValid and GridMask.IsActive and (p1^.alpha > 0) then
           p := p1
@@ -1411,7 +1398,7 @@ begin
           p := p2;
 
         if AreSimilar(p^.red, p^.green, p^.blue, R1, G1, B1, Tolerance) then
-          AllCurvePoints.AddPoint(GetCurvePoint(i, j));
+          AllCurvePoints.AddPoint(TCurvePoint.Create(i, j));
           //AllCurvePoints.AddPoint(Scale.FromImgToPlot(i, j));
       end;
 
@@ -2030,7 +2017,7 @@ procedure TPlotImage.FillIsland(Xi, Yi: Double; var Island: TIsland;
                                 MoveDown: Boolean = True;
                                 MaxPoints: Integer = 1000);
 begin
-  FillIsland(GetCurvePoint(Xi, Yi), Island, JustInY, MoveUp, MoveDown, MaxPoints);
+  FillIsland(TCurvePoint.Create(Xi, Yi), Island, JustInY, MoveUp, MoveDown, MaxPoints);
 end;
 
 procedure TPlotImage.AdjustCurve(Noisy: Boolean = False);
@@ -2265,9 +2252,8 @@ begin
 end;
 
 procedure TPlotImage.SetBoxVertex(Index: Integer; const Value: TCurvePoint);
-const
-  idxo: Array [1..4] of Integer = (0, 1, 2, 3);
-  idxf: Array [1..4] of Integer = (1, 2, 3, 0);
+var
+  Idx: Integer;
 begin
   if (Index >= 1) and (Index <= 4) and (PlotBox[Index - 1] <> Value) then
   begin
@@ -2277,7 +2263,11 @@ begin
     PlotBox[Index - 1] := Value;
 
     if Assigned(FEdgeMarkers[Index]) then
-      FEdgeMarkers[Index].Position := (PlotBox[idxo[Index]] + PlotBox[idxf[Index]])/2;
+      FEdgeMarkers[Index].Position := PlotBox.Edge[Index - 1];
+
+    Idx := PlotBox.PrevVertIdx(Index - 1) + 1;
+    if Assigned(FEdgeMarkers[Idx]) then
+      FEdgeMarkers[Idx].Position := PlotBox.Edge[Idx - 1];
 
     IsChanged := True;
   end;
@@ -2739,9 +2729,9 @@ begin
         if (ssAlt in Shift) then
           FDragAction := daRotate
         else if (ssShift in Shift) then
-          FDragAction := daAngle
+          FDragAction := daVertex
         else
-          FDragAction := daVertex;
+          FDragAction := daAngle;
       end
       else if IsInArray(FClickedMarker, FEdgeMarkers) then
         FDragAction := daEdge;
@@ -2806,23 +2796,35 @@ begin
         case FDragAction of
           daVertex, daAngle: begin
             // Move vertex
-            PlotBox[i - 1] := NewPos;
+            OldPos := PlotBox[i - 1];
             if (FDragAction = daAngle) then
             begin
-              BoxMarkers[xm[i]].Move(GetCurvePoint(NewPos.X, BoxMarkers[xm[i]].Position.Y));
-              BoxMarkers[ym[i]].Move(GetCurvePoint(BoxMarkers[ym[i]].Position.X, NewPos.Y));
+              PlotBox.MoveVertex(i - 1, NewPos);
+              P1 := PlotBox[PlotBox.NextVertIdx(i - 1)];
+              P2 := PlotBox[PlotBox.PrevVertIdx(i - 1)];
 
-              PlotBox[xm[i] - 1] := BoxMarkers[xm[i]].Position;
-              PlotBox[ym[i] - 1] := BoxMarkers[ym[i]].Position;
+              // Check that no marker moves out of the image
+              if ClientRect.Contains(P1) and ClientRect.Contains(P2) then
+              begin
+                BoxMarkers[PlotBox.NextVertIdx(i - 1) + 1].Move(P1);
+                BoxMarkers[PlotBox.PrevVertIdx(i - 1) + 1].Move(P2);
 
-              for j := 1 to PlotBox.NumEdges do
-                EdgeMarkers[j].Move(PlotBox.Edge[j - 1]);
+                for j := 1 to PlotBox.NumEdges do
+                  EdgeMarkers[j].Move(PlotBox.Edge[j - 1]);
+              end
+              else
+              begin
+                PlotBox.MoveVertex(i - 1, OldPos);
+                NewPos := OldPos;
+              end;
             end
             else
             begin
               EdgeMarkers[i].Move(PlotBox.Edge[i - 1]);
               EdgeMarkers[PlotBox.PrevVertIdx(i - 1) + 1].Move(PlotBox.Edge[PlotBox.PrevVertIdx(i - 1)]);
             end;
+
+            PlotBox[i - 1] := NewPos;
           end;
           daRotate: begin
             // Rotate
@@ -2950,8 +2952,8 @@ begin
 
           case FDragAction of
             daAngle: begin
-              OnMarkerDragged(Self, BoxMarkers[xm[i]], False);
-              OnMarkerDragged(Self, BoxMarkers[ym[i]], False);
+              OnMarkerDragged(Self, BoxMarkers[PlotBox.NextVertIdx(i - 1) + 1], False);
+              OnMarkerDragged(Self, BoxMarkers[PlotBox.PrevVertIdx(i - 1) + 1], False);
             end;
             daRotate: begin
               for i := 1 to PlotBox.NumVertices do
@@ -2961,6 +2963,14 @@ begin
                 if (BoxMarkers[i] <> FClickedMarker) then
                   OnMarkerDragged(Self, BoxMarkers[i], False);
               end;
+            end;
+            daEdge: begin
+              for i := 1 to PlotBox.NumVertices do
+                if (FClickedMarker = EdgeMarkers[i]) then
+                  Break;
+
+              OnMarkerDragged(Self, BoxMarkers[PlotBox.NextVertIdx(i - 1) + 1], False);
+              OnMarkerDragged(Self, BoxMarkers[i], False);
             end;
           end;
         end;
@@ -3047,7 +3057,7 @@ end;
 
 function TPlotImage.ConvertCoords(X, Y: Double): TCurvePoint;
 begin
-  Result := ConvertCoords(GetCurvePoint(X, Y));
+  Result := ConvertCoords(TCurvePoint.Create(X, Y));
 end;
 
 function TPlotImage.GetCount: Integer;
@@ -3878,6 +3888,8 @@ begin
 end;
 
 function TPlotImage.LoadFromXML(FileName: TFileName; PictureDlg: TOpenPictureDialog = nil): Boolean;
+const
+  span = 6;
 var
   i, w, h,
   SavedCurveCount,
@@ -4064,10 +4076,10 @@ begin
     begin
       if not PlotBoxLoaded then
       begin
-        PlotBox[0] := GetCurvePoint(0, 0);
-        PlotBox[1] := GetCurvePoint(0, Height);
-        PlotBox[2] := GetCurvePoint(Width, Height);
-        PlotBox[3] := GetCurvePoint(Width, 0);
+        PlotBox[0] := TCurvePoint.Create(span, span);
+        PlotBox[1] := TCurvePoint.Create(Width - span - 1, span);
+        PlotBox[2] := TCurvePoint.Create(Width - span - 1, Height - span - 1);
+        PlotBox[3] := TCurvePoint.Create(span, Height - span - 1);
       end;
 
       State := piSetCurve;

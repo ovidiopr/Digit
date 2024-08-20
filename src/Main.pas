@@ -23,7 +23,8 @@ type
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
-    lblWarning: TLabel;
+    tbResetBox: TToolButton;
+    ToolResetBox: TAction;
     ToolCorrectDistortion: TAction;
     tbBox: TToolBar;
     tbCorrectDistortion: TToolButton;
@@ -417,6 +418,7 @@ type
     procedure ToolMarkersExecute(Sender: TObject);
     procedure ToolBSplinesExecute(Sender: TObject);
     procedure ToolResampleExecute(Sender: TObject);
+    procedure ToolResetBoxExecute(Sender: TObject);
     procedure ToolScaleOptionsExecute(Sender: TObject);
     procedure ToolSmoothExecute(Sender: TObject);
     procedure ToolCurveUpExecute(Sender: TObject);
@@ -783,17 +785,17 @@ begin
   Readln(F, C);
   SavedPoints := C = '1';
   Read(F, X);  Read(F, Y);
-  PlotImage.Scale.ImagePoint[1] := GetCurvePoint(X, Y);
+  PlotImage.Scale.ImagePoint[1] := TCurvePoint.Create(X, Y);
   Read(F, X);  Read(F, Y);
-  PlotImage.Scale.ImagePoint[2] := GetCurvePoint(X, Y);
+  PlotImage.Scale.ImagePoint[2] := TCurvePoint.Create(X, Y);
   Read(F, X);  Readln(F, Y);
-  PlotImage.Scale.ImagePoint[3] := GetCurvePoint(X, Y);
+  PlotImage.Scale.ImagePoint[3] := TCurvePoint.Create(X, Y);
   Read(F, X);  Read(F, Y);
-  PlotImage.Scale.PlotPoint[1] := GetCurvePoint(X, Y);
+  PlotImage.Scale.PlotPoint[1] := TCurvePoint.Create(X, Y);
   Read(F, X);  Read(F, Y);
-  PlotImage.Scale.PlotPoint[2] := GetCurvePoint(X, Y);
+  PlotImage.Scale.PlotPoint[2] := TCurvePoint.Create(X, Y);
   Read(F, X);  Readln(F, Y);
-  PlotImage.Scale.PlotPoint[3] := GetCurvePoint(X, Y);
+  PlotImage.Scale.PlotPoint[3] := TCurvePoint.Create(X, Y);
   Readln(F, Co);
   btnColor.ButtonColor := Co;
   PlotImage.DigitCurve.Color := Co;
@@ -1108,14 +1110,14 @@ procedure TDigitMainForm.EditVX1Change(Sender: TObject; AByUser: boolean);
 begin
   if AByUser then
     with TBCTrackbarUpdown(Sender) do
-      PlotImage.BoxVertex[Tag] := GetCurvePoint(Value, PlotImage.BoxVertex[Tag].Y);
+      PlotImage.BoxVertex[Tag] := TCurvePoint.Create(Value, PlotImage.BoxVertex[Tag].Y);
 end;
 
 procedure TDigitMainForm.EditVY1Change(Sender: TObject; AByUser: boolean);
 begin
   if AByUser then
     with TBCTrackbarUpdown(Sender) do
-      PlotImage.BoxVertex[Tag] := GetCurvePoint(PlotImage.BoxVertex[Tag].X, Value);
+      PlotImage.BoxVertex[Tag] := TCurvePoint.Create(PlotImage.BoxVertex[Tag].X, Value);
 end;
 
 procedure TDigitMainForm.edtGridMaskChange(Sender: TObject; AByUser: boolean);
@@ -1413,7 +1415,7 @@ begin
         if (PlotImage.NumPoints >= Row) and (NewValue <> OldValue) then
         begin
           X := PlotImage.Point[Row - 1].X;
-          PlotImage.Point[Row - 1] := GetCurvePoint(X, Y);
+          PlotImage.Point[Row - 1] := TCurvePoint.Create(X, Y);
 
           NewValue := Format('%.5g', [Y]);
 
@@ -1596,23 +1598,23 @@ end;
 function TDigitMainForm.GetImagePoint(Index: Integer): TCurvePoint;
 begin
   case Index of
-    1: Result := GetCurvePoint(EditIX1.Value, EditIY1.Value);
-    2: Result := GetCurvePoint(EditIX2.Value, EditIY2.Value);
-    3: Result := GetCurvePoint(EditIX3.Value, EditIY3.Value);
-    else Result := GetCurvePoint(0, 0);
+    1: Result := TCurvePoint.Create(EditIX1.Value, EditIY1.Value);
+    2: Result := TCurvePoint.Create(EditIX2.Value, EditIY2.Value);
+    3: Result := TCurvePoint.Create(EditIX3.Value, EditIY3.Value);
+    else Result := TCurvePoint.Create(0, 0);
   end;
 end;
 
 function TDigitMainForm.GetPlotPoint(Index: Integer): TCurvePoint;
 begin
   case Index of
-    1: Result := GetCurvePoint(StrToFloat(EditPX1.Text),
+    1: Result := TCurvePoint.Create(StrToFloat(EditPX1.Text),
                                StrToFloat(EditPY1.Text));
-    2: Result := GetCurvePoint(StrToFloat(EditPX2.Text),
+    2: Result := TCurvePoint.Create(StrToFloat(EditPX2.Text),
                                StrToFloat(EditPY2.Text));
-    3: Result := GetCurvePoint(StrToFloat(EditPX3.Text),
+    3: Result := TCurvePoint.Create(StrToFloat(EditPX3.Text),
                                StrToFloat(EditPY3.Text));
-    else Result := GetCurvePoint(0, 0);
+    else Result := TCurvePoint.Create(0, 0);
   end;
 end;
 
@@ -2378,7 +2380,11 @@ end;
 procedure TDigitMainForm.ToolCorrectDistortionExecute(Sender: TObject);
 begin
   // Almost ready, but not yet
-  PlotImage.UndistortImage;
+  if (MessageDlg('You are about to crop the current plot image.' +
+                 ' This action cannot be undone and will reset the' +
+                 ' digitization. Continue?',
+                 mtWarning, [mbYes, mbNo], 0) = mrYes) then
+    PlotImage.UndistortImage;
 end;
 
 procedure TDigitMainForm.ToolCurveAddExecute(Sender: TObject);
@@ -2450,6 +2456,19 @@ begin
   //Replace the curve by interpolated values
   PlotImage.Interpolate(seXo.Value, seXf.Value, seInterpPoints.Value);
   CurveToGUI;
+end;
+
+procedure TDigitMainForm.ToolResetBoxExecute(Sender: TObject);
+const
+  span = 6;
+begin
+  with PlotImage do
+  begin
+    BoxVertex[1] := TCurvePoint.Create(span, span);
+    BoxVertex[2] := TCurvePoint.Create(Width - span - 1, span);
+    BoxVertex[3] := TCurvePoint.Create(Width - span - 1, Height - span - 1);
+    BoxVertex[4] := TCurvePoint.Create(span, Height - span - 1);
+  end;
 end;
 
 procedure TDigitMainForm.ToolScaleOptionsExecute(Sender: TObject);

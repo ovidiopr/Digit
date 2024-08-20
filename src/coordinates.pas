@@ -103,7 +103,7 @@ type
     property IsValid: Boolean read GetIsValidScale;
   end;
 
-  TPlotPoly = class(TObject)
+  TPolygon = class(TObject)
   private
     { Private declarations }
     FVertices: Array of TCurvePoint;
@@ -135,6 +135,7 @@ type
     destructor Destroy; override;
 
     procedure Reset;
+    procedure MoveVertex(Index: Integer; Pn: TCurvePoint); virtual;
     procedure MoveEdge(Index: Integer; Pn: TCurvePoint); virtual;
     procedure Rotate(Index: Integer; Pn: TCurvePoint); virtual;
     procedure ApplyRotation;
@@ -161,7 +162,7 @@ type
     property Rotated: Boolean read FRotated;
   end;
 
-  TPlotQuad = class(TPlotPoly)
+  TPlotQuad = class(TPolygon)
   private
     { Private declarations }
     FPolarCoordinates: Boolean;
@@ -183,6 +184,7 @@ type
     {@exclude}
     destructor Destroy; override;
 
+    procedure MoveVertex(Index: Integer; Pn: TCurvePoint); override;
     procedure MoveEdge(Index: Integer; Pn: TCurvePoint); override;
     procedure Rotate(Index: Integer; Pn: TCurvePoint); override;
 
@@ -316,8 +318,8 @@ begin
 
   for i := 1 to 3 do
   begin
-    ImagePoint[i] := GetCurvePoint(0, 0);
-    PlotPoint[i] := GetCurvePoint(0, 0);
+    ImagePoint[i] := TCurvePoint.Create(0, 0);
+    PlotPoint[i] := TCurvePoint.Create(0, 0);
 
     FImgPointIsSet[i] := False;
     FPltPointIsSet[i] := False;
@@ -414,12 +416,12 @@ begin
     Result := pnt;
   end
   else
-    Result := GetCurvePoint(0, 0);
+    Result := TCurvePoint.Create(0, 0);
 end;
 
 function TScale.FromImgToPlot(X, Y: Double): TCurvePoint;
 begin
-  Result := FromImgToPlot(GetCurvePoint(X, Y));
+  Result := FromImgToPlot(TCurvePoint.Create(X, Y));
 end;
 
 function TScale.FromPlotToImg(p: TCurvePoint): TCurvePoint;
@@ -501,12 +503,12 @@ begin
     Result := ChangeCoords(TmpPlotPoint, ImagePoints, pnt);
   end
   else
-    Result := GetCurvePoint(0, 0);
+    Result := TCurvePoint.Create(0, 0);
 end;
 
 function TScale.FromPlotToImg(X, Y: Double): TCurvePoint;
 begin
-  Result := FromPlotToImg(GetCurvePoint(X, Y));
+  Result := FromPlotToImg(TCurvePoint.Create(X, Y));
 end;
 
 function TScale.Distance(P1, P2: TCurvePoint): Double;
@@ -519,12 +521,12 @@ end;
 
 function TScale.Nx(Pi: TCurvePoint): TCurvePoint;
 begin
-  Result := Normalize(FromPlotToImg(FromImgToPlot(Pi) + GetCurvePoint(1, 0)) - Pi)
+  Result := Normalize(FromPlotToImg(FromImgToPlot(Pi) + TCurvePoint.Create(1, 0)) - Pi)
 end;
 
 function TScale.Ny(Pi: TCurvePoint): TCurvePoint;
 begin
-  Result := Normalize(FromPlotToImg(FromImgToPlot(Pi) + GetCurvePoint(0, 1)) - Pi)
+  Result := Normalize(FromPlotToImg(FromImgToPlot(Pi) + TCurvePoint.Create(0, 1)) - Pi)
 end;
 
 function TScale.dx(Pi: TCurvePoint): Double;
@@ -684,7 +686,7 @@ begin
               Y := StrToFloat(UTF8Encode(Child.Attributes.Item[j].NodeValue));
           end;
 
-          ImagePoint[i] := GetCurvePoint(X, Y);
+          ImagePoint[i] := TCurvePoint.Create(X, Y);
         end;
 
         // Plot points
@@ -700,7 +702,7 @@ begin
               Y := StrToFloat(UTF8Encode(Child.Attributes.Item[j].NodeValue));
           end;
 
-          PlotPoint[i] := GetCurvePoint(X, Y);
+          PlotPoint[i] := TCurvePoint.Create(X, Y);
         end;
       end;
 
@@ -770,12 +772,12 @@ begin
   end;
 end;
 
-//===============================| TScale |===============================//
+//===============================| TScale |================================//
 
 
-//==============================| TPlotPoly |==============================//
+//==============================| TPolygon |===============================//
 
-constructor TPlotPoly.Create(NumVert: Integer = 4);
+constructor TPolygon.Create(NumVert: Integer = 4);
 begin
   inherited Create;
 
@@ -784,7 +786,7 @@ begin
   Reset;
 end;
 
-destructor TPlotPoly.Destroy;
+destructor TPolygon.Destroy;
 begin
   SetLength(FVertices, 0);
   SetLength(FSlopes, 0);
@@ -793,7 +795,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TPlotPoly.Reset;
+procedure TPolygon.Reset;
 var
   i: Integer;
 begin
@@ -802,23 +804,42 @@ begin
   FCosine := 1.0;
 
   for i := 0 to NumVertices - 1 do
-    Vertex[i] := GetCurvePoint(-1, -1);
+    Vertex[i] := TCurvePoint.Create(-1, -1);
 end;
 
-procedure TPlotPoly.MoveEdge(Index: Integer; Pn: TCurvePoint);
+procedure TPolygon.MoveVertex(Index: Integer; Pn: TCurvePoint);
 var
   Idx1, Idx2: Integer;
 begin
-  Idx1 := NextVertIdx(Index);
-  Idx2 := NextVertIdx(NextVertIdx(Index));
-  Vertex[Idx1] := CalcVertexPos(Pn, Vertex[Idx2], Index, Idx1);
+  if (Index >= 0) and (Index < NumVertices) then
+  begin
+    Idx1 := NextVertIdx(Index);
+    Idx2 := NextVertIdx(Idx1);
+    FVertices[Idx1] := CalcVertexPos(Pn, Vertex[Idx2], Index, Idx1);
 
-  Idx1 := Index;
-  Idx2 := PrevVertIdx(Index);
-  Vertex[Idx1] := CalcVertexPos(Pn, Vertex[Idx2], Index, Idx2);
+    Idx1 := PrevVertIdx(Index);
+    Idx2 := PrevVertIdx(Idx1);
+    FVertices[Idx1] := CalcVertexPos(Pn, Vertex[Idx2], Idx1, Idx2);
+  end;
 end;
 
-procedure TPlotPoly.Rotate(Index: Integer; Pn: TCurvePoint);
+procedure TPolygon.MoveEdge(Index: Integer; Pn: TCurvePoint);
+var
+  Idx1, Idx2: Integer;
+begin
+  if (Index >= 0) and (Index < NumVertices) then
+  begin
+    Idx1 := NextVertIdx(Index);
+    Idx2 := NextVertIdx(Idx1);
+    FVertices[Idx1] := CalcVertexPos(Pn, Vertex[Idx2], Index, Idx1);
+
+    Idx1 := Index;
+    Idx2 := PrevVertIdx(Index);
+    FVertices[Idx1] := CalcVertexPos(Pn, Vertex[Idx2], Index, Idx2);
+  end;
+end;
+
+procedure TPolygon.Rotate(Index: Integer; Pn: TCurvePoint);
 var
   a, b, c: TCurvePoint;
 begin
@@ -839,7 +860,7 @@ begin
    end;
 end;
 
-procedure TPlotPoly.ApplyRotation;
+procedure TPolygon.ApplyRotation;
 var
   i: Integer;
   a, c: TCurvePoint;
@@ -863,19 +884,19 @@ begin
   end;
 end;
 
-procedure TPlotPoly.CancelRotation;
+procedure TPolygon.CancelRotation;
 begin
   FRotated := False;
   FSine := 0.0;
   FCosine := 1.0;
 end;
 
-function TPlotPoly.GetNumVertices: Integer;
+function TPolygon.GetNumVertices: Integer;
 begin
   Result :=  Length(FVertices);
 end;
 
-function TPlotPoly.GetVertex(Index: Integer): TCurvePoint;
+function TPolygon.GetVertex(Index: Integer): TCurvePoint;
 var
   a, c: TCurvePoint;
   X1, Y1: Double;
@@ -895,10 +916,10 @@ begin
       Result := FVertices[Index];
   end
   else
-    Result :=  GetCurvePoint(-1, -1);
+    Result :=  TCurvePoint.Create(-1, -1);
 end;
 
-function TPlotPoly.GetEdge(Index: Integer): TCurvePoint;
+function TPolygon.GetEdge(Index: Integer): TCurvePoint;
 begin
   if (Index >= 0) and (Index < NumEdges) then
   begin
@@ -908,10 +929,10 @@ begin
       Result := (Vertex[Index] + Vertex[Index + 1])/2;
   end
   else
-    Result :=  GetCurvePoint(-1, -1);
+    Result :=  TCurvePoint.Create(-1, -1);
 end;
 
-function TPlotPoly.GetCenter: TCurvePoint;
+function TPolygon.GetCenter: TCurvePoint;
 var
   i, j: Integer;
   A, Cx, Cy, C: Double;
@@ -936,7 +957,7 @@ begin
   Result := TCurvePoint.Create(Cx/A/3, Cy/A/3);
 end;
 
-function TPlotPoly.GetPolygonPoints: ArrayOfTPointF;
+function TPolygon.GetPolygonPoints: ArrayOfTPointF;
 var i: Integer;
 begin
   Setlength(Result, NumVertices);
@@ -947,7 +968,7 @@ begin
   end;
 end;
 
-function TPlotPoly.GetRect: TRect;
+function TPolygon.GetRect: TRect;
 var
   i, Xo, Yo, Xf, Yf: Integer;
 begin
@@ -971,7 +992,7 @@ begin
   end;
 end;
 
-function TPlotPoly.NextVertIdx(Index: Integer): Integer;
+function TPolygon.NextVertIdx(Index: Integer): Integer;
 begin
   if (Index = NumVertices - 1) then
     Result := 0
@@ -979,7 +1000,7 @@ begin
     Result := Index + 1;
 end;
 
-function TPlotPoly.PrevVertIdx(Index: Integer): Integer;
+function TPolygon.PrevVertIdx(Index: Integer): Integer;
 begin
   if (Index = 0) then
     Result := NumVertices - 1
@@ -987,14 +1008,14 @@ begin
     Result := Index - 1;
 end;
 
-procedure TPlotPoly.SetNumVertices(const Value: Integer);
+procedure TPolygon.SetNumVertices(const Value: Integer);
 begin
   SetLength(FVertices, Value);
   SetLength(FSlopes, Value);
   SetLength(FHoriLines, Value);
 end;
 
-procedure TPlotPoly.SetVertex(Index: Integer; const Value: TCurvePoint);
+procedure TPolygon.SetVertex(Index: Integer; const Value: TCurvePoint);
 begin
   if (Index >= 0) and (Index < NumVertices) and (not Rotated) then
   begin
@@ -1004,7 +1025,7 @@ begin
   end;
 end;
 
-procedure TPlotPoly.RecalcSlopes;
+procedure TPolygon.RecalcSlopes;
 var
   i, j: Integer;
 begin
@@ -1031,7 +1052,7 @@ begin
   end;
 end;
 
-function TPlotPoly.CalcVertexPos(Pn, Pa: TCurvePoint; Index, Idx: Integer): TCurvePoint;
+function TPolygon.CalcVertexPos(Pn, Pa: TCurvePoint; Index, Idx: Integer): TCurvePoint;
 var
   a, b, c: Double;
 begin
@@ -1079,7 +1100,7 @@ begin
   end;
 end;
 
-function TPlotPoly.Contains(p: TCurvePoint): Boolean;
+function TPolygon.Contains(p: TCurvePoint): Boolean;
 var
   i, j: Integer;
 begin
@@ -1117,7 +1138,7 @@ end;
 
 // This function is adapted from:
 // https://math.stackexchange.com/questions/1743995/determine-whether-a-polygon-is-convex-based-on-its-vertices/1745427#1745427
-function TPlotPoly.IsConvex: Boolean;
+function TPolygon.IsConvex: Boolean;
 var
   i, j, k: Integer;
   w, wSign,
@@ -1240,7 +1261,7 @@ begin
   Result := (xFlips = 2) and (yFlips = 2);
 end;
 
-function TPlotPoly.IsCW: Boolean;
+function TPolygon.IsCW: Boolean;
 var
   i, j: Integer;
   sum: Double;
@@ -1258,12 +1279,12 @@ begin
   Result := (sum <= 0.0);
 end;
 
-function TPlotPoly.IsCCW: Boolean;
+function TPolygon.IsCCW: Boolean;
 begin
   Result := not IsCW;
 end;
 
-function TPlotPoly.ImportFromXML(Item: TDOMNode): Boolean;
+function TPolygon.ImportFromXML(Item: TDOMNode): Boolean;
 var
   i, j: Integer;
   X, Y: Double;
@@ -1297,7 +1318,7 @@ begin
               Y := StrToFloat(UTF8Encode(Child.Attributes.Item[j].NodeValue));
           end;
 
-          Vertex[i - 1] := GetCurvePoint(X, Y);
+          Vertex[i - 1] := TCurvePoint.Create(X, Y);
         end;
       end;
 
@@ -1311,7 +1332,7 @@ begin
   end;
 end;
 
-function TPlotPoly.ExportToXML(Doc: TXMLDocument): TDOMNode;
+function TPolygon.ExportToXML(Doc: TXMLDocument): TDOMNode;
 var
   i: Integer;
   VertexNode: TDOMNode;
@@ -1336,7 +1357,7 @@ begin
   end;
 end;
 
-//==============================| TPlotPoly |==============================//
+//==============================| TPolygon |===============================//
 
 
 //==============================| TPlotQuad |==============================//
@@ -1434,6 +1455,14 @@ begin
   FRecalculateInverse := True;
 
   inherited SetVertex(Index, Value);
+end;
+
+procedure TPlotQuad.MoveVertex(Index: Integer; Pn: TCurvePoint);
+begin
+  FRecalculateDirect := True;
+  FRecalculateInverse := True;
+
+  inherited MoveVertex(Index, Pn);
 end;
 
 procedure TPlotQuad.MoveEdge(Index: Integer; Pn: TCurvePoint);
@@ -1622,7 +1651,7 @@ end;
 
 function CartesianToPolar(X, Y: Double): TCurvePoint;
 begin
-  Result := CartesianToPolar(GetCurvePoint(X, Y));
+  Result := CartesianToPolar(TCurvePoint.Create(X, Y));
 end;
 
 function PolarToCartesian(p: TCurvePoint): TCurvePoint;
@@ -1633,7 +1662,7 @@ end;
 
 function PolarToCartesian(X, Y: Double): TCurvePoint;
 begin
-  Result := PolarToCartesian(GetCurvePoint(X, Y));
+  Result := PolarToCartesian(TCurvePoint.Create(X, Y));
 end;
 
 end.
