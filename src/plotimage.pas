@@ -2726,7 +2726,7 @@ begin
     begin
       if IsInArray(FClickedMarker, FBoxMarkers) then
       begin
-        if (ssAlt in Shift) then
+        if (ssAlt in Shift) or (ssCtrl in Shift) then
           FDragAction := daRotate
         else if (ssShift in Shift) or (not PlotBox.IsConvex) then
           FDragAction := daVertex
