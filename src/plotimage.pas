@@ -176,6 +176,9 @@ type
     function GetCanUndo: Boolean;
     function GetCanRedo: Boolean;
 
+    function XAxisRect: TRect;
+    function YAxisRect: TRect;
+
     procedure SetAxesPoint(Index: Integer; const Value: TCurvePoint);
     procedure SetBoxVertex(Index: Integer; const Value: TCurvePoint);
 
@@ -200,6 +203,10 @@ type
     procedure UpdateRegion; overload;
 
     procedure EraseCurve(Curve: TDigitCurve);
+
+    procedure RectIntersection(Po, Pf: TCurvePoint; var Pini, Pend: TCurvePoint);
+    procedure XAxisCoords(var Pini, Pend: TCurvePoint);
+    procedure YAxisCoords(var Pini, Pend: TCurvePoint);
 
     procedure LoadImage(FileName: TFileName); overload;
     procedure LoadImage(Stream: TStream); overload;
@@ -2239,6 +2246,46 @@ begin
     Result := nil;
 end;
 
+function TPlotImage.XAxisRect: TRect;
+var
+  Pini, Pend: TCurvePoint;
+  Xmin, Xmax,
+  Ymin, Ymax: Integer;
+begin
+  if Assigned(FAxesMarkers[2]) and Assigned(FAxesMarkers[3]) then
+  begin
+    RectIntersection(AxesMarkers[2].Position, AxesMarkers[3].Position, Pini, Pend);
+
+    Xmin := Round(min(Pini.X, Pend.X));
+    Xmax := Round(max(Pini.X, Pend.X));
+    Ymin := Round(min(Pini.Y, Pend.Y));
+    Ymax := Round(max(Pini.Y, Pend.Y));
+    Result := TRect.Create(Xmin, Ymin, Xmax, Ymax);
+  end
+  else
+    Result := TRect.Create(0, 0, 0, 0);
+end;
+
+function TPlotImage.YAxisRect: TRect;
+var
+  Pini, Pend: TCurvePoint;
+  Xmin, Xmax,
+  Ymin, Ymax: Integer;
+begin
+  if Assigned(FAxesMarkers[2]) and Assigned(FAxesMarkers[1]) then
+  begin
+    RectIntersection(AxesMarkers[2].Position, AxesMarkers[1].Position, Pini, Pend);
+
+    Xmin := Round(min(Pini.X, Pend.X));
+    Xmax := Round(max(Pini.X, Pend.X));
+    Ymin := Round(min(Pini.Y, Pend.Y));
+    Ymax := Round(max(Pini.Y, Pend.Y));
+    Result := TRect.Create(Xmin, Ymin, Xmax, Ymax);
+  end
+  else
+    Result := TRect.Create(0, 0, 0, 0);
+end;
+
 procedure TPlotImage.SetAxesPoint(Index: Integer; const Value: TCurvePoint);
 begin
   if (Index >= 1) and (Index <= 3) and (Scale.ImagePoint[Index] <> Value) then
@@ -2584,12 +2631,13 @@ end;
 
 procedure TPlotImage.Paint;
 var
-  PolyColor: TBGRAPixel;
-  Rect, ClipRect, PaintRect: TRect;
   i: Integer;
   {$ifdef windows}
   ClipRgn: HRGN;
   {$endif}
+  PolyColor: TBGRAPixel;
+  Rect, ClipRect, PaintRect: TRect;
+  Pini, Pend: TCurvePoint;
 begin
   inherited Paint;
 
@@ -2610,26 +2658,44 @@ begin
       CopyRect(PaintRect, GridMask.Mask.Canvas, PaintRect);
   end;
 
-  if HasPoints and (State = piSetCurve) then
-    DigitCurve.Draw(WhiteBoard.Canvas);
+  case State of
+    piSetCurve: begin
+      if HasPoints then
+        DigitCurve.Draw(WhiteBoard.Canvas);
+    end;
+    piSetScale: begin
+      WhiteBoard.ArrowEndAsTriangle();
+      WhiteBoard.ArrowEndSize := PointF(8, 2.5);
+      WhiteBoard.ArrowStartOffset:= 0;
+      WhiteBoard.ArrowEndOffset:= -7;
 
-  if (State = piSetPlotBox) and
-     not (PlotBox.Rect*PaintRect).IsEmpty then
-  begin
-    if PlotBox.IsConvex then
-    begin
-      if PlotBox.IsCW then
-        PolyColor := clBlue
-      else
-        PolyColor := clGreen;
-    end
-    else
-      PolyColor := clRed;
+      XAxisCoords(Pini, Pend);
+      WhiteBoard.DrawLineAntialias(Pini.X, Pini.Y, Pend.X, Pend.Y, clBlack, 2);
 
-    PolyColor.alpha := 80;
-    PlotBox.PolarCoordinates := (Scale.CoordSystem = csPolar);
-    WhiteBoard.DrawPolygonAntialias(PlotBox.PolygonPoints, BGRABlack, 1, PolyColor);
+      YAxisCoords(Pini, Pend);
+      WhiteBoard.DrawLineAntialias(Pini.X, Pini.Y, Pend.X, Pend.Y, clRed, 2);
+    end;
+    piSetPlotBox: begin
+      if not (PlotBox.Rect*PaintRect).IsEmpty then
+      begin
+        if PlotBox.IsConvex then
+        begin
+          if PlotBox.IsCW then
+            PolyColor := clBlue
+          else
+            PolyColor := clGreen;
+        end
+        else
+          PolyColor := clRed;
+
+        PolyColor.alpha := 80;
+        PlotBox.PolarCoordinates := (Scale.CoordSystem = csPolar);
+        WhiteBoard.DrawPolygonAntialias(PlotBox.PolygonPoints, BGRABlack, 1, PolyColor);
+      end;
+    end;
   end;
+
+
 
   for i := Markers.Count - 1 downto 0 do
     Markers[i].Draw(WhiteBoard, PaintRect);
@@ -2779,12 +2845,24 @@ begin
     begin
       UpdateMarker(FClickedMarker);
 
+      if (State = piSetScale) then
+      begin
+        UpdateRegion(XAxisRect);
+        UpdateRegion(YAxisRect);
+      end;
+
       if ClientRect.Contains(MouseMovePos) then
         NewPos := FClickedCoord + MouseMovePos - FClickedPoint
       else
         NewPos := FClickedCoord;  //The mouse moves out of the image
 
       FClickedMarker.Move(NewPos);
+
+      if (State = piSetScale) then
+      begin
+        UpdateRegion(XAxisRect);
+        UpdateRegion(YAxisRect);
+      end;
 
       if (State = piSetPlotBox) then
       begin
@@ -3295,6 +3373,123 @@ end;
 procedure TPlotImage.EraseCurve(Curve: TDigitCurve);
 begin
   Curve.Draw(Canvas);
+end;
+
+procedure TPlotImage.RectIntersection(Po, Pf: TCurvePoint;
+                                      var Pini, Pend: TCurvePoint);
+var
+  P: Array [1..4] of TCurvePoint;
+  Idx: Array [1..2] of Integer;
+  i, j: Integer;
+  m, b: Double;
+begin
+  // Mostly vertical
+  if abs(Pf.Y - Po.Y) > abs(Pf.X - Po.X) then
+  begin
+    m := (Pf.X - Po.X)/(Pf.Y - Po.Y);
+    b := Pf.X - m*Pf.Y;
+
+    // Intersection with the upper edge
+    P[1].Y := 0;
+    P[1].X := b;
+
+    // Intersection with the bottom edge
+    P[3].Y := ClientHeight - 1;
+    P[3].X := m*P[3].Y + b;
+
+    // Not completely vertical
+    if (abs(m) > 1e-5) then
+    begin
+      // Intersection with the right edge
+      P[2].X := ClientWidth - 1;
+      P[2].Y := (P[2].X - b)/m;
+
+      // Intersection with the left edge
+      P[4].X := 0;
+      P[4].Y := -b/m;
+    end
+    // Completely vertical
+    else
+    begin
+      // No intersection (lines are parallel)
+      P[2] := TCurvePoint.Create(-1, -1);
+      P[4] := TCurvePoint.Create(-1, -1);
+    end;
+  end
+  // Mostly horizontal
+  else
+  begin
+    m := (Pf.Y - Po.Y)/(Pf.X - Po.X);
+    b := Pf.Y - m*Pf.X;
+
+    // Not completely horizontal
+    if (abs(m) > 1e-5) then
+    begin
+      // Intersection with the upper edge
+      P[1].Y := 0;
+      P[1].X := -b/m;
+
+      // Intersection with the bottom edge
+      P[3].Y := ClientHeight - 1;
+      P[3].X := (P[3].Y - b)/m;
+    end
+    // Completely horizontal
+    else
+    begin
+      // No intersection (lines are parallel)
+      P[1] := TCurvePoint.Create(-1, -1);
+      P[3] := TCurvePoint.Create(-1, -1);
+    end;
+
+    // Intersection with the right edge
+    P[2].X := ClientWidth - 1;
+    P[2].Y := m*P[2].X + b;
+
+    // Intersection with the left edge
+    P[4].X := 0;
+    P[4].Y := b;
+  end;
+
+  // Find the two points that belong to the rectangle
+  j := 1;
+  for i := 1 to 4 do
+  begin
+    if ClientRect.Contains(P[i]) and (j <= 2) then
+    begin
+      Idx[j] := i;
+      inc(j);
+    end;
+  end;
+
+  // Assign the points
+  if (Po.DistanceTo(P[Idx[1]]) < Po.DistanceTo(P[Idx[2]])) then
+  begin
+    Pini := P[Idx[1]];
+    Pend := P[Idx[2]];
+  end
+  else
+  begin
+    Pini := P[Idx[2]];
+    Pend := P[Idx[1]];
+  end;
+end;
+
+procedure TPlotImage.XAxisCoords(var Pini, Pend: TCurvePoint);
+begin
+  if Assigned(FAxesMarkers[2]) and Assigned(FAxesMarkers[3]) then
+    RectIntersection(AxesMarkers[2].Position, AxesMarkers[3].Position, Pini, Pend)
+  else
+    with Scale do
+      RectIntersection(ImagePoint[2], ImagePoint[3], Pini, Pend);
+end;
+
+procedure TPlotImage.YAxisCoords(var Pini, Pend: TCurvePoint);
+begin
+  if Assigned(FAxesMarkers[2]) and Assigned(FAxesMarkers[1]) then
+    RectIntersection(AxesMarkers[2].Position, AxesMarkers[1].Position, Pini, Pend)
+  else
+    with Scale do
+      RectIntersection(ImagePoint[2], ImagePoint[1], Pini, Pend);
 end;
 
 procedure TPlotImage.LoadImage(FileName: TFileName);
