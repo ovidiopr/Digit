@@ -1479,7 +1479,7 @@ object DigitMainForm: TDigitMainForm
       Height = 237
       Top = 5
       Width = 220
-      ActivePage = tsPlotBox
+      ActivePage = tsCurve
       Align = alClient
       AutoSize = True
       BorderSpacing.Top = 5
@@ -1488,7 +1488,7 @@ object DigitMainForm: TDigitMainForm
       ParentShowHint = False
       ShowHint = True
       Style = tsButtons
-      TabIndex = 2
+      TabIndex = 0
       TabOrder = 0
       OnChange = pcInputChange
       Options = [nboMultiLine]
@@ -2025,13 +2025,13 @@ object DigitMainForm: TDigitMainForm
           TabOrder = 0
           object gbCoord: TGroupBox
             Left = 0
-            Height = 40
+            Height = 47
             Top = 0
             Width = 197
             Align = alTop
             AutoSize = True
             Caption = 'Coordinates'
-            ClientHeight = 13
+            ClientHeight = 20
             ClientWidth = 187
             Font.Color = clBlack
             Font.Height = -11
@@ -2064,7 +2064,7 @@ object DigitMainForm: TDigitMainForm
           object gbX: TGroupBox
             Left = 0
             Height = 68
-            Top = 40
+            Top = 47
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2156,7 +2156,7 @@ object DigitMainForm: TDigitMainForm
           object gbY: TGroupBox
             Left = 0
             Height = 66
-            Top = 108
+            Top = 115
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2246,7 +2246,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint1: TGroupBox
             Left = 0
             Height = 88
-            Top = 174
+            Top = 181
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2258,7 +2258,7 @@ object DigitMainForm: TDigitMainForm
             ChildSizing.ControlsPerLine = 3
             ClientHeight = 61
             ClientWidth = 187
-            Font.Color = clBlack
+            Font.Color = clRed
             Font.Height = -11
             Font.Name = 'Default'
             Font.Style = [fsBold]
@@ -2283,7 +2283,7 @@ object DigitMainForm: TDigitMainForm
               Top = 0
               Width = 82
               Caption = 'Image'
-              Font.Color = clBlack
+              Font.Color = clRed
               Font.Height = -11
               Font.Name = 'Default'
               Font.Style = [fsBold]
@@ -2305,7 +2305,7 @@ object DigitMainForm: TDigitMainForm
               Width = 14
               Alignment = taRightJustify
               Caption = 'X:'
-              Font.Color = clBlack
+              Font.Color = clRed
               Font.Height = -11
               Font.Name = 'Default'
               Font.Style = [fsBold]
@@ -2382,7 +2382,7 @@ object DigitMainForm: TDigitMainForm
               Border.Style = bboSolid
               Rounding.RoundX = 1
               Rounding.RoundY = 1
-              Font.Color = clBlack
+              Font.Color = clRed
               Font.Height = -11
               Font.Name = 'Default'
               Font.Style = [fsBold]
@@ -2399,7 +2399,7 @@ object DigitMainForm: TDigitMainForm
               Height = 22
               Top = 15
               Width = 87
-              Font.Color = clBlack
+              Font.Color = clRed
               Font.Height = -13
               Font.Name = 'Default'
               Font.Style = [fsBold]
@@ -2486,7 +2486,7 @@ object DigitMainForm: TDigitMainForm
               Border.Style = bboSolid
               Rounding.RoundX = 1
               Rounding.RoundY = 1
-              Font.Color = clBlack
+              Font.Color = clRed
               Font.Height = -11
               Font.Name = 'Default'
               Font.Style = [fsBold]
@@ -2503,7 +2503,7 @@ object DigitMainForm: TDigitMainForm
               Height = 22
               Top = 39
               Width = 87
-              Font.Color = clBlack
+              Font.Color = clRed
               Font.Height = -13
               Font.Name = 'Default'
               Font.Style = [fsBold]
@@ -2515,7 +2515,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint2: TGroupBox
             Left = 0
             Height = 88
-            Top = 262
+            Top = 269
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2527,7 +2527,7 @@ object DigitMainForm: TDigitMainForm
             ChildSizing.ControlsPerLine = 3
             ClientHeight = 61
             ClientWidth = 187
-            Font.Color = clBlack
+            Font.Color = clGreen
             Font.Height = -11
             Font.Name = 'Default'
             Font.Style = [fsBold]
@@ -2552,7 +2552,7 @@ object DigitMainForm: TDigitMainForm
               Top = 0
               Width = 82
               Caption = 'Image'
-              Font.Color = clBlack
+              Font.Color = clGreen
               Font.Height = -11
               Font.Name = 'Default'
               Font.Style = [fsBold]
@@ -2574,7 +2574,7 @@ object DigitMainForm: TDigitMainForm
               Width = 14
               Alignment = taRightJustify
               Caption = 'X:'
-              Font.Color = clBlack
+              Font.Color = clGreen
               Font.Height = -11
               Font.Name = 'Default'
               Font.Style = [fsBold]
@@ -2651,7 +2651,7 @@ object DigitMainForm: TDigitMainForm
               Border.Style = bboSolid
               Rounding.RoundX = 1
               Rounding.RoundY = 1
-              Font.Color = clBlack
+              Font.Color = clGreen
               Font.Height = -11
               Font.Name = 'Default'
               Font.Style = [fsBold]
@@ -2668,7 +2668,7 @@ object DigitMainForm: TDigitMainForm
               Height = 22
               Top = 15
               Width = 87
-              Font.Color = clBlack
+              Font.Color = clGreen
               Font.Height = -13
               Font.Name = 'Default'
               Font.Style = [fsBold]
@@ -2755,7 +2755,7 @@ object DigitMainForm: TDigitMainForm
               Border.Style = bboSolid
               Rounding.RoundX = 1
               Rounding.RoundY = 1
-              Font.Color = clBlack
+              Font.Color = clGreen
               Font.Height = -11
               Font.Name = 'Default'
               Font.Style = [fsBold]
@@ -2772,7 +2772,7 @@ object DigitMainForm: TDigitMainForm
               Height = 22
               Top = 39
               Width = 87
-              Font.Color = clBlack
+              Font.Color = clGreen
               Font.Height = -13
               Font.Name = 'Default'
               Font.Style = [fsBold]
@@ -2784,7 +2784,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint3: TGroupBox
             Left = 0
             Height = 88
-            Top = 350
+            Top = 357
             Width = 197
             Align = alTop
             AutoSize = True

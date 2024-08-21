@@ -2261,6 +2261,7 @@ begin
     Ymin := Round(min(Pini.Y, Pend.Y));
     Ymax := Round(max(Pini.Y, Pend.Y));
     Result := TRect.Create(Xmin, Ymin, Xmax, Ymax);
+    Result.Union(TRect.Create(Pend - TPoint.Create(6, 6), 12, 12));
   end
   else
     Result := TRect.Create(0, 0, 0, 0);
@@ -2281,6 +2282,7 @@ begin
     Ymin := Round(min(Pini.Y, Pend.Y));
     Ymax := Round(max(Pini.Y, Pend.Y));
     Result := TRect.Create(Xmin, Ymin, Xmax, Ymax);
+    Result.Union(TRect.Create(Pend - TPoint.Create(6, 6), 12, 12));
   end
   else
     Result := TRect.Create(0, 0, 0, 0);
@@ -2669,11 +2671,15 @@ begin
       WhiteBoard.ArrowStartOffset:= 0;
       WhiteBoard.ArrowEndOffset:= -7;
 
+      WhiteBoard.PenStyle := psDash;
+
       XAxisCoords(Pini, Pend);
       WhiteBoard.DrawLineAntialias(Pini.X, Pini.Y, Pend.X, Pend.Y, clBlack, 2);
 
       YAxisCoords(Pini, Pend);
       WhiteBoard.DrawLineAntialias(Pini.X, Pini.Y, Pend.X, Pend.Y, clRed, 2);
+
+      WhiteBoard.PenStyle := psSolid;
     end;
     piSetPlotBox: begin
       if not (PlotBox.Rect*PaintRect).IsEmpty then
@@ -3326,7 +3332,7 @@ begin
                                         Scale.ImagePoint[1], True);
       FAxesMarkers[2] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'+', clGreen, 3),
                                         Scale.ImagePoint[2], True);
-      FAxesMarkers[3] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'+', clRed, 3),
+      FAxesMarkers[3] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'+', clBlack, 3),
                                         Scale.ImagePoint[3], True);
 
       AddMarker(AxesMarkers[1], False);
@@ -3454,11 +3460,15 @@ begin
   j := 1;
   for i := 1 to 4 do
   begin
-    if ClientRect.Contains(P[i]) and (j <= 2) then
-    begin
-      Idx[j] := i;
-      inc(j);
-    end;
+    if ClientRect.Contains(P[i]) then
+      if (j <= 2) then
+      begin
+        Idx[j] := i;
+        inc(j);
+      end
+      else
+        if (P[Idx[1]].DistanceTo(P[i]) > P[Idx[1]].DistanceTo(P[Idx[2]])) then
+          Idx[2] := i;
   end;
 
   // Assign the points
