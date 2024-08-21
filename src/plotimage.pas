@@ -1235,6 +1235,7 @@ begin
 
     Result.AppendChild(DataNode);
   finally
+    Stream.Free;
   end;
 end;
 
@@ -3985,7 +3986,8 @@ begin
                   ImgName := '';
 
               // It is the data image
-              if (ImageChild.CompareName('data') = 0) then
+              if (ImageChild.CompareName('data') = 0) and
+                 Assigned(ImageChild.FirstChild) then
               begin
                 // Extract the image data as a Base64 string
                 EncBuffer := UTF8Encode(ImageChild.FirstChild.NodeValue);
