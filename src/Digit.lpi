@@ -34,7 +34,7 @@
           <Version Value="11"/>
           <PathDelim Value="\"/>
           <Target>
-            <Filename Value="..\build\Digit-$(TargetOS)-$(TargetCPU)"/>
+            <Filename Value="..\build\$(TargetOS)-$(TargetCPU)\Digit"/>
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>

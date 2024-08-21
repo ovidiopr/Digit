@@ -594,16 +594,20 @@ var
 begin
   if (k >= 1) and (d >= 2) then
   begin
-    if not IsSorted then SortCurve;
+    try
+      if not IsSorted then SortCurve;
 
-    SetLength(Pnts, Count);
-    for i := 0 to Count - 1 do
-      Pnts[i] := Point[i];
+      SetLength(Pnts, Count);
+      for i := 0 to Count - 1 do
+        Pnts[i] := Point[i];
 
-    SavitzkyGolay(2*k + 1, d, 0, Pnts);
-    Clear;
-    for i := Low(Pnts) to High(Pnts) do
-      Points.Add(Pnts[i]);
+      SavitzkyGolay(2*k + 1, d, 0, Pnts);
+      Clear;
+      for i := Low(Pnts) to High(Pnts) do
+        Points.Add(Pnts[i]);
+    finally
+      SetLength(Pnts, 0);
+    end;
   end;
 end;
 
@@ -624,32 +628,36 @@ var
 begin
   if (n > 2) then
   begin
-    if not IsSorted then SortCurve;
+    try
+      if not IsSorted then SortCurve;
 
-    if (Xo < X[0]) then
-      InsertPoint(0, Xo, Y[0]);
+      if (Xo < X[0]) then
+        InsertPoint(0, Xo, Y[0]);
 
-    if (Xf > X[Count - 1]) then
-      AddPoint(Xf, Y[Count - 1]);
+      if (Xf > X[Count - 1]) then
+        AddPoint(Xf, Y[Count - 1]);
 
-    SetLength(Pnts, Count);
-    for i := 0 to Count - 1 do
-      Pnts[i] := Point[i];
+      SetLength(Pnts, Count);
+      for i := 0 to Count - 1 do
+        Pnts[i] := Point[i];
 
-    Clear;
-    dx := (Xf - Xo)/(n - 1);
-    for i := 0 to n - 1 do
-    begin
-      Xint := Xo + i*dx;
+      Clear;
+      dx := (Xf - Xo)/(n - 1);
+      for i := 0 to n - 1 do
+      begin
+        Xint := Xo + i*dx;
 
-      case IntType of
-        itpBSpline: Yint :=  BSpline(Pnts, Degree, Xint);
-        itpSpline: Yint :=  Spline(Pnts, Degree, Xint);
-        else
-          Yint :=  BSpline(Pnts, Degree, Xint);
+        case IntType of
+          itpBSpline: Yint :=  BSpline(Pnts, Degree, Xint);
+          itpSpline: Yint :=  Spline(Pnts, Degree, Xint);
+          else
+            Yint :=  BSpline(Pnts, Degree, Xint);
+        end;
+
+        AddPoint(Xint, Yint);
       end;
-
-      AddPoint(Xint, Yint);
+    finally
+      SetLength(Pnts, 0);
     end;
   end;
 end;
