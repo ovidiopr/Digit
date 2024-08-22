@@ -2666,20 +2666,29 @@ begin
         DigitCurve.Draw(WhiteBoard.Canvas);
     end;
     piSetScale: begin
-      WhiteBoard.ArrowEndAsTriangle();
-      WhiteBoard.ArrowEndSize := PointF(8, 2.5);
-      WhiteBoard.ArrowStartOffset:= 0;
-      WhiteBoard.ArrowEndOffset:= -7;
+      if Options.ShowXAxis or Options.ShowYAxis then
+      begin
+        WhiteBoard.ArrowEndAsTriangle();
+        WhiteBoard.ArrowEndSize := PointF(8, 2.5);
+        WhiteBoard.ArrowStartOffset:= 0;
+        WhiteBoard.ArrowEndOffset:= -7;
 
-      WhiteBoard.PenStyle := psDash;
+        WhiteBoard.PenStyle := psDash;
 
-      XAxisCoords(Pini, Pend);
-      WhiteBoard.DrawLineAntialias(Pini.X, Pini.Y, Pend.X, Pend.Y, clBlack, 2);
+        if Options.ShowXAxis then
+        begin
+          XAxisCoords(Pini, Pend);
+          WhiteBoard.DrawLineAntialias(Pini.X, Pini.Y, Pend.X, Pend.Y, Options.XAxisColor, 2);
+        end;
 
-      YAxisCoords(Pini, Pend);
-      WhiteBoard.DrawLineAntialias(Pini.X, Pini.Y, Pend.X, Pend.Y, clRed, 2);
+        if Options.ShowYAxis then
+        begin
+          YAxisCoords(Pini, Pend);
+          WhiteBoard.DrawLineAntialias(Pini.X, Pini.Y, Pend.X, Pend.Y, Options.YAxisColor, 2);
+        end;
 
-      WhiteBoard.PenStyle := psSolid;
+        WhiteBoard.PenStyle := psSolid;
+      end;
     end;
     piSetPlotBox: begin
       if not (PlotBox.Rect*PaintRect).IsEmpty then

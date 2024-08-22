@@ -1333,7 +1333,7 @@ object DigitMainForm: TDigitMainForm
     object btnScaleOptions: TToolButton
       Left = 777
       Top = 2
-      Action = ToolScaleOptions
+      Action = ToolPlotOptions
       ParentShowHint = False
       ShowHint = True
     end
@@ -2258,7 +2258,7 @@ object DigitMainForm: TDigitMainForm
             ChildSizing.ControlsPerLine = 3
             ClientHeight = 61
             ClientWidth = 187
-            Font.Color = clRed
+            Font.Color = clBlack
             Font.Height = -11
             Font.Name = 'Default'
             Font.Style = [fsBold]
@@ -2283,12 +2283,6 @@ object DigitMainForm: TDigitMainForm
               Top = 0
               Width = 82
               Caption = 'Image'
-              Font.Color = clRed
-              Font.Height = -11
-              Font.Name = 'Default'
-              Font.Style = [fsBold]
-              ParentColor = False
-              ParentFont = False
             end
             object lblPlt1: TLabel
               Left = 100
@@ -2296,7 +2290,6 @@ object DigitMainForm: TDigitMainForm
               Top = 0
               Width = 87
               Caption = 'Plot'
-              ParentColor = False
             end
             object lblX1: TLabel
               Left = 0
@@ -2305,13 +2298,7 @@ object DigitMainForm: TDigitMainForm
               Width = 14
               Alignment = taRightJustify
               Caption = 'X:'
-              Font.Color = clRed
-              Font.Height = -11
-              Font.Name = 'Default'
-              Font.Style = [fsBold]
               Layout = tlCenter
-              ParentColor = False
-              ParentFont = False
             end
             object EditIX1: TBCTrackbarUpdown
               Tag = 1
@@ -2382,7 +2369,7 @@ object DigitMainForm: TDigitMainForm
               Border.Style = bboSolid
               Rounding.RoundX = 1
               Rounding.RoundY = 1
-              Font.Color = clRed
+              Font.Color = clBlack
               Font.Height = -11
               Font.Name = 'Default'
               Font.Style = [fsBold]
@@ -2399,11 +2386,7 @@ object DigitMainForm: TDigitMainForm
               Height = 22
               Top = 15
               Width = 87
-              Font.Color = clRed
-              Font.Height = -13
-              Font.Name = 'Default'
-              Font.Style = [fsBold]
-              ParentFont = False
+              Color = clBtnFace
               TabOrder = 1
               OnEditingDone = EditPX1EditingDone
             end
@@ -2415,7 +2398,6 @@ object DigitMainForm: TDigitMainForm
               Alignment = taRightJustify
               Caption = 'Y:'
               Layout = tlCenter
-              ParentColor = False
             end
             object EditIY1: TBCTrackbarUpdown
               Tag = 1
@@ -2486,7 +2468,7 @@ object DigitMainForm: TDigitMainForm
               Border.Style = bboSolid
               Rounding.RoundX = 1
               Rounding.RoundY = 1
-              Font.Color = clRed
+              Font.Color = clBlack
               Font.Height = -11
               Font.Name = 'Default'
               Font.Style = [fsBold]
@@ -2503,11 +2485,6 @@ object DigitMainForm: TDigitMainForm
               Height = 22
               Top = 39
               Width = 87
-              Font.Color = clRed
-              Font.Height = -13
-              Font.Name = 'Default'
-              Font.Style = [fsBold]
-              ParentFont = False
               TabOrder = 3
               OnEditingDone = EditPY1EditingDone
             end
@@ -2527,7 +2504,7 @@ object DigitMainForm: TDigitMainForm
             ChildSizing.ControlsPerLine = 3
             ClientHeight = 61
             ClientWidth = 187
-            Font.Color = clGreen
+            Font.Color = clBlack
             Font.Height = -11
             Font.Name = 'Default'
             Font.Style = [fsBold]
@@ -2552,12 +2529,6 @@ object DigitMainForm: TDigitMainForm
               Top = 0
               Width = 82
               Caption = 'Image'
-              Font.Color = clGreen
-              Font.Height = -11
-              Font.Name = 'Default'
-              Font.Style = [fsBold]
-              ParentColor = False
-              ParentFont = False
             end
             object lblPlt2: TLabel
               Left = 100
@@ -2565,7 +2536,6 @@ object DigitMainForm: TDigitMainForm
               Top = 0
               Width = 87
               Caption = 'Plot'
-              ParentColor = False
             end
             object lblX2: TLabel
               Left = 0
@@ -2574,13 +2544,7 @@ object DigitMainForm: TDigitMainForm
               Width = 14
               Alignment = taRightJustify
               Caption = 'X:'
-              Font.Color = clGreen
-              Font.Height = -11
-              Font.Name = 'Default'
-              Font.Style = [fsBold]
               Layout = tlCenter
-              ParentColor = False
-              ParentFont = False
             end
             object EditIX2: TBCTrackbarUpdown
               Tag = 2
@@ -2651,7 +2615,7 @@ object DigitMainForm: TDigitMainForm
               Border.Style = bboSolid
               Rounding.RoundX = 1
               Rounding.RoundY = 1
-              Font.Color = clGreen
+              Font.Color = clBlack
               Font.Height = -11
               Font.Name = 'Default'
               Font.Style = [fsBold]
@@ -2668,11 +2632,6 @@ object DigitMainForm: TDigitMainForm
               Height = 22
               Top = 15
               Width = 87
-              Font.Color = clGreen
-              Font.Height = -13
-              Font.Name = 'Default'
-              Font.Style = [fsBold]
-              ParentFont = False
               TabOrder = 1
               OnEditingDone = EditPX1EditingDone
             end
@@ -2684,7 +2643,6 @@ object DigitMainForm: TDigitMainForm
               Alignment = taRightJustify
               Caption = 'Y:'
               Layout = tlCenter
-              ParentColor = False
             end
             object EditIY2: TBCTrackbarUpdown
               Tag = 2
@@ -2755,7 +2713,7 @@ object DigitMainForm: TDigitMainForm
               Border.Style = bboSolid
               Rounding.RoundX = 1
               Rounding.RoundY = 1
-              Font.Color = clGreen
+              Font.Color = clBlack
               Font.Height = -11
               Font.Name = 'Default'
               Font.Style = [fsBold]
@@ -2772,11 +2730,6 @@ object DigitMainForm: TDigitMainForm
               Height = 22
               Top = 39
               Width = 87
-              Font.Color = clGreen
-              Font.Height = -13
-              Font.Name = 'Default'
-              Font.Style = [fsBold]
-              ParentFont = False
               TabOrder = 3
               OnEditingDone = EditPY1EditingDone
             end
@@ -4017,7 +3970,7 @@ object DigitMainForm: TDigitMainForm
             BorderSpacing.Right = 5
             GroupIndex = 1
             Images = ImageList
-            ImageIndex = 14
+            ImageIndex = 43
             ParentShowHint = False
           end
           object lblMinorGrid: TLabel
@@ -4071,7 +4024,7 @@ object DigitMainForm: TDigitMainForm
             BorderSpacing.Right = 5
             GroupIndex = 1
             Images = ImageList
-            ImageIndex = 14
+            ImageIndex = 43
             ParentShowHint = False
           end
           object lblBackground: TLabel
@@ -4126,7 +4079,7 @@ object DigitMainForm: TDigitMainForm
             BorderSpacing.Right = 5
             GroupIndex = 1
             Images = ImageList
-            ImageIndex = 14
+            ImageIndex = 43
             ParentShowHint = False
           end
           object lblGridTolerance: TLabel
@@ -5195,7 +5148,7 @@ object DigitMainForm: TDigitMainForm
         Caption = '-'
       end
       object ToolScaleOptionsItem: TMenuItem
-        Action = ToolScaleOptions
+        Action = ToolPlotOptions
       end
     end
     object MarkersMenu: TMenuItem
@@ -5310,7 +5263,7 @@ object DigitMainForm: TDigitMainForm
       Caption = 'Curve color selection'
       GroupIndex = 1
       Hint = 'Curve color selection|Curve color selection mode'
-      ImageIndex = 14
+      ImageIndex = 43
       OnExecute = ModeColorExecute
     end
     object ModeSteps: TAction
@@ -5475,21 +5428,21 @@ object DigitMainForm: TDigitMainForm
       Category = 'Mode'
       GroupIndex = 1
       Hint = 'Major grid color selection|Major grid color selection mode'
-      ImageIndex = 14
+      ImageIndex = 43
       OnExecute = ModeMajorGridColorExecute
     end
     object ModeMinorGridColor: TAction
       Category = 'Mode'
       GroupIndex = 1
       Hint = 'Minor grid color selection|Minor grid color selection mode'
-      ImageIndex = 14
+      ImageIndex = 43
       OnExecute = ModeMinorGridColorExecute
     end
     object ModeBackgroundColor: TAction
       Category = 'Mode'
       GroupIndex = 1
       Hint = 'Background color selection|Background color selection mode'
-      ImageIndex = 14
+      ImageIndex = 43
       OnExecute = ModeBackgroundColorExecute
     end
     object EditPasteImage: TAction
@@ -5512,7 +5465,7 @@ object DigitMainForm: TDigitMainForm
       Category = 'Tools'
       Caption = 'Digitize &color'
       Hint = 'Digitize color|Digitize the current plot by color'
-      ImageIndex = 43
+      ImageIndex = 14
       OnExecute = ToolDigitColorExecute
       ShortCut = 114
     end
@@ -5635,12 +5588,12 @@ object DigitMainForm: TDigitMainForm
       ImageIndex = 27
       OnExecute = ToolCurveNameExecute
     end
-    object ToolScaleOptions: TAction
+    object ToolPlotOptions: TAction
       Category = 'Tools'
-      Caption = 'Scale &options'
-      Hint = 'Scale options|Edit scale options'
+      Caption = 'Plot &options'
+      Hint = 'Plot options|Edit plot options'
       ImageIndex = 11
-      OnExecute = ToolScaleOptionsExecute
+      OnExecute = ToolPlotOptionsExecute
     end
     object ToolCorrectDistortion: TAction
       Category = 'Tools'

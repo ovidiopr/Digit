@@ -18,8 +18,8 @@ type
   TPlotOptions = record
     BgndColor: TColor;
 
-    DefaultItp: TInterpolation;
     DefaultDig: TDigitization;
+    DefaultItp: TInterpolation;
 
     ShowXAxis: Boolean;
     ShowYAxis: Boolean;
@@ -358,8 +358,8 @@ class operator TPlotOptions.Initialize(var po: TPlotOptions);
 begin
   po.BgndColor := clWhite;
 
-  po.DefaultItp := itpBSpline;
   po.DefaultDig := digLine;
+  po.DefaultItp := itpBSpline;
 
   po.ShowXAxis := True;
   po.ShowYAxis := True;
@@ -375,8 +375,8 @@ begin
     IniFile := TIniFile.Create(FileName);
     BgndColor := IniFile.ReadInteger('Plot', 'BgndColor', BgndColor);
 
-    DefaultItp := TInterpolation(IniFile.ReadInteger('Plot', 'DefaultItp', Integer(DefaultItp)));
     DefaultDig := TDigitization(IniFile.ReadInteger('Plot', 'DefaultDig', Integer(DefaultDig)));
+    DefaultItp := TInterpolation(IniFile.ReadInteger('Plot', 'DefaultItp', Integer(DefaultItp)));
 
     ShowXAxis := IniFile.ReadBool('Plot', 'ShowXAxis', ShowXAxis);
     ShowYAxis := IniFile.ReadBool('Plot', 'ShowYAxis', ShowYAxis);
@@ -395,8 +395,8 @@ begin
     IniFile := TIniFile.Create(FileName);
     IniFile.WriteInteger('Plot', 'BgndColor', BgndColor);
 
-    IniFile.WriteInteger('Plot', 'DefaultItp', Integer(DefaultItp));
     IniFile.WriteInteger('Plot', 'DefaultDig', Integer(DefaultDig));
+    IniFile.WriteInteger('Plot', 'DefaultItp', Integer(DefaultItp));
 
     IniFile.WriteBool('Plot', 'ShowXAxis', ShowXAxis);
     IniFile.WriteBool('Plot', 'ShowYAxis', ShowYAxis);

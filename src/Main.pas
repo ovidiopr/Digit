@@ -221,7 +221,7 @@ type
     ToolScaleOptionsItem: TMenuItem;
     N4: TMenuItem;
     sep06: TToolButton;
-    ToolScaleOptions: TAction;
+    ToolPlotOptions: TAction;
     LargeImageList: TImageList;
     CurveMenu: TMenuItem;
     CurveAddItem: TMenuItem;
@@ -423,7 +423,7 @@ type
     procedure ToolDigitMarkersExecute(Sender: TObject);
     procedure ToolBSplinesExecute(Sender: TObject);
     procedure ToolResetBoxExecute(Sender: TObject);
-    procedure ToolScaleOptionsExecute(Sender: TObject);
+    procedure ToolPlotOptionsExecute(Sender: TObject);
     procedure ToolSmoothExecute(Sender: TObject);
     procedure ToolCurveUpExecute(Sender: TObject);
     procedure ToolCurveDownExecute(Sender: TObject);
@@ -602,7 +602,7 @@ begin
     ToolCurveDelete.Enabled := ImageIsLoaded and (State = piSetCurve) and (Count > 1);
     ToolCurveName.Enabled := ImageIsLoaded and (State = piSetCurve) and (Count > 0);
 
-    ToolScaleOptions.Enabled := ImageIsLoaded;
+    ToolPlotOptions.Enabled := ImageIsLoaded;
 
     MarkersMoveUp.Enabled := ImageIsLoaded and assigned(ActiveMarker);
     MarkersMoveDown.Enabled := ImageIsLoaded and assigned(ActiveMarker);
@@ -2522,66 +2522,10 @@ begin
   end;
 end;
 
-procedure TDigitMainForm.ToolScaleOptionsExecute(Sender: TObject);
-var
-  i: Integer;
-  WasChanged: Boolean;
+procedure TDigitMainForm.ToolPlotOptionsExecute(Sender: TObject);
 begin
-  if OptionsDlg.Execute(PlotImage.Scale) then
-  begin
-    WasChanged := False;
-    with PlotImage.Scale do
-    begin
-      if (CoordSystem <> OptionsDlg.CoordSystem) then
-      begin
-        CoordSystem := OptionsDlg.CoordSystem;
-        WasChanged := True;
-      end;
-      if (XScale <> OptionsDlg.XScale) or (YScale <> OptionsDlg.YScale) then
-      begin
-        XScale := OptionsDlg.XScale;
-        YScale := OptionsDlg.YScale;
-        WasChanged := True;
-      end;
-
-      if (XLabel <> OptionsDlg.XLabel) or (YLabel <> OptionsDlg.YLabel) then
-      begin
-        XLabel := OptionsDlg.XLabel;
-        YLabel := OptionsDlg.YLabel;
-
-        leData.TitleCaptions[0] := XLabel;
-        leData.TitleCaptions[1] := YLabel;
-        leData.Invalidate;
-
-        MainPlot.BottomAxis.Title.Caption := XLabel;
-        MainPlot.LeftAxis.Title.Caption := YLabel;
-
-        WasChanged := True;
-      end;
-
-      for i := 1 to 3 do
-      begin
-        if (ImagePoint[i] <> OptionsDlg.ImagePoint[i]) then
-        begin
-          ImagePoint[i] := OptionsDlg.ImagePoint[i];
-          PlotImage.MoveMarker(PlotImage.AxesMarkers[i], OptionsDlg.ImagePoint[i]);
-          WasChanged := True;
-        end;
-        if (PlotPoint[i] <> OptionsDlg.PlotPoint[i]) then
-        begin
-          PlotPoint[i] := OptionsDlg.PlotPoint[i];
-          WasChanged := True;
-        end;
-      end;
-    end;
-
-    if WasChanged then
-    begin
-      GUIToCurve;
-
-      IsSaved := False;
-    end;
-  end;
+  if OptionsDlg.Execute(PlotImage.Options) then
+    PlotImage.Options := OptionsDlg.Options;
 end;
 
 procedure TDigitMainForm.ToolSmoothExecute(Sender: TObject);
