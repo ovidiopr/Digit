@@ -1407,10 +1407,10 @@ object DigitMainForm: TDigitMainForm
       Caption = 'sep03'
       Style = tbsSeparator
     end
-    object btnBSpline: TToolButton
+    object btnResample: TToolButton
       Left = 533
       Top = 2
-      Action = ToolResample
+      Action = ToolBSplines
       DropdownMenu = ResampleMenu
       ParentShowHint = False
       ShowHint = True
@@ -4978,7 +4978,7 @@ object DigitMainForm: TDigitMainForm
       object btnDigitize: TToolButton
         Left = 117
         Top = 2
-        Action = ToolDigit
+        Action = ToolDigitLine
         DropdownMenu = DigitizeMenu
         ParentShowHint = False
         ShowHint = True
@@ -5140,11 +5140,17 @@ object DigitMainForm: TDigitMainForm
       Caption = '&Digitization'
       Hint = 'Digitization commands'
       object ToolDigitizeItem: TMenuItem
-        Action = ToolDigit
-        Caption = '&Digitize'
-      end
-      object ToolDigitMarkersItem: TMenuItem
-        Action = ToolMarkers
+        Caption = 'Digitize'
+        ImageIndex = 17
+        object ToolDigitLineItem: TMenuItem
+          Action = ToolDigitLine
+        end
+        object ToolDigitColorItem: TMenuItem
+          Action = ToolDigitColor
+        end
+        object ToolDigitMarkersItem: TMenuItem
+          Action = ToolDigitMarkers
+        end
       end
       object ToolAdjustItem: TMenuItem
         Action = ToolAdjustCurve
@@ -5172,7 +5178,6 @@ object DigitMainForm: TDigitMainForm
         Caption = '&Resample'
         Hint = 'Resample|Resample digitization'
         ImageIndex = 48
-        ShortCut = 119
         object ToolBSplinesItem: TMenuItem
           Action = ToolBSplines
         end
@@ -5495,21 +5500,29 @@ object DigitMainForm: TDigitMainForm
       OnExecute = EditPasteImageExecute
       ShortCut = 16470
     end
-    object ToolDigit: TAction
+    object ToolDigitLine: TAction
       Category = 'Tools'
-      Caption = 'D&igitize'
-      Hint = 'Digitize|Digitize the current plot'
+      Caption = 'Digitize &line'
+      Hint = 'Digitize line|Digitize the current plot by following a line'
       ImageIndex = 17
-      OnExecute = ToolDigitExecute
-      ShortCut = 116
+      OnExecute = ToolDigitLineExecute
+      ShortCut = 113
     end
-    object ToolMarkers: TAction
+    object ToolDigitColor: TAction
+      Category = 'Tools'
+      Caption = 'Digitize &color'
+      Hint = 'Digitize color|Digitize the current plot by color'
+      ImageIndex = 43
+      OnExecute = ToolDigitColorExecute
+      ShortCut = 114
+    end
+    object ToolDigitMarkers: TAction
       Category = 'Tools'
       Caption = 'Digitize &markers'
       Hint = 'Digitize markers|Generate curve from markers in the current plot'
       ImageIndex = 19
-      OnExecute = ToolMarkersExecute
-      ShortCut = 117
+      OnExecute = ToolDigitMarkersExecute
+      ShortCut = 115
     end
     object ToolAdjustCurve: TAction
       Category = 'Tools'
@@ -5517,7 +5530,7 @@ object DigitMainForm: TDigitMainForm
       Hint = 'Adjust curve|Adjust curve to the current plot'
       ImageIndex = 18
       OnExecute = ToolAdjustCurveExecute
-      ShortCut = 118
+      ShortCut = 116
     end
     object ToolAdjustNoise: TAction
       Category = 'Tools'
@@ -5525,28 +5538,23 @@ object DigitMainForm: TDigitMainForm
       Hint = 'Adjust noisy curve|Adjust noisy curve to the current plot'
       ImageIndex = 50
       OnExecute = ToolAdjustNoiseExecute
-    end
-    object ToolResample: TAction
-      Category = 'Tools'
-      Caption = '&Resample'
-      Hint = 'Resample|Resample digitization'
-      ImageIndex = 48
-      OnExecute = ToolResampleExecute
-      ShortCut = 119
+      ShortCut = 117
     end
     object ToolBSplines: TAction
       Category = 'Tools'
       Caption = '&B-Splines'
-      Hint = 'B-Splines| Use B-Splines to resample digitization'
+      Hint = 'B-Splines|Resample digitization using B-Splines'
       ImageIndex = 48
       OnExecute = ToolBSplinesExecute
+      ShortCut = 118
     end
     object ToolSplines: TAction
       Category = 'Tools'
       Caption = '&Splines'
-      Hint = 'Splines| Use Splines to resample digitization'
+      Hint = 'B-Splines|Resample digitization using Splines'
       ImageIndex = 49
       OnExecute = ToolSplinesExecute
+      ShortCut = 119
     end
     object ToolSmooth: TAction
       Category = 'Tools'
@@ -8795,11 +8803,14 @@ object DigitMainForm: TDigitMainForm
     Images = ImageList
     Left = 576
     Top = 408
-    object DigitizeItem: TMenuItem
-      Action = ToolDigit
+    object DigitizeLineItem: TMenuItem
+      Action = ToolDigitLine
     end
-    object Interpolate: TMenuItem
-      Action = ToolMarkers
+    object DigitizeColorItem: TMenuItem
+      Action = ToolDigitColor
+    end
+    object DigitizeMarkersItem: TMenuItem
+      Action = ToolDigitMarkers
     end
   end
   object ResampleMenu: TPopupMenu

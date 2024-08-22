@@ -12,8 +12,6 @@ const
   HistItems = 20;
 
 type
-  TInterpolation = (itpBSpline, itpSpline);
-
   TIntegerList = specialize TFPGList<Integer>;
   TFloatList = specialize TFPGList<Double>;
 

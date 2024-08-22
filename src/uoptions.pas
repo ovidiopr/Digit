@@ -1,4 +1,4 @@
-unit scaledialog;
+unit uoptions;
 
 {$mode objfpc}{$H+}
 
@@ -9,9 +9,9 @@ uses
   ExtCtrls, Buttons, ComCtrls, coordinates;
 
 type
-  { TScaleDlg }
+  { TOptionsDlg }
 
-  TScaleDlg = class(TForm)
+  TOptionsDlg = class(TForm)
     btnAccept: TBitBtn;
     btnCancel: TBitBtn;
     cbbCoords: TComboBox;
@@ -91,13 +91,13 @@ type
   end;
 
 var
-  ScaleDlg: TScaleDlg;
+  OptionsDlg: TOptionsDlg;
 
 implementation
 
 {$R *.lfm}
 
-function TScaleDlg.GetCoords: TCoordSystem;
+function TOptionsDlg.GetCoords: TCoordSystem;
 begin
   case cbbCoords.ItemIndex of
     0, 1: Result := TCoordSystem(cbbCoords.ItemIndex);
@@ -106,7 +106,7 @@ begin
   end;
 end;
 
-function TScaleDlg.GetXScale: TScaleType;
+function TOptionsDlg.GetXScale: TScaleType;
 begin
   case cbbXScale.ItemIndex of
     0, 1, 2, 3: Result := TScaleType(cbbXScale.ItemIndex);
@@ -115,7 +115,7 @@ begin
   end;
 end;
 
-function TScaleDlg.GetYScale: TScaleType;
+function TOptionsDlg.GetYScale: TScaleType;
 begin
   case cbbYScale.ItemIndex of
     0, 1, 2, 3: Result := TScaleType(cbbYScale.ItemIndex);
@@ -124,17 +124,17 @@ begin
   end;
 end;
 
-function TScaleDlg.GetXLabel: String;
+function TOptionsDlg.GetXLabel: String;
 begin
   Result := edtX.Text;
 end;
 
-function TScaleDlg.GetYLabel: String;
+function TOptionsDlg.GetYLabel: String;
 begin
   Result := edtY.Text;
 end;
 
-function TScaleDlg.GetImagePoint(Index: Integer): TCurvePoint;
+function TOptionsDlg.GetImagePoint(Index: Integer): TCurvePoint;
 begin
   case Index of
     1: Result := TCurvePoint.Create(StrToFloat(EditIX1.Text),
@@ -147,7 +147,7 @@ begin
   end;
 end;
 
-function TScaleDlg.GetPlotPoint(Index: Integer): TCurvePoint;
+function TOptionsDlg.GetPlotPoint(Index: Integer): TCurvePoint;
 begin
   case Index of
     1: Result := TCurvePoint.Create(StrToFloat(EditPX1.Text),
@@ -160,7 +160,7 @@ begin
   end;
 end;
 
-procedure TScaleDlg.SetCoords(Value: TCoordSystem);
+procedure TOptionsDlg.SetCoords(Value: TCoordSystem);
 begin
   case Value of
     csCartesian,
@@ -171,7 +171,7 @@ begin
   cbbCoordsChange(cbbCoords);
 end;
 
-procedure TScaleDlg.SetXScale(Value: TScaleType);
+procedure TOptionsDlg.SetXScale(Value: TScaleType);
 begin
   case Value of
     stLinear,
@@ -183,7 +183,7 @@ begin
   end;
 end;
 
-procedure TScaleDlg.SetYScale(Value: TScaleType);
+procedure TOptionsDlg.SetYScale(Value: TScaleType);
 begin
   case Value of
     stLinear,
@@ -195,17 +195,17 @@ begin
   end;
 end;
 
-procedure TScaleDlg.SetXLabel(Value: String);
+procedure TOptionsDlg.SetXLabel(Value: String);
 begin
   edtX.Text := Value;
 end;
 
-procedure TScaleDlg.SetYLabel(Value: String);
+procedure TOptionsDlg.SetYLabel(Value: String);
 begin
   edtY.Text := Value;
 end;
 
-procedure TScaleDlg.SetImagePoint(Index: Integer; const Value: TCurvePoint);
+procedure TOptionsDlg.SetImagePoint(Index: Integer; const Value: TCurvePoint);
 begin
   case Index of
     1: begin
@@ -223,7 +223,7 @@ begin
   end;
 end;
 
-procedure TScaleDlg.SetPlotPoint(Index: Integer; const Value: TCurvePoint);
+procedure TOptionsDlg.SetPlotPoint(Index: Integer; const Value: TCurvePoint);
 begin
   case Index of
     1: begin
@@ -241,7 +241,7 @@ begin
   end;
 end;
 
-procedure TScaleDlg.cbbCoordsChange(Sender: TObject);
+procedure TOptionsDlg.cbbCoordsChange(Sender: TObject);
 begin
   if (TCoordSystem(cbbCoords.ItemIndex ) = csCartesian) then
   begin
@@ -272,7 +272,7 @@ begin
 end;
 
 
-procedure TScaleDlg.FormCreate(Sender: TObject);
+procedure TOptionsDlg.FormCreate(Sender: TObject);
 var
   i: Integer;
 begin
@@ -289,7 +289,7 @@ begin
   end;
 end;
 
-function TScaleDlg.Execute(Scale: TScale; ActivePoint: Integer = 0;
+function TOptionsDlg.Execute(Scale: TScale; ActivePoint: Integer = 0;
                            X: Integer = 0; Y:Integer = 0): Boolean;
 var
   i: Integer;

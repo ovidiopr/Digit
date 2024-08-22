@@ -13,7 +13,7 @@ uses
   About in 'About.pas' {AboutBox},
   curves in 'curves.pas',
   restore,
-  uchartscale, scaledialog, utils, plotimage;
+  uchartscale, uoptions, utils, plotimage;
 
 {$R *.res}
 
@@ -23,7 +23,7 @@ begin
   Application.Initialize;
   Application.CreateForm(TDigitMainForm, DigitMainForm);
   Application.CreateForm(TChartScaleDlg, ChartScaleDlg);
-  Application.CreateForm(TScaleDlg, ScaleDlg);
+  Application.CreateForm(TOptionsDlg, OptionsDlg);
   Application.CreateForm(TAboutBox, AboutBox);
   Application.Run;
 end.

@@ -1,4 +1,4 @@
-object ScaleDlg: TScaleDlg
+object OptionsDlg: TOptionsDlg
   Left = 1122
   Height = 364
   Top = 161
@@ -9,7 +9,7 @@ object ScaleDlg: TScaleDlg
   ClientHeight = 364
   ClientWidth = 298
   OnCreate = FormCreate
-  LCLVersion = '2.2.4.0'
+  LCLVersion = '3.4.0.0'
   object pnButtons: TPanel
     Left = 0
     Height = 45
@@ -27,10 +27,10 @@ object ScaleDlg: TScaleDlg
       AnchorSideRight.Side = asrBottom
       AnchorSideBottom.Control = pnButtons
       AnchorSideBottom.Side = asrBottom
-      Left = 208
+      Left = 214
       Height = 33
       Top = 6
-      Width = 84
+      Width = 78
       Anchors = [akTop, akRight, akBottom]
       AutoSize = True
       BorderSpacing.Left = 5
@@ -50,10 +50,10 @@ object ScaleDlg: TScaleDlg
       AnchorSideRight.Control = btnAccept
       AnchorSideBottom.Control = pnButtons
       AnchorSideBottom.Side = asrBottom
-      Left = 120
+      Left = 132
       Height = 33
       Top = 6
-      Width = 83
+      Width = 77
       Anchors = [akTop, akRight, akBottom]
       AutoSize = True
       BorderSpacing.Left = 5
@@ -81,7 +81,7 @@ object ScaleDlg: TScaleDlg
     TabOrder = 1
     object tsCoordinates: TTabSheet
       Caption = 'Coordinates'
-      ClientHeight = 289
+      ClientHeight = 283
       ClientWidth = 292
       ParentFont = False
       object lblType: TLabel
@@ -347,7 +347,7 @@ object ScaleDlg: TScaleDlg
     end
     object tsBasis: TTabSheet
       Caption = 'Basis'
-      ClientHeight = 289
+      ClientHeight = 283
       ClientWidth = 292
       ParentFont = False
       object lblP1: TLabel

@@ -6,8 +6,8 @@ interface
 
 uses {$ifdef windows}Windows,{$endif} Forms, Classes, Controls, Graphics,
      ExtDlgs, Fgl, ComCtrls, SysUtils, DOM, XMLWrite, XMLRead, Dialogs, Types,
-     Base64, BGRABitmap, BGRABitmapTypes, BGRAreadTiff,
-     math, curves, coordinates;
+     Base64, BGRABitmap, BGRABitmapTypes, BGRAreadTiff, math,
+     utils, curves, coordinates;
 
 type
   TPlotImageState = (piSetCurve, piSetScale, piSetPlotBox, piSetGrid);
@@ -97,6 +97,7 @@ type
     InMouseMove: Boolean;
     MouseMovePos: TPoint;
 
+    FOptions: TPlotOptions;
     FState: TPlotImageState;
     FDragAction: TDragAction;
 
@@ -301,6 +302,7 @@ type
     function SaveToXML(FileName: TFileName): Boolean;
     function LoadFromXML(FileName: TFileName; PictureDlg: TOpenPictureDialog = nil): Boolean;
 
+    property Options: TPlotOptions read FOptions write FOptions;
     property State: TPlotImageState read FState write SetState;
     property ImageName: TFileName read FImageName write SetImageName;
     property GridMask: TGridMask read FGridMask;
@@ -364,8 +366,6 @@ type
 function CreateMarker(Size: TPoint; Symbol: Char; Color: TColor; LineWith: Integer = 3): TBGRABitmap;
 
 implementation
-
-uses utils;
 
 function TMarkerComparator(const a, b: TMarker): Integer;
 begin

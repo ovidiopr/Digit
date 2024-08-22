@@ -1,15 +1,36 @@
 unit utils;
 
 {$mode objfpc}{$H+}
+{$modeswitch advancedrecords}
 
 interface
 
 uses
-  Classes, SysUtils, coordinates, typ, ipf, math, inv, Graphics;
+  Classes, SysUtils, typ, ipf, math, inv, Graphics, IniFiles, coordinates;
 
 type
   THough1DMap = Array of LongWord;
   THough2DMap = Array of Array of LongWord;
+
+  TInterpolation = (itpBSpline, itpSpline);
+  TDigitization = (digLine, digColor, digMarkers);
+
+  TPlotOptions = record
+    BgndColor: TColor;
+
+    DefaultItp: TInterpolation;
+    DefaultDig: TDigitization;
+
+    ShowXAxis: Boolean;
+    ShowYAxis: Boolean;
+    XAxisColor: TColor;
+    YAxisColor: TColor;
+
+    class operator Initialize(var po: TPlotOptions);
+
+    procedure LoadFromFile(FileName: TFileName);
+    procedure SaveToFile(FileName: TFileName);
+  end;
 
 
 function AreSimilar(R1, G1, B1, R2, G2, B2, Tolerance: Byte): Boolean; overload;
@@ -330,6 +351,63 @@ begin
     SetLength(tAA, 0);
   end;
 end;
+
+//============================|TPlotOptions|==================================//
+
+class operator TPlotOptions.Initialize(var po: TPlotOptions);
+begin
+  po.BgndColor := clWhite;
+
+  po.DefaultItp := itpBSpline;
+  po.DefaultDig := digLine;
+
+  po.ShowXAxis := True;
+  po.ShowYAxis := True;
+  po.XAxisColor := clBlack;
+  po.YAxisColor := clRed;
+end;
+
+procedure TPlotOptions.LoadFromFile(FileName: TFileName);
+var
+  IniFile: TIniFile;
+begin
+  try
+    IniFile := TIniFile.Create(FileName);
+    BgndColor := IniFile.ReadInteger('Plot', 'BgndColor', BgndColor);
+
+    DefaultItp := TInterpolation(IniFile.ReadInteger('Plot', 'DefaultItp', Integer(DefaultItp)));
+    DefaultDig := TDigitization(IniFile.ReadInteger('Plot', 'DefaultDig', Integer(DefaultDig)));
+
+    ShowXAxis := IniFile.ReadBool('Plot', 'ShowXAxis', ShowXAxis);
+    ShowYAxis := IniFile.ReadBool('Plot', 'ShowYAxis', ShowYAxis);
+    XAxisColor := IniFile.ReadInteger('Plot', 'XAxisColor', XAxisColor);
+    YAxisColor := IniFile.ReadInteger('Plot', 'YAxisColor', YAxisColor);
+  finally
+    IniFile.Free;
+  end;
+end;
+
+procedure TPlotOptions.SaveToFile(FileName: TFileName);
+var
+  IniFile: TIniFile;
+begin
+  try
+    IniFile := TIniFile.Create(FileName);
+    IniFile.WriteInteger('Plot', 'BgndColor', BgndColor);
+
+    IniFile.WriteInteger('Plot', 'DefaultItp', Integer(DefaultItp));
+    IniFile.WriteInteger('Plot', 'DefaultDig', Integer(DefaultDig));
+
+    IniFile.WriteBool('Plot', 'ShowXAxis', ShowXAxis);
+    IniFile.WriteBool('Plot', 'ShowYAxis', ShowYAxis);
+    IniFile.WriteInteger('Plot', 'XAxisColor', XAxisColor);
+    IniFile.WriteInteger('Plot', 'YAxisColor', YAxisColor);
+  finally
+    IniFile.Free;
+  end;
+end;
+
+//============================|TPlotOptions|==================================//
 
 end.
 

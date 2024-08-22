@@ -165,9 +165,9 @@
         <ResourceBaseClass Value="Form"/>
       </Unit7>
       <Unit8>
-        <Filename Value="scaledialog.pas"/>
+        <Filename Value="uoptions.pas"/>
         <IsPartOfProject Value="True"/>
-        <ComponentName Value="ScaleDlg"/>
+        <ComponentName Value="OptionsDlg"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit8>

@@ -10,11 +10,12 @@ unit Main;
 
 interface
 
-uses LCLIntf, LCLType, SysUtils, Classes, Graphics, Forms, Controls, Menus,
+uses
+  LCLIntf, LCLType, SysUtils, Classes, Graphics, Forms, Controls, Menus,
   StdCtrls, Dialogs, Buttons, ExtCtrls, ComCtrls, TATypes, TASeries, TAGraph,
   ClipBrd, ActnList, ValEdit, Spin, ExtDlgs, MaskEdit, BCTrackbarUpdown,
-  FileUtil, restore, TAChartUtils, coordinates, curves, plotimage, uchartscale,
-  IniFiles, BGRABitmapTypes, GraphType, Grids;
+  FileUtil, restore, TAChartUtils, uchartscale, IniFiles, BGRABitmapTypes,
+  GraphType, Grids, utils, coordinates, curves, plotimage;
 
 type
   TMouseMode = (mdCursor, mdMarkers, mdColor, mdSteps, mdSegments,
@@ -23,6 +24,10 @@ type
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
+    DigitizeColorItem: TMenuItem;
+    ToolDigitizeItem: TMenuItem;
+    ToolDigitColorItem: TMenuItem;
+    ToolDigitColor: TAction;
     tbResetBox: TToolButton;
     ToolResetBox: TAction;
     ToolCorrectDistortion: TAction;
@@ -35,13 +40,12 @@ type
     ToolBSplinesItem: TMenuItem;
     ResampleMenu: TPopupMenu;
     SplinesItem: TMenuItem;
-    ToolResample: TAction;
     ToolSplines: TAction;
-    DigitizeItem: TMenuItem;
-    Interpolate: TMenuItem;
+    DigitizeLineItem: TMenuItem;
+    DigitizeMarkersItem: TMenuItem;
     DigitMainItem: TMenuItem;
     ToolDigitMarkersItem: TMenuItem;
-    ToolMarkers: TAction;
+    ToolDigitMarkers: TAction;
     chbRebuildCurve: TCheckBox;
     EditPasteImage: TAction;
     btnBackground: TColorButton;
@@ -200,7 +204,7 @@ type
     btnColorMode: TToolButton;
     btnCursorMode: TToolButton;
     btnMarkersMode: TToolButton;
-    btnBSpline: TToolButton;
+    btnResample: TToolButton;
     btnSegmentMode: TToolButton;
     btnSmooth: TToolButton;
     btnStepsMode: TToolButton;
@@ -303,8 +307,8 @@ type
     ImageList: TImageList;
     EditUndo: TAction;
     DigitMenu: TMenuItem;
-    ToolDigit: TAction;
-    ToolDigitizeItem: TMenuItem;
+    ToolDigitLine: TAction;
+    ToolDigitLineItem: TMenuItem;
     ToolSmooth: TAction;
     sep04: TToolButton;
     BtnImage: TToolButton;
@@ -414,10 +418,10 @@ type
     procedure ToolCurveLeftExecute(Sender: TObject);
     procedure ToolCurveNameExecute(Sender: TObject);
     procedure ToolCurveRightExecute(Sender: TObject);
-    procedure ToolDigitExecute(Sender: TObject);
-    procedure ToolMarkersExecute(Sender: TObject);
+    procedure ToolDigitColorExecute(Sender: TObject);
+    procedure ToolDigitLineExecute(Sender: TObject);
+    procedure ToolDigitMarkersExecute(Sender: TObject);
     procedure ToolBSplinesExecute(Sender: TObject);
-    procedure ToolResampleExecute(Sender: TObject);
     procedure ToolResetBoxExecute(Sender: TObject);
     procedure ToolScaleOptionsExecute(Sender: TObject);
     procedure ToolSmoothExecute(Sender: TObject);
@@ -537,7 +541,7 @@ implementation
 
 {$R *.lfm}
 
-uses About, scaledialog;
+uses About, uoptions;
 
 //Beginning of general functions
 
@@ -579,11 +583,11 @@ begin
     ModeMinorGridColor.Enabled := ImageIsLoaded and (State = piSetGrid);
     ModeBackgroundColor.Enabled := ImageIsLoaded and (State = piSetGrid);
 
-    ToolDigit.Enabled := Scale.IsValid and ColorIsSet and (State = piSetCurve);
-    ToolMarkers.Enabled := ToolDigit.Enabled and (Markers.Count > 0);
+    ToolDigitLine.Enabled := Scale.IsValid and ColorIsSet and (State = piSetCurve);
+    ToolDigitColor.Enabled := Scale.IsValid and ColorIsSet and (State = piSetCurve);
+    ToolDigitMarkers.Enabled := ToolDigitLine.Enabled and (Markers.Count > 0);
     ToolAdjustCurve.Enabled := (State = piSetCurve) and HasPoints;
     ToolAdjustNoise.Enabled := (State = piSetCurve) and HasPoints;
-    ToolResample.Enabled := (State = piSetCurve) and HasPoints;
     ToolBSplines.Enabled := (State = piSetCurve) and HasPoints;
     ToolSplines.Enabled := (State = piSetCurve) and HasPoints;
     ToolSmooth.Enabled := (State = piSetCurve) and HasPoints;
@@ -887,6 +891,22 @@ begin
   IsSaved := True;
   leData.Strings.Clear;
   pcInput.ActivePageIndex := Integer(PlotImage.State);
+
+  case PlotImage.Options.DefaultItp of
+    itpSpline:
+      btnResample.Action := ToolSplines;
+    else
+      btnResample.Action := ToolBSplines;
+  end;
+
+  case PlotImage.Options.DefaultDig of
+    digColor:
+      btnDigitize.Action := ToolDigitColor;
+    digMarkers:
+      btnDigitize.Action := ToolDigitMarkers;
+    else
+      btnDigitize.Action := ToolDigitLine;
+  end;
 end;
 //End of general functions
 
@@ -1268,6 +1288,8 @@ begin
     OnRegionSelected := @PlotImageRegionSelected;
     OnStateChanged := @PlotImageStateChanged;
     OnMarkerDragged := @PlotImageMarkerDragged;
+
+    Options.LoadFromFile(GetIniName);
   end;
 
   Initialize;
@@ -1299,6 +1321,7 @@ begin
   GlobalWinRestorer.Free;
   SavePreferences;
 
+  PlotImage.Options.SaveToFile(GetIniName);
   PlotImage.Free;
 end;
 //End of form functions
@@ -2430,36 +2453,60 @@ begin
   PlotImage.MoveCurveRight;
 end;
 
-procedure TDigitMainForm.ToolDigitExecute(Sender: TObject);
+procedure TDigitMainForm.ToolDigitColorExecute(Sender: TObject);
+var
+  TmpOpt: TPlotOptions;
+begin
+  // TODO
+  TmpOpt := PlotImage.Options;
+  TmpOpt.DefaultDig := digColor;
+  PlotImage.Options := TmpOpt;
+  btnDigitize.Action := ToolDigitColor;
+end;
+
+procedure TDigitMainForm.ToolDigitLineExecute(Sender: TObject);
+var
+  TmpOpt: TPlotOptions;
 begin
   GUIToCurve;
   //Digitize curve
   PlotImage.DigitizeSpectrum;
   CurveToGUI;
+
+  TmpOpt := PlotImage.Options;
+  TmpOpt.DefaultDig := digLine;
+  PlotImage.Options := TmpOpt;
+  btnDigitize.Action := ToolDigitLine;
 end;
 
-procedure TDigitMainForm.ToolMarkersExecute(Sender: TObject);
+procedure TDigitMainForm.ToolDigitMarkersExecute(Sender: TObject);
+var
+  TmpOpt: TPlotOptions;
 begin
   GUIToCurve;
   //Fill curve from markers
   PlotImage.DigitizeMarkers;
   CurveToGUI;
+
+  TmpOpt := PlotImage.Options;
+  TmpOpt.DefaultDig := digMarkers;
+  PlotImage.Options := TmpOpt;
+  btnDigitize.Action := ToolDigitMarkers;
 end;
 
 procedure TDigitMainForm.ToolBSplinesExecute(Sender: TObject);
+var
+  TmpOpt: TPlotOptions;
 begin
   GUIToCurve;
   //Replace the curve by interpolated values
   PlotImage.Interpolate(seXo.Value, seXf.Value, seInterpPoints.Value, False, itpBSpline);
   CurveToGUI;
-end;
 
-procedure TDigitMainForm.ToolResampleExecute(Sender: TObject);
-begin
-  GUIToCurve;
-  //Replace the curve by interpolated values
-  PlotImage.Interpolate(seXo.Value, seXf.Value, seInterpPoints.Value);
-  CurveToGUI;
+  TmpOpt := PlotImage.Options;
+  TmpOpt.DefaultItp := itpBSpline;
+  PlotImage.Options := TmpOpt;
+  btnResample.Action := ToolBSplines;
 end;
 
 procedure TDigitMainForm.ToolResetBoxExecute(Sender: TObject);
@@ -2480,27 +2527,27 @@ var
   i: Integer;
   WasChanged: Boolean;
 begin
-  if ScaleDlg.Execute(PlotImage.Scale) then
+  if OptionsDlg.Execute(PlotImage.Scale) then
   begin
     WasChanged := False;
     with PlotImage.Scale do
     begin
-      if (CoordSystem <> ScaleDlg.CoordSystem) then
+      if (CoordSystem <> OptionsDlg.CoordSystem) then
       begin
-        CoordSystem := ScaleDlg.CoordSystem;
+        CoordSystem := OptionsDlg.CoordSystem;
         WasChanged := True;
       end;
-      if (XScale <> ScaleDlg.XScale) or (YScale <> ScaleDlg.YScale) then
+      if (XScale <> OptionsDlg.XScale) or (YScale <> OptionsDlg.YScale) then
       begin
-        XScale := ScaleDlg.XScale;
-        YScale := ScaleDlg.YScale;
+        XScale := OptionsDlg.XScale;
+        YScale := OptionsDlg.YScale;
         WasChanged := True;
       end;
 
-      if (XLabel <> ScaleDlg.XLabel) or (YLabel <> ScaleDlg.YLabel) then
+      if (XLabel <> OptionsDlg.XLabel) or (YLabel <> OptionsDlg.YLabel) then
       begin
-        XLabel := ScaleDlg.XLabel;
-        YLabel := ScaleDlg.YLabel;
+        XLabel := OptionsDlg.XLabel;
+        YLabel := OptionsDlg.YLabel;
 
         leData.TitleCaptions[0] := XLabel;
         leData.TitleCaptions[1] := YLabel;
@@ -2514,15 +2561,15 @@ begin
 
       for i := 1 to 3 do
       begin
-        if (ImagePoint[i] <> ScaleDlg.ImagePoint[i]) then
+        if (ImagePoint[i] <> OptionsDlg.ImagePoint[i]) then
         begin
-          ImagePoint[i] := ScaleDlg.ImagePoint[i];
-          PlotImage.MoveMarker(PlotImage.AxesMarkers[i], ScaleDlg.ImagePoint[i]);
+          ImagePoint[i] := OptionsDlg.ImagePoint[i];
+          PlotImage.MoveMarker(PlotImage.AxesMarkers[i], OptionsDlg.ImagePoint[i]);
           WasChanged := True;
         end;
-        if (PlotPoint[i] <> ScaleDlg.PlotPoint[i]) then
+        if (PlotPoint[i] <> OptionsDlg.PlotPoint[i]) then
         begin
-          PlotPoint[i] := ScaleDlg.PlotPoint[i];
+          PlotPoint[i] := OptionsDlg.PlotPoint[i];
           WasChanged := True;
         end;
       end;
@@ -2582,11 +2629,18 @@ begin
 end;
 
 procedure TDigitMainForm.ToolSplinesExecute(Sender: TObject);
+var
+  TmpOpt: TPlotOptions;
 begin
   GUIToCurve;
   //Replace the curve by interpolated values
   PlotImage.Interpolate(seXo.Value, seXf.Value, seInterpPoints.Value, False, itpSpline);
   CurveToGUI;
+
+  TmpOpt := PlotImage.Options;
+  TmpOpt.DefaultItp := itpSpline;
+  PlotImage.Options := TmpOpt;
+  btnResample.Action := ToolSplines;
 end;
 
 //End of the action functions
