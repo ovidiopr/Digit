@@ -386,7 +386,7 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure PlotImageResize(Sender: TObject);
     procedure PlotImageChange(Sender: TObject);
-    procedure PlotImageShowProgress(Sender: TObject; Progress: Cardinal);
+    procedure PlotImageShowProgress(Sender: TObject; Progress: Cardinal; Msg: String);
     procedure PlotImageHideProgress(Sender: TObject);
     procedure PlotImageRegionSelected(Sender: TObject; RegionRect: TRect);
     procedure PlotImageStateChanged(Sender: TObject; NewState: TPlotImageState);
@@ -434,6 +434,9 @@ type
   private
     { Private declarations }
     FIsSaved: Boolean;
+
+    UpdatingTable: Boolean;
+    UpdatingPlot: Boolean;
 
     PlotImage: TPlotImage;
 
@@ -630,6 +633,12 @@ var
   i, j: Integer;
   PtCv: TCurve;
 begin
+  // Make sure that there are no previous events in the stack
+  if UpdatingPlot then Exit;
+  UpdatingPlot := True;
+  // Empty message stack
+  Application.ProcessMessages;
+
   //Draw the plot in the Chart
   for i := 0 to PlotImage.Count - 1 do
   begin
@@ -654,12 +663,20 @@ begin
       end;
     end;
   end;
+
+  UpdatingPlot := False;
 end;
 
 procedure TDigitMainForm.UpdateValues;
 var
   i: Integer;
 begin
+  // Make sure that there are no previous events in the stack
+  if UpdatingTable then Exit;
+  UpdatingTable := True;
+  // Empty message stack
+  Application.ProcessMessages;
+
   // Avoid loops
   leData.OnValidateEntry := Nil;
   leData.EditorMode:=False;
@@ -677,6 +694,8 @@ begin
 
   // Restore data validation
   leData.OnValidateEntry := @leDataValidateEntry;
+
+  UpdatingTable := False;
 end;
 
 procedure TDigitMainForm.SavePlot(FName: TFileName; FType: Integer);
@@ -1270,6 +1289,9 @@ begin
   GlobalWinRestorer := TWinRestorer.Create(GetIniName, WHATSAVE_ALL);
   GlobalWinRestorer.RestoreWin(Self, [size, location, state]);
   RestorePreferences;
+
+  UpdatingTable := False;
+  UpdatingPlot := False;
 
   PlotImage := TPlotImage.Create(ScrollBox);
   with PlotImage do
@@ -2138,15 +2160,17 @@ begin
   SetIsSaved(False, PlotImage.State in [piSetCurve, piSetScale]);
 end;
 
-procedure TDigitMainForm.PlotImageShowProgress(Sender: TObject; Progress: Cardinal);
+procedure TDigitMainForm.PlotImageShowProgress(Sender: TObject; Progress: Cardinal; Msg: String);
 begin
   ProgressBar.Visible := True;
   ProgressBar.Position := Progress;
+  StatusBar.Panels[4].Text := Msg;
 end;
 
 procedure TDigitMainForm.PlotImageHideProgress(Sender: TObject);
 begin
   ProgressBar.Visible := False;
+  StatusBar.Panels[4].Text := '';
 end;
 
 procedure TDigitMainForm.PlotImageRegionSelected(Sender: TObject; RegionRect: TRect);
@@ -2457,7 +2481,11 @@ procedure TDigitMainForm.ToolDigitColorExecute(Sender: TObject);
 var
   TmpOpt: TPlotOptions;
 begin
-  // TODO
+  GUIToCurve;
+  //Digitize curve
+  PlotImage.DigitizeColor;
+  CurveToGUI;
+
   TmpOpt := PlotImage.Options;
   TmpOpt.DefaultDig := digColor;
   PlotImage.Options := TmpOpt;

@@ -82,7 +82,7 @@ type
 
   TMarkerList = specialize TFPGObjectList<TMarker>;
 
-  TShowProgressEvent = procedure(Sender: TObject; Progress: Cardinal) of Object;
+  TShowProgressEvent = procedure(Sender: TObject; Progress: Cardinal; Msg: String) of Object;
   THideProgressEvent = procedure(Sender: TObject) of Object;
   TSelectRegionEvent = procedure(Sender: TObject; RegionRect: TRect) of Object;
   TStateChangeEvent = procedure(Sender: TObject; NewState: TPlotImageState) of Object;
@@ -226,6 +226,7 @@ type
                                FillCurvePoints: Boolean = True); overload;
     procedure DigitizeSpectrum; overload;
 
+    procedure DigitizeColor;
     procedure DigitizeMarkers;
 
     procedure FillIsland(Pi: TCurvePoint; var Island: TIsland;
@@ -1381,7 +1382,7 @@ var
 begin
   // Notify the parent that must show the progress bar
   if Assigned(OnShowProgress) then
-    OnShowProgress(Self, 0);
+    OnShowProgress(Self, 0, 'Finding points...');
 
   Tolerance := DigitCurve.Tolerance;
   C1 := ColorToRGB(DigitCurve.Color);
@@ -1416,7 +1417,8 @@ begin
       // Notify the parent that must update the progress bar
       if Assigned(OnShowProgress) then
         OnShowProgress(Self, Round(100*(j*PlotImg.Width + i)/
-                                   (PlotImg.Width*PlotImg.Height)));
+                                   (PlotImg.Width*PlotImg.Height)),
+                                   'Finding points...');
 
       Application.ProcessMessages;
     end;
@@ -1827,7 +1829,7 @@ begin
 
   // Notify the parent that must show the progress bar
   if Assigned(OnShowProgress) then
-    OnShowProgress(Self, 0);
+    OnShowProgress(Self, 0, 'Digitizing spectrum...');
 
   DigitCurve.NextCurve(False);
   Curve.AddPoint(Pi);
@@ -1906,15 +1908,15 @@ begin
           if (Scale.CoordSystem = csCartesian) then
           begin
             if PixelStep > 0 then
-              OnShowProgress(Self, Round(100*Pi.X/L))
+              OnShowProgress(Self, Round(100*Pi.X/L), 'Digitizing spectrum...')
             else
-              OnShowProgress(Self, Round(100*(1 - Pi.X/L)));
+              OnShowProgress(Self, Round(100*(1 - Pi.X/L)), 'Digitizing spectrum...');
           end
           else
-            OnShowProgress(Self, Round(100*Abs(Delta)/360));
+            OnShowProgress(Self, Round(100*Abs(Delta)/360), 'Digitizing spectrum...');
         end
         else
-          OnShowProgress(Self, Round(i/(ML.Count - 1)));
+          OnShowProgress(Self, Round(i/(ML.Count - 1)), 'Digitizing spectrum...');
         end;
     end;
 
@@ -1965,6 +1967,52 @@ begin
 
 
   DigitizeSpectrum(Pi, False);
+end;
+
+procedure TPlotImage.DigitizeColor;
+var
+  i, j: Integer;
+  Pi: TCurvePoint;
+  Added: Boolean;
+begin
+  //Identify all the points that have similar color
+  FindCurvePoints;
+
+  // Notify the parent that must show the progress bar
+  if Assigned(OnShowProgress) then
+    OnShowProgress(Self, 0, 'Digitizing spectrum...');
+
+  DigitCurve.NextCurve(False);
+
+  Curve.AddPoint(AllCurvePoints.Point[0]);
+  for i := 1 to AllCurvePoints.Count - 1 do
+  begin
+    // Notify the parent that must update the progress bar
+    if Assigned(OnShowProgress) then
+      OnShowProgress(Self, Round(100*(i + 1)/AllCurvePoints.Count), 'Digitizing spectrum...');
+
+    Added := False;
+    Pi := AllCurvePoints.Point[i];
+    for j := 0 to Curve.Count - 1 do
+      if (2*Pi.DistanceTo(Curve.Point[j]) <= DigitCurve.Spread) then
+      begin
+        Curve.Point[j] := (Pi + Curve.Point[j])/2;
+        Added := True;
+      end;
+
+    if not Added then
+      Curve.AddPoint(Pi);
+  end;
+
+  Curve.SortCurve;
+
+  // Notify the parent that must hide the progress bar
+  if Assigned(OnHideProgress) then
+    OnHideProgress(Self);
+
+  SortCurve;
+
+  IsChanged := True;
 end;
 
 procedure TPlotImage.DigitizeMarkers;
@@ -2048,7 +2096,7 @@ begin
 
       // Notify the parent that must show the progress bar
       if Assigned(OnShowProgress) then
-        OnShowProgress(Self, 0);
+        OnShowProgress(Self, 0, 'Adjusting curve...');
 
       Island := TIsland.Create;
       Island.Clear;
@@ -2057,7 +2105,7 @@ begin
         // Notify the parent that must update the progress bar
         if Assigned(OnShowProgress) then
         begin
-          OnShowProgress(Self, Round(100*(i + 1)/Curve.Count));
+          OnShowProgress(Self, Round(100*(i + 1)/Curve.Count), 'Adjusting curve...');
           Application.ProcessMessages;
         end;
 
@@ -2145,7 +2193,7 @@ begin
 
       // Notify the parent that must show the progress bar
       if Assigned(OnShowProgress) then
-        OnShowProgress(Self, 0);
+        OnShowProgress(Self, 0, 'Converting curve to symbols...');
 
       Island := TIsland.Create;
       Island.Clear;
@@ -2154,7 +2202,8 @@ begin
         // Notify the parent that must update the progress bar
         if Assigned(OnShowProgress) then
         begin
-          OnShowProgress(Self, Round(100*(i + 1)/Curve.Count));
+          OnShowProgress(Self, Round(100*(i + 1)/Curve.Count),
+                         'Converting curve to symbols...');
           Application.ProcessMessages;
         end;
 

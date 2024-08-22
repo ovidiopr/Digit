@@ -2025,13 +2025,13 @@ object DigitMainForm: TDigitMainForm
           TabOrder = 0
           object gbCoord: TGroupBox
             Left = 0
-            Height = 47
+            Height = 40
             Top = 0
             Width = 197
             Align = alTop
             AutoSize = True
             Caption = 'Coordinates'
-            ClientHeight = 20
+            ClientHeight = 13
             ClientWidth = 187
             Font.Color = clBlack
             Font.Height = -11
@@ -2064,7 +2064,7 @@ object DigitMainForm: TDigitMainForm
           object gbX: TGroupBox
             Left = 0
             Height = 68
-            Top = 47
+            Top = 40
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2156,7 +2156,7 @@ object DigitMainForm: TDigitMainForm
           object gbY: TGroupBox
             Left = 0
             Height = 66
-            Top = 115
+            Top = 108
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2246,7 +2246,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint1: TGroupBox
             Left = 0
             Height = 88
-            Top = 181
+            Top = 174
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2492,7 +2492,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint2: TGroupBox
             Left = 0
             Height = 88
-            Top = 269
+            Top = 262
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2737,7 +2737,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint3: TGroupBox
             Left = 0
             Height = 88
-            Top = 357
+            Top = 350
             Width = 197
             Align = alTop
             AutoSize = True
@@ -4582,7 +4582,7 @@ object DigitMainForm: TDigitMainForm
         Font.Color = clWindowText
         Font.Height = -11
         Font.Name = 'MS Sans Serif'
-        MaxValue = 3000
+        MaxValue = 100000
         MinValue = 1
         ParentFont = False
         TabOrder = 0
