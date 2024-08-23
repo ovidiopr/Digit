@@ -1589,7 +1589,7 @@ begin
 
   Delta := 0;
   if PixelStep > 0 then
-    L := Width - Pi.X
+    L := PlotImg.Width - Pi.X
   else
     L := Pi.X;
 
