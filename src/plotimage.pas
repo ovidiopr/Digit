@@ -94,6 +94,7 @@ type
   TSelectRegionEvent = procedure(Sender: TObject; RegionRect: TRect) of Object;
   TStateChangeEvent = procedure(Sender: TObject; NewState: TPlotImageState) of Object;
   TMarkerDraggedEvent = procedure(Sender: TObject; Marker: TMarker; Zoom: Boolean) of Object;
+  TZoomChangeEvent = procedure(Sender: TObject; Zoom: Double) of Object;
 
   TPlotImage = class(TCustomControl)
   protected type
@@ -146,6 +147,8 @@ type
     FOnRegionSelected: TSelectRegionEvent;
     FOnStateChanged: TStateChangeEvent;
     FOnMarkerDragged: TMarkerDraggedEvent;
+    FOnZoomChanged: TZoomChangeEvent;
+
 
     procedure Paint; override;
     procedure Resize; override;
@@ -382,6 +385,7 @@ type
     property OnRegionSelected: TSelectRegionEvent read FOnRegionSelected write FOnRegionSelected;
     property OnStateChanged: TStateChangeEvent read FOnStateChanged write FOnStateChanged;
     property OnMarkerDragged: TMarkerDraggedEvent read FOnMarkerDragged write FOnMarkerDragged;
+    property OnZoomChanged: TZoomChangeEvent read FOnZoomChanged write FOnZoomChanged;
   end;
 
 function CreateMarker(Size: TPoint; Symbol: Char; Color: TColor; LineWith: Integer = 3): TBGRABitmap;
@@ -2431,6 +2435,11 @@ begin
     WhiteBoard.PutImage(0, 0, ZoomImg, dmSet);
 
     UpdateMarkersInImage;
+
+    // Notify the parent that the state has changed
+    if assigned(OnZoomChanged) then
+      OnZoomChanged(Self, Value);
+
     Invalidate;
   end;
 end;

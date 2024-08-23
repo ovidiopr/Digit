@@ -24,6 +24,7 @@ type
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
+    tbZoom: TBCTrackbarUpdown;
     EditZoomFit: TAction;
     EditZoomOut: TAction;
     EditZoomIn: TAction;
@@ -409,6 +410,7 @@ type
     procedure PlotImageRegionSelected(Sender: TObject; RegionRect: TRect);
     procedure PlotImageStateChanged(Sender: TObject; NewState: TPlotImageState);
     procedure PlotImageMarkerDragged(Sender: TObject; Marker: TMarker; Zoom: Boolean);
+    procedure PlotImageZoomChanged(Sender: TObject; Zoom: Double);
     procedure InputPanelResize(Sender: TObject);
     procedure MainPlotMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
@@ -426,6 +428,7 @@ type
     procedure ModeGroupPointsExecute(Sender: TObject);
     procedure PlotExportExecute(Sender: TObject);
     procedure PlotScaleExecute(Sender: TObject);
+    procedure tbZoomChange(Sender: TObject; AByUser: boolean);
     procedure tcCurvesChange(Sender: TObject);
     procedure ToolAdjustCurveExecute(Sender: TObject);
     procedure ToolAdjustNoiseExecute(Sender: TObject);
@@ -1353,6 +1356,7 @@ begin
     OnRegionSelected := @PlotImageRegionSelected;
     OnStateChanged := @PlotImageStateChanged;
     OnMarkerDragged := @PlotImageMarkerDragged;
+    OnZoomChanged := @PlotImageZoomChanged;
 
     Options.LoadFromFile(GetIniName);
   end;
@@ -2284,6 +2288,11 @@ begin
     UpdateZoomImage(Marker.Position);
 end;
 
+procedure TDigitMainForm.PlotImageZoomChanged(Sender: TObject; Zoom: Double);
+begin
+  tbZoom.Value := Round(Zoom*100);
+end;
+
 procedure TDigitMainForm.InputPanelResize(Sender: TObject);
 begin
   ZoomImage.Height := InputPanel.Width;
@@ -2433,6 +2442,13 @@ begin
       ZoomYmax := Zoom.Ymax;
     end;
   end;
+end;
+
+procedure TDigitMainForm.tbZoomChange(Sender: TObject; AByUser: boolean);
+begin
+  if AByUser then
+    with TBCTrackbarUpdown(Sender) do
+      PlotImage.Zoom := Value/100;
 end;
 
 procedure TDigitMainForm.tcCurvesChange(Sender: TObject);
