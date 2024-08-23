@@ -510,7 +510,7 @@ type
     procedure GUIToCurve;
   public
     { Public declarations }
-    TmpPoint: TPoint;
+    TmpPoint: TCurvePoint;
     FMouseMode: TMouseMode;
     FDigitFileName: TFileName;
     ExportFileName: TFileName;
@@ -647,6 +647,7 @@ begin
     EditRedo.Enabled := (State = piSetCurve) and CanRedo;
     EditCopyCurve.Enabled := (State = piSetCurve) and HasPoints;
 
+    tbZoom.Enabled := ImageIsLoaded;
     EditZoomOriginal.Enabled := ImageIsLoaded;
     EditZoomIn.Enabled := ImageIsLoaded;
     EditZoomOut.Enabled := ImageIsLoaded;
@@ -2105,21 +2106,21 @@ begin
         end;
         //We are selecting the color
         mdColor: begin
-          btnColor.ButtonColor := PlotImage.PlotImg.GetPixel(X, Y);
-          PlotImage.DigitCurve.Color := PlotImage.PlotImg.GetPixel(X, Y);
+          btnColor.ButtonColor := PlotImage.GetPixel(X, Y);
+          PlotImage.DigitCurve.Color := PlotImage.GetPixel(X, Y);
           PlotImage.RedrawMarkers;
         end;
-        mdMajorGridColor: btnMajorGrid.ButtonColor := PlotImage.PlotImg.GetPixel(X, Y);
-        mdMinorGridColor: btnMinorGrid.ButtonColor := PlotImage.PlotImg.GetPixel(X, Y);
-        mdBackgroundColor: btnBackground.ButtonColor := PlotImage.PlotImg.GetPixel(X, Y);
+        mdMajorGridColor: btnMajorGrid.ButtonColor := PlotImage.GetPixel(X, Y);
+        mdMinorGridColor: btnMinorGrid.ButtonColor := PlotImage.GetPixel(X, Y);
+        mdBackgroundColor: btnBackground.ButtonColor := PlotImage.GetPixel(X, Y);
       end;
 
       UpdateControls;
     end;
     mbRight: begin
       DigitizeFromHereItem.Enabled := PlotImage.Scale.IsValid and PlotImage.ColorIsSet;
-      TmpPoint.X := X;
-      TmpPoint.Y := Y;
+      TmpPoint.X := X/PlotImage.Zoom;
+      TmpPoint.Y := Y/PlotImage.Zoom;
     end;
   end;
 end;

@@ -157,10 +157,6 @@ type
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
   private
-    function GetPixel(X, Y: Integer): LongInt; overload;
-    function GetPixel(X, Y: Double): LongInt; overload;
-    function GetPixel(P: TCurvePoint): LongInt; overload;
-
     function GetAxesPoint(Index: Integer): TCurvePoint;
     function GetBoxVertex(Index: Integer): TCurvePoint;
     function GetAxesMarkers(Index: Integer): TMarker;
@@ -232,6 +228,10 @@ type
 
     procedure Reset;
     procedure SetPlotPointMarkers(ResetPoints: Boolean = False);
+
+    function GetPixel(X, Y: Integer): LongInt; overload;
+    function GetPixel(X, Y: Double): LongInt; overload;
+    function GetPixel(P: TCurvePoint): LongInt; overload;
 
     procedure FindCurvePoints;
 
@@ -1481,94 +1481,6 @@ begin
     OnHideProgress(Self);
 end;
 
-//function TPlotImage.FindNextPoint(var Pv: TCurvePoint; Interval: Integer;
-//                                  ScanX: Boolean = False): Boolean;
-//var
-//  // Number of pixels that the line is expected to spread
-//  Spread: Integer;
-//
-//  Nx, Ny, d: Double;
-//  dk: Array of Double;
-//  i, j, k: Integer;
-//  ki: Array of Integer;
-//  Pi, Pvp, Pip: TCurvePoint;
-//  P: Array of TCurvePoint;
-//  NoPnts: Integer;
-//begin
-//  if ScanX then
-//    Spread := 0
-//  else
-//    Spread := DigitCurve.Spread;
-//
-//  Nx := Interval*Abs(Scale.Ny(Pv).X);
-//  Ny := Interval*Abs(Scale.Ny(Pv).Y);
-//  Pvp := Scale.FromImgToPlot(Pv);
-//  d := max(1, Modulus(Pvp));
-//
-//  NoPnts := 0;
-//  Result := False;
-//
-//  SetLength(ki, 1 + 2*Spread);
-//  SetLength(dk, 1 + 2*Spread);
-//  SetLength(P, 1 + 2*Spread);
-//  try
-//    // We scan all the potential curve points,
-//    // trying to find all that are within the spread range
-//    for i := AllCurvePoints.Count - 1 downto 0 do
-//    begin
-//      Pi := AllCurvePoints.Point[i];
-//      Pip := Scale.FromImgToPlot(Pi);
-//      //if Distance(Pv, Pi, not ScanX) <= Interval then
-//      //ShowMessage(FloatToStr(Scale.Ny(Pv).X) + ', ' + FloatToStr(Scale.Ny(Pv).Y));
-//      if (Abs(Pv.X - Pi.X) <= Nx) and (Abs(Pv.Y - Pi.Y) <= Ny) then//and
-//         //(Abs((Pvp.X - Pip.X)/d) < 1e-2) then
-//      begin
-//        ShowMessage(FloatToStr(Abs(Pvp.X - Pip.X)/d) + ': (' +
-//                    FloatToStr(Pvp.X) + ', ' + FloatToStr(Pvp.Y) + '), (' +
-//                    FloatToStr(Pip.X) + ', ' + FloatToStr(Pip.Y) + ')');
-//        if (NoPnts < 1 + 2*Spread) then
-//        begin
-//          ki[NoPnts] := i;
-//          dk[NoPnts] := Scale.Distance(Pv, Pi);
-//          P[NoPnts] := Pi;
-//          inc(NoPnts);
-//        end
-//        else
-//        begin
-//          k := 0;
-//          for j := 1 to NoPnts - 1 do
-//            if (dk[j] > dk[j - 1]) then
-//              k := j;
-//
-//          if (dk[k] > Scale.Distance(Pv, Pi)) then
-//          begin
-//            ki[k] := i;
-//            dk[k] := Scale.Distance(Pv, Pi);
-//            P[k] := Pi;
-//          end;
-//        end;
-//      end;
-//    end;
-//
-//    if (NoPnts > 0) then
-//    begin
-//      Pi := GetcurvePoint(0, 0);
-//      for i := 0 to NoPnts - 1 do
-//      begin
-//        Pi := Pi + P[i];
-//        AllCurvePoints.DeletePoint(ki[i]);
-//      end;
-//
-//      Pv := Pi/NoPnts;
-//      Result := True;
-//    end;
-//  finally
-//    SetLength(ki, 0);
-//    SetLength(dk, 0);
-//    SetLength(P, 0);
-//  end;
-//end;
-
 function TPlotImage.FindNextPoint(var Pv: TCurvePoint; Interval: Integer;
                                   ScanX: Boolean = False): Boolean;
 var
@@ -1624,216 +1536,6 @@ begin
     Pv := P/NoPnts;
   end;
 end;
-
-//procedure TPlotImage.DigitizeSpectrum(Pi: TCurvePoint;
-//                                      ProgressBar: TProgressBar = nil;
-//                                      FillCurvePoints: Boolean = True);
-//var
-//  i: Integer;
-//  Delta, L: Double;
-//  Pv, Pn: TCurvePoint;
-//  Ppv, Ppn: TCurvePoint;
-//  PNew: TCurvePoint;
-//  NoPnts: Integer;
-//
-//  // Steps (in the image) between one point and the next
-//  PixelStep: Integer;
-//  // Interval of pixels to scan below and above the expected point
-//  Interval: Integer;
-//
-//  ML: TCurve;
-//begin
-//  if FillCurvePoints then
-//    FindCurvePoints(ProgressBar);
-//
-//  PixelStep := DigitCurve.Step;
-//  Interval := DigitCurve.Interval;
-//
-//  if Assigned(ProgressBar) then
-//  begin
-//    ProgressBar.Visible := True;
-//    ProgressBar.Position := 0;
-//  end;
-//
-//  DigitCurve.NextCurve(False);
-//  Curve.AddPoint(Pi);
-//
-//  if PixelStep > 0 then
-//    i := 0
-//  else
-//    i := AllCurvePoints.Count - 1;
-//
-//  L := AllCurvePoints.Count;
-//  PNew := GetcurvePoint(0, 0);
-//  NoPnts := 0;
-//  repeat
-//    Ppn := AllCurvePoints.Point[i];
-//    Pn := Scale.FromPlotToImg(Ppn);
-//
-//    if (Abs(Pn.Y - Pi.Y) <= Interval) then
-//    begin
-//
-//    end;
-//
-//    inc(i, sign(PixelStep));
-//
-//    if (i < 0) then i := AllCurvePoints.Count - 1;
-//    if (i >= AllCurvePoints.Count) then i := 0;
-//
-//    if Assigned(ProgressBar) then
-//      ProgressBar.Position := Round(100*(L - AllCurvePoints.Count)/L);
-//
-//    Application.ProcessMessages;
-//  until (AllCurvePoints.Count = 0);
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//  repeat
-//    if (NoPnts = 0) then
-//    begin
-//      if () then
-//      begin
-//        Pi := Pp;
-//        PNew := Pp;
-//        NoPnts := 1;
-//      end;
-//    end
-//    else
-//    begin
-//      if ((PixelStep > 0) and (PNew.X >= Pp.X)) or
-//         ((PixelStep < 0) and (PNew.X <= Pp.X)) then
-//      begin
-//        if (Abs(Pi.X - AllCurvePoints.Point[i].X) < Scale.dx(Pi)) and
-//           () then
-//        begin
-//          PNew := PNew + AllCurvePoints.Point[i];
-//          inc(NoPnts);
-//        end
-//        else
-//        begin
-//          if (NoPnts > 0) then
-//          begin
-//            Curve.AddPoint(PNew/NoPnts);
-//            PNew := GetcurvePoint(0, 0);
-//            NoPnts := 0;
-//         end;
-//        end;
-//      end;
-//      AllCurvePoints.DeletePoint(i);
-//      inc(i, sign(-PixelStep));
-//    end;
-//
-//    inc(i, sign(PixelStep));
-//
-//    if (i < 0) then i := AllCurvePoints.Count - 1;
-//    if (i >= AllCurvePoints.Count) then i := 0;
-//
-//    if Assigned(ProgressBar) then
-//      ProgressBar.Position := Round(100*(L - AllCurvePoints.Count)/L);
-//
-//    Application.ProcessMessages;
-//  until (AllCurvePoints.Count = 0);
-//
-//
-//
-//
-//
-//  Delta := 0;
-//  if PixelStep > 0 then
-//    L := Width - Pi.X
-//  else
-//    L := Pi.X;
-//
-//  ML := MarkerList;
-//  if (ML.Count > 2) then
-//    if (Scale.CoordSystem = csCartesian) then
-//      ML.Interpolate(1 + Abs(Round((Scale.FromPlotToImg(ML.Point[ML.Count - 1]).X -
-//                                    Scale.FromPlotToImg(ML.Point[0]).X)/PixelStep)))
-//    else
-//      ML.Interpolate(1 + Abs(360 div PixelStep));
-//
-//  i := 0;
-//
-//  // Move to the next and look for [Interval] points up and down
-//  repeat
-//    case ML.Count of
-//      0..2: begin
-//        // Not enough markers to guide the search
-//        // Find the closer point
-//        if (Scale.CoordSystem = csPolar) then
-//        begin
-//          Pp := CartesianToPolar(Pi - Scale.ImagePoint[2]);
-//          if (2*Pp.Y*Pp.Y < PixelStep*PixelStep) then
-//            Pp.Y := PixelStep;
-//          Pp.X := Pp.X - ArcSin(PixelStep/Sqrt(4*Pp.Y*Pp.Y - PixelStep*PixelStep))*90/ArcTan(1);
-//          Pi := Scale.ImagePoint[2] + PolarToCartesian(Pp);
-//
-//          Delta := Delta + Sign(PixelStep)*ArcSin(PixelStep/Sqrt(4*Pp.Y*Pp.Y - PixelStep*PixelStep))*90/ArcTan(1);
-//        end
-//        else
-//        begin
-//          Pi := Pi + PixelStep*Scale.Nx(Pi);
-//          Delta := SegmentLength(Pi, Scale.Nx(Pi));
-//        end;
-//
-//        PNew := Pi;
-//      end
-//      else
-//      begin
-//        // There are enough markers to guide the search
-//        inc(i);
-//
-//        if (PixelStep > 0) then
-//          PNew := Scale.FromPlotToImg(ML.Point[i])
-//        else
-//          PNew := Scale.FromPlotToImg(ML.Point[ML.Count - 1 - i]);
-//      end;
-//    end;
-//
-//
-//    if FindNextPoint(PNew, Interval) then
-//    begin
-//      Pi := PNew;
-//      Curve.AddPoint(Pi);
-//    end;
-//
-//    if Assigned(ProgressBar) then
-//    begin
-//      case ML.Count of
-//        0..2: begin
-//          if (Scale.CoordSystem = csCartesian) then
-//          begin
-//            if PixelStep > 0 then
-//              ProgressBar.Position := Round(100*Pi.X/L)
-//            else
-//              ProgressBar.Position := Round(100*(1 - Pi.X/L));
-//          end
-//          else
-//            ProgressBar.Position := Round(100*Abs(Delta)/360);
-//        end
-//        else
-//          ProgressBar.Position := Round(i/(ML.Count - 1));
-//        end;
-//    end;
-//
-//    Application.ProcessMessages;
-//  until (not PlotBox.Contains(Pi)) or
-//        ((Scale.CoordSystem = csPolar) and (Abs(Delta) > 360)) or
-//        ((ML.Count > 2) and (i >= ML.Count - 1));
-//
-//  if Assigned(ProgressBar) then
-//    ProgressBar.Visible := False;
-//
-//  SortCurve;
-//
-//  IsChanged := True;
-//end;
 
 procedure TPlotImage.DigitizeSpectrum(Pi: TCurvePoint;
                                       FillCurvePoints: Boolean = True);
@@ -1988,9 +1690,9 @@ begin
   if (Markers.Count > 0) then
   begin
     if (DigitCurve.Step > 0) then
-      Pi := LeftMarker.Position
+      Pi := LeftMarker.Position/Zoom
     else
-      Pi := RightMarker.Position;
+      Pi := RightMarker.Position/Zoom;
   end
   else
   begin
@@ -2087,7 +1789,7 @@ begin
     Curve.ShowAsSymbols := True;
 
     for i := 0 to Markers.Count - 1 do
-      Curve.AddPoint(Markers[i].Position);
+      Curve.AddPoint(Markers[i].Position/Zoom);
 
     Curve.SortCurve;
 
@@ -3322,8 +3024,8 @@ begin
           begin
             Left := Round(Left/Zoom);
             Top := Round(Top/Zoom);
-            Width := Round(Width/Zoom);
-            Height := Round(Height/Zoom);
+            Right := Round(Right/Zoom);
+            Bottom := Round(Bottom/Zoom);
           end;
 
         // Notify the parent that the user has selected a region
