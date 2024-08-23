@@ -1,4 +1,4 @@
-unit Main;
+unit umain;
 
 {$mode objfpc}{$H+}
 {$IFDEF DARWIN}
@@ -565,7 +565,7 @@ implementation
 
 {$R *.lfm}
 
-uses About, uoptions;
+uses uabout, uoptions;
 
 //Beginning of general functions
 

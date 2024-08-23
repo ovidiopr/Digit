@@ -24,8 +24,8 @@
     <VersionInfo>
       <UseVersionInfo Value="True"/>
       <MajorVersionNr Value="2"/>
-      <MinorVersionNr Value="3"/>
-      <StringTable ProductName="Digit" ProductVersion="2.3"/>
+      <MinorVersionNr Value="4"/>
+      <StringTable ProductName="Digit" ProductVersion="2.4"/>
     </VersionInfo>
     <BuildModes Count="3">
       <Item1 Name="Default" Default="True"/>
@@ -126,20 +126,21 @@
       <Unit0>
         <Filename Value="Digit.lpr"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="digit"/>
       </Unit0>
       <Unit1>
         <Filename Value="coordinates.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit1>
       <Unit2>
-        <Filename Value="Main.pas"/>
+        <Filename Value="umain.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="DigitMainForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit2>
       <Unit3>
-        <Filename Value="About.pas"/>
+        <Filename Value="uabout.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="AboutBox"/>
         <HasResources Value="True"/>
