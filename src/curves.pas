@@ -206,7 +206,7 @@ type
 
     procedure Reset;
     procedure Clear;
-    procedure Draw(Canvas: TCanvas);
+    procedure Draw(Canvas: TCanvas; Zoom: Double = 1);
     function CurveRect: TRect;
 
     procedure CorrectCurve(Po, Pf: TCurvePoint; IsStep: Boolean = True);
@@ -1025,7 +1025,7 @@ begin
     FMarkers[Index] := Value;
 end;
 
-procedure TDigitCurve.Draw(Canvas: TCanvas);
+procedure TDigitCurve.Draw(Canvas: TCanvas; Zoom: Double = 1);
 var
   i: Integer;
 begin
@@ -1037,9 +1037,9 @@ begin
       Pen.Mode := pmNot;
       with Curve do
       begin
-        MoveTo(Round(X[0]), Round(Y[0]));
+        MoveTo(Round(Zoom*X[0]), Round(Zoom*Y[0]));
         for i := 1 to Count - 1 do
-          LineTo(Round(X[i]), Round(Y[i]));
+          LineTo(Round(Zoom*X[i]), Round(Zoom*Y[i]));
       end;
     end;
   end;

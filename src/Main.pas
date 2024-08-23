@@ -24,7 +24,21 @@ type
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
+    EditZoomFit: TAction;
+    EditZoomOut: TAction;
+    EditZoomIn: TAction;
+    EditZoomOriginal: TAction;
     DigitizeColorItem: TMenuItem;
+    EditZoomOriginalItem: TMenuItem;
+    EditZoomInItem: TMenuItem;
+    EditZoomOutItem: TMenuItem;
+    EditZoomFitItem: TMenuItem;
+    Separator1: TMenuItem;
+    sep09: TToolButton;
+    btnZoomOriginal: TToolButton;
+    btnZoomIn: TToolButton;
+    btnZoomOut: TToolButton;
+    btnZoomFit: TToolButton;
     ToolDigitizeItem: TMenuItem;
     ToolDigitColorItem: TMenuItem;
     ToolDigitColor: TAction;
@@ -348,6 +362,10 @@ type
     procedure EditPY1EditingDone(Sender: TObject);
     procedure EditVX1Change(Sender: TObject; AByUser: boolean);
     procedure EditVY1Change(Sender: TObject; AByUser: boolean);
+    procedure EditZoomFitExecute(Sender: TObject);
+    procedure EditZoomInExecute(Sender: TObject);
+    procedure EditZoomOriginalExecute(Sender: TObject);
+    procedure EditZoomOutExecute(Sender: TObject);
     procedure edtGridMaskChange(Sender: TObject; AByUser: boolean);
     procedure edtGridThresholdChange(Sender: TObject; AByUser: boolean);
     procedure edtGridToleranceChange(Sender: TObject; AByUser: boolean);
@@ -625,6 +643,11 @@ begin
     EditUndo.Enabled := (State = piSetCurve) and CanUndo;
     EditRedo.Enabled := (State = piSetCurve) and CanRedo;
     EditCopyCurve.Enabled := (State = piSetCurve) and HasPoints;
+
+    EditZoomOriginal.Enabled := ImageIsLoaded;
+    EditZoomIn.Enabled := ImageIsLoaded;
+    EditZoomOut.Enabled := ImageIsLoaded;
+    EditZoomFit.Enabled := ImageIsLoaded;
   end;
 end;
 
@@ -1160,6 +1183,26 @@ begin
   if AByUser then
     with TBCTrackbarUpdown(Sender) do
       PlotImage.BoxVertex[Tag] := TCurvePoint.Create(PlotImage.BoxVertex[Tag].X, Value);
+end;
+
+procedure TDigitMainForm.EditZoomFitExecute(Sender: TObject);
+begin
+  PlotImage.ZoomFitBest;
+end;
+
+procedure TDigitMainForm.EditZoomInExecute(Sender: TObject);
+begin
+  PlotImage.ZoomIn;
+end;
+
+procedure TDigitMainForm.EditZoomOriginalExecute(Sender: TObject);
+begin
+  PlotImage.ZoomOriginal;
+end;
+
+procedure TDigitMainForm.EditZoomOutExecute(Sender: TObject);
+begin
+  PlotImage.ZoomOut;
 end;
 
 procedure TDigitMainForm.edtGridMaskChange(Sender: TObject; AByUser: boolean);
@@ -2538,16 +2581,8 @@ begin
 end;
 
 procedure TDigitMainForm.ToolResetBoxExecute(Sender: TObject);
-const
-  span = 6;
 begin
-  with PlotImage do
-  begin
-    BoxVertex[1] := TCurvePoint.Create(span, span);
-    BoxVertex[2] := TCurvePoint.Create(Width - span - 1, span);
-    BoxVertex[3] := TCurvePoint.Create(Width - span - 1, Height - span - 1);
-    BoxVertex[4] := TCurvePoint.Create(span, Height - span - 1);
-  end;
+  PlotImage.ResetPlotBox;
 end;
 
 procedure TDigitMainForm.ToolPlotOptionsExecute(Sender: TObject);
