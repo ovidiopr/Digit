@@ -10,8 +10,8 @@ uses {$ifdef windows}Windows,{$endif} Forms, Classes, Controls, Graphics,
      utils, curves, coordinates;
 
 const
-  ZoomLevels: Array [1..15] of Double = (1/10, 1/8, 1/6, 1/5, 1/4, 1/3, 1/2,
-                                         1, 2, 3, 4, 5, 6, 8, 10);
+  ZoomLevels: Array [1..17] of Double = (1/10, 1/8, 1/6, 1/5, 1/4, 1/3, 1/2,
+                                         2/3, 1, 3/2, 2, 3, 4, 5, 6, 8, 10);
 
 type
   TPlotImageState = (piSetCurve, piSetScale, piSetPlotBox, piSetGrid);
@@ -412,6 +412,8 @@ begin
         DrawLineAntialias(0, Height - 1, Width - 1, 0, Color, LineWith);
       end;
       '+': begin
+        DrawLineAntialias(0, Height div 2, Width - 1, Height div 2, InvertColor(Color), LineWith + 2);
+        DrawLineAntialias(Width div 2, 0, Width div 2, Height - 1, InvertColor(Color), LineWith + 2);
         DrawLineAntialias(0, Height div 2, Width - 1, Height div 2, Color, LineWith);
         DrawLineAntialias(Width div 2, 0, Width div 2, Height - 1, Color, LineWith);
       end;
@@ -2126,6 +2128,8 @@ procedure TPlotImage.SetZoom(Value: Double);
 begin
   if (Value > 0) and (Value <> FZoom) then
   begin
+    UpdateMarkersInCurve;
+
     FZoom := Value;
 
     Width := Round(FZoom*PlotImg.Width);
@@ -3262,11 +3266,11 @@ begin
   case State of
     piSetScale: begin
 
-      FAxesMarkers[1] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'+', clRed, 3),
+      FAxesMarkers[1] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'+', Options.YAxisColor, 3),
                                         Zoom*Scale.ImagePoint[1], True);
       FAxesMarkers[2] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'+', clGreen, 3),
                                         Zoom*Scale.ImagePoint[2], True);
-      FAxesMarkers[3] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'+', clBlack, 3),
+      FAxesMarkers[3] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'+', Options.XAxisColor, 3),
                                         Zoom*Scale.ImagePoint[3], True);
 
       AddMarker(AxesMarkers[1], False);
@@ -4232,6 +4236,7 @@ begin
     end;
 
     FCurveIndex := 0;
+    UpdateMarkersInImage;
 
     if ImageIsLoaded then
     begin

@@ -1751,7 +1751,11 @@ begin
 
   CurveCount := PlotImage.Count;
 
-  if UpdateTable then UpdateView;
+  if UpdateTable then
+    UpdateView
+  else
+    PlotCurve;
+
   UpdateControls;
 end;
 
@@ -2128,7 +2132,6 @@ end;
 procedure TDigitMainForm.PlotImageMouseLeave(Sender: TObject);
 begin
   ClearZoomImage;
-  //ZoomImage.Visible := False;
 
   StatusBar.Panels[1].Text := '';
   StatusBar.Panels[2].Text := '';
@@ -2138,39 +2141,24 @@ procedure TDigitMainForm.PlotImageMouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
 var
   Pt: TCurvePoint;
-//var
-//  i: Integer;
-//  a, b, c, Pn: TCurvePoint;
-//  X1, Y1,
-//  sin_a,
-//  cos_a: Double;
 begin
-  //ZoomImage.Visible := True;
   UpdateZoomImage(X, Y);
 
-  StatusBar.Panels[1].Text := IntToStr(X) + ', ' + IntToStr(Y);
-  if PlotImage.Scale.IsValid then
+  with PlotImage do
   begin
-    Pt := PlotImage.ConvertCoords(X, Y);
-    StatusBar.Panels[2].Text := Pt.ToStr('%.3g');
-  end
-  else
-    StatusBar.Panels[2].Text := '';
-
-
-
-  //Pn := TCurvePoint.Create(X, Y);
-  //c := PlotImage.PlotBox.Center;
-  //a := PlotImage.PlotBox[0] - c;
-  //b := Pn - c;
-  //
-  //if (Modulus(a) > 0) and (Modulus(b) > 0) then
-  //begin
-  //  cos_a := (a.X*b.X + a.Y*b.Y)/Modulus(a)/Modulus(b);
-  //  sin_a := sign(a.x*(pn.Y - c.Y) - a.y*(pn.X - c.X))*sqrt(1 - cos_a*cos_a);
-  //end;
-  //StatusBar.Panels[3].Text := Format('%.g', [ArcSin(sin_a)*45/ArcTan(1)]);
-  //StatusBar.Panels[4].Text := Format('%.g, %.g', [sin_a, cos_a]);
+    if (Zoom = 1) then
+      StatusBar.Panels[1].Text := Format('%d, %d', [X, Y])
+    else
+      StatusBar.Panels[1].Text := Format('%d, %d (%d, %d)',
+                                         [X, Y, Round(X/Zoom), Round(Y/Zoom)]);
+    if Scale.IsValid then
+    begin
+      Pt := ConvertCoords(X, Y);
+      StatusBar.Panels[2].Text := Pt.ToStr('%.3g');
+    end
+    else
+      StatusBar.Panels[2].Text := '';
+  end;
 end;
 
 procedure TDigitMainForm.PlotImageMouseUp(Sender: TObject;
@@ -2286,7 +2274,8 @@ begin
   end;
 
   if Zoom then
-    UpdateZoomImage(Marker.Position);
+    with Marker.Position do
+      PlotImageMouseMove(Sender, [], Round(X), Round(Y));
 end;
 
 procedure TDigitMainForm.PlotImageZoomChanged(Sender: TObject; Zoom: Double);
