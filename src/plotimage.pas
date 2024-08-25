@@ -3409,7 +3409,8 @@ begin
   end;
 
   // Assign the points
-  if (Po.DistanceTo(P[Idx[1]]) < Po.DistanceTo(P[Idx[2]])) then
+  if (sign(Pf.X - Po.X) = sign(P[Idx[2]].X - P[Idx[1]].X)) and
+     (sign(Pf.Y - Po.Y) = sign(P[Idx[2]].Y - P[Idx[1]].Y)) then
   begin
     Pini := P[Idx[1]];
     Pend := P[Idx[2]];
