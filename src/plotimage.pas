@@ -2636,7 +2636,7 @@ begin
 
         PolyColor.alpha := 80;
         PlotBox.PolarCoordinates := (Scale.CoordSystem = csPolar);
-        WhiteBoard.DrawPolygonAntialias(PlotBox.PolygonPoints[Zoom], BGRABlack, 1, PolyColor);
+        WhiteBoard.DrawPolygonAntialias(PlotBox.DrawPoints[Zoom], BGRABlack, 1, PolyColor);
       end;
     end;
   end;

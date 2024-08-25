@@ -117,7 +117,8 @@ type
     function GetVertex(Index: Integer): TCurvePoint;
     function GetEdge(Index: Integer): TCurvePoint;
     function GetCenter: TCurvePoint;
-    function GetPolygonPoints(Zoom: Double): ArrayOfTPointF; virtual;
+    function GetPolygonPoints(Zoom: Double): ArrayOfTPointF;
+    function GetDrawPoints(Zoom: Double): ArrayOfTPointF; virtual;
     function GetRect(Zoom: Double): TRect;
 
     procedure SetNumVertices(const Value: Integer);
@@ -158,6 +159,7 @@ type
     property Edge[Index: Integer]: TCurvePoint read GetEdge;
     property Center: TCurvePoint read GetCenter;
     property PolygonPoints[Zoom: Double]: ArrayOfTPointF read GetPolygonPoints;
+    property DrawPoints[Zoom: Double]: ArrayOfTPointF read GetDrawPoints;
     property Rect[Zoom: Double]: TRect read GetRect;
     property Rotated: Boolean read FRotated;
   end;
@@ -172,7 +174,7 @@ type
     FDMat: Array of Array of Double;
     FIMat: Array of Array of Double;
 
-    function GetPolygonPoints(Zoom: Double): ArrayOfTPointF; override;
+    function GetDrawPoints(Zoom: Double): ArrayOfTPointF; override;
 
     procedure SetVertex(Index: Integer; const Value: TCurvePoint); override;
   protected
@@ -961,6 +963,30 @@ function TPolygon.GetPolygonPoints(Zoom: Double): ArrayOfTPointF;
 var i: Integer;
 begin
   Setlength(Result, NumVertices);
+  Result[0].X := Zoom*Vertex[0].X;
+  Result[0].Y := Zoom*Vertex[0].Y;
+  if IsCW then
+  begin
+    for i := Low(Result) + 1 to High(Result) do
+    begin
+      Result[i].X := Zoom*Vertex[i].X;
+      Result[i].Y := Zoom*Vertex[i].Y;
+    end;
+  end
+  else
+  begin
+    for i := High(Result) downto Low(Result) + 1 do
+    begin
+      Result[High(Result) - i + 1].X := Zoom*Vertex[i].X;
+      Result[High(Result) - i + 1].Y := Zoom*Vertex[i].Y;
+    end;
+  end;
+end;
+
+function TPolygon.GetDrawPoints(Zoom: Double): ArrayOfTPointF;
+var i: Integer;
+begin
+  Setlength(Result, NumVertices);
   for i := Low(Result) to High(Result) do
   begin
     Result[i].X := Zoom*Vertex[i].X;
@@ -988,8 +1014,8 @@ begin
       if (Vertex[i].Y > Yf) then Yf := Round(Vertex[i].Y);
     end;
 
-    Result := TRect.Create(Round(Xo/Zoom), Round(Yo/Zoom),
-                           Round(Xf/Zoom), Round(Yf/Zoom));
+    Result := TRect.Create(Round(Xo*Zoom), Round(Yo*Zoom),
+                           Round(Xf*Zoom), Round(Yf*Zoom));
   end;
 end;
 
@@ -1394,7 +1420,7 @@ begin
   inherited Destroy;
 end;
 
-function TPlotQuad.GetPolygonPoints(Zoom: Double): ArrayOfTPointF;
+function TPlotQuad.GetDrawPoints(Zoom: Double): ArrayOfTPointF;
 const
   NumEllipsePoints = 360;
 var
@@ -1447,7 +1473,7 @@ begin
     end;
   end
   else
-    Result := inherited GetPolygonPoints(Zoom);
+    Result := inherited GetDrawPoints(Zoom);
 end;
 
 procedure TPlotQuad.SetVertex(Index: Integer; const Value: TCurvePoint);
