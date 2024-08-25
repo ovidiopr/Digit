@@ -1553,6 +1553,580 @@ object DigitMainForm: TDigitMainForm
       UseDockManager = False
     end
   end
+  object StatusBar: TStatusBar
+    Left = 0
+    Height = 18
+    Top = 502
+    Width = 1100
+    AutoHint = True
+    Panels = <    
+      item
+        Width = 300
+      end    
+      item
+        Width = 120
+      end    
+      item
+        Width = 120
+      end    
+      item
+        Width = 170
+      end    
+      item
+        Width = 50
+      end>
+    ParentFont = False
+    SimplePanel = False
+  end
+  object ProgressBar: TProgressBar
+    AnchorSideTop.Control = StatusBar
+    AnchorSideRight.Control = StatusBar
+    AnchorSideRight.Side = asrBottom
+    AnchorSideBottom.Control = StatusBar
+    AnchorSideBottom.Side = asrBottom
+    Left = 540
+    Height = 16
+    Top = 503
+    Width = 170
+    Anchors = [akTop, akLeft, akBottom]
+    BorderSpacing.Top = 1
+    BorderSpacing.Right = 16
+    BorderSpacing.Bottom = 1
+    ParentFont = False
+    Step = 1
+    TabOrder = 2
+    Visible = False
+  end
+  object MainPanel: TPanel
+    Left = 225
+    Height = 462
+    Top = 40
+    Width = 707
+    Align = alClient
+    BevelOuter = bvNone
+    ClientHeight = 462
+    ClientWidth = 707
+    ParentBackground = False
+    TabOrder = 3
+    object PageControl: TPageControl
+      Left = 0
+      Height = 422
+      Top = 40
+      Width = 707
+      ActivePage = tsPicture
+      Align = alClient
+      BorderSpacing.CellAlignHorizontal = ccaCenter
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Default'
+      ParentFont = False
+      TabIndex = 0
+      TabOrder = 0
+      TabPosition = tpBottom
+      object tsPicture: TTabSheet
+        Caption = 'Picture'
+        ClientHeight = 394
+        ClientWidth = 701
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Default'
+        ParentFont = False
+        object tcCurves: TTabControl
+          Left = 0
+          Height = 394
+          Top = 0
+          Width = 701
+          OnChange = tcCurvesChange
+          Align = alClient
+          TabOrder = 0
+          object ScrollBox: TScrollBox
+            Left = 2
+            Height = 326
+            Top = 30
+            Width = 691
+            HorzScrollBar.Page = 1
+            VertScrollBar.Page = 1
+            Align = alClient
+            ParentBackground = False
+            TabOrder = 1
+          end
+        end
+      end
+      object tsPlot: TTabSheet
+        Caption = 'Plot'
+        ClientHeight = 394
+        ClientWidth = 701
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Default'
+        ImageIndex = 1
+        ParentFont = False
+        object MainPlot: TChart
+          Left = 0
+          Height = 394
+          Top = 0
+          Width = 701
+          AxisList = <          
+            item
+              Grid.Style = psClear
+              Grid.Visible = False
+              Intervals.MaxLength = 200
+              Marks.LabelBrush.Style = bsClear
+              Minors = <>
+              Title.LabelFont.CharSet = ANSI_CHARSET
+              Title.LabelFont.Height = -16
+              Title.LabelFont.Name = 'Arial'
+              Title.LabelFont.Orientation = 900
+              Title.LabelFont.Pitch = fpVariable
+              Title.LabelFont.Quality = fqDraft
+              Title.Visible = True
+              Title.Caption = 'Y'
+              Title.LabelBrush.Style = bsClear
+            end          
+            item
+              Grid.Style = psSolid
+              Grid.Visible = False
+              Intervals.MaxLength = 200
+              Alignment = calBottom
+              Marks.LabelBrush.Style = bsClear
+              Minors = <>
+              Title.LabelFont.CharSet = ANSI_CHARSET
+              Title.LabelFont.Height = -16
+              Title.LabelFont.Name = 'Arial'
+              Title.LabelFont.Pitch = fpVariable
+              Title.LabelFont.Quality = fqDraft
+              Title.Visible = True
+              Title.Caption = 'X'
+              Title.LabelBrush.Style = bsClear
+            end>
+          BackColor = clWhite
+          Foot.Brush.Color = clBtnFace
+          Foot.Font.Color = clBlue
+          Legend.Alignment = laTopCenter
+          Legend.ColumnCount = 6
+          Legend.Visible = True
+          Title.Brush.Color = clBtnFace
+          Title.Font.Color = clBlue
+          Title.Text.Strings = (
+            'TAChart'
+          )
+          Align = alClient
+          OnMouseMove = MainPlotMouseMove
+        end
+      end
+    end
+    object tbPlot: TToolBar
+      Left = 0
+      Height = 40
+      Top = 0
+      Width = 707
+      ButtonHeight = 36
+      ButtonWidth = 32
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Default'
+      Images = LargeImageList
+      ParentFont = False
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 1
+      object btnAddCurve: TToolButton
+        Left = 1
+        Top = 2
+        Action = ToolCurveAdd
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object btnDelCurve: TToolButton
+        Left = 37
+        Top = 2
+        Action = ToolCurveDelete
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object btnEditName: TToolButton
+        Left = 73
+        Top = 2
+        Action = ToolCurveName
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object sep07: TToolButton
+        Left = 109
+        Height = 36
+        Top = 2
+        Caption = 'sep07'
+        Style = tbsSeparator
+      end
+      object btnDigitize: TToolButton
+        Left = 117
+        Top = 2
+        Action = ToolDigitLine
+        DropdownMenu = DigitizeMenu
+        ParentShowHint = False
+        ShowHint = True
+        Style = tbsDropDown
+      end
+      object btnMoveUp: TToolButton
+        Left = 237
+        Top = 2
+        Action = ToolCurveUp
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object btnMoveDown: TToolButton
+        Left = 273
+        Top = 2
+        Action = ToolCurveDown
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object btnClear: TToolButton
+        Left = 309
+        Top = 2
+        Action = ToolClear
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object btnAdjustCurve: TToolButton
+        Left = 165
+        Top = 2
+        Action = ToolAdjustCurve
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object sep08: TToolButton
+        Left = 345
+        Height = 36
+        Top = 2
+        Caption = 'sep08'
+        Style = tbsSeparator
+      end
+      object btnExportPlot: TToolButton
+        Left = 353
+        Top = 2
+        Action = PlotExport
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object btnSetScale: TToolButton
+        Left = 389
+        Top = 2
+        Action = PlotScale
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object btnAdjustNoise: TToolButton
+        Left = 201
+        Top = 2
+        Action = ToolAdjustNoise
+      end
+    end
+  end
+  object pnlData: TPanel
+    Left = 937
+    Height = 462
+    Top = 40
+    Width = 163
+    Align = alRight
+    BevelOuter = bvNone
+    ClientHeight = 462
+    ClientWidth = 163
+    Font.Color = clBlack
+    Font.Height = -11
+    Font.Name = 'Default'
+    ParentBackground = False
+    ParentFont = False
+    TabOrder = 4
+    object gbSmooth: TGroupBox
+      Left = 0
+      Height = 69
+      Top = 70
+      Width = 163
+      Align = alTop
+      Caption = 'Smooth'
+      ClientHeight = 42
+      ClientWidth = 153
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Default'
+      ParentBackground = False
+      ParentFont = False
+      TabOrder = 0
+      object lblSmoothKernel: TLabel
+        AnchorSideLeft.Control = gbSmooth
+        AnchorSideTop.Control = seSGKernel
+        AnchorSideTop.Side = asrCenter
+        Left = 2
+        Height = 13
+        Top = 5
+        Width = 37
+        BorderSpacing.Left = 2
+        Caption = 'Kernel:'
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Default'
+        ParentColor = False
+        ParentFont = False
+      end
+      object seSGKernel: TSpinEdit
+        AnchorSideLeft.Control = lblSmoothKernel
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = gbSmooth
+        AnchorSideRight.Control = gbSmooth
+        AnchorSideRight.Side = asrBottom
+        Left = 41
+        Height = 18
+        Top = 2
+        Width = 110
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Left = 2
+        BorderSpacing.Top = 2
+        BorderSpacing.Right = 2
+        Font.Color = clWindowText
+        Font.Height = -10
+        Font.Name = 'MS Sans Serif'
+        MaxValue = 20
+        MinValue = 1
+        ParentFont = False
+        TabOrder = 0
+        Value = 5
+      end
+      object lblSmoothDegree: TLabel
+        AnchorSideLeft.Control = gbSmooth
+        AnchorSideTop.Control = seSGDegree
+        AnchorSideTop.Side = asrCenter
+        AnchorSideRight.Control = pnlData
+        AnchorSideRight.Side = asrBottom
+        Left = 2
+        Height = 13
+        Top = 25
+        Width = 41
+        BorderSpacing.Left = 2
+        BorderSpacing.Right = 2
+        Caption = 'Degree:'
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Default'
+        ParentColor = False
+        ParentFont = False
+      end
+      object seSGDegree: TSpinEdit
+        AnchorSideLeft.Control = lblSmoothDegree
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = seSGKernel
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = gbSmooth
+        AnchorSideRight.Side = asrBottom
+        Left = 45
+        Height = 18
+        Top = 22
+        Width = 106
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Left = 2
+        BorderSpacing.Top = 2
+        BorderSpacing.Right = 2
+        Font.Color = clWindowText
+        Font.Height = -10
+        Font.Name = 'MS Sans Serif'
+        MaxValue = 20
+        MinValue = 2
+        ParentFont = False
+        TabOrder = 1
+        Value = 3
+      end
+    end
+    object gbResample: TGroupBox
+      Left = 0
+      Height = 70
+      Top = 0
+      Width = 163
+      Align = alTop
+      Caption = 'Resample'
+      ClientHeight = 43
+      ClientWidth = 153
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Default'
+      ParentBackground = False
+      ParentFont = False
+      TabOrder = 1
+      OnResize = gbResampleResize
+      object lblBSPoints: TLabel
+        AnchorSideLeft.Control = gbResample
+        AnchorSideTop.Control = seInterpPoints
+        AnchorSideTop.Side = asrCenter
+        Left = 2
+        Height = 13
+        Top = 5
+        Width = 36
+        BorderSpacing.Left = 2
+        BorderSpacing.Top = 5
+        Caption = 'Points:'
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Default'
+        ParentColor = False
+        ParentFont = False
+      end
+      object seInterpPoints: TSpinEdit
+        AnchorSideLeft.Control = lblBSPoints
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = gbResample
+        AnchorSideRight.Control = gbResample
+        AnchorSideRight.Side = asrBottom
+        Left = 40
+        Height = 19
+        Top = 2
+        Width = 111
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Left = 2
+        BorderSpacing.Top = 2
+        BorderSpacing.Right = 2
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        MaxValue = 100000
+        MinValue = 1
+        ParentFont = False
+        TabOrder = 0
+        Value = 101
+      end
+      object lblXInterval: TLabel
+        AnchorSideLeft.Control = gbResample
+        AnchorSideTop.Control = seXo
+        AnchorSideTop.Side = asrCenter
+        AnchorSideRight.Control = pnlData
+        AnchorSideRight.Side = asrBottom
+        Left = 2
+        Height = 13
+        Top = 26
+        Width = 11
+        BorderSpacing.Left = 2
+        BorderSpacing.Right = 2
+        Caption = 'X:'
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Default'
+        ParentColor = False
+        ParentFont = False
+      end
+      object seXo: TFloatSpinEdit
+        AnchorSideLeft.Control = lblXInterval
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = seInterpPoints
+        AnchorSideTop.Side = asrBottom
+        Left = 15
+        Height = 19
+        Top = 23
+        Width = 71
+        BorderSpacing.Left = 2
+        BorderSpacing.Top = 2
+        DecimalPlaces = 4
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Default'
+        MaxValue = 1E20
+        MinValue = -1E20
+        ParentFont = False
+        TabOrder = 1
+      end
+      object lblXInterval1: TLabel
+        AnchorSideLeft.Control = seXo
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = seXo
+        AnchorSideTop.Side = asrCenter
+        AnchorSideRight.Side = asrBottom
+        Left = 88
+        Height = 13
+        Top = 26
+        Width = 5
+        BorderSpacing.Left = 2
+        Caption = '-'
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Default'
+        ParentColor = False
+        ParentFont = False
+      end
+      object seXf: TFloatSpinEdit
+        AnchorSideLeft.Control = lblXInterval1
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = seXo
+        AnchorSideTop.Side = asrCenter
+        AnchorSideRight.Control = gbResample
+        AnchorSideRight.Side = asrBottom
+        Left = 95
+        Height = 19
+        Top = 23
+        Width = 56
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Left = 2
+        BorderSpacing.Right = 2
+        DecimalPlaces = 4
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Default'
+        MaxValue = 1E20
+        MinValue = -1E20
+        ParentFont = False
+        TabOrder = 2
+      end
+    end
+    object gbData: TGroupBox
+      Left = 0
+      Height = 323
+      Top = 139
+      Width = 163
+      Align = alClient
+      Caption = 'Data'
+      ClientHeight = 296
+      ClientWidth = 153
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Default'
+      ParentBackground = False
+      ParentFont = False
+      TabOrder = 2
+      object leData: TValueListEditor
+        Left = 0
+        Height = 296
+        Top = 0
+        Width = 153
+        Align = alClient
+        AutoEdit = False
+        FixedCols = 0
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Default'
+        ParentFont = False
+        RowCount = 2
+        TabOrder = 0
+        OnValidateEntry = leDataValidateEntry
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing, goRowSelect, goThumbTracking]
+        Strings.Strings = (
+          ''
+        )
+        TitleCaptions.Strings = (
+          'X'
+          'Y'
+        )
+        ColWidths = (
+          64
+          89
+        )
+      end
+    end
+  end
+  object RightSplitter: TSplitter
+    Left = 932
+    Height = 462
+    Top = 40
+    Width = 5
+    Align = alRight
+    MinSize = 150
+    ResizeAnchor = akRight
+  end
   object InputPanel: TPanel
     Left = 0
     Height = 462
@@ -1568,7 +2142,7 @@ object DigitMainForm: TDigitMainForm
     Font.Name = 'Default'
     ParentBackground = False
     ParentFont = False
-    TabOrder = 1
+    TabOrder = 6
     OnResize = InputPanelResize
     object ZoomImage: TImage
       Left = 0
@@ -1582,7 +2156,7 @@ object DigitMainForm: TDigitMainForm
       Height = 237
       Top = 5
       Width = 220
-      ActivePage = tsCurve
+      ActivePage = tsScale
       Align = alClient
       AutoSize = True
       BorderSpacing.Top = 5
@@ -1591,7 +2165,7 @@ object DigitMainForm: TDigitMainForm
       ParentShowHint = False
       ShowHint = True
       Style = tsButtons
-      TabIndex = 0
+      TabIndex = 1
       TabOrder = 0
       OnChange = pcInputChange
       Options = [nboMultiLine]
@@ -2128,13 +2702,13 @@ object DigitMainForm: TDigitMainForm
           TabOrder = 0
           object gbCoord: TGroupBox
             Left = 0
-            Height = 40
+            Height = 47
             Top = 0
             Width = 197
             Align = alTop
             AutoSize = True
             Caption = 'Coordinates'
-            ClientHeight = 13
+            ClientHeight = 20
             ClientWidth = 187
             Font.Color = clBlack
             Font.Height = -11
@@ -2167,7 +2741,7 @@ object DigitMainForm: TDigitMainForm
           object gbX: TGroupBox
             Left = 0
             Height = 68
-            Top = 40
+            Top = 47
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2259,7 +2833,7 @@ object DigitMainForm: TDigitMainForm
           object gbY: TGroupBox
             Left = 0
             Height = 66
-            Top = 108
+            Top = 115
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2349,7 +2923,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint1: TGroupBox
             Left = 0
             Height = 88
-            Top = 174
+            Top = 181
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2595,7 +3169,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint2: TGroupBox
             Left = 0
             Height = 88
-            Top = 262
+            Top = 269
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2840,7 +3414,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint3: TGroupBox
             Left = 0
             Height = 88
-            Top = 350
+            Top = 357
             Width = 197
             Align = alTop
             AutoSize = True
@@ -4521,580 +5095,6 @@ object DigitMainForm: TDigitMainForm
     Top = 40
     Width = 5
     MinSize = 150
-  end
-  object pnlData: TPanel
-    Left = 937
-    Height = 462
-    Top = 40
-    Width = 163
-    Align = alRight
-    BevelOuter = bvNone
-    ClientHeight = 462
-    ClientWidth = 163
-    Font.Color = clBlack
-    Font.Height = -11
-    Font.Name = 'Default'
-    ParentBackground = False
-    ParentFont = False
-    TabOrder = 3
-    object gbSmooth: TGroupBox
-      Left = 0
-      Height = 69
-      Top = 70
-      Width = 163
-      Align = alTop
-      Caption = 'Smooth'
-      ClientHeight = 42
-      ClientWidth = 153
-      Font.Color = clBlack
-      Font.Height = -11
-      Font.Name = 'Default'
-      ParentBackground = False
-      ParentFont = False
-      TabOrder = 0
-      object lblSmoothKernel: TLabel
-        AnchorSideLeft.Control = gbSmooth
-        AnchorSideTop.Control = seSGKernel
-        AnchorSideTop.Side = asrCenter
-        Left = 2
-        Height = 13
-        Top = 5
-        Width = 37
-        BorderSpacing.Left = 2
-        Caption = 'Kernel:'
-        Font.Color = clBlack
-        Font.Height = -11
-        Font.Name = 'Default'
-        ParentColor = False
-        ParentFont = False
-      end
-      object seSGKernel: TSpinEdit
-        AnchorSideLeft.Control = lblSmoothKernel
-        AnchorSideLeft.Side = asrBottom
-        AnchorSideTop.Control = gbSmooth
-        AnchorSideRight.Control = gbSmooth
-        AnchorSideRight.Side = asrBottom
-        Left = 41
-        Height = 18
-        Top = 2
-        Width = 110
-        Anchors = [akTop, akLeft, akRight]
-        BorderSpacing.Left = 2
-        BorderSpacing.Top = 2
-        BorderSpacing.Right = 2
-        Font.Color = clWindowText
-        Font.Height = -10
-        Font.Name = 'MS Sans Serif'
-        MaxValue = 20
-        MinValue = 1
-        ParentFont = False
-        TabOrder = 0
-        Value = 5
-      end
-      object lblSmoothDegree: TLabel
-        AnchorSideLeft.Control = gbSmooth
-        AnchorSideTop.Control = seSGDegree
-        AnchorSideTop.Side = asrCenter
-        AnchorSideRight.Control = pnlData
-        AnchorSideRight.Side = asrBottom
-        Left = 2
-        Height = 13
-        Top = 25
-        Width = 41
-        BorderSpacing.Left = 2
-        BorderSpacing.Right = 2
-        Caption = 'Degree:'
-        Font.Color = clBlack
-        Font.Height = -11
-        Font.Name = 'Default'
-        ParentColor = False
-        ParentFont = False
-      end
-      object seSGDegree: TSpinEdit
-        AnchorSideLeft.Control = lblSmoothDegree
-        AnchorSideLeft.Side = asrBottom
-        AnchorSideTop.Control = seSGKernel
-        AnchorSideTop.Side = asrBottom
-        AnchorSideRight.Control = gbSmooth
-        AnchorSideRight.Side = asrBottom
-        Left = 45
-        Height = 18
-        Top = 22
-        Width = 106
-        Anchors = [akTop, akLeft, akRight]
-        BorderSpacing.Left = 2
-        BorderSpacing.Top = 2
-        BorderSpacing.Right = 2
-        Font.Color = clWindowText
-        Font.Height = -10
-        Font.Name = 'MS Sans Serif'
-        MaxValue = 20
-        MinValue = 2
-        ParentFont = False
-        TabOrder = 1
-        Value = 3
-      end
-    end
-    object gbResample: TGroupBox
-      Left = 0
-      Height = 70
-      Top = 0
-      Width = 163
-      Align = alTop
-      Caption = 'Resample'
-      ClientHeight = 43
-      ClientWidth = 153
-      Font.Color = clBlack
-      Font.Height = -11
-      Font.Name = 'Default'
-      ParentBackground = False
-      ParentFont = False
-      TabOrder = 1
-      OnResize = gbResampleResize
-      object lblBSPoints: TLabel
-        AnchorSideLeft.Control = gbResample
-        AnchorSideTop.Control = seInterpPoints
-        AnchorSideTop.Side = asrCenter
-        Left = 2
-        Height = 13
-        Top = 5
-        Width = 36
-        BorderSpacing.Left = 2
-        BorderSpacing.Top = 5
-        Caption = 'Points:'
-        Font.Color = clBlack
-        Font.Height = -11
-        Font.Name = 'Default'
-        ParentColor = False
-        ParentFont = False
-      end
-      object seInterpPoints: TSpinEdit
-        AnchorSideLeft.Control = lblBSPoints
-        AnchorSideLeft.Side = asrBottom
-        AnchorSideTop.Control = gbResample
-        AnchorSideRight.Control = gbResample
-        AnchorSideRight.Side = asrBottom
-        Left = 40
-        Height = 19
-        Top = 2
-        Width = 111
-        Anchors = [akTop, akLeft, akRight]
-        BorderSpacing.Left = 2
-        BorderSpacing.Top = 2
-        BorderSpacing.Right = 2
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        MaxValue = 100000
-        MinValue = 1
-        ParentFont = False
-        TabOrder = 0
-        Value = 101
-      end
-      object lblXInterval: TLabel
-        AnchorSideLeft.Control = gbResample
-        AnchorSideTop.Control = seXo
-        AnchorSideTop.Side = asrCenter
-        AnchorSideRight.Control = pnlData
-        AnchorSideRight.Side = asrBottom
-        Left = 2
-        Height = 13
-        Top = 26
-        Width = 11
-        BorderSpacing.Left = 2
-        BorderSpacing.Right = 2
-        Caption = 'X:'
-        Font.Color = clBlack
-        Font.Height = -11
-        Font.Name = 'Default'
-        ParentColor = False
-        ParentFont = False
-      end
-      object seXo: TFloatSpinEdit
-        AnchorSideLeft.Control = lblXInterval
-        AnchorSideLeft.Side = asrBottom
-        AnchorSideTop.Control = seInterpPoints
-        AnchorSideTop.Side = asrBottom
-        Left = 15
-        Height = 19
-        Top = 23
-        Width = 71
-        BorderSpacing.Left = 2
-        BorderSpacing.Top = 2
-        DecimalPlaces = 4
-        Font.Color = clBlack
-        Font.Height = -11
-        Font.Name = 'Default'
-        MaxValue = 1E20
-        MinValue = -1E20
-        ParentFont = False
-        TabOrder = 1
-      end
-      object lblXInterval1: TLabel
-        AnchorSideLeft.Control = seXo
-        AnchorSideLeft.Side = asrBottom
-        AnchorSideTop.Control = seXo
-        AnchorSideTop.Side = asrCenter
-        AnchorSideRight.Side = asrBottom
-        Left = 88
-        Height = 13
-        Top = 26
-        Width = 5
-        BorderSpacing.Left = 2
-        Caption = '-'
-        Font.Color = clBlack
-        Font.Height = -11
-        Font.Name = 'Default'
-        ParentColor = False
-        ParentFont = False
-      end
-      object seXf: TFloatSpinEdit
-        AnchorSideLeft.Control = lblXInterval1
-        AnchorSideLeft.Side = asrBottom
-        AnchorSideTop.Control = seXo
-        AnchorSideTop.Side = asrCenter
-        AnchorSideRight.Control = gbResample
-        AnchorSideRight.Side = asrBottom
-        Left = 95
-        Height = 19
-        Top = 23
-        Width = 56
-        Anchors = [akTop, akLeft, akRight]
-        BorderSpacing.Left = 2
-        BorderSpacing.Right = 2
-        DecimalPlaces = 4
-        Font.Color = clBlack
-        Font.Height = -11
-        Font.Name = 'Default'
-        MaxValue = 1E20
-        MinValue = -1E20
-        ParentFont = False
-        TabOrder = 2
-      end
-    end
-    object gbData: TGroupBox
-      Left = 0
-      Height = 323
-      Top = 139
-      Width = 163
-      Align = alClient
-      Caption = 'Data'
-      ClientHeight = 296
-      ClientWidth = 153
-      Font.Color = clBlack
-      Font.Height = -11
-      Font.Name = 'Default'
-      ParentBackground = False
-      ParentFont = False
-      TabOrder = 2
-      object leData: TValueListEditor
-        Left = 0
-        Height = 296
-        Top = 0
-        Width = 153
-        Align = alClient
-        AutoEdit = False
-        FixedCols = 0
-        Font.Color = clBlack
-        Font.Height = -11
-        Font.Name = 'Default'
-        ParentFont = False
-        RowCount = 2
-        TabOrder = 0
-        OnValidateEntry = leDataValidateEntry
-        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing, goRowSelect, goThumbTracking]
-        Strings.Strings = (
-          ''
-        )
-        TitleCaptions.Strings = (
-          'X'
-          'Y'
-        )
-        ColWidths = (
-          64
-          89
-        )
-      end
-    end
-  end
-  object RightSplitter: TSplitter
-    Left = 932
-    Height = 462
-    Top = 40
-    Width = 5
-    Align = alRight
-    MinSize = 150
-    ResizeAnchor = akRight
-  end
-  object StatusBar: TStatusBar
-    Left = 0
-    Height = 18
-    Top = 502
-    Width = 1100
-    AutoHint = True
-    Panels = <    
-      item
-        Width = 300
-      end    
-      item
-        Width = 120
-      end    
-      item
-        Width = 120
-      end    
-      item
-        Width = 170
-      end    
-      item
-        Width = 50
-      end>
-    ParentFont = False
-    SimplePanel = False
-  end
-  object ProgressBar: TProgressBar
-    AnchorSideTop.Control = StatusBar
-    AnchorSideRight.Control = StatusBar
-    AnchorSideRight.Side = asrBottom
-    AnchorSideBottom.Control = StatusBar
-    AnchorSideBottom.Side = asrBottom
-    Left = 540
-    Height = 16
-    Top = 503
-    Width = 170
-    Anchors = [akTop, akLeft, akBottom]
-    BorderSpacing.Top = 1
-    BorderSpacing.Right = 16
-    BorderSpacing.Bottom = 1
-    ParentFont = False
-    Step = 1
-    TabOrder = 6
-    Visible = False
-  end
-  object MainPanel: TPanel
-    Left = 225
-    Height = 462
-    Top = 40
-    Width = 707
-    Align = alClient
-    BevelOuter = bvNone
-    ClientHeight = 462
-    ClientWidth = 707
-    ParentBackground = False
-    TabOrder = 7
-    object PageControl: TPageControl
-      Left = 0
-      Height = 422
-      Top = 40
-      Width = 707
-      ActivePage = tsPicture
-      Align = alClient
-      BorderSpacing.CellAlignHorizontal = ccaCenter
-      Font.Color = clBlack
-      Font.Height = -11
-      Font.Name = 'Default'
-      ParentFont = False
-      TabIndex = 0
-      TabOrder = 0
-      TabPosition = tpBottom
-      object tsPicture: TTabSheet
-        Caption = 'Picture'
-        ClientHeight = 394
-        ClientWidth = 701
-        Font.Color = clBlack
-        Font.Height = -11
-        Font.Name = 'Default'
-        ParentFont = False
-        object tcCurves: TTabControl
-          Left = 0
-          Height = 394
-          Top = 0
-          Width = 701
-          OnChange = tcCurvesChange
-          Align = alClient
-          TabOrder = 0
-          object ScrollBox: TScrollBox
-            Left = 2
-            Height = 326
-            Top = 30
-            Width = 691
-            HorzScrollBar.Page = 1
-            VertScrollBar.Page = 1
-            Align = alClient
-            ParentBackground = False
-            TabOrder = 1
-          end
-        end
-      end
-      object tsPlot: TTabSheet
-        Caption = 'Plot'
-        ClientHeight = 394
-        ClientWidth = 701
-        Font.Color = clBlack
-        Font.Height = -11
-        Font.Name = 'Default'
-        ImageIndex = 1
-        ParentFont = False
-        object MainPlot: TChart
-          Left = 0
-          Height = 394
-          Top = 0
-          Width = 701
-          AxisList = <          
-            item
-              Grid.Style = psClear
-              Grid.Visible = False
-              Intervals.MaxLength = 200
-              Marks.LabelBrush.Style = bsClear
-              Minors = <>
-              Title.LabelFont.CharSet = ANSI_CHARSET
-              Title.LabelFont.Height = -16
-              Title.LabelFont.Name = 'Arial'
-              Title.LabelFont.Orientation = 900
-              Title.LabelFont.Pitch = fpVariable
-              Title.LabelFont.Quality = fqDraft
-              Title.Visible = True
-              Title.Caption = 'Y'
-              Title.LabelBrush.Style = bsClear
-            end          
-            item
-              Grid.Style = psSolid
-              Grid.Visible = False
-              Intervals.MaxLength = 200
-              Alignment = calBottom
-              Marks.LabelBrush.Style = bsClear
-              Minors = <>
-              Title.LabelFont.CharSet = ANSI_CHARSET
-              Title.LabelFont.Height = -16
-              Title.LabelFont.Name = 'Arial'
-              Title.LabelFont.Pitch = fpVariable
-              Title.LabelFont.Quality = fqDraft
-              Title.Visible = True
-              Title.Caption = 'X'
-              Title.LabelBrush.Style = bsClear
-            end>
-          BackColor = clWhite
-          Foot.Brush.Color = clBtnFace
-          Foot.Font.Color = clBlue
-          Legend.Alignment = laTopCenter
-          Legend.ColumnCount = 6
-          Legend.Visible = True
-          Title.Brush.Color = clBtnFace
-          Title.Font.Color = clBlue
-          Title.Text.Strings = (
-            'TAChart'
-          )
-          Align = alClient
-          OnMouseMove = MainPlotMouseMove
-        end
-      end
-    end
-    object tbPlot: TToolBar
-      Left = 0
-      Height = 40
-      Top = 0
-      Width = 707
-      ButtonHeight = 36
-      ButtonWidth = 32
-      Font.Color = clBlack
-      Font.Height = -11
-      Font.Name = 'Default'
-      Images = LargeImageList
-      ParentFont = False
-      ParentShowHint = False
-      ShowHint = True
-      TabOrder = 1
-      object btnAddCurve: TToolButton
-        Left = 1
-        Top = 2
-        Action = ToolCurveAdd
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object btnDelCurve: TToolButton
-        Left = 37
-        Top = 2
-        Action = ToolCurveDelete
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object btnEditName: TToolButton
-        Left = 73
-        Top = 2
-        Action = ToolCurveName
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object sep07: TToolButton
-        Left = 109
-        Height = 36
-        Top = 2
-        Caption = 'sep07'
-        Style = tbsSeparator
-      end
-      object btnDigitize: TToolButton
-        Left = 117
-        Top = 2
-        Action = ToolDigitLine
-        DropdownMenu = DigitizeMenu
-        ParentShowHint = False
-        ShowHint = True
-        Style = tbsDropDown
-      end
-      object btnMoveUp: TToolButton
-        Left = 237
-        Top = 2
-        Action = ToolCurveUp
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object btnMoveDown: TToolButton
-        Left = 273
-        Top = 2
-        Action = ToolCurveDown
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object btnClear: TToolButton
-        Left = 309
-        Top = 2
-        Action = ToolClear
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object btnAdjustCurve: TToolButton
-        Left = 165
-        Top = 2
-        Action = ToolAdjustCurve
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object sep08: TToolButton
-        Left = 345
-        Height = 36
-        Top = 2
-        Caption = 'sep08'
-        Style = tbsSeparator
-      end
-      object btnExportPlot: TToolButton
-        Left = 353
-        Top = 2
-        Action = PlotExport
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object btnSetScale: TToolButton
-        Left = 389
-        Top = 2
-        Action = PlotScale
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object btnAdjustNoise: TToolButton
-        Left = 201
-        Top = 2
-        Action = ToolAdjustNoise
-      end
-    end
   end
   object MainMenu: TMainMenu
     Images = ImageList
@@ -8962,6 +8962,21 @@ object DigitMainForm: TDigitMainForm
     end
     object SplinesItem: TMenuItem
       Action = ToolSplines
+    end
+  end
+  object AxisTransformLog: TChartAxisTransformations
+    Left = 648
+    Top = 408
+    object atLog: TLogarithmAxisTransform
+      Base = 2.71828182845905
+    end
+  end
+  object AxisTransformInv: TChartAxisTransformations
+    Left = 680
+    Top = 408
+    object atInverse: TUserDefinedAxisTransform
+      OnAxisToGraph = atInverseAxisToGraph
+      OnGraphToAxis = atInverseGraphToAxis
     end
   end
 end

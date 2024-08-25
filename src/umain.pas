@@ -13,9 +13,10 @@ interface
 uses
   LCLIntf, LCLType, SysUtils, Classes, Graphics, Forms, Controls, Menus,
   StdCtrls, Dialogs, Buttons, ExtCtrls, ComCtrls, TATypes, TASeries, TAGraph,
-  ClipBrd, ActnList, ValEdit, Spin, ExtDlgs, MaskEdit, BCTrackbarUpdown,
-  FileUtil, restore, TAChartUtils, uchartscale, IniFiles, BGRABitmapTypes,
-  GraphType, Grids, utils, coordinates, curves, plotimage;
+  TAChartAxis, TATransformations, TACustomSource, TAChartUtils, ClipBrd,
+  ActnList, ValEdit, Spin, ExtDlgs, MaskEdit, BCTrackbarUpdown, FileUtil,
+  IniFiles, BGRABitmapTypes, GraphType, Grids,
+  restore, uchartscale, utils, coordinates, curves, plotimage;
 
 type
   TMouseMode = (mdCursor, mdMarkers, mdColor, mdSteps, mdSegments,
@@ -24,65 +25,32 @@ type
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
-    tbZoom: TBCTrackbarUpdown;
-    EditZoomFit: TAction;
-    EditZoomOut: TAction;
-    EditZoomIn: TAction;
-    EditZoomOriginal: TAction;
-    DigitizeColorItem: TMenuItem;
-    EditZoomOriginalItem: TMenuItem;
-    EditZoomInItem: TMenuItem;
-    EditZoomOutItem: TMenuItem;
-    EditZoomFitItem: TMenuItem;
-    Separator1: TMenuItem;
-    sep09: TToolButton;
-    btnZoomOriginal: TToolButton;
-    btnZoomIn: TToolButton;
-    btnZoomOut: TToolButton;
-    btnZoomFit: TToolButton;
-    ToolDigitizeItem: TMenuItem;
-    ToolDigitColorItem: TMenuItem;
-    ToolDigitColor: TAction;
-    tbResetBox: TToolButton;
-    ToolResetBox: TAction;
-    ToolCorrectDistortion: TAction;
-    tbBox: TToolBar;
-    tbCorrectDistortion: TToolButton;
-    ToolAdjustNoise: TAction;
-    BSplinesItem: TMenuItem;
-    btnAdjustNoise: TToolButton;
-    ToolSplinesItem: TMenuItem;
-    ToolBSplinesItem: TMenuItem;
-    ResampleMenu: TPopupMenu;
-    SplinesItem: TMenuItem;
-    ToolSplines: TAction;
-    DigitizeLineItem: TMenuItem;
-    DigitizeMarkersItem: TMenuItem;
-    DigitMainItem: TMenuItem;
-    ToolDigitMarkersItem: TMenuItem;
-    ToolDigitMarkers: TAction;
-    chbRebuildCurve: TCheckBox;
-    EditPasteImage: TAction;
-    btnBackground: TColorButton;
-    btnBackgroundColor: TSpeedButton;
-    btnColor: TColorButton;
-    btnMajorGrid: TColorButton;
-    btnMajorGridColor: TSpeedButton;
-    btnMinorGrid: TColorButton;
-    btnMinorGridColor: TSpeedButton;
+    atInverse: TUserDefinedAxisTransform;
+    AxisTransformInv: TChartAxisTransformations;
+    atLog: TLogarithmAxisTransform;
     btnAddCurve: TToolButton;
     btnAdjustCurve: TToolButton;
+    btnAdjustNoise: TToolButton;
+    btnBackground: TColorButton;
+    btnBackgroundColor: TSpeedButton;
     btnClear: TToolButton;
+    btnColor: TColorButton;
     btnDelCurve: TToolButton;
     btnDigitize: TToolButton;
     btnEditName: TToolButton;
     btnExportPlot: TToolButton;
+    btnMajorGrid: TColorButton;
+    btnMajorGridColor: TSpeedButton;
+    btnMinorGrid: TColorButton;
+    btnMinorGridColor: TSpeedButton;
     btnMoveDown: TToolButton;
     btnMoveUp: TToolButton;
     btnSetScale: TToolButton;
     cbbCoords: TComboBox;
     cbbXScale: TComboBox;
     cbbYScale: TComboBox;
+    AxisTransformLog: TChartAxisTransformations;
+    chbRebuildCurve: TCheckBox;
     EditIX1: TBCTrackbarUpdown;
     EditIX2: TBCTrackbarUpdown;
     EditIX3: TBCTrackbarUpdown;
@@ -103,8 +71,8 @@ type
     EditVY2: TBCTrackbarUpdown;
     EditVY3: TBCTrackbarUpdown;
     EditVY4: TBCTrackbarUpdown;
-    edtGridThreshold: TBCTrackbarUpdown;
     edtGridMask: TBCTrackbarUpdown;
+    edtGridThreshold: TBCTrackbarUpdown;
     edtGridTolerance: TBCTrackbarUpdown;
     edtInterval: TBCTrackbarUpdown;
     edtSpread: TBCTrackbarUpdown;
@@ -113,19 +81,24 @@ type
     edtX: TEdit;
     edtY: TEdit;
     gbCoord: TGroupBox;
+    gbData: TGroupBox;
     gbPoint1: TGroupBox;
     gbPoint2: TGroupBox;
     gbPoint3: TGroupBox;
+    gbResample: TGroupBox;
+    gbSmooth: TGroupBox;
     gbVertex1: TGroupBox;
     gbVertex2: TGroupBox;
     gbVertex3: TGroupBox;
     gbVertex4: TGroupBox;
     gbX: TGroupBox;
     gbY: TGroupBox;
+    InputPanel: TPanel;
     lblBackground: TLabel;
+    lblBSPoints: TLabel;
     lblColor: TLabel;
-    lblGridThreshold: TLabel;
     lblGridMask: TLabel;
+    lblGridThreshold: TLabel;
     lblGridTolerance: TLabel;
     lblImg1: TLabel;
     lblImg2: TLabel;
@@ -136,6 +109,8 @@ type
     lblPlt1: TLabel;
     lblPlt2: TLabel;
     lblPlt3: TLabel;
+    lblSmoothDegree: TLabel;
+    lblSmoothKernel: TLabel;
     lblSpace1: TLabel;
     lblSpace2: TLabel;
     lblSpace3: TLabel;
@@ -154,13 +129,77 @@ type
     lblX1: TLabel;
     lblX2: TLabel;
     lblX3: TLabel;
+    lblXInterval: TLabel;
+    lblXInterval1: TLabel;
     lblXScale: TLabel;
     lblY: TLabel;
     lblY1: TLabel;
     lblY2: TLabel;
     lblY3: TLabel;
     lblYScale: TLabel;
+    leData: TValueListEditor;
+    LeftSplitter: TSplitter;
+    MainPanel: TPanel;
     MainPlot: TChart;
+    PageControl: TPageControl;
+    pcInput: TPageControl;
+    pnlData: TPanel;
+    rgDirection: TRadioGroup;
+    RightSplitter: TSplitter;
+    sbCurve: TScrollBox;
+    sbGrid: TScrollBox;
+    sbPlotBox: TScrollBox;
+    sbScale: TScrollBox;
+    ScrollBox: TScrollBox;
+    seInterpPoints: TSpinEdit;
+    sep07: TToolButton;
+    sep08: TToolButton;
+    seSGDegree: TSpinEdit;
+    seSGKernel: TSpinEdit;
+    seXf: TFloatSpinEdit;
+    seXo: TFloatSpinEdit;
+    tbBox: TToolBar;
+    tbCorrectDistortion: TToolButton;
+    tbGrid: TToolBar;
+    tbPlot: TToolBar;
+    tbRemoveGrid: TToolButton;
+    tbResetBox: TToolButton;
+    tbShowHideGrid: TToolButton;
+    tbZoom: TBCTrackbarUpdown;
+    EditZoomFit: TAction;
+    EditZoomOut: TAction;
+    EditZoomIn: TAction;
+    EditZoomOriginal: TAction;
+    DigitizeColorItem: TMenuItem;
+    EditZoomOriginalItem: TMenuItem;
+    EditZoomInItem: TMenuItem;
+    EditZoomOutItem: TMenuItem;
+    EditZoomFitItem: TMenuItem;
+    Separator1: TMenuItem;
+    sep09: TToolButton;
+    btnZoomOriginal: TToolButton;
+    btnZoomIn: TToolButton;
+    btnZoomOut: TToolButton;
+    btnZoomFit: TToolButton;
+    tcCurves: TTabControl;
+    ToolDigitizeItem: TMenuItem;
+    ToolDigitColorItem: TMenuItem;
+    ToolDigitColor: TAction;
+    ToolResetBox: TAction;
+    ToolCorrectDistortion: TAction;
+    ToolAdjustNoise: TAction;
+    BSplinesItem: TMenuItem;
+    ToolSplinesItem: TMenuItem;
+    ToolBSplinesItem: TMenuItem;
+    ResampleMenu: TPopupMenu;
+    SplinesItem: TMenuItem;
+    ToolSplines: TAction;
+    DigitizeLineItem: TMenuItem;
+    DigitizeMarkersItem: TMenuItem;
+    DigitMainItem: TMenuItem;
+    ToolDigitMarkersItem: TMenuItem;
+    ToolDigitMarkers: TAction;
+    EditPasteImage: TAction;
     EditPasteImageItem: TMenuItem;
     N7: TMenuItem;
     ModeBackgroundColor: TAction;
@@ -180,37 +219,18 @@ type
     N6: TMenuItem;
     btnGroupPointsmode: TToolButton;
     btnDeletePointsMode: TToolButton;
-    MainPanel: TPanel;
-    PageControl: TPageControl;
-    pcInput: TPageControl;
     DigitizeMenu: TPopupMenu;
-    rgDirection: TRadioGroup;
-    ScrollBox: TScrollBox;
-    sbScale: TScrollBox;
-    sbPlotBox: TScrollBox;
-    sbCurve: TScrollBox;
-    sbGrid: TScrollBox;
-    sep07: TToolButton;
     SpeedButton1: TSpeedButton;
     BtnPasteImage: TToolButton;
-    tsPlotBox: TTabSheet;
-    tsScale: TTabSheet;
-    tbPlot: TToolBar;
-    tbGrid: TToolBar;
-    tbRemoveGrid: TToolButton;
-    tbShowHideGrid: TToolButton;
-    tcCurves: TTabControl;
-    sep08: TToolButton;
-    tsGrid: TTabSheet;
     tsCurve: TTabSheet;
+    tsGrid: TTabSheet;
+    tsPicture: TTabSheet;
+    tsPlot: TTabSheet;
     ToolRightItem: TMenuItem;
     ToolLeftItem: TMenuItem;
     ToolCurveRight: TAction;
     ToolCurveLeft: TAction;
     MarkersMenu: TMenuItem;
-    tsPicture: TTabSheet;
-    tsPlot: TTabSheet;
-    ZoomImage: TImage;
     MarkersDelete: TAction;
     MarkersMoveRight: TAction;
     MarkersMoveLeft: TAction;
@@ -264,31 +284,14 @@ type
     SavePlotDlg: TSaveDialog;
     ToolConvertToSymbols: TAction;
     ToolAdjustCurve: TAction;
-    seXo: TFloatSpinEdit;
-    seXf: TFloatSpinEdit;
-    lblXInterval: TLabel;
-    lblXInterval1: TLabel;
     OpenPictureDlg: TOpenPictureDialog;
     ProgressBar: TProgressBar;
     StatusBar: TStatusBar;
     ToolBSplines: TAction;
-    seInterpPoints: TSpinEdit;
-    seSGKernel: TSpinEdit;
-    gbSmooth: TGroupBox;
-    gbResample: TGroupBox;
-    gbData: TGroupBox;
-    lblSmoothDegree: TLabel;
-    lblBSPoints: TLabel;
-    lblSmoothKernel: TLabel;
-    InputPanel: TPanel;
-    LeftSplitter: TSplitter;
     ModeSteps: TAction;
     ModeColor: TAction;
     ModeMarkers: TAction;
     ModeCursor: TAction;
-    pnlData: TPanel;
-    seSGDegree: TSpinEdit;
-    RightSplitter: TSplitter;
     ToolCurveName: TAction;
     ToolCurveDelete: TAction;
     ToolCurveAdd: TAction;
@@ -346,7 +349,11 @@ type
     SaveDataDlg: TSaveDialog;
     OpenProjectDlg: TOpenDialog;
     SaveProjectDlg: TSaveDialog;
-    leData: TValueListEditor;
+    tsPlotBox: TTabSheet;
+    tsScale: TTabSheet;
+    ZoomImage: TImage;
+    procedure atInverseAxisToGraph(AX: Double; out AT: Double);
+    procedure atInverseGraphToAxis(AX: Double; out AT: Double);
     procedure btnBackgroundColorChanged(Sender: TObject);
     procedure btnMajorGridColorChanged(Sender: TObject);
     procedure btnMinorGridColorChanged(Sender: TObject);
@@ -479,6 +486,11 @@ type
     function GetYLabel: String;
     function GetImagePoint(Index: Integer): TCurvePoint;
     function GetPlotPoint(Index: Integer): TCurvePoint;
+
+    procedure UpdatePlotXScale;
+    procedure UpdatePlotYScale;
+    procedure LogAxis(AChart: TChart; AxisIndex: Integer; Enable: Boolean; Base: Double);
+    procedure InverseAxis(AChart: TChart; AxisIndex: Integer; Enable: Boolean);
 
     procedure SetDigitFileName(Value: TFileName);
     procedure SetIsSaved(Value: Boolean); overload;
@@ -757,25 +769,9 @@ begin
     MainPlot.BottomAxis.Title.Caption := PlotImage.Scale.XLabel;
     MainPlot.LeftAxis.Title.Caption := PlotImage.Scale.YLabel;
 
-    if PlotImage.ImageIsLoaded then
-    begin
-      // Update the limits in the relevant controls
-      EditIX1.MaxValue := PlotImage.Width - 1;
-      EditIY1.MaxValue := PlotImage.Height - 1;
-      EditIX2.MaxValue := PlotImage.Width - 1;
-      EditIY2.MaxValue := PlotImage.Height - 1;
-      EditIX3.MaxValue := PlotImage.Width - 1;
-      EditIY3.MaxValue := PlotImage.Height - 1;
+    UpdatePlotXScale;
+    UpdatePlotYScale;
 
-      EditVX1.MaxValue := PlotImage.Width - 1;
-      EditVY1.MaxValue := PlotImage.Height - 1;
-      EditVX2.MaxValue := PlotImage.Width - 1;
-      EditVY2.MaxValue := PlotImage.Height - 1;
-      EditVX3.MaxValue := PlotImage.Width - 1;
-      EditVY3.MaxValue := PlotImage.Height - 1;
-      EditVX4.MaxValue := PlotImage.Width - 1;
-      EditVY4.MaxValue := PlotImage.Height - 1;
-    end;
     CurveToGUI;
 
     DigitFileName := FileName;
@@ -936,6 +932,7 @@ begin
   PlotImage.Reset;
   IsSaved := True;
   leData.Strings.Clear;
+  PageControl.ActivePage := tsPicture;
   pcInput.ActivePageIndex := Integer(PlotImage.State);
 
   case PlotImage.Options.DefaultItp of
@@ -1038,6 +1035,16 @@ begin
   end;
 end;
 
+procedure TDigitMainForm.atInverseAxisToGraph(AX: Double; out AT: Double);
+begin
+  AT := 1/AX;
+end;
+
+procedure TDigitMainForm.atInverseGraphToAxis(AX: Double; out AT: Double);
+begin
+  AT := 1/AX;
+end;
+
 procedure TDigitMainForm.btnMinorGridColorChanged(Sender: TObject);
 begin
   if (PlotImage.GridMask.MinorGridColor <> btnMinorGrid.ButtonColor) then
@@ -1050,13 +1057,23 @@ end;
 procedure TDigitMainForm.cbbXScaleChange(Sender: TObject);
 begin
   if (PlotImage.Scale.XScale <> TScaleType(cbbXScale.ItemIndex)) then
+  begin
     PlotImage.Scale.XScale := TScaleType(cbbXScale.ItemIndex);
+    UpdatePlotXScale;
+
+    PlotImage.IsChanged := True;
+  end;
 end;
 
 procedure TDigitMainForm.cbbYScaleChange(Sender: TObject);
 begin
   if (PlotImage.Scale.YScale <> TScaleType(cbbYScale.ItemIndex)) then
+  begin
     PlotImage.Scale.YScale := TScaleType(cbbYScale.ItemIndex);
+    UpdatePlotYScale;
+
+    PlotImage.IsChanged := True;
+  end;
 end;
 
 procedure TDigitMainForm.chbRebuildCurveChange(Sender: TObject);
@@ -1714,6 +1731,80 @@ begin
   end;
 end;
 
+procedure TDigitMainForm.UpdatePlotXScale;
+begin
+  case PlotImage.Scale.XScale of
+    stLog: LogAxis(MainPlot, 1, True, 10);
+    stLn: LogAxis(MainPlot, 1, True, 2.71828182845905);
+    stInverse: InverseAxis(MainPlot, 1, True);
+    else
+      MainPlot.AxisList[1].Transformations := Nil;
+  end;
+end;
+
+procedure TDigitMainForm.UpdatePlotYScale;
+begin
+  case PlotImage.Scale.YScale of
+    stLog: LogAxis(MainPlot, 0, True, 10);
+    stLn: LogAxis(MainPlot, 0, True, 2.71828182845905);
+    stInverse: InverseAxis(MainPlot, 0, True);
+    else
+      MainPlot.AxisList[0].Transformations := Nil;
+  end;
+end;
+
+procedure TDigitMainForm.LogAxis(AChart: TChart; AxisIndex: Integer; Enable: Boolean; Base: Double);
+var
+  axis: TChartAxis;
+  transf: TLogarithmAxisTransform;
+begin
+  // Determine the axis to be processed
+  axis := AChart.AxisList[AxisIndex];
+
+  // Assign AxisTransformations component
+  axis.Transformations := AxisTransformLog;
+
+  // Configure the log transform...
+  transf := (TAxisTransform(axis.Transformations.List[0]) as TLogarithmAxisTransform);
+  transf.Base := Base;
+
+  // Enable the transformation for a log scale, or disable it for a linear scale
+  transf.Enabled := Enable;
+
+  // Find "nice" axis labels
+  if Enable then begin
+    axis.Intervals.Options := axis.Intervals.Options + [aipGraphCoords];
+    // Depending on the size of the chart and the data extent you may have to
+    // play with the following numbers to get "nice" log labels.
+    axis.Intervals.MaxLength := 200;
+    axis.Intervals.Tolerance := 100;
+  end else begin
+    // Adapt these numbers, too. These are the defaults of a linear scale.
+    // Often the Intervals.MaxLength has to be increased to avoid overlapping labels.
+    axis.Intervals.Options := axis.Intervals.Options - [aipGraphCoords];
+    axis.Intervals.MaxLength := 50;
+    axis.Intervals.Tolerance := 1;
+  end;
+end;
+
+procedure TDigitMainForm.InverseAxis(AChart: TChart; AxisIndex: Integer; Enable: Boolean);
+var
+  axis: TChartAxis;
+  transf: TUserDefinedAxisTransform;
+begin
+  // Determine the axis to be processed
+  axis := AChart.AxisList[AxisIndex];
+
+  // Assign AxisTransformations component
+  axis.Transformations := AxisTransformInv;
+
+  // Configure the inverse transform...
+  transf := (TAxisTransform(axis.Transformations.List[0]) as TUserDefinedAxisTransform);
+
+  // Enable the transformation for an inverse scale, or disable it for a linear scale
+  transf.Enabled := Enable;
+end;
+
 procedure TDigitMainForm.SetDigitFileName(Value: TFileName);
 begin
   FDigitFileName := Value;
@@ -1798,6 +1889,9 @@ begin
     begin
       TmpSeries := TLineSeries.Create(MainPlot);
       MainPlot.AddSeries(TmpSeries);
+
+      TmpSeries.AxisIndexX := MainPlot.BottomAxis.Index;
+      TmpSeries.AxisIndexY := MainPlot.LeftAxis.Index;
 
       tcCurves.Tabs.Add(PlotImage.Curves[i].Name);
     end;

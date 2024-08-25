@@ -1774,6 +1774,7 @@ begin
       OnHideProgress(Self);
 
     SortCurve;
+    Curve.Interpolate(Count, itpBSpline);
 
     IsChanged := True;
   finally
