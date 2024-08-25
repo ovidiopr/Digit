@@ -1767,14 +1767,12 @@ begin
           Point[j] := Point[j]/n[j];
     end;
 
-    //Curve.SortCurve;
-
     // Notify the parent that must hide the progress bar
     if Assigned(OnHideProgress) then
       OnHideProgress(Self);
 
     SortCurve;
-    Curve.Interpolate(Count, itpBSpline);
+    //Curve.Interpolate(Curve.Count, itpBSpline);
 
     IsChanged := True;
   finally
