@@ -1,7 +1,7 @@
 object DigitMainForm: TDigitMainForm
-  Left = 348
+  Left = 306
   Height = 520
-  Top = 225
+  Top = 268
   Width = 1100
   AllowDropFiles = True
   Caption = 'Digitizer'
@@ -1584,10 +1584,10 @@ object DigitMainForm: TDigitMainForm
     AnchorSideRight.Side = asrBottom
     AnchorSideBottom.Control = StatusBar
     AnchorSideBottom.Side = asrBottom
-    Left = 540
+    Left = 572
     Height = 16
     Top = 503
-    Width = 170
+    Width = 164
     Anchors = [akTop, akLeft, akBottom]
     BorderSpacing.Top = 1
     BorderSpacing.Right = 16
@@ -1596,233 +1596,6 @@ object DigitMainForm: TDigitMainForm
     Step = 1
     TabOrder = 2
     Visible = False
-  end
-  object MainPanel: TPanel
-    Left = 225
-    Height = 462
-    Top = 40
-    Width = 707
-    Align = alClient
-    BevelOuter = bvNone
-    ClientHeight = 462
-    ClientWidth = 707
-    ParentBackground = False
-    TabOrder = 3
-    object PageControl: TPageControl
-      Left = 0
-      Height = 422
-      Top = 40
-      Width = 707
-      ActivePage = tsPicture
-      Align = alClient
-      BorderSpacing.CellAlignHorizontal = ccaCenter
-      Font.Color = clBlack
-      Font.Height = -11
-      Font.Name = 'Default'
-      ParentFont = False
-      TabIndex = 0
-      TabOrder = 0
-      TabPosition = tpBottom
-      object tsPicture: TTabSheet
-        Caption = 'Picture'
-        ClientHeight = 394
-        ClientWidth = 701
-        Font.Color = clBlack
-        Font.Height = -11
-        Font.Name = 'Default'
-        ParentFont = False
-        object tcCurves: TTabControl
-          Left = 0
-          Height = 394
-          Top = 0
-          Width = 701
-          OnChange = tcCurvesChange
-          Align = alClient
-          TabOrder = 0
-          object ScrollBox: TScrollBox
-            Left = 2
-            Height = 326
-            Top = 30
-            Width = 691
-            HorzScrollBar.Page = 1
-            VertScrollBar.Page = 1
-            Align = alClient
-            ParentBackground = False
-            TabOrder = 1
-          end
-        end
-      end
-      object tsPlot: TTabSheet
-        Caption = 'Plot'
-        ClientHeight = 394
-        ClientWidth = 701
-        Font.Color = clBlack
-        Font.Height = -11
-        Font.Name = 'Default'
-        ImageIndex = 1
-        ParentFont = False
-        object MainPlot: TChart
-          Left = 0
-          Height = 394
-          Top = 0
-          Width = 701
-          AxisList = <          
-            item
-              Grid.Style = psClear
-              Grid.Visible = False
-              Intervals.MaxLength = 200
-              Marks.LabelBrush.Style = bsClear
-              Minors = <>
-              Title.LabelFont.CharSet = ANSI_CHARSET
-              Title.LabelFont.Height = -16
-              Title.LabelFont.Name = 'Arial'
-              Title.LabelFont.Orientation = 900
-              Title.LabelFont.Pitch = fpVariable
-              Title.LabelFont.Quality = fqDraft
-              Title.Visible = True
-              Title.Caption = 'Y'
-              Title.LabelBrush.Style = bsClear
-            end          
-            item
-              Grid.Style = psSolid
-              Grid.Visible = False
-              Intervals.MaxLength = 200
-              Alignment = calBottom
-              Marks.LabelBrush.Style = bsClear
-              Minors = <>
-              Title.LabelFont.CharSet = ANSI_CHARSET
-              Title.LabelFont.Height = -16
-              Title.LabelFont.Name = 'Arial'
-              Title.LabelFont.Pitch = fpVariable
-              Title.LabelFont.Quality = fqDraft
-              Title.Visible = True
-              Title.Caption = 'X'
-              Title.LabelBrush.Style = bsClear
-            end>
-          BackColor = clWhite
-          Foot.Brush.Color = clBtnFace
-          Foot.Font.Color = clBlue
-          Legend.Alignment = laTopCenter
-          Legend.ColumnCount = 6
-          Legend.Visible = True
-          Title.Brush.Color = clBtnFace
-          Title.Font.Color = clBlue
-          Title.Text.Strings = (
-            'TAChart'
-          )
-          Align = alClient
-          OnMouseLeave = MainPlotMouseLeave
-          OnMouseMove = MainPlotMouseMove
-        end
-      end
-    end
-    object tbPlot: TToolBar
-      Left = 0
-      Height = 40
-      Top = 0
-      Width = 707
-      ButtonHeight = 36
-      ButtonWidth = 32
-      Font.Color = clBlack
-      Font.Height = -11
-      Font.Name = 'Default'
-      Images = LargeImageList
-      ParentFont = False
-      ParentShowHint = False
-      ShowHint = True
-      TabOrder = 1
-      object btnAddCurve: TToolButton
-        Left = 1
-        Top = 2
-        Action = ToolCurveAdd
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object btnDelCurve: TToolButton
-        Left = 37
-        Top = 2
-        Action = ToolCurveDelete
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object btnEditName: TToolButton
-        Left = 73
-        Top = 2
-        Action = ToolCurveName
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object sep07: TToolButton
-        Left = 109
-        Height = 36
-        Top = 2
-        Caption = 'sep07'
-        Style = tbsSeparator
-      end
-      object btnDigitize: TToolButton
-        Left = 117
-        Top = 2
-        Action = ToolDigitLine
-        DropdownMenu = DigitizeMenu
-        ParentShowHint = False
-        ShowHint = True
-        Style = tbsDropDown
-      end
-      object btnMoveUp: TToolButton
-        Left = 237
-        Top = 2
-        Action = ToolCurveUp
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object btnMoveDown: TToolButton
-        Left = 273
-        Top = 2
-        Action = ToolCurveDown
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object btnClear: TToolButton
-        Left = 309
-        Top = 2
-        Action = ToolClear
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object btnAdjustCurve: TToolButton
-        Left = 165
-        Top = 2
-        Action = ToolAdjustCurve
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object sep08: TToolButton
-        Left = 345
-        Height = 36
-        Top = 2
-        Caption = 'sep08'
-        Style = tbsSeparator
-      end
-      object btnExportPlot: TToolButton
-        Left = 353
-        Top = 2
-        Action = PlotExport
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object btnSetScale: TToolButton
-        Left = 389
-        Top = 2
-        Action = PlotScale
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object btnAdjustNoise: TToolButton
-        Left = 201
-        Top = 2
-        Action = ToolAdjustNoise
-      end
-    end
   end
   object pnlData: TPanel
     Left = 937
@@ -1838,7 +1611,7 @@ object DigitMainForm: TDigitMainForm
     Font.Name = 'Default'
     ParentBackground = False
     ParentFont = False
-    TabOrder = 4
+    TabOrder = 3
     object gbSmooth: TGroupBox
       Left = 0
       Height = 69
@@ -2143,7 +1916,7 @@ object DigitMainForm: TDigitMainForm
     Font.Name = 'Default'
     ParentBackground = False
     ParentFont = False
-    TabOrder = 6
+    TabOrder = 5
     OnResize = InputPanelResize
     object ZoomImage: TImage
       Left = 0
@@ -5097,10 +4870,225 @@ object DigitMainForm: TDigitMainForm
     Width = 5
     MinSize = 150
   end
+  object tcCurves: TTabControl
+    Left = 225
+    Height = 452
+    Top = 50
+    Width = 707
+    OnChange = tcCurvesChange
+    Align = alClient
+    BorderSpacing.Top = 10
+    TabOrder = 7
+    object PageControl: TPageControl
+      Left = 2
+      Height = 344
+      Top = 70
+      Width = 697
+      ActivePage = tsPicture
+      Align = alClient
+      BorderSpacing.CellAlignHorizontal = ccaCenter
+      TabIndex = 0
+      TabOrder = 1
+      TabPosition = tpBottom
+      object tsPicture: TTabSheet
+        Caption = 'Picture'
+        ClientHeight = 316
+        ClientWidth = 691
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Default'
+        ParentFont = False
+        object ScrollBox: TScrollBox
+          Left = 0
+          Height = 316
+          Top = 0
+          Width = 691
+          HorzScrollBar.Page = 1
+          VertScrollBar.Page = 1
+          Align = alClient
+          ParentBackground = False
+          TabOrder = 0
+        end
+      end
+      object tsPlot: TTabSheet
+        Caption = 'Plot'
+        ClientHeight = 316
+        ClientWidth = 691
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Default'
+        ImageIndex = 1
+        ParentFont = False
+        object MainPlot: TChart
+          Left = 0
+          Height = 316
+          Top = 0
+          Width = 691
+          AxisList = <          
+            item
+              Grid.Style = psClear
+              Grid.Visible = False
+              Intervals.MaxLength = 200
+              Marks.LabelBrush.Style = bsClear
+              Minors = <>
+              Title.LabelFont.CharSet = ANSI_CHARSET
+              Title.LabelFont.Height = -16
+              Title.LabelFont.Name = 'Arial'
+              Title.LabelFont.Orientation = 900
+              Title.LabelFont.Pitch = fpVariable
+              Title.LabelFont.Quality = fqDraft
+              Title.Visible = True
+              Title.Caption = 'Y'
+              Title.LabelBrush.Style = bsClear
+              Title.TextFormat = tfHTML
+            end          
+            item
+              Grid.Style = psSolid
+              Grid.Visible = False
+              Intervals.MaxLength = 200
+              Alignment = calBottom
+              Marks.LabelBrush.Style = bsClear
+              Minors = <>
+              Title.LabelFont.CharSet = ANSI_CHARSET
+              Title.LabelFont.Height = -16
+              Title.LabelFont.Name = 'Arial'
+              Title.LabelFont.Pitch = fpVariable
+              Title.LabelFont.Quality = fqDraft
+              Title.Visible = True
+              Title.Caption = 'X'
+              Title.LabelBrush.Style = bsClear
+              Title.TextFormat = tfHTML
+            end>
+          BackColor = clWhite
+          Foot.Brush.Color = clBtnFace
+          Foot.Font.Color = clBlue
+          Legend.Alignment = laTopCenter
+          Legend.ColumnCount = 6
+          Legend.TextFormat = tfHTML
+          Legend.Visible = True
+          Title.Brush.Color = clBtnFace
+          Title.Font.Color = clBlue
+          Title.Text.Strings = (
+            'TAChart'
+          )
+          Align = alClient
+          OnMouseLeave = MainPlotMouseLeave
+          OnMouseMove = MainPlotMouseMove
+        end
+      end
+    end
+    object tbPlot: TToolBar
+      Left = 2
+      Height = 40
+      Top = 30
+      Width = 697
+      ButtonHeight = 36
+      ButtonWidth = 32
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Default'
+      Images = LargeImageList
+      ParentFont = False
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 2
+      object btnAddCurve: TToolButton
+        Left = 1
+        Top = 2
+        Action = ToolCurveAdd
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object btnDelCurve: TToolButton
+        Left = 37
+        Top = 2
+        Action = ToolCurveDelete
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object btnEditName: TToolButton
+        Left = 73
+        Top = 2
+        Action = ToolCurveName
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object sep07: TToolButton
+        Left = 109
+        Height = 36
+        Top = 2
+        Caption = 'sep07'
+        Style = tbsSeparator
+      end
+      object btnDigitize: TToolButton
+        Left = 117
+        Top = 2
+        Action = ToolDigitLine
+        DropdownMenu = DigitizeMenu
+        ParentShowHint = False
+        ShowHint = True
+        Style = tbsDropDown
+      end
+      object btnMoveUp: TToolButton
+        Left = 237
+        Top = 2
+        Action = ToolCurveUp
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object btnMoveDown: TToolButton
+        Left = 273
+        Top = 2
+        Action = ToolCurveDown
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object btnClear: TToolButton
+        Left = 309
+        Top = 2
+        Action = ToolClear
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object btnAdjustCurve: TToolButton
+        Left = 165
+        Top = 2
+        Action = ToolAdjustCurve
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object sep08: TToolButton
+        Left = 345
+        Height = 36
+        Top = 2
+        Caption = 'sep08'
+        Style = tbsSeparator
+      end
+      object btnExportPlot: TToolButton
+        Left = 353
+        Top = 2
+        Action = PlotExport
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object btnSetScale: TToolButton
+        Left = 389
+        Top = 2
+        Action = PlotScale
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object btnAdjustNoise: TToolButton
+        Left = 201
+        Top = 2
+        Action = ToolAdjustNoise
+      end
+    end
+  end
   object MainMenu: TMainMenu
     Images = ImageList
-    Left = 240
-    Top = 408
+    Left = 232
+    Top = 376
     object FileMenu: TMenuItem
       Caption = '&File'
       Hint = 'File commands'
@@ -5312,8 +5300,8 @@ object DigitMainForm: TDigitMainForm
   end
   object ActionList: TActionList
     Images = ImageList
-    Left = 272
-    Top = 408
+    Left = 264
+    Top = 376
     object FileNew: TAction
       Category = 'File'
       Caption = '&New'
@@ -5765,8 +5753,8 @@ object DigitMainForm: TDigitMainForm
     end
   end
   object ImageList: TImageList
-    Left = 335
-    Top = 408
+    Left = 327
+    Top = 376
     Bitmap = {
       4C7A3B0000001000000010000000CD6E00000000000078DAECBD055455DFDAF6
       3DA5BBBB4B091130B1155B516CC56E51FF7677618B01764B8809A8A8806281A2
@@ -6664,16 +6652,16 @@ object DigitMainForm: TDigitMainForm
     Filter = 'CSV files|*.csv|All files|*.*'
     FilterIndex = 0
     Options = [ofEnableSizing]
-    Left = 402
-    Top = 408
+    Left = 394
+    Top = 376
   end
   object OpenProjectDlg: TOpenDialog
     Title = 'Open digitization project'
     DefaultExt = '.dig'
     Filter = 'Digitization project|*.dig|All files|*.*'
     Options = [ofHideReadOnly, ofEnableSizing]
-    Left = 435
-    Top = 408
+    Left = 427
+    Top = 376
   end
   object SaveProjectDlg: TSaveDialog
     Title = 'Save digitization project'
@@ -6681,13 +6669,13 @@ object DigitMainForm: TDigitMainForm
     Filter = 'Digitization project|*.dig|All files|*.*'
     FilterIndex = 0
     Options = [ofEnableSizing]
-    Left = 469
-    Top = 408
+    Left = 461
+    Top = 376
   end
   object DigitPopupMenu: TPopupMenu
     Images = ImageList
-    Left = 544
-    Top = 408
+    Left = 536
+    Top = 376
     object DigitizeFromHereItem: TMenuItem
       Caption = '&Digitize from here'
       Hint = 'Digitize from here|Digitize the current plot from this point'
@@ -6696,19 +6684,19 @@ object DigitMainForm: TDigitMainForm
     end
   end
   object OpenPictureDlg: TOpenPictureDialog
-    Left = 371
-    Top = 408
+    Left = 363
+    Top = 376
   end
   object SavePlotDlg: TSaveDialog
     Filter = 'PGN image (*.png)|*.png|JPEG image (*.jpg, *.jpeg, *.jpe)|*.jpg;*.jpeg;*.jpe|X PixMap image (*.xpm)|*.xpm|PPM image (*.ppm)|*.ppm|BitMap image (*.bmp)|*.bmp'
-    Left = 504
-    Top = 408
+    Left = 496
+    Top = 376
   end
   object LargeImageList: TImageList
     Height = 32
     Width = 32
-    Left = 304
-    Top = 408
+    Left = 296
+    Top = 376
     Bitmap = {
       4C7A3700000020000000200000005E1601000000000078DAECBD055495CBF706
       3C8484081CBA1BE96E10C1C66E115BECEE46AF81796D11506CE5DA81DDA88881
@@ -8942,8 +8930,8 @@ object DigitMainForm: TDigitMainForm
   end
   object DigitizeMenu: TPopupMenu
     Images = ImageList
-    Left = 576
-    Top = 408
+    Left = 568
+    Top = 376
     object DigitizeLineItem: TMenuItem
       Action = ToolDigitLine
     end
@@ -8956,8 +8944,8 @@ object DigitMainForm: TDigitMainForm
   end
   object ResampleMenu: TPopupMenu
     Images = ImageList
-    Left = 608
-    Top = 408
+    Left = 600
+    Top = 376
     object BSplinesItem: TMenuItem
       Action = ToolBSplines
     end
@@ -8966,15 +8954,15 @@ object DigitMainForm: TDigitMainForm
     end
   end
   object AxisTransformLog: TChartAxisTransformations
-    Left = 648
-    Top = 408
+    Left = 640
+    Top = 376
     object atLog: TLogarithmAxisTransform
       Base = 2.71828182845905
     end
   end
   object AxisTransformInv: TChartAxisTransformations
-    Left = 680
-    Top = 408
+    Left = 672
+    Top = 376
     object atInverse: TUserDefinedAxisTransform
       OnAxisToGraph = atInverseAxisToGraph
       OnGraphToAxis = atInverseGraphToAxis

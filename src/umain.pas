@@ -139,7 +139,6 @@ type
     lblYScale: TLabel;
     leData: TValueListEditor;
     LeftSplitter: TSplitter;
-    MainPanel: TPanel;
     MainPlot: TChart;
     PageControl: TPageControl;
     pcInput: TPageControl;
@@ -224,8 +223,6 @@ type
     BtnPasteImage: TToolButton;
     tsCurve: TTabSheet;
     tsGrid: TTabSheet;
-    tsPicture: TTabSheet;
-    tsPlot: TTabSheet;
     ToolRightItem: TMenuItem;
     ToolLeftItem: TMenuItem;
     ToolCurveRight: TAction;
@@ -349,6 +346,8 @@ type
     SaveDataDlg: TSaveDialog;
     OpenProjectDlg: TOpenDialog;
     SaveProjectDlg: TSaveDialog;
+    tsPicture: TTabSheet;
+    tsPlot: TTabSheet;
     tsPlotBox: TTabSheet;
     tsScale: TTabSheet;
     ZoomImage: TImage;
@@ -1341,12 +1340,6 @@ begin
     MustOpen := False;
   end;
   UpdateControls;
-
-  {$ifdef darwin}
-  // This fixes a bug in MacOs (tcCurves is not following the Align 'alClient')
-  InputPanel.Width := InputPanel.Width + 1;
-  InputPanel.Width := InputPanel.Width - 1;
-  {$endif}
 end;
 
 procedure TDigitMainForm.FormCreate(Sender: TObject);
