@@ -1564,7 +1564,7 @@ object DigitMainForm: TDigitMainForm
         Width = 300
       end    
       item
-        Width = 120
+        Width = 150
       end    
       item
         Width = 120
@@ -1711,6 +1711,7 @@ object DigitMainForm: TDigitMainForm
             'TAChart'
           )
           Align = alClient
+          OnMouseLeave = MainPlotMouseLeave
           OnMouseMove = MainPlotMouseMove
         end
       end

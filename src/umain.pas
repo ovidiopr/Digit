@@ -15,7 +15,7 @@ uses
   StdCtrls, Dialogs, Buttons, ExtCtrls, ComCtrls, TATypes, TASeries, TAGraph,
   TAChartAxis, TATransformations, TACustomSource, TAChartUtils, ClipBrd,
   ActnList, ValEdit, Spin, ExtDlgs, MaskEdit, BCTrackbarUpdown, FileUtil,
-  IniFiles, BGRABitmapTypes, GraphType, Grids,
+  IniFiles, BGRABitmapTypes, GraphType, Grids, math,
   restore, uchartscale, utils, coordinates, curves, plotimage;
 
 type
@@ -399,6 +399,7 @@ type
     procedure FileExitExecute(Sender: TObject);
     procedure leDataValidateEntry(Sender: TObject; aCol, aRow: Integer;
       const OldValue: string; var NewValue: String);
+    procedure MainPlotMouseLeave(Sender: TObject);
     procedure ModeBackgroundColorExecute(Sender: TObject);
     procedure ModeMajorGridColorExecute(Sender: TObject);
     procedure ModeMinorGridColorExecute(Sender: TObject);
@@ -1545,6 +1546,11 @@ begin
   end;
 end;
 
+procedure TDigitMainForm.MainPlotMouseLeave(Sender: TObject);
+begin
+  StatusBar.Panels[2].Text := '';
+end;
+
 procedure TDigitMainForm.ModeBackgroundColorExecute(Sender: TObject);
 begin
   MouseMode := mdBackgroundColor;
@@ -1774,15 +1780,11 @@ begin
   // Find "nice" axis labels
   if Enable then begin
     axis.Intervals.Options := axis.Intervals.Options + [aipGraphCoords];
-    // Depending on the size of the chart and the data extent you may have to
-    // play with the following numbers to get "nice" log labels.
-    axis.Intervals.MaxLength := 200;
     axis.Intervals.Tolerance := 100;
-  end else begin
-    // Adapt these numbers, too. These are the defaults of a linear scale.
-    // Often the Intervals.MaxLength has to be increased to avoid overlapping labels.
+  end
+  else
+  begin
     axis.Intervals.Options := axis.Intervals.Options - [aipGraphCoords];
-    axis.Intervals.MaxLength := 50;
     axis.Intervals.Tolerance := 1;
   end;
 end;
@@ -1803,6 +1805,17 @@ begin
 
   // Enable the transformation for an inverse scale, or disable it for a linear scale
   transf.Enabled := Enable;
+
+  // Find "nice" axis labels
+  if Enable then begin
+    axis.Intervals.Options := axis.Intervals.Options + [aipGraphCoords];
+    axis.Intervals.Tolerance := 100;
+  end
+  else
+  begin
+    axis.Intervals.Options := axis.Intervals.Options - [aipGraphCoords];
+    axis.Intervals.Tolerance := 1;
+  end;
 end;
 
 procedure TDigitMainForm.SetDigitFileName(Value: TFileName);
@@ -2243,12 +2256,12 @@ begin
     if (Zoom = 1) then
       StatusBar.Panels[1].Text := Format('%d, %d', [X, Y])
     else
-      StatusBar.Panels[1].Text := Format('%d, %d (%d, %d)',
-                                         [X, Y, Round(X/Zoom), Round(Y/Zoom)]);
+      StatusBar.Panels[1].Text := Format('%d, %d (%.1f, %.1f)',
+                                         [X, Y, X/Zoom, Y/Zoom]);
     if Scale.IsValid then
     begin
       Pt := ConvertCoords(X, Y);
-      StatusBar.Panels[2].Text := Pt.ToStr('%.3g');
+      StatusBar.Panels[2].Text := Pt.ToStr('%.4g');
     end
     else
       StatusBar.Panels[2].Text := '';
@@ -2406,7 +2419,21 @@ var
 begin
   StatusBar.Panels[1].Text := '';
   Pt := MainPlot.ImageToGraph(TPoint.Create(X, Y));
-  StatusBar.Panels[2].Text := Format('%.3g, %.3g', [Pt.X, Pt.Y]);
+
+  // Calculate the correct value for the X axis
+  case PlotImage.Scale.XScale of
+    stLog: Pt.X := Power(10, Pt.X);
+    stLn: Pt.X := Power(2.71828182845905, Pt.X);
+    stInverse: Pt.X := 1/Pt.X;
+  end;
+  // Calculate the correct value for the Y axis
+  case PlotImage.Scale.YScale of
+    stLog: Pt.Y := Power(10, Pt.Y);
+    stLn: Pt.Y := Power(2.71828182845905, Pt.Y);
+    stInverse: Pt.Y := 1/Pt.Y;
+  end;
+
+  StatusBar.Panels[2].Text := Format('%.4g, %.4g', [Pt.X, Pt.Y]);
 end;
 
 procedure TDigitMainForm.MarkersDeleteExecute(Sender: TObject);
