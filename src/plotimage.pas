@@ -105,6 +105,9 @@ type
     InMouseMove: Boolean;
     MouseMovePos: TPoint;
 
+    FRunningAction: Boolean;
+    FCancelAction: Boolean;
+
     FZoom: Double;
     FOptions: TPlotOptions;
     FState: TPlotImageState;
@@ -348,6 +351,8 @@ type
     property Dragging: Boolean read FDragging write SetDragging;
     property SelectingRegion: Boolean read FSelectingRegion write SetSelectingRegion;
     property SelectionRect: TRect read FSelectionRect;
+    property RunningAction: Boolean read FRunningAction write FRunningAction;
+    property CancelAction: Boolean read FCancelAction write FCancelAction;
 
     {Return the number of curves}
     property Count: Integer read GetCount;
@@ -1372,7 +1377,10 @@ begin
   FGridMask.IsValid := False;
   FGridMask.IsActive := False;
 
-  InMouseMove := false;
+  InMouseMove := False;
+
+  FRunningAction := False;
+  FCancelAction := False;
 
   FIsChanged := False;
 end;
@@ -1437,6 +1445,9 @@ begin
   if Assigned(OnShowProgress) then
     OnShowProgress(Self, 0, 'Finding points...');
 
+  RunningAction := True;
+  CancelAction := False;
+
   Tolerance := DigitCurve.Tolerance;
   C1 := ColorToRGB(DigitCurve.Color);
 
@@ -1474,13 +1485,17 @@ begin
                                    'Finding points...');
 
       Application.ProcessMessages;
+      if CancelAction then Break;
     end;
+    if CancelAction then Break;
   end;
   //AllCurvePoints.SortCurve;
 
   // Notify the parent that must hide the progress bar
   if Assigned(OnHideProgress) then
     OnHideProgress(Self);
+
+  RunningAction := False;
 end;
 
 function TPlotImage.FindNextPoint(var Pv: TCurvePoint; Interval: Integer;
@@ -1576,6 +1591,9 @@ begin
 end;
 
 begin
+  RunningAction := True;
+  CancelAction := False;
+
   if FillCurvePoints then
     FindCurvePoints;
 
@@ -1669,6 +1687,7 @@ begin
     end;
 
     Application.ProcessMessages;
+    if CancelAction then Break;
   until (not PlotBox.Contains(Pi)) or
         ((Scale.CoordSystem = csPolar) and (Abs(Delta) > 360)) or
         ((ML.Count > 2) and (i >= ML.Count - 1));
@@ -1680,6 +1699,8 @@ begin
   SortCurve;
 
   IsChanged := True;
+
+  RunningAction := False;
 end;
 
 procedure TPlotImage.DigitizeSpectrum;
@@ -1854,6 +1875,9 @@ begin
   // Only if there is a curve
   if HasPoints then
   begin
+    RunningAction := True;
+    CancelAction := False;
+
     FindCurvePoints;
     try
       NewPoints := TPointList.Create;
@@ -1867,13 +1891,6 @@ begin
       Island.Clear;
       for i := 0 to Curve.Count - 1 do
       begin
-        // Notify the parent that must update the progress bar
-        if Assigned(OnShowProgress) then
-        begin
-          OnShowProgress(Self, Round(100*(i + 1)/Curve.Count), 'Adjusting curve...');
-          Application.ProcessMessages;
-        end;
-
         Pi := Curve.Point[i];
         if (not Island.Contains(Pi)) then
         begin
@@ -1923,6 +1940,13 @@ begin
           else
             NewPoints.Add(Pi);
         end;
+
+        // Notify the parent that must update the progress bar
+        if Assigned(OnShowProgress) then
+          OnShowProgress(Self, Round(100*(i + 1)/Curve.Count), 'Adjusting curve...');
+
+        Application.ProcessMessages;
+        if CancelAction then Break;
       end;
 
       DigitCurve.NextCurve(False);
@@ -1938,6 +1962,8 @@ begin
 
       IsChanged := True;
     end;
+
+    RunningAction := False;
   end;
 end;
 
@@ -1951,6 +1977,9 @@ begin
   // Only if there is a curve
   if HasPoints then
   begin
+    RunningAction := True;
+    CancelAction := False;
+
     FindCurvePoints;
     try
       NewPoints := TPointList.Create;
@@ -1964,14 +1993,6 @@ begin
       Island.Clear;
       for i := 0 to Curve.Count - 1 do
       begin
-        // Notify the parent that must update the progress bar
-        if Assigned(OnShowProgress) then
-        begin
-          OnShowProgress(Self, Round(100*(i + 1)/Curve.Count),
-                         'Converting curve to symbols...');
-          Application.ProcessMessages;
-        end;
-
         Pi := Curve.Point[i];
         if (not Island.Contains(Pi)) then
         begin
@@ -1980,6 +2001,14 @@ begin
           if (Island.Count > 0) then
             NewPoints.Add(Island.MeanValue);
         end;
+
+        // Notify the parent that must update the progress bar
+        if Assigned(OnShowProgress) then
+          OnShowProgress(Self, Round(100*(i + 1)/Curve.Count),
+                         'Converting curve to symbols...');
+
+        Application.ProcessMessages;
+        if CancelAction then Break;
       end;
 
       DigitCurve.NextCurve(False);
@@ -1996,6 +2025,8 @@ begin
 
       IsChanged := True;
     end;
+
+    RunningAction := False;
   end;
 end;
 

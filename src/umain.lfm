@@ -1592,7 +1592,6 @@ object DigitMainForm: TDigitMainForm
     BorderSpacing.Top = 1
     BorderSpacing.Right = 16
     BorderSpacing.Bottom = 1
-    ParentFont = False
     Step = 1
     TabOrder = 2
     Visible = False
@@ -4368,7 +4367,7 @@ object DigitMainForm: TDigitMainForm
           VertScrollBar.Page = 159
           Align = alClient
           ClientHeight = 159
-          ClientWidth = 197
+          ClientWidth = 212
           ParentBackground = False
           TabOrder = 1
           object lblMajorGrid: TLabel
@@ -4395,7 +4394,7 @@ object DigitMainForm: TDigitMainForm
             Left = 66
             Height = 25
             Top = 8
-            Width = 96
+            Width = 111
             Anchors = [akTop, akLeft, akRight]
             BorderSpacing.Left = 5
             BorderWidth = 2
@@ -4412,7 +4411,7 @@ object DigitMainForm: TDigitMainForm
             AnchorSideTop.Side = asrCenter
             AnchorSideRight.Control = sbGrid
             AnchorSideRight.Side = asrBottom
-            Left = 162
+            Left = 177
             Height = 25
             Top = 8
             Width = 30
@@ -4449,7 +4448,7 @@ object DigitMainForm: TDigitMainForm
             Left = 66
             Height = 25
             Top = 35
-            Width = 96
+            Width = 111
             Anchors = [akTop, akLeft, akRight]
             BorderSpacing.Left = 5
             BorderWidth = 2
@@ -4466,7 +4465,7 @@ object DigitMainForm: TDigitMainForm
             AnchorSideTop.Side = asrCenter
             AnchorSideRight.Control = sbGrid
             AnchorSideRight.Side = asrBottom
-            Left = 162
+            Left = 177
             Height = 25
             Top = 35
             Width = 30
@@ -4503,7 +4502,7 @@ object DigitMainForm: TDigitMainForm
             Left = 76
             Height = 25
             Top = 62
-            Width = 86
+            Width = 101
             Anchors = [akTop, akLeft, akRight]
             BorderSpacing.Left = 5
             BorderSpacing.Top = 3
@@ -4521,7 +4520,7 @@ object DigitMainForm: TDigitMainForm
             AnchorSideTop.Side = asrCenter
             AnchorSideRight.Control = sbGrid
             AnchorSideRight.Side = asrBottom
-            Left = 162
+            Left = 177
             Height = 25
             Top = 62
             Width = 30
@@ -4559,7 +4558,7 @@ object DigitMainForm: TDigitMainForm
             Left = 64
             Height = 22
             Top = 88
-            Width = 128
+            Width = 143
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -4660,7 +4659,7 @@ object DigitMainForm: TDigitMainForm
             Left = 65
             Height = 22
             Top = 113
-            Width = 127
+            Width = 142
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -4744,7 +4743,7 @@ object DigitMainForm: TDigitMainForm
             Left = 65
             Height = 18
             Top = 137
-            Width = 127
+            Width = 142
             Anchors = [akTop, akLeft, akRight]
             BorderSpacing.Top = 2
             BorderSpacing.Right = 5
@@ -4783,7 +4782,7 @@ object DigitMainForm: TDigitMainForm
             Left = 64
             Height = 22
             Top = 157
-            Width = 128
+            Width = 143
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -5761,6 +5760,15 @@ object DigitMainForm: TDigitMainForm
       ImageIndex = 54
       OnExecute = EditZoomFitExecute
       ShortCut = 32838
+    end
+    object ToolCancelAction: TAction
+      Category = 'Tools'
+      Caption = 'Cancel action'
+      Enabled = False
+      Hint = 'Cancel action|Cancel the current action'
+      ImageIndex = 40
+      OnExecute = ToolCancelActionExecute
+      ShortCut = 27
     end
   end
   object ImageList: TImageList

@@ -25,6 +25,7 @@ type
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
+    ToolCancelAction: TAction;
     atInverse: TUserDefinedAxisTransform;
     AxisTransformInv: TChartAxisTransformations;
     atLog: TLogarithmAxisTransform;
@@ -220,7 +221,6 @@ type
     btnGroupPointsmode: TToolButton;
     btnDeletePointsMode: TToolButton;
     DigitizeMenu: TPopupMenu;
-    SpeedButton1: TSpeedButton;
     BtnPasteImage: TToolButton;
     tsCurve: TTabSheet;
     tsGrid: TTabSheet;
@@ -440,6 +440,7 @@ type
     procedure tcCurvesChange(Sender: TObject);
     procedure ToolAdjustCurveExecute(Sender: TObject);
     procedure ToolAdjustNoiseExecute(Sender: TObject);
+    procedure ToolCancelActionExecute(Sender: TObject);
     procedure ToolConvertToSymbolsExecute(Sender: TObject);
     procedure ToolCorrectDistortionExecute(Sender: TObject);
     procedure ToolCurveAddExecute(Sender: TObject);
@@ -967,7 +968,7 @@ end;
 procedure TDigitMainForm.FormCloseQuery(Sender: TObject; var CanClose: boolean);
 begin
   //Verify that the file has been saved before closing
-  CanClose := CheckSaveStatus;
+  CanClose := CheckSaveStatus and not PlotImage.RunningAction;
 end;
 
 procedure TDigitMainForm.DigitizeFromHereItemClick(Sender: TObject);
@@ -2305,13 +2306,15 @@ end;
 
 procedure TDigitMainForm.PlotImageShowProgress(Sender: TObject; Progress: Cardinal; Msg: String);
 begin
+  ToolCancelAction.Enabled := True;
   ProgressBar.Visible := True;
   ProgressBar.Position := Progress;
-  StatusBar.Panels[4].Text := Msg;
+  StatusBar.Panels[4].Text := Format('%s (Esc to cancel)', [Msg]);
 end;
 
 procedure TDigitMainForm.PlotImageHideProgress(Sender: TObject);
 begin
+  ToolCancelAction.Enabled := False;
   ProgressBar.Visible := False;
   StatusBar.Panels[4].Text := '';
 end;
@@ -2420,17 +2423,20 @@ begin
   StatusBar.Panels[1].Text := '';
   Pt := MainPlot.ImageToGraph(TPoint.Create(X, Y));
 
-  // Calculate the correct value for the X axis
-  case PlotImage.Scale.XScale of
-    stLog: Pt.X := Power(10, Pt.X);
-    stLn: Pt.X := Power(2.71828182845905, Pt.X);
-    stInverse: Pt.X := 1/Pt.X;
-  end;
-  // Calculate the correct value for the Y axis
-  case PlotImage.Scale.YScale of
-    stLog: Pt.Y := Power(10, Pt.Y);
-    stLn: Pt.Y := Power(2.71828182845905, Pt.Y);
-    stInverse: Pt.Y := 1/Pt.Y;
+  if Assigned(PlotImage) and Assigned(PlotImage.Scale) then
+  begin
+    // Calculate the correct value for the X axis
+    case PlotImage.Scale.XScale of
+      stLog: Pt.X := Power(10, Pt.X);
+      stLn: Pt.X := Power(2.71828182845905, Pt.X);
+      stInverse: Pt.X := 1/Pt.X;
+    end;
+    // Calculate the correct value for the Y axis
+    case PlotImage.Scale.YScale of
+      stLog: Pt.Y := Power(10, Pt.Y);
+      stLn: Pt.Y := Power(2.71828182845905, Pt.Y);
+      stInverse: Pt.Y := 1/Pt.Y;
+    end;
   end;
 
   StatusBar.Panels[2].Text := Format('%.4g, %.4g', [Pt.X, Pt.Y]);
@@ -2589,6 +2595,12 @@ begin
   PlotImage.AdjustCurve(True);
   PlotImage.Invalidate;
   CurveToGUI;
+end;
+
+procedure TDigitMainForm.ToolCancelActionExecute(Sender: TObject);
+begin
+  if not PlotImage.CancelAction then
+    PlotImage.CancelAction := True;
 end;
 
 procedure TDigitMainForm.ToolConvertToSymbolsExecute(Sender: TObject);
