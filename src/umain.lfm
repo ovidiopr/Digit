@@ -4368,7 +4368,7 @@ object DigitMainForm: TDigitMainForm
           VertScrollBar.Page = 159
           Align = alClient
           ClientHeight = 159
-          ClientWidth = 212
+          ClientWidth = 197
           ParentBackground = False
           TabOrder = 1
           object lblMajorGrid: TLabel
@@ -4395,7 +4395,7 @@ object DigitMainForm: TDigitMainForm
             Left = 66
             Height = 25
             Top = 8
-            Width = 111
+            Width = 96
             Anchors = [akTop, akLeft, akRight]
             BorderSpacing.Left = 5
             BorderWidth = 2
@@ -4412,7 +4412,7 @@ object DigitMainForm: TDigitMainForm
             AnchorSideTop.Side = asrCenter
             AnchorSideRight.Control = sbGrid
             AnchorSideRight.Side = asrBottom
-            Left = 177
+            Left = 162
             Height = 25
             Top = 8
             Width = 30
@@ -4449,7 +4449,7 @@ object DigitMainForm: TDigitMainForm
             Left = 66
             Height = 25
             Top = 35
-            Width = 111
+            Width = 96
             Anchors = [akTop, akLeft, akRight]
             BorderSpacing.Left = 5
             BorderWidth = 2
@@ -4466,7 +4466,7 @@ object DigitMainForm: TDigitMainForm
             AnchorSideTop.Side = asrCenter
             AnchorSideRight.Control = sbGrid
             AnchorSideRight.Side = asrBottom
-            Left = 177
+            Left = 162
             Height = 25
             Top = 35
             Width = 30
@@ -4503,7 +4503,7 @@ object DigitMainForm: TDigitMainForm
             Left = 76
             Height = 25
             Top = 62
-            Width = 101
+            Width = 86
             Anchors = [akTop, akLeft, akRight]
             BorderSpacing.Left = 5
             BorderSpacing.Top = 3
@@ -4521,7 +4521,7 @@ object DigitMainForm: TDigitMainForm
             AnchorSideTop.Side = asrCenter
             AnchorSideRight.Control = sbGrid
             AnchorSideRight.Side = asrBottom
-            Left = 177
+            Left = 162
             Height = 25
             Top = 62
             Width = 30
@@ -4559,7 +4559,7 @@ object DigitMainForm: TDigitMainForm
             Left = 64
             Height = 22
             Top = 88
-            Width = 143
+            Width = 128
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -4660,7 +4660,7 @@ object DigitMainForm: TDigitMainForm
             Left = 65
             Height = 22
             Top = 113
-            Width = 142
+            Width = 127
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -4744,7 +4744,7 @@ object DigitMainForm: TDigitMainForm
             Left = 65
             Height = 18
             Top = 137
-            Width = 142
+            Width = 127
             Anchors = [akTop, akLeft, akRight]
             BorderSpacing.Top = 2
             BorderSpacing.Right = 5
@@ -4783,7 +4783,7 @@ object DigitMainForm: TDigitMainForm
             Left = 64
             Height = 22
             Top = 157
-            Width = 143
+            Width = 128
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -4870,118 +4870,129 @@ object DigitMainForm: TDigitMainForm
     Width = 5
     MinSize = 150
   end
-  object tcCurves: TTabControl
+  object MainPanel: TPanel
     Left = 225
-    Height = 452
-    Top = 50
+    Height = 462
+    Top = 40
     Width = 707
-    OnChange = tcCurvesChange
     Align = alClient
-    BorderSpacing.Top = 10
+    BevelOuter = bvNone
+    ClientHeight = 462
+    ClientWidth = 707
+    ParentBackground = False
     TabOrder = 7
-    object PageControl: TPageControl
-      Left = 2
-      Height = 344
-      Top = 70
-      Width = 697
-      ActivePage = tsPicture
+    object tcCurves: TTabControl
+      Left = 0
+      Height = 422
+      Top = 40
+      Width = 707
+      OnChange = tcCurvesChange
       Align = alClient
-      BorderSpacing.CellAlignHorizontal = ccaCenter
-      TabIndex = 0
-      TabOrder = 1
-      TabPosition = tpBottom
-      object tsPicture: TTabSheet
-        Caption = 'Picture'
-        ClientHeight = 316
-        ClientWidth = 691
-        Font.Color = clBlack
-        Font.Height = -11
-        Font.Name = 'Default'
-        ParentFont = False
-        object ScrollBox: TScrollBox
-          Left = 0
-          Height = 316
-          Top = 0
-          Width = 691
-          HorzScrollBar.Page = 1
-          VertScrollBar.Page = 1
-          Align = alClient
-          ParentBackground = False
-          TabOrder = 0
+      TabOrder = 0
+      object PageControl: TPageControl
+        Left = 2
+        Height = 354
+        Top = 30
+        Width = 697
+        ActivePage = tsPicture
+        Align = alClient
+        BorderSpacing.CellAlignHorizontal = ccaCenter
+        TabIndex = 0
+        TabOrder = 1
+        TabPosition = tpBottom
+        object tsPicture: TTabSheet
+          Caption = 'Picture'
+          ClientHeight = 326
+          ClientWidth = 691
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Default'
+          ParentFont = False
+          object ScrollBox: TScrollBox
+            Left = 0
+            Height = 326
+            Top = 0
+            Width = 691
+            HorzScrollBar.Page = 1
+            VertScrollBar.Page = 1
+            Align = alClient
+            ParentBackground = False
+            TabOrder = 0
+          end
         end
-      end
-      object tsPlot: TTabSheet
-        Caption = 'Plot'
-        ClientHeight = 316
-        ClientWidth = 691
-        Font.Color = clBlack
-        Font.Height = -11
-        Font.Name = 'Default'
-        ImageIndex = 1
-        ParentFont = False
-        object MainPlot: TChart
-          Left = 0
-          Height = 316
-          Top = 0
-          Width = 691
-          AxisList = <          
-            item
-              Grid.Style = psClear
-              Grid.Visible = False
-              Intervals.MaxLength = 200
-              Marks.LabelBrush.Style = bsClear
-              Minors = <>
-              Title.LabelFont.CharSet = ANSI_CHARSET
-              Title.LabelFont.Height = -16
-              Title.LabelFont.Name = 'Arial'
-              Title.LabelFont.Orientation = 900
-              Title.LabelFont.Pitch = fpVariable
-              Title.LabelFont.Quality = fqDraft
-              Title.Visible = True
-              Title.Caption = 'Y'
-              Title.LabelBrush.Style = bsClear
-              Title.TextFormat = tfHTML
-            end          
-            item
-              Grid.Style = psSolid
-              Grid.Visible = False
-              Intervals.MaxLength = 200
-              Alignment = calBottom
-              Marks.LabelBrush.Style = bsClear
-              Minors = <>
-              Title.LabelFont.CharSet = ANSI_CHARSET
-              Title.LabelFont.Height = -16
-              Title.LabelFont.Name = 'Arial'
-              Title.LabelFont.Pitch = fpVariable
-              Title.LabelFont.Quality = fqDraft
-              Title.Visible = True
-              Title.Caption = 'X'
-              Title.LabelBrush.Style = bsClear
-              Title.TextFormat = tfHTML
-            end>
-          BackColor = clWhite
-          Foot.Brush.Color = clBtnFace
-          Foot.Font.Color = clBlue
-          Legend.Alignment = laTopCenter
-          Legend.ColumnCount = 6
-          Legend.TextFormat = tfHTML
-          Legend.Visible = True
-          Title.Brush.Color = clBtnFace
-          Title.Font.Color = clBlue
-          Title.Text.Strings = (
-            'TAChart'
-          )
-          Align = alClient
-          OnMouseLeave = MainPlotMouseLeave
-          OnMouseMove = MainPlotMouseMove
+        object tsPlot: TTabSheet
+          Caption = 'Plot'
+          ClientHeight = 326
+          ClientWidth = 691
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Default'
+          ImageIndex = 1
+          ParentFont = False
+          object MainPlot: TChart
+            Left = 0
+            Height = 326
+            Top = 0
+            Width = 691
+            AxisList = <            
+              item
+                Grid.Style = psClear
+                Grid.Visible = False
+                Intervals.MaxLength = 200
+                Marks.LabelBrush.Style = bsClear
+                Minors = <>
+                Title.LabelFont.CharSet = ANSI_CHARSET
+                Title.LabelFont.Height = -16
+                Title.LabelFont.Name = 'Arial'
+                Title.LabelFont.Orientation = 900
+                Title.LabelFont.Pitch = fpVariable
+                Title.LabelFont.Quality = fqDraft
+                Title.Visible = True
+                Title.Caption = 'Y'
+                Title.LabelBrush.Style = bsClear
+                Title.TextFormat = tfHTML
+              end            
+              item
+                Grid.Style = psSolid
+                Grid.Visible = False
+                Intervals.MaxLength = 200
+                Alignment = calBottom
+                Marks.LabelBrush.Style = bsClear
+                Minors = <>
+                Title.LabelFont.CharSet = ANSI_CHARSET
+                Title.LabelFont.Height = -16
+                Title.LabelFont.Name = 'Arial'
+                Title.LabelFont.Pitch = fpVariable
+                Title.LabelFont.Quality = fqDraft
+                Title.Visible = True
+                Title.Caption = 'X'
+                Title.LabelBrush.Style = bsClear
+                Title.TextFormat = tfHTML
+              end>
+            BackColor = clWhite
+            Foot.Brush.Color = clBtnFace
+            Foot.Font.Color = clBlue
+            Legend.Alignment = laTopCenter
+            Legend.ColumnCount = 6
+            Legend.TextFormat = tfHTML
+            Legend.Visible = True
+            Title.Brush.Color = clBtnFace
+            Title.Font.Color = clBlue
+            Title.Text.Strings = (
+              'TAChart'
+            )
+            Align = alClient
+            OnMouseLeave = MainPlotMouseLeave
+            OnMouseMove = MainPlotMouseMove
+          end
         end
       end
     end
     object tbPlot: TToolBar
-      Left = 2
+      Left = 0
       Height = 40
-      Top = 30
-      Width = 697
+      Top = 0
+      Width = 707
       ButtonHeight = 36
       ButtonWidth = 32
       Font.Color = clBlack
@@ -4991,7 +5002,7 @@ object DigitMainForm: TDigitMainForm
       ParentFont = False
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 2
+      TabOrder = 1
       object btnAddCurve: TToolButton
         Left = 1
         Top = 2

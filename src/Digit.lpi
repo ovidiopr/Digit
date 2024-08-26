@@ -34,7 +34,7 @@
           <Version Value="11"/>
           <PathDelim Value="\"/>
           <Target>
-            <Filename Value="..\build\$(TargetOS)-$(TargetCPU)\Digit"/>
+            <Filename Value="..\build\$(TargetOS)-$(TargetCPU)\digit"/>
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
@@ -74,7 +74,7 @@
           <Version Value="11"/>
           <PathDelim Value="\"/>
           <Target>
-            <Filename Value="..\build\$(TargetOS)-$(TargetCPU)\Digit"/>
+            <Filename Value="..\build\$(TargetOS)-$(TargetCPU)\digit"/>
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
@@ -108,25 +108,27 @@
     <RunParams>
       <FormatVersion Value="2"/>
     </RunParams>
-    <RequiredPackages Count="4">
+    <RequiredPackages Count="5">
       <Item1>
-        <PackageName Value="LazControls"/>
+        <PackageName Value="LazControlDsgn"/>
       </Item1>
       <Item2>
-        <PackageName Value="bgracontrols"/>
+        <PackageName Value="LazControls"/>
       </Item2>
       <Item3>
-        <PackageName Value="TAChartLazarusPkg"/>
+        <PackageName Value="bgracontrols"/>
       </Item3>
       <Item4>
-        <PackageName Value="LCL"/>
+        <PackageName Value="TAChartLazarusPkg"/>
       </Item4>
+      <Item5>
+        <PackageName Value="LCL"/>
+      </Item5>
     </RequiredPackages>
     <Units Count="10">
       <Unit0>
-        <Filename Value="Digit.lpr"/>
+        <Filename Value="digit.lpr"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="digit"/>
       </Unit0>
       <Unit1>
         <Filename Value="coordinates.pas"/>
@@ -182,7 +184,7 @@
     <Version Value="11"/>
     <PathDelim Value="\"/>
     <Target>
-      <Filename Value="..\build\Digit-$(TargetOS)-$(TargetCPU)"/>
+      <Filename Value="..\build\$(TargetOS)-$(TargetCPU)\digit"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>

@@ -139,6 +139,7 @@ type
     lblYScale: TLabel;
     leData: TValueListEditor;
     LeftSplitter: TSplitter;
+    MainPanel: TPanel;
     MainPlot: TChart;
     PageControl: TPageControl;
     pcInput: TPageControl;
@@ -1340,6 +1341,12 @@ begin
     MustOpen := False;
   end;
   UpdateControls;
+
+  {$ifdef darwin}
+  // This fixes a bug in MacOs (tcCurves is not following the Align 'alClient')
+  InputPanel.Width := InputPanel.Width + 1;
+  InputPanel.Width := InputPanel.Width - 1;
+  {$endif}
 end;
 
 procedure TDigitMainForm.FormCreate(Sender: TObject);
