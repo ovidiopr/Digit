@@ -25,6 +25,15 @@ type
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
+    LinearItem: TMenuItem;
+    CubicItem: TMenuItem;
+    ToolCubicItem: TMenuItem;
+    ToolQuadraticItem: TMenuItem;
+    ToolLinearItem: TMenuItem;
+    QuadraticItem: TMenuItem;
+    ToolCubic: TAction;
+    ToolQuadratic: TAction;
+    ToolLinear: TAction;
     ToolCancelAction: TAction;
     atInverse: TUserDefinedAxisTransform;
     AxisTransformInv: TChartAxisTransformations;
@@ -443,6 +452,7 @@ type
     procedure ToolCancelActionExecute(Sender: TObject);
     procedure ToolConvertToSymbolsExecute(Sender: TObject);
     procedure ToolCorrectDistortionExecute(Sender: TObject);
+    procedure ToolCubicExecute(Sender: TObject);
     procedure ToolCurveAddExecute(Sender: TObject);
     procedure ToolCurveDeleteExecute(Sender: TObject);
     procedure ToolCurveLeftExecute(Sender: TObject);
@@ -452,6 +462,8 @@ type
     procedure ToolDigitLineExecute(Sender: TObject);
     procedure ToolDigitMarkersExecute(Sender: TObject);
     procedure ToolBSplinesExecute(Sender: TObject);
+    procedure ToolLinearExecute(Sender: TObject);
+    procedure ToolQuadraticExecute(Sender: TObject);
     procedure ToolResetBoxExecute(Sender: TObject);
     procedure ToolPlotOptionsExecute(Sender: TObject);
     procedure ToolSmoothExecute(Sender: TObject);
@@ -1409,6 +1421,9 @@ begin
   GlobalWinRestorer.SaveWin(Self, [size, location, state]);
   GlobalWinRestorer.Free;
   SavePreferences;
+
+  // To avoid errors after the PlotImage has been destroyed
+  MainPlot.OnMouseMove := Nil;
 
   PlotImage.Options.SaveToFile(GetIniName);
   PlotImage.Free;
@@ -2620,6 +2635,21 @@ begin
     PlotImage.UndistortImage;
 end;
 
+procedure TDigitMainForm.ToolCubicExecute(Sender: TObject);
+var
+  TmpOpt: TPlotOptions;
+begin
+  GUIToCurve;
+  //Replace the curve by interpolated values
+  PlotImage.Interpolate(seXo.Value, seXf.Value, seInterpPoints.Value, False, itpCubic);
+  CurveToGUI;
+
+  TmpOpt := PlotImage.Options;
+  TmpOpt.DefaultItp := itpCubic;
+  PlotImage.Options := TmpOpt;
+  btnResample.Action := TAction(Sender);
+end;
+
 procedure TDigitMainForm.ToolCurveAddExecute(Sender: TObject);
 begin
   PlotImage.AddCurve;
@@ -2686,7 +2716,7 @@ begin
   TmpOpt := PlotImage.Options;
   TmpOpt.DefaultDig := digLine;
   PlotImage.Options := TmpOpt;
-  btnDigitize.Action := ToolDigitLine;
+  btnDigitize.Action := TAction(Sender);
 end;
 
 procedure TDigitMainForm.ToolDigitMarkersExecute(Sender: TObject);
@@ -2701,7 +2731,7 @@ begin
   TmpOpt := PlotImage.Options;
   TmpOpt.DefaultDig := digMarkers;
   PlotImage.Options := TmpOpt;
-  btnDigitize.Action := ToolDigitMarkers;
+  btnDigitize.Action := TAction(Sender);
 end;
 
 procedure TDigitMainForm.ToolBSplinesExecute(Sender: TObject);
@@ -2716,7 +2746,37 @@ begin
   TmpOpt := PlotImage.Options;
   TmpOpt.DefaultItp := itpBSpline;
   PlotImage.Options := TmpOpt;
-  btnResample.Action := ToolBSplines;
+  btnResample.Action := TAction(Sender);
+end;
+
+procedure TDigitMainForm.ToolLinearExecute(Sender: TObject);
+var
+  TmpOpt: TPlotOptions;
+begin
+  GUIToCurve;
+  //Replace the curve by interpolated values
+  PlotImage.Interpolate(seXo.Value, seXf.Value, seInterpPoints.Value, False, itpLinear);
+  CurveToGUI;
+
+  TmpOpt := PlotImage.Options;
+  TmpOpt.DefaultItp := itpLinear;
+  PlotImage.Options := TmpOpt;
+  btnResample.Action := TAction(Sender);
+end;
+
+procedure TDigitMainForm.ToolQuadraticExecute(Sender: TObject);
+var
+  TmpOpt: TPlotOptions;
+begin
+  GUIToCurve;
+  //Replace the curve by interpolated values
+  PlotImage.Interpolate(seXo.Value, seXf.Value, seInterpPoints.Value, False, itpQuadratic);
+  CurveToGUI;
+
+  TmpOpt := PlotImage.Options;
+  TmpOpt.DefaultItp := itpQuadratic;
+  PlotImage.Options := TmpOpt;
+  btnResample.Action := TAction(Sender);
 end;
 
 procedure TDigitMainForm.ToolResetBoxExecute(Sender: TObject);
@@ -2786,7 +2846,7 @@ begin
   TmpOpt := PlotImage.Options;
   TmpOpt.DefaultItp := itpSpline;
   PlotImage.Options := TmpOpt;
-  btnResample.Action := ToolSplines;
+  btnResample.Action := TAction(Sender);
 end;
 
 //End of the action functions

@@ -657,6 +657,9 @@ begin
         case IntType of
           itpBSpline: Yint :=  BSpline(Pnts, Degree, Xint);
           itpSpline: Yint :=  Spline(Pnts, Degree, Xint);
+          itpLinear: Yint :=  Polynomial(Pnts, 1, Xint);
+          itpQuadratic: Yint :=  Polynomial(Pnts, 2, Xint);
+          itpCubic: Yint :=  Polynomial(Pnts, 3, Xint);
           else
             Yint :=  BSpline(Pnts, Degree, Xint);
         end;

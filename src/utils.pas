@@ -6,13 +6,13 @@ unit utils;
 interface
 
 uses
-  Classes, SysUtils, typ, ipf, math, inv, Graphics, IniFiles, coordinates;
+  Classes, SysUtils, Graphics, IniFiles, typ, ipf, spe, math, inv, coordinates;
 
 type
   THough1DMap = Array of LongWord;
   THough2DMap = Array of Array of LongWord;
 
-  TInterpolation = (itpBSpline, itpSpline);
+  TInterpolation = (itpBSpline, itpSpline, itpLinear, itpQuadratic, itpCubic);
   TDigitization = (digLine, digColor, digMarkers);
 
   TPlotOptions = record
@@ -36,6 +36,7 @@ type
 function AreSimilar(R1, G1, B1, R2, G2, B2, Tolerance: Byte): Boolean; overload;
 function AreSimilar(R1, G1, B1: Byte; C2: LongWord; Tolerance: Byte): Boolean; overload;
 function AreSimilar(C1, C2: LongWord; Tolerance: Byte): Boolean; overload;
+function Polynomial(Points: Array of TCurvePoint; Degree: Integer; Xval: Double): Double;
 function Spline(Points: Array of TCurvePoint; Degree: Integer; Xval: Double): Double;
 function BSpline(Points: Array of TCurvePoint; Degree: Integer; Xval: Double): Double;
 procedure SavitzkyGolay(Kernel, Degree, Deriv: Integer; var Points: Array of TCurvePoint);
@@ -80,6 +81,56 @@ begin
   Result := StartIdx <= High(Points);
 end;
 
+function Polynomial(Points: Array of TCurvePoint; Degree: Integer; Xval: Double): Double;
+var
+  i, j, n, d: Integer;
+  dup: Boolean;
+  term: ArbInt;
+  xi, yi, b: Array of ArbFloat;
+begin
+  Result := NaN;
+
+  if (Length(Points) > Degree) then
+  begin
+    try
+      n := Length(Points) - 1;
+      SetLength(xi, n + 1);
+      SetLength(yi, n + 1);
+      SetLength(b, Degree + 1);
+
+      d := 0;
+      for i := 0 to n do
+      begin
+        dup := False;
+        for j := 0 to i - 1 do
+          if xi[j] = Points[i].X then
+            dup := True;
+
+        if dup then
+          inc(d)
+        else
+        begin
+          xi[i - d] := Points[i].X;
+          yi[i - d] := Points[i].Y;
+        end;
+      end;
+
+      n := n - d;
+
+      // Interpolation parameters
+      ipfpol(n, Degree, xi[0], yi[0], b[0], term);
+
+      // Calculate interpolation
+      if (term = 1) then
+        Result := spepol(Xval, b[0], Degree);
+    finally
+      SetLength(xi, 0);
+      SetLength(yi, 0);
+      SetLength(b, 0);
+    end;
+  end;
+end;
+
 function Spline(Points: Array of TCurvePoint; Degree: Integer; Xval: Double): Double;
 var
   i, j, n, d: Integer;
@@ -87,7 +138,9 @@ var
   term: ArbInt;
   xi, yi, d2s: Array of ArbFloat;
 begin
-  if (Length(Points) > 0) then
+  Result := NaN;
+
+  if (Length(Points) > Degree) then
   begin
     try
       n := Length(Points) - 1;
@@ -118,7 +171,8 @@ begin
       ipfisn(n, xi[0], yi[0], d2s[0], term);
 
       // Calculate interpolation
-      Result := ipfspn(n, xi[0], yi[0], d2s[0], Xval, term);
+      if (term = 1) then
+        Result := ipfspn(n, xi[0], yi[0], d2s[0], Xval, term);
     finally
       SetLength(xi, 0);
       SetLength(yi, 0);
@@ -202,7 +256,7 @@ var
 begin
   Result := NaN;
 
-  if (Length(Points) > 0) then
+  if (Length(Points) > Degree) then
   begin
     try
       SetLength(p, Degree + 1);
