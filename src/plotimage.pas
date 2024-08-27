@@ -44,7 +44,6 @@ type
   TGridMask = class
   protected
     FMask: TBGRABitmap;
-    FZoomMask: TBGRABitmap;
 
     FMajorGridColor: TColor;
     FMinorGridColor: TColor;
@@ -69,8 +68,6 @@ type
 
     procedure RebuildCurve(PlotImg: TBGRABitmap; PlotBox: TPlotQuad;
                            CurveColor: TColor);
-
-    function ZoomMask(Zoom: Double): TBGRABitmap;
 
     function ImportFromXML(Item: TDOMNode): Boolean;
     function ExportToXML(Doc: TXMLDocument): TDOMNode;
@@ -519,7 +516,6 @@ begin
   inherited Create;
 
   FMask := TBGRABitmap.Create(Width, Height, BGRAPixelTransparent);
-  FZoomMask := TBGRABitmap.Create(Width, Height, BGRAPixelTransparent);
 
   FMajorGridColor := clBlack;
   FMinorGridColor := clGray;
@@ -533,7 +529,6 @@ end;
 
 destructor TGridMask.Destroy;
 begin
-  FZoomMask.Free;
   FMask.Free;
 
   inherited Destroy;
@@ -543,8 +538,6 @@ procedure TGridMask.SetSize(Width, Height: Integer);
 begin
   FMask.SetSize(Width, Height);
   FMask.FillTransparent;
-  FZoomMask.SetSize(Width, Height);
-  FZoomMask.FillTransparent;
 end;
 
 procedure TGridMask.RemoveCartesianGrid(PlotImg: TBGRABitmap; PlotBox: TPlotQuad);
@@ -1151,26 +1144,6 @@ begin
     left_pixels.Free;
     right_pixels.Free;
   end;
-end;
-
-function TGridMask.ZoomMask(Zoom: Double): TBGRABitmap;
-var
-  w, h: Integer;
-begin
-  FZoomMask.SetSize(Mask.Width, Mask.Height);
-  FZoomMask.FillTransparent;
-
-  FZoomMask.PutImage(0, 0, Mask, dmSet);
-
-  if (Zoom <> 1) then
-  begin
-    w := Round(Zoom*Mask.Width);
-    h := Round(Zoom*Mask.Height);
-    FZoomMask.ResampleFilter := rfSpline;
-    BGRAReplace(FZoomMask, FZoomMask.Resample(w, h, rmFineResample));
-  end;
-
-  Result := FZoomMask;
 end;
 
 function TGridMask.ImportFromXML(Item: TDOMNode): Boolean;
