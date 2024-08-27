@@ -1929,7 +1929,7 @@ object DigitMainForm: TDigitMainForm
       Height = 237
       Top = 5
       Width = 220
-      ActivePage = tsScale
+      ActivePage = tsCurve
       Align = alClient
       AutoSize = True
       BorderSpacing.Top = 5
@@ -1938,7 +1938,7 @@ object DigitMainForm: TDigitMainForm
       ParentShowHint = False
       ShowHint = True
       Style = tsButtons
-      TabIndex = 1
+      TabIndex = 0
       TabOrder = 0
       OnChange = pcInputChange
       Options = [nboMultiLine]

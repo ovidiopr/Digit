@@ -1198,14 +1198,14 @@ procedure TDigitMainForm.EditVX1Change(Sender: TObject; AByUser: boolean);
 begin
   if AByUser then
     with TBCTrackbarUpdown(Sender) do
-      PlotImage.BoxVertex[Tag] := TCurvePoint.Create(Value, PlotImage.BoxVertex[Tag].Y);
+      PlotImage.BoxVertex[Tag] := TCurvePoint.Create(Value/PlotImage.Zoom, PlotImage.BoxVertex[Tag].Y);
 end;
 
 procedure TDigitMainForm.EditVY1Change(Sender: TObject; AByUser: boolean);
 begin
   if AByUser then
     with TBCTrackbarUpdown(Sender) do
-      PlotImage.BoxVertex[Tag] := TCurvePoint.Create(PlotImage.BoxVertex[Tag].X, Value);
+      PlotImage.BoxVertex[Tag] := TCurvePoint.Create(PlotImage.BoxVertex[Tag].X, Value/PlotImage.Zoom);
 end;
 
 procedure TDigitMainForm.EditZoomFitExecute(Sender: TObject);

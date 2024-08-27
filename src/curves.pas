@@ -180,6 +180,9 @@ type
 
     FMarkers: TPointList;
 
+    FValidPoints: Boolean;
+    FAllPoints: TIsland;
+
     FStep: Integer;
     FInterval: Integer;
     FTolerance: Integer;
@@ -192,6 +195,7 @@ type
     function GetActiveCurve: TCurve;
     function GetColorIsSet: Boolean;
     function GetHasPoints: Boolean;
+    function GetValidPoints: Boolean;
     function GetMarkerCount: Integer;
     function GetMarker(Index: Integer): TCurvePoint;
 
@@ -200,6 +204,8 @@ type
     procedure SetShowAsSymbols(Value: Boolean);
     procedure SetCurveIndex(Value: Integer);
     procedure SetMarker(Index: Integer; const Value: TCurvePoint);
+
+    procedure SetTolerance(Value: Integer);
   public
     constructor Create(Name: String);
     destructor Destroy; override;
@@ -259,11 +265,14 @@ type
 
     property Step: Integer read FStep write FStep;
     property Interval: Integer read FInterval write FInterval;
-    property Tolerance: Integer read FTolerance write FTolerance;
+    property Tolerance: Integer read FTolerance write SetTolerance;
     property Spread: Integer read FSpread write FSpread;
 
     property ColorIsSet: Boolean read GetColorIsSet;
     property HasPoints: Boolean read GetHasPoints;
+
+    property ValidPoints: Boolean read GetValidPoints write FValidPoints;
+    property AllPoints: TIsland read FAllPoints;
   end;
 
 implementation
@@ -738,6 +747,7 @@ begin
     FCurves[i] := TCurve.Create;
 
   FMarkers := TPointList.Create;
+  FAllPoints := TIsland.Create;
 
   Reset;
 end;
@@ -751,6 +761,8 @@ begin
 
   FMarkers.Free;
 
+  FAllPoints.Free;
+
   inherited;
 end;
 
@@ -762,6 +774,9 @@ begin
     FCurves[i].Clear;
 
   FMarkers.Clear;
+
+  FValidPoints := False;
+  FAllPoints.Clear;
 
   FCurveIndex := 0;
   FValidCurves := 1;
@@ -984,6 +999,11 @@ begin
   Result := Curve.Count > 0;
 end;
 
+function TDigitCurve.GetValidPoints: Boolean;
+begin
+  Result := FValidPoints and (FAllPoints.Count > 0);
+end;
+
 function TDigitCurve.GetMarkerCount: Integer;
 begin
   Result := FMarkers.Count;
@@ -999,12 +1019,19 @@ end;
 
 procedure TDigitCurve.SetName(Value: String);
 begin
-  FName := Value;
+  if (Value <> FName) then
+    FName := Value;
 end;
 
 procedure TDigitCurve.SetColor(Value: TColor);
 begin
-  FColor := Value;
+  if (Value <> FColor) then
+  begin
+    FColor := Value;
+
+    FValidPoints := False;
+    FAllPoints.Clear;
+  end;
 end;
 
 procedure TDigitCurve.SetShowAsSymbols(Value: Boolean);
@@ -1023,6 +1050,17 @@ procedure TDigitCurve.SetMarker(Index: Integer; const Value: TCurvePoint);
 begin
   if (Index >= 0) and (Index < FMarkers.Count) then
     FMarkers[Index] := Value;
+end;
+
+procedure TDigitCurve.SetTolerance(Value: Integer);
+begin
+  if (Value <> FTolerance) then
+  begin
+    FTolerance := Value;
+
+    FValidPoints := False;
+    FAllPoints.Clear;
+  end;
 end;
 
 procedure TDigitCurve.Draw(Canvas: TCanvas; Zoom: Double = 1);

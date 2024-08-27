@@ -135,7 +135,6 @@ type
 
     FCurves: TCurveList;
     FCurveIndex: Integer;
-    FAllCurvePoints: TIsland;
 
     FScale: TScale;
     FPlotBox: TPlotQuad;
@@ -381,8 +380,6 @@ type
     property IsChanged: Boolean read GetIsChanged write SetIsChanged;
     property CanUndo: Boolean read GetCanUndo;
     property CanRedo: Boolean read GetCanRedo;
-
-    property AllCurvePoints: TIsland read FAllCurvePoints;
   published
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnShowProgress: TShowProgressEvent read FOnShowProgress write FOnShowProgress;
@@ -1318,7 +1315,6 @@ begin
   FMarkerList := TCurve.Create;
 
   FCurves := TCurveList.Create;
-  FAllCurvePoints := TIsland.Create;
   FScale := TScale.Create;
   FPlotBox := TPlotQuad.Create;
 
@@ -1336,7 +1332,6 @@ begin
   FMarkerList.Free;
 
   FCurves.Free;
-  FAllCurvePoints.Free;
   FScale.Free;
   FPlotBox.Free;
 
@@ -1387,7 +1382,7 @@ end;
 
 procedure TPlotImage.SetPlotPointMarkers(ResetPoints: Boolean = False);
 const
-  span = 6;
+  span = 2;
 
   function PutInside(p: TCurvePoint; w, h: Integer; d: Integer = 0): TCurvePoint;
   begin
@@ -1395,39 +1390,41 @@ const
 
     if (Result.X < d) then Result.X := d;
     if (Result.Y < d) then Result.Y := d;
-    if (Result.X > w - d) then Result.X := w - d;
-    if (Result.Y > h - d) then Result.Y := h - d;
+    if (Result.X > w - d - 1) then Result.X := w - d - 1;
+    if (Result.Y > h - d - 1) then Result.Y := h - d - 1;
   end;
 
 begin
   if ImageIsLoaded then
   begin
     if ResetPoints then
-    begin
-      AxesPoint[1] := TPoint.Create(span, span);
-      AxesPoint[2] := TPoint.Create(span, Height - span - 1);
-      AxesPoint[3] := TPoint.Create(Width - span - 1, Height - span - 1);
+      with PlotImg do
+      begin
+        AxesPoint[1] := TPoint.Create(span, span);
+        AxesPoint[2] := TPoint.Create(span, Height - span - 1);
+        AxesPoint[3] := TPoint.Create(Width - span - 1, Height - span - 1);
 
-      Scale.PlotPoint[1] := TCurvePoint.Create(0, 1);
-      Scale.PlotPoint[2] := TCurvePoint.Create(0, 0);
-      Scale.PlotPoint[3] := TCurvePoint.Create(1, 0);
+        Scale.PlotPoint[1] := TCurvePoint.Create(0, 1);
+        Scale.PlotPoint[2] := TCurvePoint.Create(0, 0);
+        Scale.PlotPoint[3] := TCurvePoint.Create(1, 0);
 
-      BoxVertex[1] := TCurvePoint.Create(span, span);
-      BoxVertex[2] := TCurvePoint.Create(Width - span - 1, span);
-      BoxVertex[3] := TCurvePoint.Create(Width - span - 1, Height - span - 1);
-      BoxVertex[4] := TCurvePoint.Create(span, Height - span - 1);
-    end
+        BoxVertex[1] := TCurvePoint.Create(span, span);
+        BoxVertex[2] := TCurvePoint.Create(Width - span - 1, span);
+        BoxVertex[3] := TCurvePoint.Create(Width - span - 1, Height - span - 1);
+        BoxVertex[4] := TCurvePoint.Create(span, Height - span - 1);
+      end
     else
-    begin
-      AxesPoint[1] := PutInside(AxesPoint[1], Width, Height, span);
-      AxesPoint[2] := PutInside(AxesPoint[2], Width, Height, span);
-      AxesPoint[3] := PutInside(AxesPoint[3], Width, Height, span);
+      with PlotImg do
+      begin
+        AxesPoint[1] := PutInside(AxesPoint[1], Width, Height, span);
+        AxesPoint[2] := PutInside(AxesPoint[2], Width, Height, span);
+        AxesPoint[3] := PutInside(AxesPoint[3], Width, Height, span);
 
-      BoxVertex[1] := PutInside(BoxVertex[1], Width, Height, span);
-      BoxVertex[2] := PutInside(BoxVertex[2], Width, Height, span);
-      BoxVertex[3] := PutInside(BoxVertex[3], Width, Height, span);
-      BoxVertex[4] := PutInside(BoxVertex[4], Width, Height, span);
-    end;
+        BoxVertex[1] := PutInside(BoxVertex[1], Width, Height, span);
+        BoxVertex[2] := PutInside(BoxVertex[2], Width, Height, span);
+        BoxVertex[3] := PutInside(BoxVertex[3], Width, Height, span);
+        BoxVertex[4] := PutInside(BoxVertex[4], Width, Height, span);
+      end;
   end;
 end;
 
@@ -1441,61 +1438,67 @@ var
   C1: LongInt;
   R1, G1, B1: Byte;
 begin
-  // Notify the parent that must show the progress bar
-  if Assigned(OnShowProgress) then
-    OnShowProgress(Self, 0, 'Finding points...');
-
-  RunningAction := True;
-  CancelAction := False;
-
-  Tolerance := DigitCurve.Tolerance;
-  C1 := ColorToRGB(DigitCurve.Color);
-
-  R1 := Red(C1);
-  G1 := Green(C1);
-  B1 := Blue(C1);
-
-  AllCurvePoints.Clear;
-  for j := 0 to PlotImg.Height - 1 do
+  // Only if necessary
+  if (not DigitCurve.ValidPoints) then
   begin
-    p1 := GridMask.Mask.Scanline[j];
-    p2 := PlotImg.Scanline[j];
+    // Notify the parent that it must show the progress bar
+    if Assigned(OnShowProgress) then
+      OnShowProgress(Self, 0, 'Finding points...');
 
-    for i := 0 to PlotImg.Width - 1 do
+    RunningAction := True;
+    CancelAction := False;
+
+    Tolerance := DigitCurve.Tolerance;
+    C1 := ColorToRGB(DigitCurve.Color);
+
+    R1 := Red(C1);
+    G1 := Green(C1);
+    B1 := Blue(C1);
+
+    DigitCurve.AllPoints.Clear;
+    for j := 0 to PlotImg.Height - 1 do
     begin
-      if PlotBox.Contains(TCurvePoint.Create(i, j)) then
+      p1 := GridMask.Mask.Scanline[j];
+      p2 := PlotImg.Scanline[j];
+
+      for i := 0 to PlotImg.Width - 1 do
       begin
-        if GridMask.IsValid and GridMask.IsActive and (p1^.alpha > 0) then
-          p := p1
-        else
-          p := p2;
+        if PlotBox.Contains(TCurvePoint.Create(i, j)) then
+        begin
+          if GridMask.IsValid and GridMask.IsActive and (p1^.alpha > 0) then
+            p := p1
+          else
+            p := p2;
 
-        if AreSimilar(p^.red, p^.green, p^.blue, R1, G1, B1, Tolerance) then
-          AllCurvePoints.AddPoint(TCurvePoint.Create(i, j));
-          //AllCurvePoints.AddPoint(Scale.FromImgToPlot(i, j));
+          if AreSimilar(p^.red, p^.green, p^.blue, R1, G1, B1, Tolerance) then
+            DigitCurve.AllPoints.AddPoint(TCurvePoint.Create(i, j));
+            //DigitCurve.AllPoints.AddPoint(Scale.FromImgToPlot(i, j));
+        end;
+
+        inc(p1);
+        inc(p2);
+
+        // Notify the parent that it must update the progress bar
+        if Assigned(OnShowProgress) then
+          OnShowProgress(Self, Round(100*(j*PlotImg.Width + i)/
+                                     (PlotImg.Width*PlotImg.Height)),
+                                     'Finding points...');
+
+        Application.ProcessMessages;
+        if CancelAction then Break;
       end;
-
-      inc(p1);
-      inc(p2);
-
-      // Notify the parent that must update the progress bar
-      if Assigned(OnShowProgress) then
-        OnShowProgress(Self, Round(100*(j*PlotImg.Width + i)/
-                                   (PlotImg.Width*PlotImg.Height)),
-                                   'Finding points...');
-
-      Application.ProcessMessages;
       if CancelAction then Break;
     end;
-    if CancelAction then Break;
+    //DigitCurve.AllPoints.SortCurve;
+
+    // Notify the parent that it must hide the progress bar
+    if Assigned(OnHideProgress) then
+      OnHideProgress(Self);
+
+    DigitCurve.ValidPoints := not CancelAction;
+
+    RunningAction := False;
   end;
-  //AllCurvePoints.SortCurve;
-
-  // Notify the parent that must hide the progress bar
-  if Assigned(OnHideProgress) then
-    OnHideProgress(Self);
-
-  RunningAction := False;
 end;
 
 function TPlotImage.FindNextPoint(var Pv: TCurvePoint; Interval: Integer;
@@ -1511,7 +1514,7 @@ var
 
 function CheckPlotPoint(const Pi: TCurvePoint; var P: TCurvePoint; var nP: Integer): Boolean;
 begin
-  Result := AllCurvePoints.Contains(Pi);
+  Result := DigitCurve.AllPoints.Contains(Pi);
   if Result then
   begin
     inc(nP);
@@ -1600,7 +1603,7 @@ begin
   PixelStep := DigitCurve.Step;
   Interval := DigitCurve.Interval;
 
-  // Notify the parent that must show the progress bar
+  // Notify the parent that it must show the progress bar
   if Assigned(OnShowProgress) then
     OnShowProgress(Self, 0, 'Digitizing spectrum...');
 
@@ -1666,7 +1669,7 @@ begin
       Curve.AddPoint(Pi);
     end;
 
-    // Notify the parent that must update the progress bar
+    // Notify the parent that it must update the progress bar
     if Assigned(OnShowProgress) then
     begin
       case ML.Count of
@@ -1692,7 +1695,7 @@ begin
         ((Scale.CoordSystem = csPolar) and (Abs(Delta) > 360)) or
         ((ML.Count > 2) and (i >= ML.Count - 1));
 
-  // Notify the parent that must hide the progress bar
+  // Notify the parent that it must hide the progress bar
   if Assigned(OnHideProgress) then
     OnHideProgress(Self);
 
@@ -1748,9 +1751,9 @@ begin
   try
     //Identify all the points that have similar color
     FindCurvePoints;
-    SetLength(n, AllCurvePoints.Count);
+    SetLength(n, DigitCurve.AllPoints.Count);
 
-    // Notify the parent that must show the progress bar
+    // Notify the parent that it must show the progress bar
     if Assigned(OnShowProgress) then
       OnShowProgress(Self, 0, 'Digitizing spectrum...');
 
@@ -1758,16 +1761,16 @@ begin
 
     with Curve do
     begin
-      AddPoint(AllCurvePoints.Point[0]);
+      AddPoint(DigitCurve.AllPoints.Point[0]);
       n[0] := 1;
-      for i := 1 to AllCurvePoints.Count - 1 do
+      for i := 1 to DigitCurve.AllPoints.Count - 1 do
       begin
-        // Notify the parent that must update the progress bar
+        // Notify the parent that it must update the progress bar
         if Assigned(OnShowProgress) then
-          OnShowProgress(Self, Round(100*(i + 1)/AllCurvePoints.Count), 'Digitizing spectrum...');
+          OnShowProgress(Self, Round(100*(i + 1)/DigitCurve.AllPoints.Count), 'Digitizing spectrum...');
 
         Added := False;
-        Pi := AllCurvePoints.Point[i];
+        Pi := DigitCurve.AllPoints.Point[i];
         for j := 0 to Count - 1 do
           if (2*Pi.DistanceTo(Point[j]) <= DigitCurve.Spread) then
           begin
@@ -1788,7 +1791,7 @@ begin
           Point[j] := Point[j]/n[j];
     end;
 
-    // Notify the parent that must hide the progress bar
+    // Notify the parent that it must hide the progress bar
     if Assigned(OnHideProgress) then
       OnHideProgress(Self);
 
@@ -1833,7 +1836,7 @@ begin
     if FillCurvePoints then
       FindCurvePoints;
 
-    if (not Island.Contains(Pi)) and AllCurvePoints.Contains(Pi) then
+    if (not Island.Contains(Pi)) and DigitCurve.AllPoints.Contains(Pi) then
     begin
       Island.AddPoint(Pi);
       if MoveDown then
@@ -1883,7 +1886,7 @@ begin
       NewPoints := TPointList.Create;
       NewPoints.Clear;
 
-      // Notify the parent that must show the progress bar
+      // Notify the parent that it must show the progress bar
       if Assigned(OnShowProgress) then
         OnShowProgress(Self, 0, 'Adjusting curve...');
 
@@ -1941,7 +1944,7 @@ begin
             NewPoints.Add(Pi);
         end;
 
-        // Notify the parent that must update the progress bar
+        // Notify the parent that it must update the progress bar
         if Assigned(OnShowProgress) then
           OnShowProgress(Self, Round(100*(i + 1)/Curve.Count), 'Adjusting curve...');
 
@@ -1953,7 +1956,7 @@ begin
       for i := 0 to NewPoints.Count - 1 do
         Curve.AddPoint(NewPoints[i]);
 
-      // Notify the parent that must hide the progress bar
+      // Notify the parent that it must hide the progress bar
       if Assigned(OnHideProgress) then
         OnHideProgress(Self);
     finally
@@ -1985,7 +1988,7 @@ begin
       NewPoints := TPointList.Create;
       NewPoints.Clear;
 
-      // Notify the parent that must show the progress bar
+      // Notify the parent that it must show the progress bar
       if Assigned(OnShowProgress) then
         OnShowProgress(Self, 0, 'Converting curve to symbols...');
 
@@ -2002,7 +2005,7 @@ begin
             NewPoints.Add(Island.MeanValue);
         end;
 
-        // Notify the parent that must update the progress bar
+        // Notify the parent that it must update the progress bar
         if Assigned(OnShowProgress) then
           OnShowProgress(Self, Round(100*(i + 1)/Curve.Count),
                          'Converting curve to symbols...');
@@ -2016,7 +2019,7 @@ begin
       for i := 0 to NewPoints.Count - 1 do
         Curve.AddPoint(NewPoints[i]);
 
-      // Notify the parent that must hide the progress bar
+      // Notify the parent that it must hide the progress bar
       if Assigned(OnHideProgress) then
         OnHideProgress(Self);
     finally
@@ -3504,8 +3507,6 @@ begin
 end;
 
 procedure TPlotImage.LoadImage(Stream: TStream);
-var
-  Rect: TRect;
 begin
   FImageIsLoaded := False;
 
@@ -3513,6 +3514,8 @@ begin
     Stream.Position := 0;
     PlotImg.LoadFromStream(Stream);
     PlotImg.ReplaceTransparent(Options.BgndColor);
+
+    ZoomFitBest;
 
     Width := Round(Zoom*PlotImg.Width);
     Height := Round(Zoom*PlotImg.Height);
@@ -3530,6 +3533,7 @@ begin
     WhiteBoard.PutImage(0, 0, ZoomImg, dmSet);
 
     FMarkers.Clear;
+
     Invalidate;
   finally
     IsChanged := True;
@@ -4078,7 +4082,7 @@ end;
 
 function TPlotImage.LoadFromXML(FileName: TFileName; PictureDlg: TOpenPictureDialog = nil): Boolean;
 const
-  span = 6;
+  span = 0;
 var
   i, w, h,
   SavedCurveCount,
