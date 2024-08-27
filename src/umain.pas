@@ -1594,37 +1594,46 @@ begin
   case TPlotImageState(pcInput.ActivePageIndex) of
     piSetCurve: CurveToGUI;
     piSetScale: begin
-      cbbCoords.ItemIndex := Integer(PlotImage.Scale.CoordSystem);
-      cbbXScale.ItemIndex := Integer(PlotImage.Scale.XScale);
-      edtX.Text := PlotImage.Scale.XLabel;
-      cbbYScale.ItemIndex := Integer(PlotImage.Scale.YScale);
-      edtY.Text := PlotImage.Scale.YLabel;
+      with PlotImage do
+      begin
+        cbbCoords.ItemIndex := Integer(Scale.CoordSystem);
+        cbbXScale.ItemIndex := Integer(Scale.XScale);
+        edtX.Text := Scale.XLabel;
+        cbbYScale.ItemIndex := Integer(Scale.YScale);
+        edtY.Text := Scale.YLabel;
 
-      ImagePoint[1] := PlotImage.Scale.ImagePoint[1];
-      PlotPoint[1] := PlotImage.Scale.PlotPoint[1];
-      ImagePoint[2] := PlotImage.Scale.ImagePoint[2];
-      PlotPoint[2] := PlotImage.Scale.PlotPoint[2];
-      ImagePoint[3] := PlotImage.Scale.ImagePoint[3];
-      PlotPoint[3] := PlotImage.Scale.PlotPoint[3];
+        ImagePoint[1] := Scale.ImagePoint[1];
+        PlotPoint[1] := Scale.PlotPoint[1];
+        ImagePoint[2] := Scale.ImagePoint[2];
+        PlotPoint[2] := Scale.PlotPoint[2];
+        ImagePoint[3] := Scale.ImagePoint[3];
+        PlotPoint[3] := Scale.PlotPoint[3];
+      end;
     end;
     piSetPlotBox: begin
-      EditVX1.Value := Round(PlotImage.PlotBox.Vertex[0].X);
-      EditVY1.Value := Round(PlotImage.PlotBox.Vertex[0].Y);
-      EditVX2.Value := Round(PlotImage.PlotBox.Vertex[1].X);
-      EditVY2.Value := Round(PlotImage.PlotBox.Vertex[1].Y);
-      EditVX3.Value := Round(PlotImage.PlotBox.Vertex[2].X);
-      EditVY3.Value := Round(PlotImage.PlotBox.Vertex[2].Y);
-      EditVX4.Value := Round(PlotImage.PlotBox.Vertex[3].X);
-      EditVY4.Value := Round(PlotImage.PlotBox.Vertex[3].Y);
+      with PlotImage.PlotBox do
+      begin
+        EditVX1.Value := Round(Vertex[0].X);
+        EditVY1.Value := Round(Vertex[0].Y);
+        EditVX2.Value := Round(Vertex[1].X);
+        EditVY2.Value := Round(Vertex[1].Y);
+        EditVX3.Value := Round(Vertex[2].X);
+        EditVY3.Value := Round(Vertex[2].Y);
+        EditVX4.Value := Round(Vertex[3].X);
+        EditVY4.Value := Round(Vertex[3].Y);
+      end;
     end;
     piSetGrid: begin
-      btnMajorGrid.ButtonColor := PlotImage.GridMask.MajorGridColor;
-      btnMinorGrid.ButtonColor := PlotImage.GridMask.MinorGridColor;
-      btnBackground.ButtonColor := PlotImage.GridMask.BckgndColor;
-      edtGridTolerance.Value := PlotImage.GridMask.Tolerance;
-      edtGridThreshold.Value := Round(100*PlotImage.GridMask.Threshold);
-      chbRebuildCurve.Checked := PlotImage.GridMask.FixCurve;
-      edtGridMask.Value := PlotImage.GridMask.MaskSize;
+      with PlotImage.GridMask do
+      begin
+        btnMajorGrid.ButtonColor := MajorGridColor;
+        btnMinorGrid.ButtonColor := MinorGridColor;
+        btnBackground.ButtonColor := BckgndColor;
+        edtGridTolerance.Value := Tolerance;
+        edtGridThreshold.Value := Round(100*Threshold);
+        chbRebuildCurve.Checked := FixCurve;
+        edtGridMask.Value := MaskSize;
+      end;
     end;
   end;
 
@@ -2453,13 +2462,13 @@ begin
     // Calculate the correct value for the X axis
     case PlotImage.Scale.XScale of
       stLog: Pt.X := Power(10, Pt.X);
-      stLn: Pt.X := Power(2.71828182845905, Pt.X);
+      stLn: Pt.X := Exp(Pt.X);
       stInverse: Pt.X := 1/Pt.X;
     end;
     // Calculate the correct value for the Y axis
     case PlotImage.Scale.YScale of
       stLog: Pt.Y := Power(10, Pt.Y);
-      stLn: Pt.Y := Power(2.71828182845905, Pt.Y);
+      stLn: Pt.Y := Exp(Pt.Y);
       stInverse: Pt.Y := 1/Pt.Y;
     end;
   end;
@@ -2786,6 +2795,18 @@ end;
 procedure TDigitMainForm.ToolResetBoxExecute(Sender: TObject);
 begin
   PlotImage.ResetPlotBox;
+
+  with PlotImage.PlotBox do
+  begin
+    EditVX1.Value := Round(Vertex[0].X);
+    EditVY1.Value := Round(Vertex[0].Y);
+    EditVX2.Value := Round(Vertex[1].X);
+    EditVY2.Value := Round(Vertex[1].Y);
+    EditVX3.Value := Round(Vertex[2].X);
+    EditVY3.Value := Round(Vertex[2].Y);
+    EditVX4.Value := Round(Vertex[3].X);
+    EditVY4.Value := Round(Vertex[3].Y);
+  end;
 end;
 
 procedure TDigitMainForm.ToolPlotOptionsExecute(Sender: TObject);

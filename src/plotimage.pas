@@ -2329,7 +2329,7 @@ end;
 
 procedure TPlotImage.ResetPlotBox;
 const
-  span = 0;
+  span = 2;
 begin
   PlotBox[0] := TCurvePoint.Create(span, span);
   PlotBox[1] := TCurvePoint.Create(PlotImg.Width - span - 1, span);
@@ -2509,44 +2509,47 @@ begin
         if (ActiveMarker = AxesMarkers[i]) then
           Scale.ImagePoint[i] := NewPos/Zoom;
 
-      for i := 1 to PlotBox.NumVertices do
+      with PlotBox do
       begin
-        if (ActiveMarker = BoxMarkers[i]) then
+        for i := 1 to NumVertices do
         begin
-          UpdateRegion(PlotBox.Rect[Zoom]);
-          PlotBox[i - 1] := NewPos/Zoom;
-
-          EdgeMarkers[i].Move(Zoom*PlotBox.Edge[i - 1]);
-          EdgeMarkers[PlotBox.PrevVertIdx(i - 1) + 1].Move(Zoom*PlotBox.Edge[PlotBox.PrevVertIdx(i - 1)]);
-          UpdateRegion(PlotBox.Rect[Zoom]);
-        end;
-
-        if (ActiveMarker = EdgeMarkers[i]) then
-        begin
-          OldPos := Zoom*PlotBox.Edge[i - 1];
-          PlotBox.MoveEdge(i - 1, NewPos/Zoom);
-          P1 := Zoom*PlotBox[PlotBox.NextVertIdx(i - 1)];
-          P2 := Zoom*PlotBox[i - 1];
-
-          // Check that no marker moves out of the image
-          if ClientRect.Contains(P1) and ClientRect.Contains(P2) then
+          if (ActiveMarker = BoxMarkers[i]) then
           begin
-            UpdateRegion(PlotBox.Rect[Zoom]);
+            UpdateRegion(Rect[Zoom]);
+            Vertex[i - 1] := NewPos/Zoom;
 
-            BoxMarkers[PlotBox.NextVertIdx(i - 1) + 1].Move(P1);
-            BoxMarkers[i].Move(P2);
+            EdgeMarkers[i].Move(Zoom*Edge[i - 1]);
+            EdgeMarkers[PrevVertIdx(i - 1) + 1].Move(Zoom*Edge[PrevVertIdx(i - 1)]);
+            UpdateRegion(Rect[Zoom]);
+          end;
 
-            EdgeMarkers[PlotBox.NextVertIdx(i - 1) + 1].Move(Zoom*PlotBox.Edge[PlotBox.NextVertIdx(i - 1)]);
-            EdgeMarkers[PlotBox.PrevVertIdx(i - 1) + 1].Move(Zoom*PlotBox.Edge[PlotBox.PrevVertIdx(i - 1)]);
-
-            UpdateRegion(PlotBox.Rect[Zoom]);
-
-            NewPos := Zoom*PlotBox.Edge[i - 1];
-          end
-          else
+          if (ActiveMarker = EdgeMarkers[i]) then
           begin
-            PlotBox.MoveEdge(i - 1, OldPos);
-            NewPos := OldPos;
+            OldPos := Zoom*Edge[i - 1];
+            MoveEdge(i - 1, NewPos/Zoom);
+            P1 := Zoom*Vertex[NextVertIdx(i - 1)];
+            P2 := Zoom*Vertex[i - 1];
+
+            // Check that no marker moves out of the image
+            if ClientRect.Contains(P1) and ClientRect.Contains(P2) then
+            begin
+              UpdateRegion(Rect[Zoom]);
+
+              BoxMarkers[NextVertIdx(i - 1) + 1].Move(P1);
+              BoxMarkers[i].Move(P2);
+
+              EdgeMarkers[NextVertIdx(i - 1) + 1].Move(Zoom*Edge[NextVertIdx(i - 1)]);
+              EdgeMarkers[PrevVertIdx(i - 1) + 1].Move(Zoom*Edge[PrevVertIdx(i - 1)]);
+
+              UpdateRegion(Rect[Zoom]);
+
+              NewPos := Zoom*Edge[i - 1];
+            end
+            else
+            begin
+              MoveEdge(i - 1, OldPos);
+              NewPos := OldPos;
+            end;
           end;
         end;
       end;
@@ -2627,21 +2630,24 @@ begin
       end;
     end;
     piSetPlotBox: begin
-      if not (PlotBox.Rect[Zoom]*PaintRect).IsEmpty then
+      with PlotBox do
       begin
-        if PlotBox.IsConvex then
+        if not (Rect[Zoom]*PaintRect).IsEmpty then
         begin
-          if PlotBox.IsCW then
-            PolyColor := clBlue
+          if IsConvex then
+          begin
+            if IsCW then
+              PolyColor := clBlue
+            else
+              PolyColor := clGreen;
+          end
           else
-            PolyColor := clGreen;
-        end
-        else
-          PolyColor := clRed;
+            PolyColor := clRed;
 
-        PolyColor.alpha := 80;
-        PlotBox.PolarCoordinates := (Scale.CoordSystem = csPolar);
-        WhiteBoard.DrawPolygonAntialias(PlotBox.DrawPoints[Zoom], BGRABlack, 1, PolyColor);
+          PolyColor.alpha := 80;
+          PolarCoordinates := (Scale.CoordSystem = csPolar);
+          WhiteBoard.DrawPolygonAntialias(DrawPoints[Zoom], BGRABlack, 1, PolyColor);
+        end;
       end;
     end;
   end;
@@ -2810,111 +2816,112 @@ begin
       end;
 
       if (State = piSetPlotBox) then
-      begin
-        // Rectangle containing all the modified region
-        TmpRect := PlotBox.Rect[Zoom];
-        for i := 1 to PlotBox.NumVertices do
-          TmpRect.Union(BoxMarkers[i].Rect);
-        for i := 1 to PlotBox.NumEdges do
-          TmpRect.Union(EdgeMarkers[i].Rect);
+        with PlotBox do
+        begin
+          // Rectangle containing all the modified region
+          TmpRect := Rect[Zoom];
+          for i := 1 to NumVertices do
+            TmpRect.Union(BoxMarkers[i].Rect);
+          for i := 1 to NumEdges do
+            TmpRect.Union(EdgeMarkers[i].Rect);
 
-        for i := 1 to PlotBox.NumVertices do
-          if (FClickedMarker = BoxMarkers[i]) then
-            Break;
+          for i := 1 to NumVertices do
+            if (FClickedMarker = BoxMarkers[i]) then
+              Break;
 
-        case FDragAction of
-          daVertex, daAngle: begin
-            // Move vertex
-            OldPos := Zoom*PlotBox[i - 1];
-            if (FDragAction = daAngle) and PlotBox.IsConvex then
-            begin
-              PlotBox.MoveVertex(i - 1, NewPos/Zoom);
-              P1 := Zoom*PlotBox[PlotBox.NextVertIdx(i - 1)];
-              P2 := Zoom*PlotBox[PlotBox.PrevVertIdx(i - 1)];
-
-              // Check that no marker moves out of the image
-              if ClientRect.Contains(P1) and ClientRect.Contains(P2) then
+          case FDragAction of
+            daVertex, daAngle: begin
+              // Move vertex
+              OldPos := Zoom*Vertex[i - 1];
+              if (FDragAction = daAngle) and IsConvex then
               begin
-                BoxMarkers[PlotBox.NextVertIdx(i - 1) + 1].Move(P1);
-                BoxMarkers[PlotBox.PrevVertIdx(i - 1) + 1].Move(P2);
-              end
-              else
-              begin
-                PlotBox.MoveVertex(i - 1, OldPos);
-                NewPos := OldPos;
+                MoveVertex(i - 1, NewPos/Zoom);
+                P1 := Zoom*Vertex[NextVertIdx(i - 1)];
+                P2 := Zoom*Vertex[PrevVertIdx(i - 1)];
+
+                // Check that no marker moves out of the image
+                if ClientRect.Contains(P1) and ClientRect.Contains(P2) then
+                begin
+                  BoxMarkers[NextVertIdx(i - 1) + 1].Move(P1);
+                  BoxMarkers[PrevVertIdx(i - 1) + 1].Move(P2);
+                end
+                else
+                begin
+                  MoveVertex(i - 1, OldPos);
+                  NewPos := OldPos;
+                end;
               end;
+
+              // Update vertex
+              Vertex[i - 1] := NewPos/Zoom;
+
+              // Move edges
+              for j := 1 to NumEdges do
+                EdgeMarkers[j].Move(Zoom*Edge[j - 1]);
             end;
-
-            // Update vertex
-            PlotBox[i - 1] := NewPos/Zoom;
-
-            // Move edges
-            for j := 1 to PlotBox.NumEdges do
-              EdgeMarkers[j].Move(Zoom*PlotBox.Edge[j - 1]);
-          end;
-          daRotate: begin
-            // Rotate
-            PlotBox.Rotate(i - 1, NewPos/Zoom);
-
-            // Check that no marker moves out of the image
-            if not ClientRect.Contains(Zoom*PlotBox[0]) or
-               not ClientRect.Contains(Zoom*PlotBox[1]) or
-               not ClientRect.Contains(Zoom*PlotBox[2]) or
-               not ClientRect.Contains(Zoom*PlotBox[3]) then
-            begin
-              PlotBox.CancelRotation;
-            end;
-
-            for j := 1 to PlotBox.NumVertices do
-              if (i <> j) then
-                BoxMarkers[j].Move(Zoom*PlotBox.Vertex[j - 1]);
-
-            for j := 1 to PlotBox.NumEdges do
-              EdgeMarkers[j].Move(Zoom*PlotBox.Edge[j - 1]);
-
-            NewPos := Zoom*PlotBox.Vertex[i - 1];
-            FClickedMarker.Move(NewPos);
-          end;
-          daEdge: begin
-            for i := 1 to PlotBox.NumVertices do
-              if (FClickedMarker = EdgeMarkers[i]) then
-                Break;
-
-            if PlotBox.IsConvex then
-            begin
-              OldPos := Zoom*PlotBox.Edge[i - 1];
-              PlotBox.MoveEdge(i - 1, NewPos/Zoom);
-              P1 := Zoom*PlotBox[PlotBox.NextVertIdx(i - 1)];
-              P2 := Zoom*PlotBox[i - 1];
+            daRotate: begin
+              // Rotate
+              Rotate(i - 1, NewPos/Zoom);
 
               // Check that no marker moves out of the image
-              if ClientRect.Contains(P1) and ClientRect.Contains(P2) and
-                 PlotBox.IsConvex then
+              if not ClientRect.Contains(Zoom*Vertex[0]) or
+                 not ClientRect.Contains(Zoom*Vertex[1]) or
+                 not ClientRect.Contains(Zoom*Vertex[2]) or
+                 not ClientRect.Contains(Zoom*Vertex[3]) then
               begin
-                BoxMarkers[PlotBox.NextVertIdx(i - 1) + 1].Move(P1);
-                BoxMarkers[i].Move(P2);
+                CancelRotation;
+              end;
 
-                EdgeMarkers[PlotBox.NextVertIdx(i - 1) + 1].Move(Zoom*PlotBox.Edge[PlotBox.NextVertIdx(i - 1)]);
-                EdgeMarkers[PlotBox.PrevVertIdx(i - 1) + 1].Move(Zoom*PlotBox.Edge[PlotBox.PrevVertIdx(i - 1)]);
-              end
-              else
-                PlotBox.MoveEdge(i - 1, OldPos);
+              for j := 1 to NumVertices do
+                if (i <> j) then
+                  BoxMarkers[j].Move(Zoom*Vertex[j - 1]);
+
+              for j := 1 to NumEdges do
+                EdgeMarkers[j].Move(Zoom*Edge[j - 1]);
+
+              NewPos := Zoom*Vertex[i - 1];
+              FClickedMarker.Move(NewPos);
             end;
+            daEdge: begin
+              for i := 1 to NumEdges do
+                if (FClickedMarker = EdgeMarkers[i]) then
+                  Break;
 
-            NewPos := Zoom*PlotBox.Edge[i - 1];
-            FClickedMarker.Move(NewPos);
+              if IsConvex then
+              begin
+                OldPos := Zoom*Edge[i - 1];
+                MoveEdge(i - 1, NewPos/Zoom);
+                P1 := Zoom*Vertex[NextVertIdx(i - 1)];
+                P2 := Zoom*Vertex[i - 1];
+
+                // Check that no marker moves out of the image
+                if ClientRect.Contains(P1) and ClientRect.Contains(P2) and
+                   IsConvex then
+                begin
+                  BoxMarkers[NextVertIdx(i - 1) + 1].Move(P1);
+                  BoxMarkers[i].Move(P2);
+
+                  EdgeMarkers[NextVertIdx(i - 1) + 1].Move(Zoom*Edge[NextVertIdx(i - 1)]);
+                  EdgeMarkers[PrevVertIdx(i - 1) + 1].Move(Zoom*Edge[PrevVertIdx(i - 1)]);
+                end
+                else
+                  MoveEdge(i - 1, OldPos);
+              end;
+
+              NewPos := Zoom*Edge[i - 1];
+              FClickedMarker.Move(NewPos);
+            end;
           end;
+
+          // Include the new positions in the modified rectangle
+          TmpRect.Union(Rect[Zoom]);
+          for i := 1 to NumVertices do
+            TmpRect.Union(BoxMarkers[i].Rect);
+          for i := 1 to NumEdges do
+            TmpRect.Union(EdgeMarkers[i].Rect);
+
+          UpdateRegion(TmpRect);
         end;
-
-        // Include the new positions in the modified rectangle
-        TmpRect.Union(PlotBox.Rect[Zoom]);
-        for i := 1 to PlotBox.NumVertices do
-          TmpRect.Union(BoxMarkers[i].Rect);
-        for i := 1 to PlotBox.NumEdges do
-          TmpRect.Union(EdgeMarkers[i].Rect);
-
-        UpdateRegion(TmpRect);
-      end;
 
       UpdateMarker(FClickedMarker);
       MarkerUnderCursor := FClickedMarker;
@@ -2982,35 +2989,36 @@ begin
       begin
         // Notify that neighboring markers have moved
         if (State = piSetPlotBox) then
-        begin
-          for i := 1 to PlotBox.NumVertices do
-            if (FClickedMarker = BoxMarkers[i]) then
-              Break;
+          with PlotBox do
+          begin
+            for i := 1 to NumVertices do
+              if (FClickedMarker = BoxMarkers[i]) then
+                Break;
 
-          case FDragAction of
-            daAngle: begin
-              OnMarkerDragged(Self, BoxMarkers[PlotBox.NextVertIdx(i - 1) + 1], False);
-              OnMarkerDragged(Self, BoxMarkers[PlotBox.PrevVertIdx(i - 1) + 1], False);
-            end;
-            daRotate: begin
-              for i := 1 to PlotBox.NumVertices do
-              begin
-                BoxMarkers[i].Move(Zoom*PlotBox.Vertex[i - 1]);
+            case FDragAction of
+              daAngle: begin
+                OnMarkerDragged(Self, BoxMarkers[NextVertIdx(i - 1) + 1], False);
+                OnMarkerDragged(Self, BoxMarkers[PrevVertIdx(i - 1) + 1], False);
+              end;
+              daRotate: begin
+                for i := 1 to NumVertices do
+                begin
+                  BoxMarkers[i].Move(Zoom*Vertex[i - 1]);
 
-                if (BoxMarkers[i] <> FClickedMarker) then
-                  OnMarkerDragged(Self, BoxMarkers[i], False);
+                  if (BoxMarkers[i] <> FClickedMarker) then
+                    OnMarkerDragged(Self, BoxMarkers[i], False);
+                end;
+              end;
+              daEdge: begin
+                for i := 1 to NumEdges do
+                  if (FClickedMarker = EdgeMarkers[i]) then
+                    Break;
+
+                OnMarkerDragged(Self, BoxMarkers[NextVertIdx(i - 1) + 1], False);
+                OnMarkerDragged(Self, BoxMarkers[i], False);
               end;
             end;
-            daEdge: begin
-              for i := 1 to PlotBox.NumVertices do
-                if (FClickedMarker = EdgeMarkers[i]) then
-                  Break;
-
-              OnMarkerDragged(Self, BoxMarkers[PlotBox.NextVertIdx(i - 1) + 1], False);
-              OnMarkerDragged(Self, BoxMarkers[i], False);
-            end;
           end;
-        end;
 
         // Notify that the marker has been dragged
         OnMarkerDragged(Self, FClickedMarker, True);
@@ -3279,21 +3287,24 @@ begin
       FAxesMarkers[3] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'+', Options.XAxisColor, 3),
                                         Zoom*Scale.ImagePoint[3], True);
 
-      AddMarker(AxesMarkers[1], False);
-      AddMarker(AxesMarkers[2], False);
-      AddMarker(AxesMarkers[3], False);
+      AddMarker(FAxesMarkers[1], False);
+      AddMarker(FAxesMarkers[2], False);
+      AddMarker(FAxesMarkers[3], False);
     end;
     piSetPlotBox: begin
       for i := 1 to 4 do
-      begin
-        FBoxMarkers[i] := TMarker.Create(CreateMarker(TPoint.Create(13, 13), '1', clBlack, 3),
-                                         Zoom*PlotBox[i - 1], True);
-        AddMarker(BoxMarkers[i], False);
+        with PlotBox do
+        begin
+          FBoxMarkers[i] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),
+                                           '1', clBlack, 3),
+                                           Zoom*Vertex[i - 1], True);
+          AddMarker(FBoxMarkers[i], False);
 
-        FEdgeMarkers[i] := TMarker.Create(CreateMarker(TPoint.Create(13, 13), '0', clBlack, 3),
-                                          Zoom*PlotBox.Edge[i - 1], True);
-        AddMarker(EdgeMarkers[i], False);
-      end;
+          FEdgeMarkers[i] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),
+                                            '0', clBlack, 3),
+                                            Zoom*Edge[i - 1], True);
+          AddMarker(FEdgeMarkers[i], False);
+        end;
     end;
     piSetCurve: begin
       for i := 0 to DigitCurve.MarkerCount - 1 do
@@ -4054,8 +4065,6 @@ begin
 end;
 
 function TPlotImage.LoadFromXML(FileName: TFileName; PictureDlg: TOpenPictureDialog = nil): Boolean;
-const
-  span = 0;
 var
   i, w, h,
   SavedCurveCount,
