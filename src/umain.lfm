@@ -1613,12 +1613,13 @@ object DigitMainForm: TDigitMainForm
     TabOrder = 3
     object gbSmooth: TGroupBox
       Left = 0
-      Height = 69
-      Top = 70
+      Height = 67
+      Top = 89
       Width = 163
       Align = alTop
+      AutoSize = True
       Caption = 'Smooth'
-      ClientHeight = 42
+      ClientHeight = 40
       ClientWidth = 153
       Font.Color = clBlack
       Font.Height = -11
@@ -1669,7 +1670,6 @@ object DigitMainForm: TDigitMainForm
         AnchorSideLeft.Control = gbSmooth
         AnchorSideTop.Control = seSGDegree
         AnchorSideTop.Side = asrCenter
-        AnchorSideRight.Control = pnlData
         AnchorSideRight.Side = asrBottom
         Left = 2
         Height = 13
@@ -1711,12 +1711,13 @@ object DigitMainForm: TDigitMainForm
     end
     object gbResample: TGroupBox
       Left = 0
-      Height = 70
+      Height = 89
       Top = 0
       Width = 163
       Align = alTop
+      AutoSize = True
       Caption = 'Resample'
-      ClientHeight = 43
+      ClientHeight = 62
       ClientWidth = 153
       Font.Color = clBlack
       Font.Height = -11
@@ -1769,11 +1770,10 @@ object DigitMainForm: TDigitMainForm
         AnchorSideLeft.Control = gbResample
         AnchorSideTop.Control = seXo
         AnchorSideTop.Side = asrCenter
-        AnchorSideRight.Control = pnlData
         AnchorSideRight.Side = asrBottom
         Left = 2
         Height = 13
-        Top = 26
+        Top = 46
         Width = 11
         BorderSpacing.Left = 2
         BorderSpacing.Right = 2
@@ -1787,11 +1787,11 @@ object DigitMainForm: TDigitMainForm
       object seXo: TFloatSpinEdit
         AnchorSideLeft.Control = lblXInterval
         AnchorSideLeft.Side = asrBottom
-        AnchorSideTop.Control = seInterpPoints
+        AnchorSideTop.Control = seInterpDegree
         AnchorSideTop.Side = asrBottom
         Left = 15
         Height = 19
-        Top = 23
+        Top = 43
         Width = 71
         BorderSpacing.Left = 2
         BorderSpacing.Top = 2
@@ -1812,7 +1812,7 @@ object DigitMainForm: TDigitMainForm
         AnchorSideRight.Side = asrBottom
         Left = 88
         Height = 13
-        Top = 26
+        Top = 46
         Width = 5
         BorderSpacing.Left = 2
         Caption = '-'
@@ -1831,7 +1831,7 @@ object DigitMainForm: TDigitMainForm
         AnchorSideRight.Side = asrBottom
         Left = 95
         Height = 19
-        Top = 23
+        Top = 43
         Width = 56
         Anchors = [akTop, akLeft, akRight]
         BorderSpacing.Left = 2
@@ -1845,15 +1845,56 @@ object DigitMainForm: TDigitMainForm
         ParentFont = False
         TabOrder = 2
       end
+      object lblInterpDegree: TLabel
+        AnchorSideTop.Control = seInterpDegree
+        AnchorSideTop.Side = asrCenter
+        AnchorSideRight.Side = asrBottom
+        Left = 2
+        Height = 13
+        Top = 26
+        Width = 41
+        BorderSpacing.Left = 2
+        BorderSpacing.Right = 2
+        Caption = 'Degree:'
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Default'
+        ParentColor = False
+        ParentFont = False
+      end
+      object seInterpDegree: TSpinEdit
+        AnchorSideLeft.Control = lblInterpDegree
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = seInterpPoints
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = gbResample
+        AnchorSideRight.Side = asrBottom
+        Left = 45
+        Height = 18
+        Top = 23
+        Width = 106
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Left = 2
+        BorderSpacing.Top = 2
+        BorderSpacing.Right = 2
+        Font.Color = clWindowText
+        Font.Height = -10
+        Font.Name = 'MS Sans Serif'
+        MaxValue = 20
+        MinValue = 2
+        ParentFont = False
+        TabOrder = 3
+        Value = 3
+      end
     end
     object gbData: TGroupBox
       Left = 0
-      Height = 323
-      Top = 139
+      Height = 306
+      Top = 156
       Width = 163
       Align = alClient
       Caption = 'Data'
-      ClientHeight = 296
+      ClientHeight = 279
       ClientWidth = 153
       Font.Color = clBlack
       Font.Height = -11
@@ -1863,7 +1904,7 @@ object DigitMainForm: TDigitMainForm
       TabOrder = 2
       object leData: TValueListEditor
         Left = 0
-        Height = 296
+        Height = 279
         Top = 0
         Width = 153
         Align = alClient
@@ -5258,10 +5299,7 @@ object DigitMainForm: TDigitMainForm
           Action = ToolLinear
         end
         object ToolQuadraticItem: TMenuItem
-          Action = ToolQuadratic
-        end
-        object ToolCubicItem: TMenuItem
-          Action = ToolCubic
+          Action = ToolPolynomial
         end
       end
       object ToolSmoothItem: TMenuItem
@@ -5677,19 +5715,12 @@ object DigitMainForm: TDigitMainForm
       ImageIndex = 50
       OnExecute = ToolLinearExecute
     end
-    object ToolQuadratic: TAction
+    object ToolPolynomial: TAction
       Category = 'Tools'
-      Caption = '&Quadratic'
-      Hint = 'Quadratic|Resample digitization using a quadratic function'
+      Caption = '&Polynomial'
+      Hint = 'Polynomial|Resample digitization using a polynomial'
       ImageIndex = 51
-      OnExecute = ToolQuadraticExecute
-    end
-    object ToolCubic: TAction
-      Category = 'Tools'
-      Caption = 'Cubic'
-      Hint = 'Cubic|Resample digitization using a cubic function'
-      ImageIndex = 52
-      OnExecute = ToolCubicExecute
+      OnExecute = ToolPolynomialExecute
     end
     object ToolSmooth: TAction
       Category = 'Tools'
@@ -9091,10 +9122,7 @@ object DigitMainForm: TDigitMainForm
       Action = ToolLinear
     end
     object QuadraticItem: TMenuItem
-      Action = ToolQuadratic
-    end
-    object CubicItem: TMenuItem
-      Action = ToolCubic
+      Action = ToolPolynomial
     end
   end
   object AxisTransformLog: TChartAxisTransformations

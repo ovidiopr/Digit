@@ -107,14 +107,18 @@ type
     procedure Smooth(k, d: Integer);
     {Interpolates new points using B-Splines:
         @param(n: Number of points.)
+        @param(d: Degree of the polynomial, >= 2.)
+        @param(IntType: Type of interpolation.)
     }
-    procedure Interpolate(n: Integer; IntType: TInterpolation = itpBSpline); overload;
+    procedure Interpolate(n, d: Integer; IntType: TInterpolation = itpBSpline); overload;
     {Interpolates new points using B-Splines:
         @param(Xo: Lower limit.)
         @param(Xf: Upper limit.)
         @param(n: Number of points.)
+        @param(d: Degree of the polynomial, >= 2.)
+        @param(IntType: Type of interpolation.)
     }
-    procedure Interpolate(Xo, Xf: Double; n: Integer; IntType: TInterpolation = itpBSpline); overload;
+    procedure Interpolate(Xo, Xf: Double; n, d: Integer; IntType: TInterpolation = itpBSpline); overload;
 
     {Number of points in the curve}
     property Count: Integer read GetCount;
@@ -618,18 +622,17 @@ begin
   end;
 end;
 
-procedure TCurve.Interpolate(n: Integer; IntType: TInterpolation = itpBSpline);
+procedure TCurve.Interpolate(n, d: Integer; IntType: TInterpolation = itpBSpline);
 begin
   if (n > 2) then
-    Interpolate(GetMinX, GetMaxX, n, IntType)
+    Interpolate(GetMinX, GetMaxX, n, d, IntType)
 end;
 
-procedure TCurve.Interpolate(Xo, Xf: Double; n: Integer; IntType: TInterpolation = itpBSpline);
-const
- Degree = 3;
+procedure TCurve.Interpolate(Xo, Xf: Double; n, d: Integer; IntType: TInterpolation = itpBSpline);
 var
  i: Integer;
- dx, Xint, Yint: Double;
+ dx: Double;
+ Xint, Yint: FloatArray;
 
  Pnts: Array of TCurvePoint;
 begin
@@ -650,24 +653,29 @@ begin
 
       Clear;
       dx := (Xf - Xo)/(n - 1);
+
+      SetLength(Xint, n);
       for i := 0 to n - 1 do
-      begin
-        Xint := Xo + i*dx;
+        Xint[i] := Xo + i*dx;
 
-        case IntType of
-          itpBSpline: Yint :=  BSpline(Pnts, Degree, Xint);
-          itpSpline: Yint :=  Spline(Pnts, Degree, Xint);
-          itpLinear: Yint :=  Polynomial(Pnts, 1, Xint);
-          itpQuadratic: Yint :=  Polynomial(Pnts, 2, Xint);
-          itpCubic: Yint :=  Polynomial(Pnts, 3, Xint);
-          else
-            Yint :=  BSpline(Pnts, Degree, Xint);
+      case IntType of
+        itpSpline: Yint :=  Spline(Pnts, d, Xint);
+        itpLinear: Yint :=  Polynomial(Pnts, 1, Xint);
+        itpPoly: Yint :=  Polynomial(Pnts, d, Xint);
+        else
+        begin
+          SetLength(Yint, n);
+          for i := 0 to n - 1 do
+            Yint[i] :=  BSpline(Pnts, d, Xint[i]);
         end;
-
-        AddPoint(Xint, Yint);
       end;
+
+      for i := 0 to n - 1 do
+        AddPoint(Xint[i], Yint[i]);
     finally
       SetLength(Pnts, 0);
+      SetLength(Xint, 0);
+      SetLength(Yint, 0);
     end;
   end;
 end;

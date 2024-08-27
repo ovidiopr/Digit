@@ -12,7 +12,9 @@ type
   THough1DMap = Array of LongWord;
   THough2DMap = Array of Array of LongWord;
 
-  TInterpolation = (itpBSpline, itpSpline, itpLinear, itpQuadratic, itpCubic);
+  FloatArray = Array of Double;
+
+  TInterpolation = (itpBSpline, itpSpline, itpLinear, itpPoly);
   TDigitization = (digLine, digColor, digMarkers);
 
   TPlotOptions = record
@@ -36,8 +38,8 @@ type
 function AreSimilar(R1, G1, B1, R2, G2, B2, Tolerance: Byte): Boolean; overload;
 function AreSimilar(R1, G1, B1: Byte; C2: LongWord; Tolerance: Byte): Boolean; overload;
 function AreSimilar(C1, C2: LongWord; Tolerance: Byte): Boolean; overload;
-function Polynomial(Points: Array of TCurvePoint; Degree: Integer; Xval: Double): Double;
-function Spline(Points: Array of TCurvePoint; Degree: Integer; Xval: Double): Double;
+function Polynomial(Points: Array of TCurvePoint; Degree: Integer; Xval: FloatArray): FloatArray;
+function Spline(Points: Array of TCurvePoint; Degree: Integer; Xval: FloatArray): FloatArray;
 function BSpline(Points: Array of TCurvePoint; Degree: Integer; Xval: Double): Double;
 procedure SavitzkyGolay(Kernel, Degree, Deriv: Integer; var Points: Array of TCurvePoint);
 
@@ -81,14 +83,16 @@ begin
   Result := StartIdx <= High(Points);
 end;
 
-function Polynomial(Points: Array of TCurvePoint; Degree: Integer; Xval: Double): Double;
+function Polynomial(Points: Array of TCurvePoint; Degree: Integer; Xval: FloatArray): FloatArray;
 var
   i, j, n, d: Integer;
   dup: Boolean;
   term: ArbInt;
   xi, yi, b: Array of ArbFloat;
 begin
-  Result := NaN;
+  SetLength(Result, Length(Xval));
+  for i := Low(Result) to High(Result) do
+    Result[i] := NaN;
 
   if (Length(Points) > Degree) then
   begin
@@ -122,7 +126,8 @@ begin
 
       // Calculate interpolation
       if (term = 1) then
-        Result := spepol(Xval, b[0], Degree);
+        for i := Low(Xval) to High(Xval) do
+          Result[i] := spepol(Xval[i], b[0], Degree);
     finally
       SetLength(xi, 0);
       SetLength(yi, 0);
@@ -131,14 +136,16 @@ begin
   end;
 end;
 
-function Spline(Points: Array of TCurvePoint; Degree: Integer; Xval: Double): Double;
+function Spline(Points: Array of TCurvePoint; Degree: Integer; Xval: FloatArray): FloatArray;
 var
   i, j, n, d: Integer;
   dup: Boolean;
   term: ArbInt;
   xi, yi, d2s: Array of ArbFloat;
 begin
-  Result := NaN;
+  SetLength(Result, Length(Xval));
+  for i := Low(Result) to High(Result) do
+    Result[i] := NaN;
 
   if (Length(Points) > Degree) then
   begin
@@ -172,7 +179,8 @@ begin
 
       // Calculate interpolation
       if (term = 1) then
-        Result := ipfspn(n, xi[0], yi[0], d2s[0], Xval, term);
+        for i := Low(Xval) to High(Xval) do
+          Result[i] := ipfspn(n, xi[0], yi[0], d2s[0], Xval[i], term);
     finally
       SetLength(xi, 0);
       SetLength(yi, 0);

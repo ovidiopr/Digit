@@ -293,10 +293,10 @@ type
     procedure SortCurve(Index: Integer); overload;
     procedure Smooth(k, d: Integer; Index: Integer); overload;
     procedure Smooth(k, d: Integer; AllCurves: Boolean = False); overload;
-    procedure Interpolate(n: Integer; Index: Integer; IntType: TInterpolation = itpBSpline); overload;
-    procedure Interpolate(n: Integer; AllCurves: Boolean = False; IntType: TInterpolation = itpBSpline); overload;
-    procedure Interpolate(Xo, Xf: Double; n: Integer; Index: Integer; IntType: TInterpolation = itpBSpline); overload;
-    procedure Interpolate(Xo, Xf: Double; n: Integer; AllCurves: Boolean = False; IntType: TInterpolation = itpBSpline); overload;
+    procedure Interpolate(n, d: Integer; Index: Integer; IntType: TInterpolation = itpBSpline); overload;
+    procedure Interpolate(n, d: Integer; AllCurves: Boolean = False; IntType: TInterpolation = itpBSpline); overload;
+    procedure Interpolate(Xo, Xf: Double; n, d: Integer; Index: Integer; IntType: TInterpolation = itpBSpline); overload;
+    procedure Interpolate(Xo, Xf: Double; n, d: Integer; AllCurves: Boolean = False; IntType: TInterpolation = itpBSpline); overload;
     procedure CorrectCurve(Po, Pf: TPoint; IsStep: Boolean = True); overload;
     procedure CorrectCurve(Po, Pf: TCurvePoint; IsStep: Boolean = True); overload;
     procedure CorrectCurve(Region: TRect; IsStep: Boolean = True); overload;
@@ -1593,9 +1593,9 @@ begin
   if (ML.Count > 2) then
     if (Scale.CoordSystem = csCartesian) then
       ML.Interpolate(1 + Abs(Round((Scale.FromPlotToImg(ML.Point[ML.Count - 1]).X -
-                                    Scale.FromPlotToImg(ML.Point[0]).X)/PixelStep)))
+                                    Scale.FromPlotToImg(ML.Point[0]).X)/PixelStep)), 3)
     else
-      ML.Interpolate(1 + Abs(360 div PixelStep));
+      ML.Interpolate(1 + Abs(360 div PixelStep), 3);
 
   i := 0;
 
@@ -3650,7 +3650,7 @@ begin
       Smooth(k, d, i);
 end;
 
-procedure TPlotImage.Interpolate(n: Integer; Index: Integer; IntType: TInterpolation = itpBSpline);
+procedure TPlotImage.Interpolate(n, d: Integer; Index: Integer; IntType: TInterpolation = itpBSpline);
 var
   i: Integer;
   TmpCurve: TCurve;
@@ -3659,7 +3659,7 @@ begin
     TmpCurve := PlotCurves[Index];
 
     TmpCurve.SortCurve;
-    TmpCurve.Interpolate(n, IntType);
+    TmpCurve.Interpolate(n, d, IntType);
 
     if (Index = CurveIndex) then
       EraseCurve(DigitCurve);
@@ -3678,18 +3678,18 @@ begin
   end;
 end;
 
-procedure TPlotImage.Interpolate(n: Integer; AllCurves: Boolean = False; IntType: TInterpolation = itpBSpline);
+procedure TPlotImage.Interpolate(n, d: Integer; AllCurves: Boolean = False; IntType: TInterpolation = itpBSpline);
 var
   i: Integer;
 begin
   if not AllCurves then
-    Interpolate(n, CurveIndex, IntType)
+    Interpolate(n, d, CurveIndex, IntType)
   else
     for i := 0 to Count - 1 do
-      Interpolate(n, i, IntType);
+      Interpolate(n, d, i, IntType);
 end;
 
-procedure TPlotImage.Interpolate(Xo, Xf: Double; n: Integer; Index: Integer; IntType: TInterpolation = itpBSpline);
+procedure TPlotImage.Interpolate(Xo, Xf: Double; n, d: Integer; Index: Integer; IntType: TInterpolation = itpBSpline);
 var
   i: Integer;
   TmpCurve: TCurve;
@@ -3698,7 +3698,7 @@ begin
     TmpCurve := PlotCurves[Index];
 
     TmpCurve.SortCurve;
-    TmpCurve.Interpolate(Xo, Xf, n, IntType);
+    TmpCurve.Interpolate(Xo, Xf, n, d, IntType);
 
     if (Index = CurveIndex) then
       EraseCurve(DigitCurve);
@@ -3717,15 +3717,15 @@ begin
   end;
 end;
 
-procedure TPlotImage.Interpolate(Xo, Xf: Double; n: Integer; AllCurves: Boolean = False; IntType: TInterpolation = itpBSpline);
+procedure TPlotImage.Interpolate(Xo, Xf: Double; n, d: Integer; AllCurves: Boolean = False; IntType: TInterpolation = itpBSpline);
 var
   i: Integer;
 begin
   if not AllCurves then
-    Interpolate(Xo, Xf, n, CurveIndex,IntType)
+    Interpolate(Xo, Xf, n, d, CurveIndex,IntType)
   else
     for i := 0 to Count - 1 do
-      Interpolate(Xo, Xf, n, i, IntType);
+      Interpolate(Xo, Xf, n, d, i, IntType);
 end;
 
 procedure TPlotImage.CorrectCurve(Po, Pf: TPoint; IsStep: Boolean = True);

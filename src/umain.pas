@@ -25,14 +25,13 @@ type
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
+    lblInterpDegree: TLabel;
     LinearItem: TMenuItem;
-    CubicItem: TMenuItem;
-    ToolCubicItem: TMenuItem;
+    seInterpDegree: TSpinEdit;
     ToolQuadraticItem: TMenuItem;
     ToolLinearItem: TMenuItem;
     QuadraticItem: TMenuItem;
-    ToolCubic: TAction;
-    ToolQuadratic: TAction;
+    ToolPolynomial: TAction;
     ToolLinear: TAction;
     ToolCancelAction: TAction;
     atInverse: TUserDefinedAxisTransform;
@@ -452,7 +451,6 @@ type
     procedure ToolCancelActionExecute(Sender: TObject);
     procedure ToolConvertToSymbolsExecute(Sender: TObject);
     procedure ToolCorrectDistortionExecute(Sender: TObject);
-    procedure ToolCubicExecute(Sender: TObject);
     procedure ToolCurveAddExecute(Sender: TObject);
     procedure ToolCurveDeleteExecute(Sender: TObject);
     procedure ToolCurveLeftExecute(Sender: TObject);
@@ -463,7 +461,7 @@ type
     procedure ToolDigitMarkersExecute(Sender: TObject);
     procedure ToolBSplinesExecute(Sender: TObject);
     procedure ToolLinearExecute(Sender: TObject);
-    procedure ToolQuadraticExecute(Sender: TObject);
+    procedure ToolPolynomialExecute(Sender: TObject);
     procedure ToolResetBoxExecute(Sender: TObject);
     procedure ToolPlotOptionsExecute(Sender: TObject);
     procedure ToolSmoothExecute(Sender: TObject);
@@ -937,7 +935,9 @@ begin
   seSGKernel.Value := 5;
   seSGDegree.Value := 3;
   seInterpPoints.Value := 101;
+  seInterpDegree.Value := 3;
   seXo.Value := 0;
+  seXf.Value := 0;
   ClearZoomImage;
   btnColor.ButtonColor := clBtnFace;
   rgDirection.ItemIndex := 0;
@@ -2190,6 +2190,7 @@ begin
       else
       begin
         seInterpPoints.Value := 101;
+        seInterpDegree.Value := 3;
         seXo.Value := 0;
         seXf.Value := 0;
       end;
@@ -2635,21 +2636,6 @@ begin
     PlotImage.UndistortImage;
 end;
 
-procedure TDigitMainForm.ToolCubicExecute(Sender: TObject);
-var
-  TmpOpt: TPlotOptions;
-begin
-  GUIToCurve;
-  //Replace the curve by interpolated values
-  PlotImage.Interpolate(seXo.Value, seXf.Value, seInterpPoints.Value, False, itpCubic);
-  CurveToGUI;
-
-  TmpOpt := PlotImage.Options;
-  TmpOpt.DefaultItp := itpCubic;
-  PlotImage.Options := TmpOpt;
-  btnResample.Action := TAction(Sender);
-end;
-
 procedure TDigitMainForm.ToolCurveAddExecute(Sender: TObject);
 begin
   PlotImage.AddCurve;
@@ -2740,7 +2726,10 @@ var
 begin
   GUIToCurve;
   //Replace the curve by interpolated values
-  PlotImage.Interpolate(seXo.Value, seXf.Value, seInterpPoints.Value, False, itpBSpline);
+  PlotImage.Interpolate(seXo.Value, seXf.Value,
+                        seInterpPoints.Value,
+                        seInterpDegree.Value,
+                        False, itpBSpline);
   CurveToGUI;
 
   TmpOpt := PlotImage.Options;
@@ -2755,7 +2744,10 @@ var
 begin
   GUIToCurve;
   //Replace the curve by interpolated values
-  PlotImage.Interpolate(seXo.Value, seXf.Value, seInterpPoints.Value, False, itpLinear);
+  PlotImage.Interpolate(seXo.Value, seXf.Value,
+                        seInterpPoints.Value,
+                        seInterpDegree.Value,
+                        False, itpLinear);
   CurveToGUI;
 
   TmpOpt := PlotImage.Options;
@@ -2764,17 +2756,20 @@ begin
   btnResample.Action := TAction(Sender);
 end;
 
-procedure TDigitMainForm.ToolQuadraticExecute(Sender: TObject);
+procedure TDigitMainForm.ToolPolynomialExecute(Sender: TObject);
 var
   TmpOpt: TPlotOptions;
 begin
   GUIToCurve;
   //Replace the curve by interpolated values
-  PlotImage.Interpolate(seXo.Value, seXf.Value, seInterpPoints.Value, False, itpQuadratic);
+  PlotImage.Interpolate(seXo.Value, seXf.Value,
+                        seInterpPoints.Value,
+                        seInterpDegree.Value,
+                        False, itpPoly);
   CurveToGUI;
 
   TmpOpt := PlotImage.Options;
-  TmpOpt.DefaultItp := itpQuadratic;
+  TmpOpt.DefaultItp := itpPoly;
   PlotImage.Options := TmpOpt;
   btnResample.Action := TAction(Sender);
 end;
@@ -2840,7 +2835,10 @@ var
 begin
   GUIToCurve;
   //Replace the curve by interpolated values
-  PlotImage.Interpolate(seXo.Value, seXf.Value, seInterpPoints.Value, False, itpSpline);
+  PlotImage.Interpolate(seXo.Value, seXf.Value,
+                        seInterpPoints.Value,
+                        seInterpDegree.Value,
+                        False, itpSpline);
   CurveToGUI;
 
   TmpOpt := PlotImage.Options;
