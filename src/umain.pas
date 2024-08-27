@@ -2425,6 +2425,15 @@ begin
   EditIX3.Invalidate;
   EditIY3.Invalidate;
 
+  EditVX1.Invalidate;
+  EditVY1.Invalidate;
+  EditVX2.Invalidate;
+  EditVY2.Invalidate;
+  EditVX3.Invalidate;
+  EditVY3.Invalidate;
+  EditVX4.Invalidate;
+  EditVY4.Invalidate;
+
   edtGridTolerance.Invalidate;
   edtGridThreshold.Invalidate;
   edtGridMask.Invalidate;
