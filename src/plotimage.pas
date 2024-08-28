@@ -2969,7 +2969,6 @@ begin
   InMouseMove := True;
   // Empty message stack
   Application.ProcessMessages;
-  InMouseMove := False;
 
   WasDragging := Dragging;
 
@@ -3065,6 +3064,8 @@ begin
 
   if not WasDragging then
     inherited MouseUp(Button, Shift, X, Y);
+
+  InMouseMove := False;
 end;
 
 procedure TPlotImage.SetMarkerUnderCursor(Marker: TMarker);
