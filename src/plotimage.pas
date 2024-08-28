@@ -1840,7 +1840,7 @@ end;
 
 procedure TPlotImage.AdjustCurve(Noisy: Boolean = False);
 const
-  min_diff = 0.05;
+  min_diff = 0.01;
 var
   i: Integer;
   Pi: TCurvePoint;
@@ -1891,9 +1891,11 @@ begin
                 else
                 begin
                   // The point is '100*min_diff'% larger than its neighbours
-                  Up := (min_diff <= (2*Pi.Y - Curve.Point[i - 1].Y - Curve.Point[i + 1].Y)/abs(Pi.Y));
+                  Up := (min_diff <= (Pi.Y - Curve.Point[i - 1].Y)/abs(Pi.Y)) and
+                        (min_diff <= (Pi.Y - Curve.Point[i + 1].Y)/abs(Pi.Y));
                   // The point is '100*min_diff'% smaller than its neighbours
-                  Down := (-min_diff >= (2*Pi.Y - Curve.Point[i - 1].Y - Curve.Point[i + 1].Y)/abs(Pi.Y));
+                  Down := (-min_diff >= (Pi.Y - Curve.Point[i - 1].Y)/abs(Pi.Y)) and
+                          (-min_diff >= (Pi.Y - Curve.Point[i + 1].Y)/abs(Pi.Y));
                 end;
               end;
             end;

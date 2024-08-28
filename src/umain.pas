@@ -738,8 +738,14 @@ begin
   begin
     if (Scale.IsValid and HasPoints) then
       for i := 0 to NumPoints - 1 do
+      begin
         leData.InsertRow(Format('%.5g', [Point[i].X]),
                          Format('%.5g', [Point[i].Y]), True);
+
+        // Keep the system responsive
+        if ((i mod 100) = 0) then
+          Application.ProcessMessages;
+      end;
   end;
   leData.Row := 0;
 
@@ -1880,12 +1886,12 @@ begin
 
   CurveCount := PlotImage.Count;
 
+  UpdateControls;
+
   if UpdateTable then
     UpdateView
   else
     PlotCurve;
-
-  UpdateControls;
 end;
 
 procedure TDigitMainForm.SetMouseMode(Value: TMouseMode);
@@ -2611,8 +2617,9 @@ begin
   //Finally, update the control values
   CurveToGUI;
   //Update the control values
-  UpdateView;
   UpdateControls;
+
+  UpdateView;
 end;
 
 procedure TDigitMainForm.ToolAdjustCurveExecute(Sender: TObject);
