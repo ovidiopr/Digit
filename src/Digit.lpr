@@ -1,4 +1,4 @@
-program Digit;
+program digit;
 
 {$mode objfpc}{$H+}
 
@@ -9,8 +9,8 @@ uses
   Interfaces, // this includes the LCL widgetset
   Forms, tachartlazaruspkg, lazcontrols,
   coordinates in 'coordinates.pas',
-  Main in 'Main.pas' {DigitMainForm},
-  About in 'About.pas' {AboutBox},
+  umain {DigitMainForm},
+  uabout {AboutBox},
   curves in 'curves.pas',
   restore,
   uchartscale, uoptions, utils, plotimage;
@@ -19,6 +19,7 @@ uses
 
 begin
   RequireDerivedFormResource := True;
+  Application.Title:='Digit';
   Application.Scaled:=True;
   Application.Initialize;
   Application.CreateForm(TDigitMainForm, DigitMainForm);

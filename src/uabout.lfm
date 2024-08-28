@@ -13,7 +13,7 @@ object AboutBox: TAboutBox
   OnCreate = FormCreate
   Position = poMainFormCenter
   ShowHint = True
-  LCLVersion = '2.2.4.0'
+  LCLVersion = '3.4.0.0'
   object AboutImage: TImage
     AnchorSideLeft.Control = Owner
     AnchorSideTop.Control = Owner
@@ -174,9 +174,9 @@ object AboutBox: TAboutBox
     Left = 152
     Height = 16
     Top = 64
-    Width = 243
+    Width = 244
     BorderSpacing.Top = 8
-    Caption = '(c) Ovidio Y. Peña Rodríguez 2001-2023'
+    Caption = '(c) Ovidio Y. Peña Rodríguez 2001-2024'
     ParentColor = False
   end
   object Bevel1: TBevel
@@ -222,8 +222,8 @@ object AboutBox: TAboutBox
     Anchors = [akTop, akRight, akBottom]
     BorderSpacing.Around = 8
     Caption = '&OK'
-    OnClick = btnOKClick
     TabOrder = 0
+    OnClick = btnOKClick
   end
   object lblDesc: TLabel
     AnchorSideLeft.Control = lblAuthor

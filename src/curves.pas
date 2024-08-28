@@ -107,14 +107,18 @@ type
     procedure Smooth(k, d: Integer);
     {Interpolates new points using B-Splines:
         @param(n: Number of points.)
+        @param(d: Degree of the polynomial, >= 2.)
+        @param(IntType: Type of interpolation.)
     }
-    procedure Interpolate(n: Integer; IntType: TInterpolation = itpBSpline); overload;
+    procedure Interpolate(n, d: Integer; IntType: TInterpolation = itpBSpline); overload;
     {Interpolates new points using B-Splines:
         @param(Xo: Lower limit.)
         @param(Xf: Upper limit.)
         @param(n: Number of points.)
+        @param(d: Degree of the polynomial, >= 2.)
+        @param(IntType: Type of interpolation.)
     }
-    procedure Interpolate(Xo, Xf: Double; n: Integer; IntType: TInterpolation = itpBSpline); overload;
+    procedure Interpolate(Xo, Xf: Double; n, d: Integer; IntType: TInterpolation = itpBSpline); overload;
 
     {Number of points in the curve}
     property Count: Integer read GetCount;
@@ -180,6 +184,9 @@ type
 
     FMarkers: TPointList;
 
+    FValidPoints: Boolean;
+    FAllPoints: TIsland;
+
     FStep: Integer;
     FInterval: Integer;
     FTolerance: Integer;
@@ -192,6 +199,7 @@ type
     function GetActiveCurve: TCurve;
     function GetColorIsSet: Boolean;
     function GetHasPoints: Boolean;
+    function GetValidPoints: Boolean;
     function GetMarkerCount: Integer;
     function GetMarker(Index: Integer): TCurvePoint;
 
@@ -200,6 +208,8 @@ type
     procedure SetShowAsSymbols(Value: Boolean);
     procedure SetCurveIndex(Value: Integer);
     procedure SetMarker(Index: Integer; const Value: TCurvePoint);
+
+    procedure SetTolerance(Value: Integer);
   public
     constructor Create(Name: String);
     destructor Destroy; override;
@@ -259,11 +269,14 @@ type
 
     property Step: Integer read FStep write FStep;
     property Interval: Integer read FInterval write FInterval;
-    property Tolerance: Integer read FTolerance write FTolerance;
+    property Tolerance: Integer read FTolerance write SetTolerance;
     property Spread: Integer read FSpread write FSpread;
 
     property ColorIsSet: Boolean read GetColorIsSet;
     property HasPoints: Boolean read GetHasPoints;
+
+    property ValidPoints: Boolean read GetValidPoints write FValidPoints;
+    property AllPoints: TIsland read FAllPoints;
   end;
 
 implementation
@@ -609,18 +622,17 @@ begin
   end;
 end;
 
-procedure TCurve.Interpolate(n: Integer; IntType: TInterpolation = itpBSpline);
+procedure TCurve.Interpolate(n, d: Integer; IntType: TInterpolation = itpBSpline);
 begin
   if (n > 2) then
-    Interpolate(GetMinX, GetMaxX, n, IntType)
+    Interpolate(GetMinX, GetMaxX, n, d, IntType)
 end;
 
-procedure TCurve.Interpolate(Xo, Xf: Double; n: Integer; IntType: TInterpolation = itpBSpline);
-const
- Degree = 3;
+procedure TCurve.Interpolate(Xo, Xf: Double; n, d: Integer; IntType: TInterpolation = itpBSpline);
 var
  i: Integer;
- dx, Xint, Yint: Double;
+ dx: Double;
+ Xint, Yint: FloatArray;
 
  Pnts: Array of TCurvePoint;
 begin
@@ -641,21 +653,29 @@ begin
 
       Clear;
       dx := (Xf - Xo)/(n - 1);
+
+      SetLength(Xint, n);
       for i := 0 to n - 1 do
-      begin
-        Xint := Xo + i*dx;
+        Xint[i] := Xo + i*dx;
 
-        case IntType of
-          itpBSpline: Yint :=  BSpline(Pnts, Degree, Xint);
-          itpSpline: Yint :=  Spline(Pnts, Degree, Xint);
-          else
-            Yint :=  BSpline(Pnts, Degree, Xint);
+      case IntType of
+        itpSpline: Yint :=  Spline(Pnts, d, Xint);
+        itpLinear: Yint :=  Polynomial(Pnts, 1, Xint);
+        itpPoly: Yint :=  Polynomial(Pnts, d, Xint);
+        else
+        begin
+          SetLength(Yint, n);
+          for i := 0 to n - 1 do
+            Yint[i] :=  BSpline(Pnts, d, Xint[i]);
         end;
-
-        AddPoint(Xint, Yint);
       end;
+
+      for i := 0 to n - 1 do
+        AddPoint(Xint[i], Yint[i]);
     finally
       SetLength(Pnts, 0);
+      SetLength(Xint, 0);
+      SetLength(Yint, 0);
     end;
   end;
 end;
@@ -738,6 +758,7 @@ begin
     FCurves[i] := TCurve.Create;
 
   FMarkers := TPointList.Create;
+  FAllPoints := TIsland.Create;
 
   Reset;
 end;
@@ -751,6 +772,8 @@ begin
 
   FMarkers.Free;
 
+  FAllPoints.Free;
+
   inherited;
 end;
 
@@ -762,6 +785,9 @@ begin
     FCurves[i].Clear;
 
   FMarkers.Clear;
+
+  FValidPoints := False;
+  FAllPoints.Clear;
 
   FCurveIndex := 0;
   FValidCurves := 1;
@@ -984,6 +1010,11 @@ begin
   Result := Curve.Count > 0;
 end;
 
+function TDigitCurve.GetValidPoints: Boolean;
+begin
+  Result := FValidPoints and (FAllPoints.Count > 0);
+end;
+
 function TDigitCurve.GetMarkerCount: Integer;
 begin
   Result := FMarkers.Count;
@@ -999,12 +1030,19 @@ end;
 
 procedure TDigitCurve.SetName(Value: String);
 begin
-  FName := Value;
+  if (Value <> FName) then
+    FName := Value;
 end;
 
 procedure TDigitCurve.SetColor(Value: TColor);
 begin
-  FColor := Value;
+  if (Value <> FColor) then
+  begin
+    FColor := Value;
+
+    FValidPoints := False;
+    FAllPoints.Clear;
+  end;
 end;
 
 procedure TDigitCurve.SetShowAsSymbols(Value: Boolean);
@@ -1023,6 +1061,17 @@ procedure TDigitCurve.SetMarker(Index: Integer; const Value: TCurvePoint);
 begin
   if (Index >= 0) and (Index < FMarkers.Count) then
     FMarkers[Index] := Value;
+end;
+
+procedure TDigitCurve.SetTolerance(Value: Integer);
+begin
+  if (Value <> FTolerance) then
+  begin
+    FTolerance := Value;
+
+    FValidPoints := False;
+    FAllPoints.Clear;
+  end;
 end;
 
 procedure TDigitCurve.Draw(Canvas: TCanvas; Zoom: Double = 1);

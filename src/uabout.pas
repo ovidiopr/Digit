@@ -1,9 +1,9 @@
-unit About;
+unit uabout;
 
 interface
 
 uses
-  LCLIntf, LCLType, Types, SysUtils, Classes, Graphics, Controls, Forms,
+  LCLIntf, LCLType, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls;
 
 type
