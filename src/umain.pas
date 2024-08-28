@@ -405,6 +405,8 @@ type
     procedure GridShowHideExecute(Sender: TObject);
     procedure HelpAboutExecute(Sender: TObject);
     procedure FileExitExecute(Sender: TObject);
+    procedure leDataSelectCell(Sender: TObject; aCol, aRow: Integer;
+      var CanSelect: Boolean);
     procedure leDataValidateEntry(Sender: TObject; aCol, aRow: Integer;
       const OldValue: string; var NewValue: String);
     procedure MainPlotMouseLeave(Sender: TObject);
@@ -733,27 +735,29 @@ begin
   try
     // Avoid loops
     leData.OnValidateEntry := Nil;
+    leData.OnSelectCell := Nil;
     leData.EditorMode := False;
 
     // Copy the values to the table
     leData.Strings.Clear;
     with PlotImage do
-    begin
       if (Scale.IsValid and HasPoints) then
-        for i := 0 to NumPoints - 1 do
-        begin
+      begin
+        // Update the curve properties
+        seInterpPoints.Value := NumPoints;
+        seXo.Value := Point[0].X;
+        seXf.Value := Point[NumPoints - 1].X;
+
+        for i := 0 to min(100, NumPoints - 1) do
           leData.InsertRow(Format('%.5g', [Point[i].X]),
                            Format('%.5g', [Point[i].Y]), True);
+      end;
 
-          // Keep the system responsive
-          if ((i mod 100) = 0) then
-            Application.ProcessMessages;
-        end;
-    end;
     leData.Row := 0;
   finally
     // Restore data validation
     leData.OnValidateEntry := @leDataValidateEntry;
+    leData.OnSelectCell := @leDataSelectCell;
 
     UpdatingTable := False;
   end;
@@ -1540,6 +1544,50 @@ end;
 procedure TDigitMainForm.FileExitExecute(Sender: TObject);
 begin
   Close;
+end;
+
+procedure TDigitMainForm.leDataSelectCell(Sender: TObject; aCol, aRow: Integer;
+  var CanSelect: Boolean);
+var
+  i, n, r: Integer;
+begin
+  // We are approaching the end, and there are hidden values
+  if (aRow >= (leData.RowCount - 10)) and
+     (PlotImage.NumPoints > (leData.RowCount - 1))then
+  begin
+    // Make sure that there are no previous events in the stack
+    if UpdatingTable then Exit;
+    UpdatingTable := True;
+    // Empty message stack
+    Application.ProcessMessages;
+
+    try
+      // Avoid loops
+      leData.OnValidateEntry := Nil;
+      leData.OnSelectCell := Nil;
+      leData.EditorMode := False;
+
+      with PlotImage do
+        if (Scale.IsValid and HasPoints) then
+        begin
+          // Copy a new batch of values to the table
+          n := leData.RowCount - 1;
+          r := leData.Row;
+          leData.Row := n;
+
+          for i := n to min(n + 100, NumPoints - 1) do
+            leData.InsertRow(Format('%.5g', [Point[i].X]),
+                             Format('%.5g', [Point[i].Y]), True);
+        end;
+      leData.Row := r;
+    finally
+      // Restore data validation
+      leData.OnValidateEntry := @leDataValidateEntry;
+      leData.OnSelectCell := @leDataSelectCell;
+
+      UpdatingTable := False;
+    end;
+  end;
 end;
 
 procedure TDigitMainForm.leDataValidateEntry(Sender: TObject; aCol,
