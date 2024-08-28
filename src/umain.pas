@@ -658,7 +658,7 @@ begin
     MarkersMoveRight.Enabled := ImageIsLoaded and assigned(ActiveMarker);
     MarkersDelete.Enabled := ImageIsLoaded and assigned(ActiveMarker) and not ActiveMarker.IsPersistent;
 
-    ToolCorrectDistortion.Enabled := ImageIsLoaded and (State = piSetPlotBox) and PlotImage.PlotBox.IsConvex;
+    ToolCorrectDistortion.Enabled := ImageIsLoaded and (State = piSetPlotBox) and PlotImage.Scale.PlotBox.IsConvex;
     ToolResetBox.Enabled := ImageIsLoaded and (State = piSetPlotBox);
 
     GridRemoval.Enabled := ImageIsLoaded and (State = piSetGrid) and not (GridMask.IsValid and GridMask.IsActive);
@@ -1037,7 +1037,7 @@ begin
   if (PlotImage.Scale.CoordSystem <> TCoordSystem(cbbCoords.ItemIndex)) then
   begin
     PlotImage.Scale.CoordSystem := TCoordSystem(cbbCoords.ItemIndex);
-    PlotImage.PlotBox.PolarCoordinates := (PlotImage.Scale.CoordSystem = csPolar);
+    PlotImage.Scale.PlotBox.PolarCoordinates := (PlotImage.Scale.CoordSystem = csPolar);
   end;
 end;
 
@@ -1621,7 +1621,7 @@ begin
       end;
     end;
     piSetPlotBox: begin
-      with PlotImage.PlotBox do
+      with PlotImage.Scale.PlotBox do
       begin
         EditVX1.Value := Round(Vertex[0].X);
         EditVY1.Value := Round(Vertex[0].Y);
@@ -2807,7 +2807,7 @@ procedure TDigitMainForm.ToolResetBoxExecute(Sender: TObject);
 begin
   PlotImage.ResetPlotBox;
 
-  with PlotImage.PlotBox do
+  with PlotImage.Scale.PlotBox do
   begin
     EditVX1.Value := Round(Vertex[0].X);
     EditVY1.Value := Round(Vertex[0].Y);

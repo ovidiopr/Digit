@@ -134,7 +134,6 @@ type
     FCurveIndex: Integer;
 
     FScale: TScale;
-    FPlotBox: TPlotQuad;
 
     FImageIsLoaded: Boolean;
 
@@ -371,7 +370,6 @@ type
     property Point[Index: Integer]: TCurvePoint read GetPoint write SetPoint;
 
     property Scale: TScale read FScale;
-    property PlotBox: TPlotQuad read FPlotBox;
     property ColorIsSet: Boolean read GetColorIsSet;
     property HasPoints: Boolean read GetHasPoints;
     property IsChanged: Boolean read GetIsChanged write SetIsChanged;
@@ -1289,7 +1287,6 @@ begin
 
   FCurves := TCurveList.Create;
   FScale := TScale.Create;
-  FPlotBox := TPlotQuad.Create;
 
   Reset;
 end;
@@ -1306,7 +1303,6 @@ begin
 
   FCurves.Free;
   FScale.Free;
-  FPlotBox.Free;
 
   inherited Destroy;
 end;
@@ -1325,7 +1321,6 @@ begin
   FCurveIndex := 0;
 
   FScale.Reset;
-  FPlotBox.Reset;
 
   FMarkers.Clear;
   ActiveMarker := nil;
@@ -1436,7 +1431,7 @@ begin
 
       for i := 0 to PlotImg.Width - 1 do
       begin
-        if PlotBox.Contains(TCurvePoint.Create(i, j)) then
+        if Scale.PlotBox.Contains(TCurvePoint.Create(i, j)) then
         begin
           if GridMask.IsValid and GridMask.IsActive and (p1^.alpha > 0) then
             p := p1
@@ -1664,7 +1659,7 @@ begin
 
     Application.ProcessMessages;
     if CancelAction then Break;
-  until (not PlotBox.Contains(Pi)) or
+  until (not Scale.PlotBox.Contains(Pi)) or
         ((Scale.CoordSystem = csPolar) and (Abs(Delta) > 360)) or
         ((ML.Count > 2) and (i >= ML.Count - 1));
 
@@ -1706,7 +1701,7 @@ begin
       Pi := (Scale.ImagePoint[3] + Scale.ImagePoint[2])/2;
 
     while (not FindNextPoint(Pi, Round(Modulus(Pi)), True)) and
-          (PlotBox.Contains(Pi)) do
+          (Scale.PlotBox.Contains(Pi)) do
       Pi := Pi + Sign(DigitCurve.Step)*Scale.Nx(Pi);
   end;
 
@@ -2045,7 +2040,7 @@ end;
 
 function TPlotImage.GetBoxVertex(Index: Integer): TCurvePoint;
 begin
-  Result := PlotBox[Index - 1];
+  Result := Scale.PlotBox[Index - 1];
 end;
 
 function TPlotImage.GetAxesMarkers(Index: Integer): TMarker;
@@ -2175,19 +2170,20 @@ procedure TPlotImage.SetBoxVertex(Index: Integer; const Value: TCurvePoint);
 var
   Idx: Integer;
 begin
-  if (Index >= 1) and (Index <= 4) and (PlotBox[Index - 1] <> Value) then
+  if (Index >= 1) and (Index <= 4) and
+     (Scale.PlotBox[Index - 1] <> Value) then
   begin
     if Assigned(FBoxMarkers[Index]) then
       FBoxMarkers[Index].Position := Zoom*Value;
 
-    PlotBox[Index - 1] := Value;
+    Scale.PlotBox[Index - 1] := Value;
 
     if Assigned(FEdgeMarkers[Index]) then
-      FEdgeMarkers[Index].Position := Zoom*PlotBox.Edge[Index - 1];
+      FEdgeMarkers[Index].Position := Zoom*Scale.PlotBox.Edge[Index - 1];
 
-    Idx := PlotBox.PrevVertIdx(Index - 1) + 1;
+    Idx := Scale.PlotBox.PrevVertIdx(Index - 1) + 1;
     if Assigned(FEdgeMarkers[Idx]) then
-      FEdgeMarkers[Idx].Position := Zoom*PlotBox.Edge[Idx - 1];
+      FEdgeMarkers[Idx].Position := Zoom*Scale.PlotBox.Edge[Idx - 1];
 
     IsChanged := True;
   end;
@@ -2333,10 +2329,11 @@ procedure TPlotImage.ResetPlotBox;
 const
   span = 2;
 begin
-  PlotBox[0] := TCurvePoint.Create(span, span);
-  PlotBox[1] := TCurvePoint.Create(PlotImg.Width - span - 1, span);
-  PlotBox[2] := TCurvePoint.Create(PlotImg.Width - span - 1, PlotImg.Height - span - 1);
-  PlotBox[3] := TCurvePoint.Create(span, PlotImg.Height - span - 1);
+  Scale.PlotBox[0] := TCurvePoint.Create(span, span);
+  Scale.PlotBox[1] := TCurvePoint.Create(PlotImg.Width - span - 1, span);
+  Scale.PlotBox[2] := TCurvePoint.Create(PlotImg.Width - span - 1, PlotImg.Height - span - 1);
+  Scale.PlotBox[3] := TCurvePoint.Create(span, PlotImg.Height - span - 1);
+
   if (State = piSetPlotBox) then
   begin
     UpdateMarkersInImage;
@@ -2459,7 +2456,7 @@ begin
       if (FAxesMarkers[i] = Marker) then
         FAxesMarkers[i] := nil;
 
-    for i := 1 to PlotBox.NumVertices do
+    for i := 1 to Scale.PlotBox.NumVertices do
     begin
       if (FBoxMarkers[i] = Marker) then
         FBoxMarkers[i] := nil;
@@ -2511,7 +2508,7 @@ begin
         if (ActiveMarker = AxesMarkers[i]) then
           Scale.ImagePoint[i] := NewPos/Zoom;
 
-      with PlotBox do
+      with Scale.PlotBox do
       begin
         for i := 1 to NumVertices do
         begin
@@ -2632,7 +2629,7 @@ begin
       end;
     end;
     piSetPlotBox: begin
-      with PlotBox do
+      with Scale.PlotBox do
       begin
         if not (Rect[Zoom]*PaintRect).IsEmpty then
         begin
@@ -2748,7 +2745,7 @@ begin
       begin
         if (ssAlt in Shift) or (ssCtrl in Shift) then
           FDragAction := daRotate
-        else if (ssShift in Shift) or (not PlotBox.IsConvex) then
+        else if (ssShift in Shift) or (not Scale.PlotBox.IsConvex) then
           FDragAction := daVertex
         else
           FDragAction := daAngle;
@@ -2818,7 +2815,7 @@ begin
       end;
 
       if (State = piSetPlotBox) then
-        with PlotBox do
+        with Scale.PlotBox do
         begin
           // Rectangle containing all the modified region
           TmpRect := Rect[Zoom];
@@ -2991,7 +2988,7 @@ begin
       begin
         // Notify that neighboring markers have moved
         if (State = piSetPlotBox) then
-          with PlotBox do
+          with Scale.PlotBox do
           begin
             for i := 1 to NumVertices do
               if (FClickedMarker = BoxMarkers[i]) then
@@ -3026,8 +3023,8 @@ begin
         OnMarkerDragged(Self, FClickedMarker, True);
       end;
 
-      if PlotBox.Rotated then
-        PlotBox.ApplyRotation;
+      if Scale.PlotBox.Rotated then
+        Scale.PlotBox.ApplyRotation;
 
       FDragAction := daNone;
 
@@ -3294,8 +3291,8 @@ begin
       AddMarker(FAxesMarkers[3], False);
     end;
     piSetPlotBox: begin
-      for i := 1 to 4 do
-        with PlotBox do
+      with Scale.PlotBox do
+        for i := 1 to 4 do
         begin
           FBoxMarkers[i] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),
                                            '1', clBlack, 3),
@@ -3786,17 +3783,17 @@ begin
     GridMask.FixCurve := FixCurve;
     GridMask.MaskSize := MaskSize;
 
-    PlotBox.PolarCoordinates := (Scale.CoordSystem = csPolar);
+    Scale.PlotBox.PolarCoordinates := (Scale.CoordSystem = csPolar);
 
     if Scale.CoordSystem = csCartesian then
-      GridMask.RemoveCartesianGrid(PlotImg, PlotBox)
+      GridMask.RemoveCartesianGrid(PlotImg, Scale.PlotBox)
     else
-      GridMask.RemovePolarGrid(PlotImg, PlotBox, Scale.ImagePoint[2]);
+      GridMask.RemovePolarGrid(PlotImg, Scale.PlotBox, Scale.ImagePoint[2]);
 
     if GridMask.FixCurve then
     begin
       for i := 0 to FCurves.Count - 1 do
-        GridMask.RebuildCurve(PlotImg, PlotBox, FCurves[i].Color);
+        GridMask.RebuildCurve(PlotImg, Scale.PlotBox, FCurves[i].Color);
     end;
 
     ResetZoomImage;
@@ -3906,16 +3903,19 @@ var
   NewImg: TBGRABitmap;
 begin
   try
-    w := Round(max(PlotBox[0].DistanceTo(PlotBox[1]),
-                   PlotBox[2].DistanceTo(PlotBox[3])));
-    h := Round(max(PlotBox[0].DistanceTo(PlotBox[3]),
-                   PlotBox[1].DistanceTo(PlotBox[2])));
+    with Scale.PlotBox do
+    begin
+      w := Round(max(Vertex[0].DistanceTo(Vertex[1]),
+                     Vertex[2].DistanceTo(Vertex[3])));
+      h := Round(max(Vertex[0].DistanceTo(Vertex[3]),
+                     Vertex[1].DistanceTo(Vertex[2])));
 
-    NewImg := TBGRABitmap.Create(w, h, BGRABlack);
+      NewImg := TBGRABitmap.Create(w, h, BGRABlack);
 
-    NewImg.FillPolyLinearMapping([PointF(0, 0), PointF(w - 1, 0),
-                                  PointF(w - 1, h - 1), PointF(0, h - 1)],
-                                 PlotImg, PlotBox.PolygonPoints[1], True);
+      NewImg.FillPolyLinearMapping([PointF(0, 0), PointF(w - 1, 0),
+                                    PointF(w - 1, h - 1), PointF(0, h - 1)],
+                                   PlotImg, PolygonPoints[1], True);
+    end;
 
     Stream := TMemoryStream.Create;
     Stream.Clear;
@@ -4034,7 +4034,7 @@ begin
     DigitNode.AppendChild(Scale.ExportToXML(XMLDoc));
 
     // Add PlotBox node
-    DigitNode.AppendChild(PlotBox.ExportToXML(XMLDoc));
+    DigitNode.AppendChild(Scale.PlotBox.ExportToXML(XMLDoc));
 
     // Add Grid node
     if GridMask.IsValid then
@@ -4177,11 +4177,12 @@ begin
 
           // Read PlotBox parameters
           if (DigitChild.CompareName('PlotBox') = 0) then
-          begin
-            PlotBox.ImportFromXML(DigitChild);
-            PlotBox.PolarCoordinates := (Scale.CoordSystem = csPolar);
-            PlotBoxLoaded := True;
-          end;
+            with Scale.PlotBox do
+            begin
+              ImportFromXML(DigitChild);
+              PolarCoordinates := (Scale.CoordSystem = csPolar);
+              PlotBoxLoaded := True;
+            end;
 
           // Read Grid parameters
           if (DigitChild.CompareName('grid') = 0) then
