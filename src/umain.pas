@@ -690,32 +690,34 @@ begin
   // Empty message stack
   Application.ProcessMessages;
 
-  //Draw the plot in the Chart
-  for i := 0 to PlotImage.Count - 1 do
-  begin
-    with TLineSeries(MainPlot.Series.Items[i]) do
+  try
+    //Draw the plot in the Chart
+    for i := 0 to PlotImage.Count - 1 do
     begin
-      Clear;
-      if (PlotImage.Scale.IsValid and PlotImage.Curves[i].HasPoints) then
+      with TLineSeries(MainPlot.Series.Items[i]) do
       begin
-        SeriesColor := PlotImage.Curves[i].Color;
-        Pointer.Style := psCircle;
-        Pointer.Brush.Color := PlotImage.Curves[i].Color;
-        Pointer.Pen.Color := clBlack;
-        ShowLines := not PlotImage.Curves[i].ShowAsSymbols;
-        ShowPoints := PlotImage.Curves[i].ShowAsSymbols;
-        try
-          PtCv := PlotImage.PlotCurves[i];
-          for j := 0 to PtCv.Count - 1 do
-            AddXY(PtCv.X[j], PtCv.Y[j]);
-        finally
-          PtCv.Free;
+        Clear;
+        if (PlotImage.Scale.IsValid and PlotImage.Curves[i].HasPoints) then
+        begin
+          SeriesColor := PlotImage.Curves[i].Color;
+          Pointer.Style := psCircle;
+          Pointer.Brush.Color := PlotImage.Curves[i].Color;
+          Pointer.Pen.Color := clBlack;
+          ShowLines := not PlotImage.Curves[i].ShowAsSymbols;
+          ShowPoints := PlotImage.Curves[i].ShowAsSymbols;
+          try
+            PtCv := PlotImage.PlotCurves[i];
+            for j := 0 to PtCv.Count - 1 do
+              AddXY(PtCv.X[j], PtCv.Y[j]);
+          finally
+            PtCv.Free;
+          end;
         end;
       end;
     end;
+  finally
+    UpdatingPlot := False;
   end;
-
-  UpdatingPlot := False;
 end;
 
 procedure TDigitMainForm.UpdateValues;
@@ -728,31 +730,33 @@ begin
   // Empty message stack
   Application.ProcessMessages;
 
-  // Avoid loops
-  leData.OnValidateEntry := Nil;
-  leData.EditorMode:=False;
+  try
+    // Avoid loops
+    leData.OnValidateEntry := Nil;
+    leData.EditorMode := False;
 
-  // Copy the values to the table
-  leData.Strings.Clear;
-  with PlotImage do
-  begin
-    if (Scale.IsValid and HasPoints) then
-      for i := 0 to NumPoints - 1 do
-      begin
-        leData.InsertRow(Format('%.5g', [Point[i].X]),
-                         Format('%.5g', [Point[i].Y]), True);
+    // Copy the values to the table
+    leData.Strings.Clear;
+    with PlotImage do
+    begin
+      if (Scale.IsValid and HasPoints) then
+        for i := 0 to NumPoints - 1 do
+        begin
+          leData.InsertRow(Format('%.5g', [Point[i].X]),
+                           Format('%.5g', [Point[i].Y]), True);
 
-        // Keep the system responsive
-        if ((i mod 100) = 0) then
-          Application.ProcessMessages;
-      end;
+          // Keep the system responsive
+          if ((i mod 100) = 0) then
+            Application.ProcessMessages;
+        end;
+    end;
+    leData.Row := 0;
+  finally
+    // Restore data validation
+    leData.OnValidateEntry := @leDataValidateEntry;
+
+    UpdatingTable := False;
   end;
-  leData.Row := 0;
-
-  // Restore data validation
-  leData.OnValidateEntry := @leDataValidateEntry;
-
-  UpdatingTable := False;
 end;
 
 procedure TDigitMainForm.SavePlot(FName: TFileName; FType: Integer);
