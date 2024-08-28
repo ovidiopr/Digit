@@ -1910,12 +1910,9 @@ object DigitMainForm: TDigitMainForm
         Align = alClient
         AutoEdit = False
         FixedCols = 0
-        Font.Color = clBlack
-        Font.Height = -11
-        Font.Name = 'Default'
-        ParentFont = False
         RowCount = 2
         TabOrder = 0
+        OnSelectCell = leDataSelectCell
         OnValidateEntry = leDataValidateEntry
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing, goRowSelect, goThumbTracking]
         Strings.Strings = (
