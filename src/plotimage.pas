@@ -2644,7 +2644,7 @@ begin
             PolyColor := clRed;
 
           PolyColor.alpha := 80;
-          PolarCoordinates := (Scale.CoordSystem = csPolar);
+          //PolarCoordinates := (Scale.CoordSystem = csPolar);
           WhiteBoard.DrawPolygonAntialias(DrawPoints[Zoom], BGRABlack, 1, PolyColor);
         end;
       end;
@@ -3784,7 +3784,7 @@ begin
     GridMask.FixCurve := FixCurve;
     GridMask.MaskSize := MaskSize;
 
-    Scale.PlotBox.PolarCoordinates := (Scale.CoordSystem = csPolar);
+    //Scale.PlotBox.PolarCoordinates := (Scale.CoordSystem = csPolar);
 
     if Scale.CoordSystem = csCartesian then
       GridMask.RemoveCartesianGrid(PlotImg, Scale.PlotBox)
@@ -3985,7 +3985,7 @@ begin
 
     // Create a root node
     RootNode := XMLDoc.CreateElement('digitization');
-    TDOMElement(RootNode).SetAttribute('version', '1.0');
+    TDOMElement(RootNode).SetAttribute('version', '1.1');
     XMLDoc.Appendchild(RootNode); // Save root node
 
     // Create document node
@@ -4035,7 +4035,7 @@ begin
     DigitNode.AppendChild(Scale.ExportToXML(XMLDoc));
 
     // Add PlotBox node
-    DigitNode.AppendChild(Scale.PlotBox.ExportToXML(XMLDoc));
+    //DigitNode.AppendChild(Scale.PlotBox.ExportToXML(XMLDoc));
 
     // Add Grid node
     if GridMask.IsValid then
@@ -4072,6 +4072,7 @@ var
   i, w, h,
   SavedCurveCount,
   RealCurveCount: Integer;
+  DigitVersion: Double;
   Path, ImgName: TFileName;
   Stream: TMemoryStream;
   Buffer: String; // common string with the jpg info
@@ -4089,7 +4090,6 @@ begin
   OnChange := nil;
 
   ImageIsLoaded := False;
-  PlotBoxLoaded := False;
 
   Result := False;
   try
@@ -4097,6 +4097,14 @@ begin
     ReadXMLFile(XMLDoc, FileName);
     // Create the stream to save the image
     Stream := TMemoryStream.Create;
+
+    with XMLDoc.DocumentElement.Attributes do
+      for i := 0 to Length - 1 do
+        if (Item[i].CompareName('version') = 0) then
+          if not TryStrToFloat(UTF8Encode(Item[i].NodeValue), DigitVersion) then
+            DigitVersion := 1.0;
+
+    PlotBoxLoaded := (DigitVersion > 1);
 
     Child := XMLDoc.DocumentElement.FirstChild;
     while Assigned(Child) do
@@ -4177,7 +4185,8 @@ begin
             Scale.ImportFromXML(DigitChild);
 
           // Read PlotBox parameters
-          if (DigitChild.CompareName('PlotBox') = 0) then
+          if (DigitChild.CompareName('PlotBox') = 0) and
+             (DigitVersion <= 1.0) then
             with Scale.PlotBox do
             begin
               ImportFromXML(DigitChild);

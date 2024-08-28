@@ -1174,7 +1174,7 @@ begin
     end;
 
     // Make sure that the basis is in cartesian coordinates
-    if (FCoords = csPolar) then
+    if (CoordSystem = csPolar) then
     begin
       TmpPlotPoint[1] := PolarToCartesian(TmpPlotPoint[1].X, TmpPlotPoint[1].Y - Y0);
       TmpPlotPoint[2] := PolarToCartesian(TmpPlotPoint[2].X, 0);
@@ -1185,7 +1185,7 @@ begin
     pnt := ChangeCoords(ImagePoints, TmpPlotPoint, p);
 
     // Make sure that the point is in the right coordinate system
-    if (FCoords = csPolar) then
+    if (CoordSystem = csPolar) then
     begin
       pnt := CartesianToPolar(pnt);
       pnt.Y := Y0 + pnt.Y;
@@ -1282,7 +1282,7 @@ begin
     end;
 
     // Make sure that the basis and the point are in cartesian coordinates
-    if (FCoords = csPolar) then
+    if (CoordSystem = csPolar) then
     begin
       TmpPlotPoint[1] := PolarToCartesian(TmpPlotPoint[1].X, TmpPlotPoint[1].Y - Y0);
       TmpPlotPoint[2] := PolarToCartesian(TmpPlotPoint[2].X, 0);
@@ -1389,6 +1389,8 @@ begin
       PlotPoint[2] := CartesianToPolar(PlotPoint[2]);
       PlotPoint[3] := CartesianToPolar(PlotPoint[3]);
     end;
+
+    PlotBox.PolarCoordinates := (FCoords = csPolar);
   end;
 end;
 
@@ -1438,6 +1440,7 @@ end;
 
 begin
   Result := False;
+
   try
     CoordSystem := csCartesian;
     XScale := stLinear;
@@ -1465,6 +1468,10 @@ begin
     begin
       for i := 1 to 3 do
       begin
+        // Read PlotBox parameters
+        if (Child.CompareName('PlotBox') = 0) then
+          PlotBox.ImportFromXML(Child);
+
         // Image points
         if (Child.CompareName(UTF8Decode('ImagePoint' + IntToStr(i))) = 0) then
         begin
@@ -1543,6 +1550,10 @@ begin
       SetAttribute('XLabel', UTF8Decode(XLabel));
       SetAttribute('YLabel', UTF8Decode(YLabel));
     end;
+
+    // Add PlotBox node
+    Result.AppendChild(PlotBox.ExportToXML(Doc));
+
     // Image points
     for i := 1 to 3 do
     begin
@@ -1551,6 +1562,7 @@ begin
       TDOMElement(PointNode).SetAttribute('Y', UTF8Decode(FloatToStr(ImagePoint[i].Y)));
       Result.Appendchild(PointNode);
     end;
+
     // Plot points
     for i := 1 to 3 do
     begin
