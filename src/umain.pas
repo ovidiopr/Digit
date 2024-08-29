@@ -15,8 +15,8 @@ uses
   StdCtrls, Dialogs, Buttons, ExtCtrls, ComCtrls, TATypes, TASeries, TAGraph,
   TAChartAxis, TATransformations, TACustomSource, TAChartUtils, ClipBrd,
   ActnList, ValEdit, Spin, ExtDlgs, MaskEdit, BCTrackbarUpdown, FileUtil,
-  IniFiles, BGRABitmapTypes, GraphType, Grids, math,
-  restore, uchartscale, utils, coordinates, curves, plotimage;
+  IniFiles, BGRABitmapTypes, GraphType, Grids, Math,
+  urestore, uchartscale, uutils, ucoordinates, ucurves, uplotimage;
 
 type
   TMouseMode = (mdCursor, mdMarkers, mdColor, mdSteps, mdSegments,
@@ -699,14 +699,14 @@ begin
       with TLineSeries(MainPlot.Series.Items[i]) do
       begin
         Clear;
-        if (PlotImage.Scale.IsValid and PlotImage.Curves[i].HasPoints) then
+        if (PlotImage.Scale.IsValid and PlotImage.ucurves[i].HasPoints) then
         begin
-          SeriesColor := PlotImage.Curves[i].Color;
+          SeriesColor := PlotImage.ucurves[i].Color;
           Pointer.Style := psCircle;
-          Pointer.Brush.Color := PlotImage.Curves[i].Color;
+          Pointer.Brush.Color := PlotImage.ucurves[i].Color;
           Pointer.Pen.Color := clBlack;
-          ShowLines := not PlotImage.Curves[i].ShowAsSymbols;
-          ShowPoints := PlotImage.Curves[i].ShowAsSymbols;
+          ShowLines := not PlotImage.ucurves[i].ShowAsSymbols;
+          ShowPoints := PlotImage.ucurves[i].ShowAsSymbols;
           try
             PtCv := PlotImage.PlotCurves[i];
             for j := 0 to PtCv.Count - 1 do
@@ -1989,19 +1989,19 @@ begin
       TmpSeries.AxisIndexX := MainPlot.BottomAxis.Index;
       TmpSeries.AxisIndexY := MainPlot.LeftAxis.Index;
 
-      tcCurves.Tabs.Add(PlotImage.Curves[i].Name);
+      tcCurves.Tabs.Add(PlotImage.ucurves[i].Name);
     end;
 
   // Update tabs and series
   for i := 0 to PlotImage.Count - 1 do
   begin
     TmpSeries := TLineSeries(MainPlot.Series[i]);
-    TmpSeries.Title := PlotImage.Curves[i].Name;
-    TmpSeries.SeriesColor := PlotImage.Curves[i].Color;
+    TmpSeries.Title := PlotImage.ucurves[i].Name;
+    TmpSeries.SeriesColor := PlotImage.ucurves[i].Color;
     TmpSeries.LinePen.Width := 2;
     TmpSeries.Clear;
 
-    tcCurves.Tabs.Strings[i] := PlotImage.Curves[i].Name;
+    tcCurves.Tabs.Strings[i] := PlotImage.ucurves[i].Name;
   end;
 end;
 

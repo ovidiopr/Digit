@@ -8,12 +8,12 @@ uses
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms, tachartlazaruspkg, lazcontrols,
-  coordinates in 'coordinates.pas',
+  ucoordinates,
   umain {DigitMainForm},
   uabout {AboutBox},
-  curves in 'curves.pas',
-  restore,
-  uchartscale, uoptions, utils, plotimage;
+  ucurves,
+  urestore,
+  uchartscale, uoptions, uutils, uplotimage, ugrid, uscale;
 
 {$R *.res}
 

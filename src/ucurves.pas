@@ -1,12 +1,12 @@
-unit curves;
+unit ucurves;
 
 {$mode objfpc}{$H+}
 {$modeswitch advancedrecords}
 
 interface
 
-uses Classes, SysUtils, LazFileUtils, fgl, Graphics, coordinates,
-     utils, DOM, math;
+uses Classes, SysUtils, LazFileUtils, fgl, Graphics, ucoordinates,
+     uutils, DOM, Math;
 
 const
   HistItems = 20;
