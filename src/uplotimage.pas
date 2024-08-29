@@ -1238,7 +1238,7 @@ end;
 
 function TPlotImage.GetAxesMarkers(Index: Integer): TMarker;
 begin
-  if (Index >= 1) and (Index <= 3) and Assigned(FAxesMarkers[Index]) then
+  if (Index in [1..3]) and Assigned(FAxesMarkers[Index]) then
     Result := FAxesMarkers[Index]
   else
     Result := nil;
@@ -1246,7 +1246,7 @@ end;
 
 function TPlotImage.GetBoxMarkers(Index: Integer): TMarker;
 begin
-  if (Index >= 1) and (Index <= 4) and Assigned(FBoxMarkers[Index]) then
+  if (Index in [1..4]) and Assigned(FBoxMarkers[Index]) then
     Result := FBoxMarkers[Index]
   else
     Result := nil;
@@ -1254,7 +1254,7 @@ end;
 
 function TPlotImage.GetEdgeMarkers(Index: Integer): TMarker;
 begin
-  if (Index >= 1) and (Index <= 4) and Assigned(FEdgeMarkers[Index]) then
+  if (Index in [1..4]) and Assigned(FEdgeMarkers[Index]) then
     Result := FEdgeMarkers[Index]
   else
     Result := nil;
@@ -1348,7 +1348,7 @@ end;
 
 procedure TPlotImage.SetAxesPoint(Index: Integer; const Value: TCurvePoint);
 begin
-  if (Index >= 1) and (Index <= 3) and (Scale.ImagePoint[Index] <> Value) then
+  if (Index in [1..3]) and (Scale.ImagePoint[Index] <> Value) then
   begin
     if Assigned(FAxesMarkers[Index]) then
       FAxesMarkers[Index].Position := Zoom*Value;
@@ -1363,7 +1363,7 @@ procedure TPlotImage.SetBoxVertex(Index: Integer; const Value: TCurvePoint);
 var
   Idx: Integer;
 begin
-  if (Index >= 1) and (Index <= 4) and
+  if (Index in [1..4]) and
      (Scale.PlotBox[Index - 1] <> Value) then
   begin
     if Assigned(FBoxMarkers[Index]) then
@@ -1524,7 +1524,8 @@ const
 begin
   Scale.PlotBox[0] := TCurvePoint.Create(span, span);
   Scale.PlotBox[1] := TCurvePoint.Create(PlotImg.Width - span - 1, span);
-  Scale.PlotBox[2] := TCurvePoint.Create(PlotImg.Width - span - 1, PlotImg.Height - span - 1);
+  Scale.PlotBox[2] := TCurvePoint.Create(PlotImg.Width - span - 1,
+                                         PlotImg.Height - span - 1);
   Scale.PlotBox[3] := TCurvePoint.Create(span, PlotImg.Height - span - 1);
 
   if (State = piSetPlotBox) then
@@ -1717,7 +1718,7 @@ begin
 
           if (ActiveMarker = EdgeMarkers[i]) then
           begin
-            OldPos := Zoom*Edge[i - 1];
+            OldPos := Edge[i - 1];
             MoveEdge(i - 1, NewPos/Zoom);
             P1 := Zoom*Vertex[NextVertIdx(i - 1)];
             P2 := Zoom*Vertex[i - 1];
@@ -2024,7 +2025,7 @@ begin
           case FDragAction of
             daVertex, daAngle: begin
               // Move vertex
-              OldPos := Zoom*Vertex[i - 1];
+              OldPos := Vertex[i - 1];
               if (FDragAction = daAngle) and IsConvex then
               begin
                 MoveVertex(i - 1, NewPos/Zoom);
@@ -2081,7 +2082,7 @@ begin
 
               if IsConvex then
               begin
-                OldPos := Zoom*Edge[i - 1];
+                OldPos := Edge[i - 1];
                 MoveEdge(i - 1, NewPos/Zoom);
                 P1 := Zoom*Vertex[NextVertIdx(i - 1)];
                 P2 := Zoom*Vertex[i - 1];

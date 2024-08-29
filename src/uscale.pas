@@ -129,8 +129,8 @@ begin
     TmpPlotPoint := PlotPoints;
     Y0 := PlotPoints[2].Y;
 
-    // Make sure that the basis is linear
-    case FXScale of
+    // Make sure that the basis is linear in X
+    case XScale of
       stLog: begin
         for i := 1 to 3 do
           TmpPlotPoint[i].X := log10(TmpPlotPoint[i].X);
@@ -145,8 +145,8 @@ begin
       end;
     end;
 
-    // Make sure that the basis is linear
-    case FYScale of
+    // Make sure that the basis is linear in Y
+    case YScale of
       stLog: begin
         for i := 1 to 3 do
           TmpPlotPoint[i].Y := log10(TmpPlotPoint[i].Y);
@@ -185,14 +185,14 @@ begin
     end;
 
     // Make sure that X is in the right scale
-    case FXScale of
+    case XScale of
       stLog: pnt.X := Power(10, pnt.X);
       stLn: pnt.X := Exp(pnt.X);
       stInverse: pnt.X := 1.0/pnt.X;
     end;
 
     // Make sure that Y is in the right scale
-    case FYScale of
+    case YScale of
       stLog: pnt.Y := Power(10, pnt.Y);
       stLn: pnt.Y := Exp(pnt.Y);
       stInverse: pnt.Y := 1.0/pnt.Y;
@@ -223,7 +223,7 @@ begin
     pnt := p;
 
     // Make sure that X is linear
-    case FXScale of
+    case XScale of
       stLog: begin
         for i := 1 to 3 do
           TmpPlotPoint[i].X := log10(TmpPlotPoint[i].X);
@@ -245,7 +245,7 @@ begin
     end;
 
     // Make sure that Y is linear
-    case FYScale of
+    case YScale of
       stLog: begin
         for i := 1 to 3 do
           TmpPlotPoint[i].Y := log10(TmpPlotPoint[i].Y);
@@ -320,19 +320,19 @@ end;
 
 function TScale.GetImagePoint(Index: Integer): TCurvePoint;
 begin
-  if (Index >= 1) and (Index <= 3) then
+  if (Index in [1..3]) then
     Result := FPntImg[Index]
 end;
 
 function TScale.GetPlotPoint(Index: Integer): TCurvePoint;
 begin
-  if (Index >= 1) and (Index <= 3) then
+  if (Index in [1..3]) then
     Result := FPntPlt[Index];
 end;
 
 function TScale.GetPointIsSet(Index: Integer): Boolean;
 begin
-  if (Index >= 1) and (Index <= 3) then
+  if (Index in [1..3]) then
     Result := FImgPointIsSet[Index] and FPltPointIsSet[Index]
   else
     Result := False;
@@ -360,22 +360,18 @@ begin
 end;
 
 procedure TScale.SetCoordSystem(const Value: TCoordSystem);
+var
+  i: Integer;
 begin
   if (Value <> FCoords) then
   begin
     FCoords := Value;
     if (FCoords = csCartesian) then
-    begin
-      PlotPoint[1] := PolarToCartesian(PlotPoint[1]);
-      PlotPoint[2] := PolarToCartesian(PlotPoint[2]);
-      PlotPoint[3] := PolarToCartesian(PlotPoint[3]);
-    end
+      for i := 1 to 3 do
+        PlotPoint[i] := PolarToCartesian(PlotPoint[i])
     else
-    begin
-      PlotPoint[1] := CartesianToPolar(PlotPoint[1]);
-      PlotPoint[2] := CartesianToPolar(PlotPoint[2]);
-      PlotPoint[3] := CartesianToPolar(PlotPoint[3]);
-    end;
+      for i := 1 to 3 do
+        PlotPoint[i] := CartesianToPolar(PlotPoint[i]);
 
     PlotBox.PolarCoordinates := (FCoords = csPolar);
   end;
@@ -383,7 +379,7 @@ end;
 
 procedure TScale.SetImagePoint(Index: Integer; const Value: TCurvePoint);
 begin
-  if (Index >= 1) and (Index <= 3) then
+  if (Index in [1..3]) then
   begin
     FPntImg[Index] := Value;
     FImgPointIsSet[Index] := True;
@@ -392,7 +388,7 @@ end;
 
 procedure TScale.SetPlotPoint(Index: Integer; const Value: TCurvePoint);
 begin
-  if (Index >= 1) and (Index <= 3) then
+  if (Index in [1..3]) then
   begin
     FPntPlt[Index] := Value;
     FPltPointIsSet[Index] := True;
