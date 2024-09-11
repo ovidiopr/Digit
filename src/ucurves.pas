@@ -1301,12 +1301,14 @@ begin
   end;
 
   assert(SavedPointCount = RealPointCount,
-         'Error: The number of points found (' + IntToStr(RealPointCount) +
-         ') is different from the expected (' + IntToStr(SavedPointCount) + ').');
+         Format('Error: The number of points found (%d)' +
+                ' is different from the expected (%d).',
+                [RealPointCount, SavedPointCount]));
 
   assert(SavedMarkerCount = RealMarkerCount,
-         'Error: The number of markers found (' + IntToStr(RealMarkerCount) +
-         ') is different from the expected (' + IntToStr(SavedMarkerCount) + ').');
+         Format('Error: The number of markers found (%d)' +
+                ' is different from the expected (%d).',
+                [RealMarkerCount, SavedMarkerCount]));
 end;
 
 function TDigitCurve.ExportToXML(Doc: TXMLDocument): TDOMNode;

@@ -577,6 +577,8 @@ begin
     begin
       for i := 0 to Length - 1 do
       begin
+        if (Item[i].CompareName('Name') = 0) then
+          Name := UTF8Encode(Item[i].NodeValue);
         if (Item[i].CompareName('Coordinates') = 0) then
           CoordSystem := StrToCoordSystem(UTF8Encode(UnicodeUpperCase(Item[i].NodeValue)));
         if (Item[i].CompareName('XScale') = 0) then
@@ -658,7 +660,8 @@ begin
         end;
 
         assert(SavedCurveCount = RealCurveCount,
-               Format('Error: The number of saved curves (%d) doesn''t match the expected value (%d).',
+               Format('Error: The number of saved curves (%d)' +
+                      ' doesn''t match the expected value (%d).',
                       [RealCurveCount, SavedCurveCount]));
       end;
 

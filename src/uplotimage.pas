@@ -3462,7 +3462,8 @@ begin
         end;
 
         assert(SavedScaleCount = RealScaleCount,
-               Format('Error: The number of saved scales (%d) doesn''t match the expected value (%d).',
+               Format('Error: The number of saved scales (%d)' +
+                      ' doesn''t match the expected value (%d).',
                       [RealScaleCount, SavedScaleCount]));
       end;
 
@@ -3493,7 +3494,8 @@ begin
         end;
 
         assert(SavedCurveCount = RealCurveCount,
-               Format('Error: The number of saved curves (%d) doesn''t match the expected value (%d).',
+               Format('Error: The number of saved curves (%d)' +
+                      ' doesn''t match the expected value (%d).',
                       [RealCurveCount, SavedCurveCount]));
       end;
 
