@@ -52,7 +52,7 @@ type
 
   TPlotImage = class(TCustomControl)
   protected type
-    TCurveList = specialize TFPGObjectList<TDigitCurve>;
+    TScaleList = specialize TFPGObjectList<TScale>;
   protected
     FOldCursor: TCursor;
 
@@ -87,10 +87,8 @@ type
     FSelectingRegion: Boolean;
     FSelectionRect: TRect;
 
-    FCurves: TCurveList;
-    FCurveIndex: Integer;
-
-    FScale: TScale;
+    FScales: TScaleList;
+    FScaleIndex: Integer;
 
     FImageIsLoaded: Boolean;
 
@@ -118,12 +116,12 @@ type
     function GetBoxMarkers(Index: Integer): TMarker;
     function GetEdgeMarkers(Index: Integer): TMarker;
 
-    function GetCount: Integer;
-    function GetCurve(Index: Integer): TDigitCurve;
-    function GetActiveCurve: TCurve;
-    function GetDigitCurve: TDigitCurve;
-    function GetPlotCurves(Index: Integer): TCurve;
-    function GetPlotCurve: TCurve;
+    function GetScaleCount: Integer;
+    function GetScale(Index: Integer): TScale;
+    function GetActiveScale: TScale;
+
+    function GetCurveCount: Integer;
+    function GetCurveIndex: Integer;
 
     function GetNumPoints: Integer;
     function GetPoint(Index: Integer): TCurvePoint;
@@ -158,6 +156,7 @@ type
     procedure SetState(Value: TPlotImageState);
 
     procedure SetCurveIndex(Value: Integer);
+    procedure SetScaleIndex(Value: Integer);
     procedure SetIsChanged(Value: Boolean);
 
     procedure SetPoint(Index: Integer; const Value: TCurvePoint);
@@ -236,6 +235,11 @@ type
     procedure ShiftActiveMarker(Delta: TPoint);
     procedure RedrawMarkers;
 
+    procedure AddScale; overload;
+    procedure AddScale(Position: Integer); overload;
+    procedure DeleteScale; overload;
+    procedure DeleteScale(Index: Integer); overload;
+
     procedure AddCurve; overload;
     procedure AddCurve(Position: Integer); overload;
     procedure DeleteCurve; overload;
@@ -306,27 +310,27 @@ type
     property RunningAction: Boolean read FRunningAction write FRunningAction;
     property CancelAction: Boolean read FCancelAction write FCancelAction;
 
-    {Return the number of curves}
-    property Count: Integer read GetCount;
+    {Return the number of scales}
+    property ScaleCount: Integer read GetScaleCount;
+    {Return the index of the active scale}
+    property ScaleIndex: Integer read FScaleIndex write SetScaleIndex;
+    {Return the scale}
+    property Scales[Index: Integer]: TScale read GetScale; default;
+    {Return the active scale}
+    property Scale: TScale read GetActiveScale;
+
+    {Return the number of curves (in the active scale)}
+    property CurveCount: Integer read GetCurveCount;
     {Return the index of the active curve}
-    property CurveIndex: Integer read FCurveIndex write SetCurveIndex;
-    {Return the curve}
-    property ucurves[Index: Integer]: TDigitCurve read GetCurve; default;
-    {Return the active curve (TCurve)}
-    property Curve: TCurve read GetActiveCurve;
-    {Return the active curve (TDigitCurve)}
-    property DigitCurve: TDigitCurve read GetDigitCurve;
-    {Return the given curve converted to plot scale}
-    property PlotCurves[Index: Integer]: TCurve read GetPlotCurves;
-    {Return the active curve converted to plot scale}
-    property PlotCurve: TCurve read GetPlotCurve;
+    property CurveIndex: Integer read GetCurveIndex write SetCurveIndex;
+
     property ImageIsLoaded: Boolean read FImageIsLoaded write FImageIsLoaded;
 
     {Return the number of points in the active curve}
     property NumPoints: Integer read GetNumPoints;
     property Point[Index: Integer]: TCurvePoint read GetPoint write SetPoint;
 
-    property Scale: TScale read FScale;
+    //property Scale: TScale read FScale;
     property ColorIsSet: Boolean read GetColorIsSet;
     property HasPoints: Boolean read GetHasPoints;
     property IsChanged: Boolean read GetIsChanged write SetIsChanged;
@@ -478,8 +482,8 @@ begin
   FMarkers := TMarkerList.Create;
   FMarkerList := TCurve.Create;
 
-  FCurves := TCurveList.Create;
-  FScale := TScale.Create;
+  FScales := TScaleList.Create;
+  //FScale := TScale.Create;
 
   Reset;
 end;
@@ -494,8 +498,8 @@ begin
   FMarkers.Free;
   FMarkerList.Free;
 
-  FCurves.Free;
-  FScale.Free;
+  FScales.Free;
+  //FScale.Free;
 
   inherited Destroy;
 end;
@@ -508,12 +512,12 @@ begin
   FDragAction := daNone;
   FZoom := 1;
 
-  FCurves.Clear;
-  FCurves.Add(TDigitCurve.Create('Curve1'));
+  FScales.Clear;
+  FScales.Add(TScale.Create('Scale1'));
 
-  FCurveIndex := 0;
+  FScaleIndex := 0;
 
-  FScale.Reset;
+  //FScale.Reset;
 
   FMarkers.Clear;
   ActiveMarker := nil;
@@ -600,7 +604,7 @@ var
   R1, G1, B1: Byte;
 begin
   // Only if necessary
-  if (not DigitCurve.ValidPoints) then
+  if (not Scale.DigitCurve.ValidPoints) then
   begin
     // Notify the parent that it must show the progress bar
     if Assigned(OnShowProgress) then
@@ -609,14 +613,14 @@ begin
     RunningAction := True;
     CancelAction := False;
 
-    Tolerance := DigitCurve.Tolerance;
-    C1 := ColorToRGB(DigitCurve.Color);
+    Tolerance := Scale.DigitCurve.Tolerance;
+    C1 := ColorToRGB(Scale.DigitCurve.Color);
 
     R1 := Red(C1);
     G1 := Green(C1);
     B1 := Blue(C1);
 
-    DigitCurve.AllPoints.Clear;
+    Scale.DigitCurve.AllPoints.Clear;
     for j := 0 to PlotImg.Height - 1 do
     begin
       p1 := GridMask.Mask.Scanline[j];
@@ -632,8 +636,8 @@ begin
             p := p2;
 
           if AreSimilar(p^.red, p^.green, p^.blue, R1, G1, B1, Tolerance) then
-            DigitCurve.AllPoints.AddPoint(TCurvePoint.Create(i, j));
-            //DigitCurve.AllPoints.AddPoint(Scale.FromImgToPlot(i, j));
+            Scale.DigitCurve.AllPoints.AddPoint(TCurvePoint.Create(i, j));
+            //Scale.DigitCurve.AllPoints.AddPoint(Scale.FromImgToPlot(i, j));
         end;
 
         inc(p1);
@@ -650,13 +654,13 @@ begin
       end;
       if CancelAction then Break;
     end;
-    //DigitCurve.AllPoints.SortCurve;
+    //Scale.DigitCurve.AllPoints.SortCurve;
 
     // Notify the parent that it must hide the progress bar
     if Assigned(OnHideProgress) then
       OnHideProgress(Self);
 
-    DigitCurve.ValidPoints := not CancelAction;
+    Scale.DigitCurve.ValidPoints := not CancelAction;
 
     RunningAction := False;
   end;
@@ -675,7 +679,7 @@ var
 
 function CheckPlotPoint(const Pi: TCurvePoint; var P: TCurvePoint; var nP: Integer): Boolean;
 begin
-  Result := DigitCurve.AllPoints.Contains(Pi);
+  Result := Scale.DigitCurve.AllPoints.Contains(Pi);
   if Result then
   begin
     inc(nP);
@@ -684,7 +688,7 @@ begin
 end;
 
 begin
-  Spread := DigitCurve.Spread;
+  Spread := Scale.DigitCurve.Spread;
 
   P := GetcurvePoint(0, 0);
   NoPnts := 0;
@@ -761,15 +765,15 @@ begin
   if FillCurvePoints then
     FindCurvePoints;
 
-  PixelStep := DigitCurve.Step;
-  Interval := DigitCurve.Interval;
+  PixelStep := Scale.DigitCurve.Step;
+  Interval := Scale.DigitCurve.Interval;
 
   // Notify the parent that it must show the progress bar
   if Assigned(OnShowProgress) then
     OnShowProgress(Self, 0, 'Digitizing spectrum...');
 
-  DigitCurve.NextCurve(False);
-  Curve.AddPoint(Pi);
+  Scale.DigitCurve.NextCurve(False);
+  Scale.Curve.AddPoint(Pi);
 
   Delta := 0;
   if PixelStep > 0 then
@@ -827,7 +831,7 @@ begin
     if FindNextPoint(PNew, Interval) then
     begin
       Pi := PNew;
-      Curve.AddPoint(Pi);
+      Scale.Curve.AddPoint(Pi);
     end;
 
     // Notify the parent that it must update the progress bar
@@ -876,7 +880,7 @@ begin
   // Estimate the first point
   if (Markers.Count > 0) then
   begin
-    if (DigitCurve.Step > 0) then
+    if (Scale.DigitCurve.Step > 0) then
       Pi := LeftMarker.Position/Zoom
     else
       Pi := RightMarker.Position/Zoom;
@@ -885,7 +889,7 @@ begin
   begin
     if (Scale.CoordSystem = csCartesian) then
     begin
-      if (DigitCurve.Step > 0) then
+      if (Scale.DigitCurve.Step > 0) then
         Pi := (Scale.ImagePoint[1] + Scale.ImagePoint[2])/2
       else
         Pi := Scale.ImagePoint[3] + (Scale.ImagePoint[1] - Scale.ImagePoint[2])/2;
@@ -895,7 +899,7 @@ begin
 
     while (not FindNextPoint(Pi, Round(Modulus(Pi)), True)) and
           (Scale.PlotBox.Contains(Pi)) do
-      Pi := Pi + Sign(DigitCurve.Step)*Scale.Nx(Pi);
+      Pi := Pi + Sign(Scale.DigitCurve.Step)*Scale.Nx(Pi);
   end;
 
 
@@ -912,28 +916,28 @@ begin
   try
     //Identify all the points that have similar color
     FindCurvePoints;
-    SetLength(n, DigitCurve.AllPoints.Count);
+    SetLength(n, Scale.DigitCurve.AllPoints.Count);
 
     // Notify the parent that it must show the progress bar
     if Assigned(OnShowProgress) then
       OnShowProgress(Self, 0, 'Digitizing spectrum...');
 
-    DigitCurve.NextCurve(False);
+    Scale.DigitCurve.NextCurve(False);
 
-    with Curve do
+    with Scale.Curve do
     begin
-      AddPoint(DigitCurve.AllPoints.Point[0]);
+      AddPoint(Scale.DigitCurve.AllPoints.Point[0]);
       n[0] := 1;
-      for i := 1 to DigitCurve.AllPoints.Count - 1 do
+      for i := 1 to Scale.DigitCurve.AllPoints.Count - 1 do
       begin
         // Notify the parent that it must update the progress bar
         if Assigned(OnShowProgress) then
-          OnShowProgress(Self, Round(100*(i + 1)/DigitCurve.AllPoints.Count), 'Digitizing spectrum...');
+          OnShowProgress(Self, Round(100*(i + 1)/Scale.DigitCurve.AllPoints.Count), 'Digitizing spectrum...');
 
         Added := False;
-        Pi := DigitCurve.AllPoints.Point[i];
+        Pi := Scale.DigitCurve.AllPoints.Point[i];
         for j := 0 to Count - 1 do
-          if (2*Pi.DistanceTo(Point[j]) <= DigitCurve.Spread) then
+          if (2*Pi.DistanceTo(Point[j]) <= Scale.DigitCurve.Spread) then
           begin
             Point[j] := Point[j] + TCurvePoint.Create(Point[j].X, Pi.Y);
             inc(n[j]);
@@ -971,13 +975,13 @@ var
 begin
   if (State = piSetCurve) and (Markers.Count > 0) then
   begin
-    DigitCurve.NextCurve(False);
-    Curve.ShowAsSymbols := True;
+    Scale.DigitCurve.NextCurve(False);
+    Scale.Curve.ShowAsSymbols := True;
 
     for i := 0 to Markers.Count - 1 do
-      Curve.AddPoint(Markers[i].Position/Zoom);
+      Scale.Curve.AddPoint(Markers[i].Position/Zoom);
 
-    Curve.SortCurve;
+    Scale.Curve.SortCurve;
 
     IsChanged := True;
   end;
@@ -997,7 +1001,7 @@ begin
     if FillCurvePoints then
       FindCurvePoints;
 
-    if (not Island.Contains(Pi)) and DigitCurve.AllPoints.Contains(Pi) then
+    if (not Island.Contains(Pi)) and Scale.DigitCurve.AllPoints.Contains(Pi) then
     begin
       Island.AddPoint(Pi);
       if MoveDown then
@@ -1053,9 +1057,9 @@ begin
 
       Island := TIsland.Create;
       Island.Clear;
-      for i := 0 to Curve.Count - 1 do
+      for i := 0 to Scale.Curve.Count - 1 do
       begin
-        Pi := Curve.Point[i];
+        Pi := Scale.Curve.Point[i];
         if (not Island.Contains(Pi)) then
         begin
           if Noisy then
@@ -1063,27 +1067,27 @@ begin
             case i of
               0: begin
                 // The point is '100*min_diff'% larger than its neighbour
-                Up := (min_diff <= (Pi.Y - Curve.Point[1].Y)/abs(Pi.Y));
+                Up := (min_diff <= (Pi.Y - Scale.Curve.Point[1].Y)/abs(Pi.Y));
                 // The point is '100*min_diff'% smaller than its neighbour
-                Down := (-min_diff >= (Pi.Y - Curve.Point[1].Y)/abs(Pi.Y));
+                Down := (-min_diff >= (Pi.Y - Scale.Curve.Point[1].Y)/abs(Pi.Y));
               end;
               else
               begin
-                if (i = (Curve.Count - 1)) then
+                if (i = (Scale.Curve.Count - 1)) then
                 begin
                   // The point is '100*min_diff'% larger than its neighbour
-                  Up := (min_diff <= (Pi.Y - Curve.Point[i - 1].Y)/abs(Pi.Y));
+                  Up := (min_diff <= (Pi.Y - Scale.Curve.Point[i - 1].Y)/abs(Pi.Y));
                   // The point is '100*min_diff'% smaller than its neighbour
-                  Down := (-min_diff >= (Pi.Y - Curve.Point[i - 1].Y)/abs(Pi.Y));
+                  Down := (-min_diff >= (Pi.Y - Scale.Curve.Point[i - 1].Y)/abs(Pi.Y));
                 end
                 else
                 begin
                   // The point is '100*min_diff'% larger than its neighbours
-                  Up := (min_diff <= (Pi.Y - Curve.Point[i - 1].Y)/abs(Pi.Y)) and
-                        (min_diff <= (Pi.Y - Curve.Point[i + 1].Y)/abs(Pi.Y));
+                  Up := (min_diff <= (Pi.Y - Scale.Curve.Point[i - 1].Y)/abs(Pi.Y)) and
+                        (min_diff <= (Pi.Y - Scale.Curve.Point[i + 1].Y)/abs(Pi.Y));
                   // The point is '100*min_diff'% smaller than its neighbours
-                  Down := (-min_diff >= (Pi.Y - Curve.Point[i - 1].Y)/abs(Pi.Y)) and
-                          (-min_diff >= (Pi.Y - Curve.Point[i + 1].Y)/abs(Pi.Y));
+                  Down := (-min_diff >= (Pi.Y - Scale.Curve.Point[i - 1].Y)/abs(Pi.Y)) and
+                          (-min_diff >= (Pi.Y - Scale.Curve.Point[i + 1].Y)/abs(Pi.Y));
                 end;
               end;
             end;
@@ -1109,15 +1113,15 @@ begin
 
         // Notify the parent that it must update the progress bar
         if Assigned(OnShowProgress) then
-          OnShowProgress(Self, Round(100*(i + 1)/Curve.Count), 'Adjusting curve...');
+          OnShowProgress(Self, Round(100*(i + 1)/Scale.Curve.Count), 'Adjusting curve...');
 
         Application.ProcessMessages;
         if CancelAction then Break;
       end;
 
-      DigitCurve.NextCurve(False);
+      Scale.DigitCurve.NextCurve(False);
       for i := 0 to NewPoints.Count - 1 do
-        Curve.AddPoint(NewPoints[i]);
+        Scale.Curve.AddPoint(NewPoints[i]);
 
       // Notify the parent that it must hide the progress bar
       if Assigned(OnHideProgress) then
@@ -1157,9 +1161,9 @@ begin
 
       Island := TIsland.Create;
       Island.Clear;
-      for i := 0 to Curve.Count - 1 do
+      for i := 0 to Scale.Curve.Count - 1 do
       begin
-        Pi := Curve.Point[i];
+        Pi := Scale.Curve.Point[i];
         if (not Island.Contains(Pi)) then
         begin
           Island.Clear;
@@ -1170,17 +1174,17 @@ begin
 
         // Notify the parent that it must update the progress bar
         if Assigned(OnShowProgress) then
-          OnShowProgress(Self, Round(100*(i + 1)/Curve.Count),
+          OnShowProgress(Self, Round(100*(i + 1)/Scale.Curve.Count),
                          'Converting curve to symbols...');
 
         Application.ProcessMessages;
         if CancelAction then Break;
       end;
 
-      DigitCurve.NextCurve(False);
-      Curve.ShowAsSymbols := True;
+      Scale.DigitCurve.NextCurve(False);
+      Scale.Curve.ShowAsSymbols := True;
       for i := 0 to NewPoints.Count - 1 do
-        Curve.AddPoint(NewPoints[i]);
+        Scale.Curve.AddPoint(NewPoints[i]);
 
       // Notify the parent that it must hide the progress bar
       if Assigned(OnHideProgress) then
@@ -1609,7 +1613,7 @@ procedure TPlotImage.AddMarker(Position: TPoint; NewMarker: Boolean = True);
 var
   BMP: TBGRABitmap;
 begin
-  BMP := CreateMarker(TPoint.Create(13, 13), 'x', DigitCurve.Color, 3);
+  BMP := CreateMarker(TPoint.Create(13, 13), 'x', Scale.DigitCurve.Color, 3);
   AddMarker(TMarker.Create(BMP, Position, False), NewMarker);
 end;
 
@@ -1795,7 +1799,7 @@ begin
   case State of
     piSetCurve: begin
       if HasPoints then
-        DigitCurve.Draw(WhiteBoard.Canvas, Zoom);
+        Scale.DigitCurve.Draw(WhiteBoard.Canvas, Zoom);
     end;
     piSetScale: begin
       if Options.ShowXAxis or Options.ShowYAxis then
@@ -2299,7 +2303,7 @@ end;
 
 function TPlotImage.ConvertCoords(p: TCurvePoint): TCurvePoint;
 begin
-  Result := FScale.FromImgToPlot(p/Zoom);
+  Result := Scale.FromImgToPlot(p/Zoom);
 end;
 
 function TPlotImage.ConvertCoords(X, Y: Double): TCurvePoint;
@@ -2307,66 +2311,52 @@ begin
   Result := ConvertCoords(TCurvePoint.Create(X, Y));
 end;
 
-function TPlotImage.GetCount: Integer;
+function TPlotImage.GetScaleCount: Integer;
 begin
-  Result := FCurves.Count;
+  Result := FScales.Count;
+end;
+
+function TPlotImage.GetCurveCount: Integer;
+begin
+  Result := Scale.CurveCount;
+end;
+
+function TPlotImage.GetCurveIndex: Integer;
+begin
+  Result := Scale.CurveIndex;
 end;
 
 function TPlotImage.GetNumPoints: Integer;
 begin
-  Result := DigitCurve.Curve.Count;
+  Result := Scale.DigitCurve.Curve.Count;
 end;
 
-function TPlotImage.GetCurve(Index: Integer): TDigitCurve;
+function TPlotImage.GetScale(Index: Integer): TScale;
 begin
-  if (Index >= 0) and (Index < Count) then
-    Result := FCurves[Index]
+  if (Index >= 0) and (Index < ScaleCount) then
+    Result := FScales[Index]
   else
     Result := nil;
 end;
 
-function TPlotImage.GetActiveCurve: TCurve;
+function TPlotImage.GetActiveScale: TScale;
 begin
-  Result := DigitCurve.Curve;
-end;
-
-// Warning: any time that we call this function, we must free the curve
-// created here, or we will have a memoory leak
-function TPlotImage.GetPlotCurves(Index: Integer): TCurve;
-var
-  i: Integer;
-begin
-  Result := TCurve.Create;
-  with FCurves[Index].Curve do
-  begin
-    for i := 0 to Count - 1 do
-      Result.AddPoint(FScale.FromImgToPlot(Point[i]));
-  end;
-end;
-
-function TPlotImage.GetPlotCurve: TCurve;
-begin
-  Result := GetPlotCurves(CurveIndex);
+  Result := FScales[ScaleIndex];
 end;
 
 function TPlotImage.GetPoint(Index: Integer): TCurvePoint;
 begin
-  Result := FScale.FromImgToPlot(FCurves[CurveIndex].Curve.Point[Index]);
-end;
-
-function TPlotImage.GetDigitCurve: TDigitCurve;
-begin
-  Result := FCurves[CurveIndex];
+  Result := Scale.FromImgToPlot(Scale.Curve.Point[Index]);
 end;
 
 function TPlotImage.GetColorIsSet: Boolean;
 begin
-  Result := DigitCurve.ColorIsSet;
+  Result := Scale.DigitCurve.ColorIsSet;
 end;
 
 function TPlotImage.GetHasPoints: Boolean;
 begin
-  Result := DigitCurve.HasPoints;
+  Result := Scale.DigitCurve.HasPoints;
 end;
 
 function TPlotImage.GetIsChanged: Boolean;
@@ -2376,12 +2366,12 @@ end;
 
 function TPlotImage.GetCanUndo: Boolean;
 begin
-  Result := DigitCurve.CanGoBack;
+  Result := Scale.DigitCurve.CanGoBack;
 end;
 
 function TPlotImage.GetCanRedo: Boolean;
 begin
-  Result := DigitCurve.CanGoForward;
+  Result := Scale.DigitCurve.CanGoForward;
 end;
 
 procedure TPlotImage.SetState(Value: TPlotImageState);
@@ -2407,7 +2397,7 @@ procedure TPlotImage.SetCurveIndex(Value: Integer);
 var
   TmpOnChange: TNotifyEvent;
 begin
-  if (Value >= 0) and (Value < FCurves.Count) and (Value <> CurveIndex) then
+  if (Value >= 0) and (Value < CurveCount) and (Value <> CurveIndex) then
   begin
     TmpOnChange := OnChange;
     OnChange := nil;
@@ -2415,7 +2405,27 @@ begin
     // First, update all the markers in the curve
     UpdateMarkersInCurve;
     // Now change the active curve
-    FCurveIndex := Value;
+    Scale.CurveIndex := Value;
+    // Finally, update all the new markers in the image
+    UpdateMarkersInImage;
+
+    OnChange := TmpOnChange;
+  end;
+end;
+
+procedure TPlotImage.SetScaleIndex(Value: Integer);
+var
+  TmpOnChange: TNotifyEvent;
+begin
+  if (Value >= 0) and (Value < FScales.Count) and (Value <> ScaleIndex) then
+  begin
+    TmpOnChange := OnChange;
+    OnChange := nil;
+
+    // First, update all the markers in the curve
+    UpdateMarkersInCurve;
+    // Now change the active scale
+    FScaleIndex := Value;
     // Finally, update all the new markers in the image
     UpdateMarkersInImage;
 
@@ -2433,14 +2443,15 @@ end;
 
 procedure TPlotImage.SetPoint(Index: Integer; const Value: TCurvePoint);
 begin
-  if (FScale.FromPlotToImg(Value) <> DigitCurve.Curve.Point[Index]) then
-  begin
-    EraseCurve(DigitCurve);
-    DigitCurve.Curve.Point[Index] := FScale.FromPlotToImg(Value);
-    DigitCurve.Draw(Canvas);
+  with Scale do
+    if (FromPlotToImg(Value) <> DigitCurve.Curve.Point[Index]) then
+    begin
+      EraseCurve(DigitCurve);
+      DigitCurve.Curve.Point[Index] := FromPlotToImg(Value);
+      DigitCurve.Draw(Canvas);
 
-    FIsChanged := True;
-  end;
+      FIsChanged := True;
+    end;
 end;
 
 procedure TPlotImage.ClearMarkers;
@@ -2457,11 +2468,11 @@ var
 begin
   if (State = piSetCurve) then
   begin
-    DigitCurve.ClearMarkers;
+    Scale.DigitCurve.ClearMarkers;
     for i := Markers.Count - 1 downto 0 do
-      DigitCurve.AddMarker(Markers[i].Position/Zoom);
+      Scale.DigitCurve.AddMarker(Markers[i].Position/Zoom);
 
-    DigitCurve.SortMarkers;
+    Scale.DigitCurve.SortMarkers;
   end;
 end;
 
@@ -2501,8 +2512,8 @@ begin
         end;
     end;
     piSetCurve: begin
-      for i := 0 to DigitCurve.MarkerCount - 1 do
-        AddMarker(Zoom*DigitCurve.Markers[i], False);
+      for i := 0 to Scale.DigitCurve.MarkerCount - 1 do
+        AddMarker(Zoom*Scale.DigitCurve.Markers[i], False);
     end;
     piSetGrid: begin
       // For now, do nothing
@@ -2719,35 +2730,66 @@ begin
   end;
 end;
 
+procedure TPlotImage.AddScale;
+begin
+  FScales.Add(TScale.Create('Scale' + IntToStr(FScales.Count + 1)));
+
+  IsChanged := True;
+end;
+
+procedure TPlotImage.AddScale(Position: Integer);
+begin
+  if (Position >= 0) and (Position < FScales.Count) then
+    FScales.Insert(Position, TScale.Create('Scale' + IntToStr(Position) + 'b'))
+  else
+    FScales.Add(TScale.Create('Scale' + IntToStr(FScales.Count + 1)));
+
+  IsChanged := True;
+end;
+
+procedure TPlotImage.DeleteScale;
+begin
+  DeleteScale(ScaleIndex);
+end;
+
+procedure TPlotImage.DeleteScale(Index: Integer);
+begin
+  if (Index >= 0) and (Index < FScales.Count) then
+  begin
+    FScales.Delete(Index);
+    if (ScaleIndex >= FScales.Count) then
+      FScaleIndex := FScales.Count - 1;
+
+    IsChanged := True;
+  end;
+end;
+
 procedure TPlotImage.AddCurve;
 begin
-  FCurves.Add(TDigitCurve.Create('Curve' + IntToStr(FCurves.Count + 1)));
+  Scale.AddCurve;
 
   IsChanged := True;
 end;
 
 procedure TPlotImage.AddCurve(Position: Integer);
 begin
-  if (Position >= 0) and (Position < Fcurves.Count) then
-    Fcurves.Insert(Position, TDigitCurve.Create('Curve' + IntToStr(Position) + 'b'))
-  else
-    FCurves.Add(TDigitCurve.Create('Curve' + IntToStr(FCurves.Count + 1)));
+  Scale.AddCurve(Position);
 
   IsChanged := True;
 end;
 
 procedure TPlotImage.DeleteCurve;
 begin
-  DeleteCurve(CurveIndex);
+  Scale.DeleteCurve;
+
+  IsChanged := True;
 end;
 
 procedure TPlotImage.DeleteCurve(Index: Integer);
 begin
-  if (Index >= 0) and (Index < FCurves.Count) then
+  if (Index >= 0) and (Index < CurveCount) then
   begin
-    FCurves.Delete(Index);
-    if (CurveIndex >= FCurves.Count) then
-      FCurveIndex := FCurves.Count - 1;
+    Scale.DeleteCurve(Index);
 
     IsChanged := True;
   end;
@@ -2760,10 +2802,10 @@ end;
 
 procedure TPlotImage.ClearCurve(Index: Integer);
 begin
-  if (Index >= 0) and (Index < FCurves.Count) then
+  if (Index >= 0) and (Index < CurveCount) then
   begin
-    EraseCurve(FCurves[Index]);
-    FCurves[Index].Clear;
+    EraseCurve(Scale.Curves[Index]);
+    Scale.Curves[Index].Clear;
 
     IsChanged := True;
   end;
@@ -2771,11 +2813,11 @@ end;
 
 procedure TPlotImage.UndoCurveChanges;
 begin
-  if DigitCurve.CanGoBack then
+  if Scale.DigitCurve.CanGoBack then
   begin
-    EraseCurve(DigitCurve);
-    DigitCurve.GoBack;
-    DigitCurve.Draw(Canvas);
+    EraseCurve(Scale.DigitCurve);
+    Scale.DigitCurve.GoBack;
+    Scale.DigitCurve.Draw(Canvas);
 
     IsChanged := True;
   end;
@@ -2783,11 +2825,11 @@ end;
 
 procedure TPlotImage.RedoCurveChanges;
 begin
-  if DigitCurve.CanGoForward then
+  if Scale.DigitCurve.CanGoForward then
   begin
-    EraseCurve(DigitCurve);
-    DigitCurve.GoForward;
-    DigitCurve.Draw(Canvas);
+    EraseCurve(Scale.DigitCurve);
+    Scale.DigitCurve.GoForward;
+    Scale.DigitCurve.Draw(Canvas);
 
     IsChanged := True;
   end;
@@ -2804,12 +2846,12 @@ var
   TmpCurve: TCurve;
 begin
   try
-    TmpCurve := PlotCurves[Index];
+    TmpCurve := Scale.PlotCurves[Index];
     TmpCurve.SortCurve;
 
-    FCurves[Index].Curve.Clear;
+    Scale.Curves[Index].Curve.Clear;
     for i := 0 to TmpCurve.Count - 1 do
-      FCurves[Index].Curve.AddPoint(Scale.FromPlotToImg(TmpCurve.Point[i]));
+      Scale.Curves[Index].Curve.AddPoint(Scale.FromPlotToImg(TmpCurve.Point[i]));
 
     IsChanged := True;
   finally
@@ -2823,20 +2865,20 @@ var
   TmpCurve: TCurve;
 begin
   try
-    TmpCurve := PlotCurves[Index];
+    TmpCurve := Scale.PlotCurves[Index];
 
     TmpCurve.SortCurve;
     TmpCurve.Smooth(k, d);
 
     if (Index = CurveIndex) then
-      EraseCurve(DigitCurve);
+      EraseCurve(Scale.DigitCurve);
 
-    FCurves[Index].NextCurve(False);
+    Scale.Curves[Index].NextCurve(False);
     for i := 0 to TmpCurve.Count - 1 do
-      FCurves[Index].Curve.AddPoint(FScale.FromPlotToImg(TmpCurve.Point[i]));
+      Scale.Curves[Index].Curve.AddPoint(Scale.FromPlotToImg(TmpCurve.Point[i]));
 
     if (Index = CurveIndex) then
-      DigitCurve.Draw(Canvas);
+      Scale.DigitCurve.Draw(Canvas);
 
     IsChanged := True;
   finally
@@ -2851,7 +2893,7 @@ begin
   if not AllCurves then
     Smooth(k, d, CurveIndex)
   else
-    for i := 0 to Count - 1 do
+    for i := 0 to CurveCount - 1 do
       Smooth(k, d, i);
 end;
 
@@ -2861,21 +2903,21 @@ var
   TmpCurve: TCurve;
 begin
   try
-    TmpCurve := PlotCurves[Index];
+    TmpCurve := Scale.PlotCurves[Index];
 
     TmpCurve.SortCurve;
     TmpCurve.Interpolate(n, d, IntType);
 
     if (Index = CurveIndex) then
-      EraseCurve(DigitCurve);
+      EraseCurve(Scale.DigitCurve);
 
-    FCurves[Index].NextCurve(False);
-    FCurves[Index].ShowAsSymbols := False;
+    Scale.Curves[Index].NextCurve(False);
+    Scale.Curves[Index].ShowAsSymbols := False;
     for i := 0 to TmpCurve.Count - 1 do
-      FCurves[Index].Curve.AddPoint(FScale.FromPlotToImg(TmpCurve.Point[i]));
+      Scale.Curves[Index].Curve.AddPoint(Scale.FromPlotToImg(TmpCurve.Point[i]));
 
     if (Index = CurveIndex) then
-      DigitCurve.Draw(Canvas);
+      Scale.DigitCurve.Draw(Canvas);
 
     IsChanged := True;
   finally
@@ -2890,7 +2932,7 @@ begin
   if not AllCurves then
     Interpolate(n, d, CurveIndex, IntType)
   else
-    for i := 0 to Count - 1 do
+    for i := 0 to CurveCount - 1 do
       Interpolate(n, d, i, IntType);
 end;
 
@@ -2900,21 +2942,21 @@ var
   TmpCurve: TCurve;
 begin
   try
-    TmpCurve := PlotCurves[Index];
+    TmpCurve := Scale.PlotCurves[Index];
 
     TmpCurve.SortCurve;
     TmpCurve.Interpolate(Xo, Xf, n, d, IntType);
 
     if (Index = CurveIndex) then
-      EraseCurve(DigitCurve);
+      EraseCurve(Scale.DigitCurve);
 
-    FCurves[Index].NextCurve(False);
-    FCurves[Index].ShowAsSymbols := False;
+    Scale.Curves[Index].NextCurve(False);
+    Scale.Curves[Index].ShowAsSymbols := False;
     for i := 0 to TmpCurve.Count - 1 do
-      FCurves[Index].Curve.AddPoint(FScale.FromPlotToImg(TmpCurve.Point[i]));
+      Scale.Curves[Index].Curve.AddPoint(Scale.FromPlotToImg(TmpCurve.Point[i]));
 
     if (Index = CurveIndex) then
-      DigitCurve.Draw(Canvas);
+      Scale.DigitCurve.Draw(Canvas);
 
     IsChanged := True;
   finally
@@ -2927,26 +2969,26 @@ var
   i: Integer;
 begin
   if not AllCurves then
-    Interpolate(Xo, Xf, n, d, CurveIndex,IntType)
+    Interpolate(Xo, Xf, n, d, CurveIndex, IntType)
   else
-    for i := 0 to Count - 1 do
+    for i := 0 to CurveCount - 1 do
       Interpolate(Xo, Xf, n, d, i, IntType);
 end;
 
 procedure TPlotImage.CorrectCurve(Po, Pf: TPoint; IsStep: Boolean = True);
 begin
-  EraseCurve(DigitCurve);
-  DigitCurve.CorrectCurve(Po, Pf, IsStep);
-  DigitCurve.Draw(Canvas);
+  EraseCurve(Scale.DigitCurve);
+  Scale.DigitCurve.CorrectCurve(Po, Pf, IsStep);
+  Scale.DigitCurve.Draw(Canvas);
 
   IsChanged := True;
 end;
 
 procedure TPlotImage.CorrectCurve(Po, Pf: TCurvePoint; IsStep: Boolean = True);
 begin
-  EraseCurve(DigitCurve);
-  DigitCurve.CorrectCurve(Po, Pf, IsStep);
-  DigitCurve.Draw(Canvas);
+  EraseCurve(Scale.DigitCurve);
+  Scale.DigitCurve.CorrectCurve(Po, Pf, IsStep);
+  Scale.DigitCurve.Draw(Canvas);
 
   IsChanged := True;
 end;
@@ -2987,8 +3029,8 @@ begin
 
     if GridMask.FixCurve then
     begin
-      for i := 0 to FCurves.Count - 1 do
-        GridMask.RebuildCurve(PlotImg, Scale.PlotBox, FCurves[i].Color);
+      for i := 0 to CurveCount - 1 do
+        GridMask.RebuildCurve(PlotImg, Scale.PlotBox, Scale.Curves[i].Color);
     end;
 
     ResetZoomImage;
@@ -2999,54 +3041,54 @@ end;
 
 procedure TPlotImage.GroupPoints(Region: TRect);
 begin
-  EraseCurve(DigitCurve);
-  DigitCurve.GroupPointsInRegion(Region);
-  DigitCurve.Draw(Canvas);
+  EraseCurve(Scale.DigitCurve);
+  Scale.DigitCurve.GroupPointsInRegion(Region);
+  Scale.DigitCurve.Draw(Canvas);
 
   IsChanged := True;
 end;
 
 procedure TPlotImage.DeletePoints(Region: TRect);
 begin
-  EraseCurve(DigitCurve);
-  DigitCurve.DeletePointsInRegion(Region);
-  DigitCurve.Draw(Canvas);
+  EraseCurve(Scale.DigitCurve);
+  Scale.DigitCurve.DeletePointsInRegion(Region);
+  Scale.DigitCurve.Draw(Canvas);
 
   IsChanged := True;
 end;
 
 procedure TPlotImage.MoveCurveUp;
 begin
-  EraseCurve(DigitCurve);
-  DigitCurve.AddToY(-1);
-  DigitCurve.Draw(Canvas);
+  EraseCurve(Scale.DigitCurve);
+  Scale.DigitCurve.AddToY(-1);
+  Scale.DigitCurve.Draw(Canvas);
 
   IsChanged := True;
 end;
 
 procedure TPlotImage.MoveCurveDown;
 begin
-  EraseCurve(DigitCurve);
-  DigitCurve.AddToY(1);
-  DigitCurve.Draw(Canvas);
+  EraseCurve(Scale.DigitCurve);
+  Scale.DigitCurve.AddToY(1);
+  Scale.DigitCurve.Draw(Canvas);
 
   IsChanged := True;
 end;
 
 procedure TPlotImage.MoveCurveLeft;
 begin
-  EraseCurve(DigitCurve);
-  DigitCurve.AddToX(-1);
-  DigitCurve.Draw(Canvas);
+  EraseCurve(Scale.DigitCurve);
+  Scale.DigitCurve.AddToX(-1);
+  Scale.DigitCurve.Draw(Canvas);
 
   IsChanged := True;
 end;
 
 procedure TPlotImage.MoveCurveRight;
 begin
-  EraseCurve(DigitCurve);
-  DigitCurve.AddToX(1);
-  DigitCurve.Draw(Canvas);
+  EraseCurve(Scale.DigitCurve);
+  Scale.DigitCurve.AddToX(1);
+  Scale.DigitCurve.Draw(Canvas);
 
   IsChanged := True;
 end;
@@ -3165,7 +3207,7 @@ var
   RootNode, DigitNode,
   ImageNode, PathNode,
   FileNode, DataNode,
-  CDataNode, CurveNode: TDOMNode;
+  CDataNode, ScaleNode: TDOMNode;
 begin
   // Update markers in current curve
   UpdateMarkersInCurve;
@@ -3179,7 +3221,7 @@ begin
 
     // Create a root node
     RootNode := XMLDoc.CreateElement('digitization');
-    TDOMElement(RootNode).SetAttribute('version', '1.1');
+    TDOMElement(RootNode).SetAttribute('version', '1.5');
     XMLDoc.Appendchild(RootNode); // Save root node
 
     // Create document node
@@ -3225,12 +3267,6 @@ begin
       DigitNode.Appendchild(ImageNode);
     end;
 
-    // Add scale node
-    DigitNode.AppendChild(Scale.ExportToXML(XMLDoc));
-
-    // Add PlotBox node
-    //DigitNode.AppendChild(Scale.PlotBox.ExportToXML(XMLDoc));
-
     // Add Grid node
     if GridMask.IsValid then
       DigitNode.AppendChild(GridMask.ExportToXML(XMLDoc));
@@ -3238,18 +3274,16 @@ begin
     // Save document node
     RootNode.Appendchild(DigitNode);
 
-    // Create curves node
-    RootNode:= XMLDoc.DocumentElement;
+    // Create scales node
+    ScaleNode := XMLDoc.CreateElement('scales');
+    TDOMElement(ScaleNode).SetAttribute('Count', UTF8Decode(IntToStr(ScaleCount)));
 
-    CurveNode := XMLDoc.CreateElement('curves');
-    TDOMElement(CurveNode).SetAttribute('Count', UTF8Decode(IntToStr(Count)));
+    // Save scale nodes
+    for i := 0 to ScaleCount - 1 do
+      ScaleNode.Appendchild(Scales[i].ExportToXML(XMLDoc));
 
-    // Save curve nodes
-    for i := 0 to Count - 1 do
-      CurveNode.Appendchild(ucurves[i].ExportToXML(XMLDoc));
-
-    // Save curves node
-    RootNode.AppendChild(CurveNode);
+    // Save scale node
+    RootNode.AppendChild(ScaleNode);
 
     WriteXMLFile(XMLDoc, FileName);
     Result := True;
@@ -3265,7 +3299,9 @@ function TPlotImage.LoadFromXML(FileName: TFileName; PictureDlg: TOpenPictureDia
 var
   i, w, h,
   SavedCurveCount,
-  RealCurveCount: Integer;
+  RealCurveCount,
+  SavedScaleCount,
+  RealScaleCount: Integer;
   DigitVersion: Double;
   Path, ImgName: TFileName;
   Stream: TMemoryStream;
@@ -3273,7 +3309,8 @@ var
   EncBuffer: String; // it's Base64 equivalent
   XMLDoc: TXMLDocument;
   Child, DigitChild,
-  ImageChild, CurveChild: TDOMNode;
+  ImageChild, CurveChild,
+  ScaleChild: TDOMNode;
 
   ImageLoaded: Boolean;
   PlotBoxLoaded: Boolean;
@@ -3398,10 +3435,40 @@ begin
       end;
       // All document parameters have been read
 
-      // Read curves
-      if (Child.CompareName('curves') = 0) then
+      // Read scales (only for newer versions of the document)
+      if (Child.CompareName('scales') = 0) and (DigitVersion >= 1.5) then
       begin
-        //ImportCurvesFromXML(Child);
+        SavedScaleCount := 0;
+        for i := 0 to Child.Attributes.Length - 1 do
+          if (Child.Attributes.Item[i].CompareName('Count') = 0) then
+            SavedScaleCount := StrToInt(UTF8Encode(Child.Attributes.Item[i].NodeValue));
+
+        RealScaleCount := 0;
+        ScaleChild := Child.FirstChild;
+        while Assigned(ScaleChild) do
+        begin
+          if (ScaleChild.CompareName('scale') = 0) then
+          begin
+            inc(RealScaleCount);
+            //Create all the needed scales
+            while (RealScaleCount > ScaleCount) do
+              AddScale;
+
+            Scales[RealScaleCount - 1].ImportFromXML(ScaleChild);
+          end;
+
+          // Go for the next scale
+          ScaleChild := ScaleChild.NextSibling;
+        end;
+
+        assert(SavedScaleCount = RealScaleCount,
+               Format('Error: The number of saved scales (%d) doesn''t match the expected value (%d).',
+                      [RealScaleCount, SavedScaleCount]));
+      end;
+
+      // Read curves (only for older versions of the document)
+      if (Child.CompareName('curves') = 0) and (DigitVersion < 1.5) then
+      begin
         SavedCurveCount := 0;
         for i := 0 to Child.Attributes.Length - 1 do
           if (Child.Attributes.Item[i].CompareName('Count') = 0) then
@@ -3415,15 +3482,19 @@ begin
           begin
             inc(RealCurveCount);
             //Create all the needed curves
-            while (RealCurveCount > Count) do
+            while (RealCurveCount > CurveCount) do
               Self.AddCurve;
 
-            FCurves[RealCurveCount - 1].ImportFromXML(CurveChild);
+            Scale.Curves[RealCurveCount - 1].ImportFromXML(CurveChild);
           end;
 
           // Go for the next curve
           CurveChild := CurveChild.NextSibling;
         end;
+
+        assert(SavedCurveCount = RealCurveCount,
+               Format('Error: The number of saved curves (%d) doesn''t match the expected value (%d).',
+                      [RealCurveCount, SavedCurveCount]));
       end;
 
       Child := Child.NextSibling;
@@ -3459,7 +3530,8 @@ begin
       end;
     end;
 
-    FCurveIndex := 0;
+    FScaleIndex := 0;
+    Scale.CurveIndex := 0;
     UpdateMarkersInImage;
 
     if ImageIsLoaded then
