@@ -701,6 +701,7 @@ begin
     Result := Doc.CreateElement('scale');
     with TDOMElement(Result) do
     begin
+      SetAttribute('Name', UTF8Decode(Name));
       SetAttribute('Coordinates', UTF8Decode(CoordSystemToStr(CoordSystem)));
       SetAttribute('XScale', UTF8Decode(ScaleTypeToStr(XScale)));
       SetAttribute('YScale', UTF8Decode(ScaleTypeToStr(YScale)));
