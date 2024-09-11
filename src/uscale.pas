@@ -5,12 +5,16 @@ unit uscale;
 interface
 
 uses
-  Classes, SysUtils, DOM, Math, ucoordinates;
+  Classes, SysUtils, Fgl, DOM, Math, uutils, ucoordinates, ucurves;
 
 type
   TScale = class(TObject)
+  protected type
+    TCurveList = specialize TFPGObjectList<TDigitCurve>;
   private
     { Private declarations }
+    FName: String;
+
     FCoords: TCoordSystem;
     FXScale: TScaleType;
     FYScale: TScaleType;
@@ -26,11 +30,25 @@ type
 
     FPlotBox: TPlotQuad;
 
+    FCurves: TCurveList;
+    FCurveIndex: Integer;
+
+    function GetCurveCount: Integer;
+    function GetCurve(Index: Integer): TDigitCurve;
+    function GetActiveCurve: TCurve;
+    function GetDigitCurve: TDigitCurve;
+    function GetPlotCurves(Index: Integer): TCurve;
+    function GetPlotCurve: TCurve;
+
     function GetImagePoint(Index: Integer): TCurvePoint;
     function GetPlotPoint(Index: Integer): TCurvePoint;
     function GetPointIsSet(Index: Integer): Boolean;
     function GetPointsAreSet: Boolean;
     function GetIsValidScale: Boolean;
+
+    procedure SetCurveIndex(Value: Integer);
+
+    procedure SetName(Value: String);
 
     procedure SetCoordSystem(const Value: TCoordSystem);
     procedure SetImagePoint(Index: Integer; const Value: TCurvePoint);
@@ -40,7 +58,7 @@ type
   public
     { Public declarations }
     {@exclude}
-    constructor Create;
+    constructor Create(Name: String);
     {@exclude}
     destructor Destroy; override;
 
@@ -58,8 +76,16 @@ type
     function dx(Pi: TCurvePoint): Double;
     function dy(Pi: TCurvePoint): Double;
 
+    procedure AddCurve; overload;
+    procedure AddCurve(Position: Integer); overload;
+    procedure DeleteCurve; overload;
+    procedure DeleteCurve(Index: Integer); overload;
+
     function ImportFromXML(Item: TDOMNode): Boolean;
     function ExportToXML(Doc: TXMLDocument): TDOMNode;
+
+    {Return the name of the scale}
+    property Name: String read FName write SetName;
 
     property CoordSystem: TCoordSystem read FCoords write SetCoordSystem;
     property XScale: TScaleType read FXScale write FXScale;
@@ -75,21 +101,42 @@ type
     property AllPointsAreSet: Boolean read GetPointsAreSet;
     property PlotBox: TPlotQuad read FPlotBox;
     property IsValid: Boolean read GetIsValidScale;
+
+    {Return the number of curves}
+    property CurveCount: Integer read GetCurveCount;
+    {Return the index of the active curve}
+    property CurveIndex: Integer read FCurveIndex write SetCurveIndex;
+    {Return the curve}
+    property Curves[Index: Integer]: TDigitCurve read GetCurve; default;
+    {Return the active curve (TCurve)}
+    property Curve: TCurve read GetActiveCurve;
+    {Return the active curve (TDigitCurve)}
+    property DigitCurve: TDigitCurve read GetDigitCurve;
+    {Return the given curve converted to plot scale}
+    property PlotCurves[Index: Integer]: TCurve read GetPlotCurves;
+    {Return the active curve converted to plot scale}
+    property PlotCurve: TCurve read GetPlotCurve;
   end;
 
 implementation
 
 //===============================| TScale |===============================//
-constructor TScale.Create;
+constructor TScale.Create(Name: String);
 begin
+  FName := Name;
+
   FPlotBox := TPlotQuad.Create;
+  FCurves := TCurveList.Create;
+
   inherited Create;
+
   Reset;
 end;
 
 destructor TScale.Destroy;
 begin
   FPlotBox.Free;
+  FCurves.Free;
 
   inherited Destroy;
 end;
@@ -115,6 +162,11 @@ begin
   end;
 
   FPlotBox.Reset;
+
+  FCurves.Clear;
+  FCurves.Add(TDigitCurve.Create('Curve1'));
+
+  FCurveIndex := 0;
 end;
 
 function TScale.FromImgToPlot(p: TCurvePoint): TCurvePoint;
@@ -318,6 +370,48 @@ begin
   Result := Distance(FromImgToPlot(Pi + Ny(Pi)), FromImgToPlot(Pi - Ny(Pi)))/2;
 end;
 
+function TScale.GetCurveCount: Integer;
+begin
+  Result := FCurves.Count;
+end;
+
+function TScale.GetCurve(Index: Integer): TDigitCurve;
+begin
+  if (Index >= 0) and (Index < CurveCount) then
+    Result := FCurves[Index]
+  else
+    Result := nil;
+end;
+
+function TScale.GetActiveCurve: TCurve;
+begin
+  Result := DigitCurve.Curve;
+end;
+
+function TScale.GetDigitCurve: TDigitCurve;
+begin
+  Result := FCurves[CurveIndex];
+end;
+
+// Warning: any time that we call this function, we must free the curve
+// created here, or we will have a memoory leak
+function TScale.GetPlotCurves(Index: Integer): TCurve;
+var
+  i: Integer;
+begin
+  Result := TCurve.Create;
+  with FCurves[Index].Curve do
+  begin
+    for i := 0 to Count - 1 do
+      Result.AddPoint(FromImgToPlot(Point[i]));
+  end;
+end;
+
+function TScale.GetPlotCurve: TCurve;
+begin
+  Result := GetPlotCurves(CurveIndex);
+end;
+
 function TScale.GetImagePoint(Index: Integer): TCurvePoint;
 begin
   if (Index in [1..3]) then
@@ -359,6 +453,25 @@ begin
   end;
 end;
 
+procedure TScale.SetCurveIndex(Value: Integer);
+begin
+  if (Value >= 0) and (Value < FCurves.Count) and (Value <> CurveIndex) then
+  begin
+    // First, update all the markers in the curve
+    //UpdateMarkersInCurve;
+    // Now change the active curve
+    FCurveIndex := Value;
+    // Finally, update all the new markers in the image
+    //UpdateMarkersInImage;
+  end;
+end;
+
+procedure TScale.SetName(Value: String);
+begin
+  if (Value <> FName) then
+    FName := Value;
+end;
+
 procedure TScale.SetCoordSystem(const Value: TCoordSystem);
 var
   i: Integer;
@@ -395,11 +508,41 @@ begin
   end;
 end;
 
+procedure TScale.AddCurve;
+begin
+  FCurves.Add(TDigitCurve.Create('Curve' + IntToStr(FCurves.Count + 1)));
+end;
+
+procedure TScale.AddCurve(Position: Integer);
+begin
+  if (Position >= 0) and (Position < FCurves.Count) then
+    FCurves.Insert(Position, TDigitCurve.Create('Curve' + IntToStr(Position) + 'b'))
+  else
+    FCurves.Add(TDigitCurve.Create('Curve' + IntToStr(FCurves.Count + 1)));
+end;
+
+procedure TScale.DeleteCurve;
+begin
+  DeleteCurve(CurveIndex);
+end;
+
+procedure TScale.DeleteCurve(Index: Integer);
+begin
+  if (Index >= 0) and (Index < FCurves.Count) then
+  begin
+    FCurves.Delete(Index);
+    if (CurveIndex >= FCurves.Count) then
+      FCurveIndex := FCurves.Count - 1;
+  end;
+end;
+
 function TScale.ImportFromXML(Item: TDOMNode): Boolean;
 var
   i, j: Integer;
+  SavedCurveCount,
+  RealCurveCount: Integer;
   X, Y: Double;
-  Child: TDOMNode;
+  Child, CurveChild: TDOMNode;
 
 function StrToCoordSystem(Value: String): TCoordSystem;
 begin
@@ -449,12 +592,12 @@ begin
     Child := Item.FirstChild;
     while Assigned(Child) do
     begin
+      // Read PlotBox parameters
+      if (Child.CompareName('PlotBox') = 0) then
+        PlotBox.ImportFromXML(Child);
+
       for i := 1 to 3 do
       begin
-        // Read PlotBox parameters
-        if (Child.CompareName('PlotBox') = 0) then
-          PlotBox.ImportFromXML(Child);
-
         // Image points
         if (Child.CompareName(UTF8Decode('ImagePoint' + IntToStr(i))) = 0) then
         begin
@@ -488,6 +631,37 @@ begin
         end;
       end;
 
+      // Read curves
+      if (Child.CompareName('curves') = 0) then
+      begin
+        SavedCurveCount := 0;
+        for i := 0 to Child.Attributes.Length - 1 do
+          if (Child.Attributes.Item[i].CompareName('Count') = 0) then
+            SavedCurveCount := StrToInt(UTF8Encode(Child.Attributes.Item[i].NodeValue));
+
+        RealCurveCount := 0;
+        CurveChild := Child.FirstChild;
+        while Assigned(CurveChild) do
+        begin
+          if (CurveChild.CompareName('curve') = 0) then
+          begin
+            inc(RealCurveCount);
+            //Create all the needed curves
+            while (RealCurveCount > CurveCount) do
+              Self.AddCurve;
+
+            Curves[RealCurveCount - 1].ImportFromXML(CurveChild);
+          end;
+
+          // Go for the next curve
+          CurveChild := CurveChild.NextSibling;
+        end;
+
+        assert(SavedCurveCount = RealCurveCount,
+               Format('Error: The number of saved curves (%d) doesn''t match the expected value (%d).',
+                      [RealCurveCount, SavedCurveCount]));
+      end;
+
       // Go for the next image point or plot point
       Child := Child.NextSibling;
     end;
@@ -501,7 +675,7 @@ end;
 function TScale.ExportToXML(Doc: TXMLDocument): TDOMNode;
 var
   i: Integer;
-  PointNode: TDOMNode;
+  PointNode, CurveNode: TDOMNode;
 
 function CoordSystemToStr(Value: TCoordSystem): String;
 begin
@@ -554,6 +728,16 @@ begin
       TDOMElement(PointNode).SetAttribute('Y', UTF8Decode(FloatToStr(PlotPoint[i].Y)));
       Result.Appendchild(PointNode);
     end;
+
+    CurveNode := Doc.CreateElement('curves');
+    TDOMElement(CurveNode).SetAttribute('Count', UTF8Decode(IntToStr(CurveCount)));
+
+    // Save curve nodes
+    for i := 0 to CurveCount - 1 do
+      CurveNode.Appendchild(Curves[i].ExportToXML(Doc));
+
+    // Save curves node
+    Result.AppendChild(CurveNode);
   except
     Result := nil;
   end;

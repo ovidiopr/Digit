@@ -649,8 +649,8 @@ begin
     ToolClear.Enabled := (State = piSetCurve) and HasPoints;
 
     ToolCurveAdd.Enabled := ImageIsLoaded and (State = piSetCurve);
-    ToolCurveDelete.Enabled := ImageIsLoaded and (State = piSetCurve) and (Count > 1);
-    ToolCurveName.Enabled := ImageIsLoaded and (State = piSetCurve) and (Count > 0);
+    ToolCurveDelete.Enabled := ImageIsLoaded and (State = piSetCurve) and (CurveCount > 1);
+    ToolCurveName.Enabled := ImageIsLoaded and (State = piSetCurve) and (CurveCount > 0);
 
     ToolPlotOptions.Enabled := ImageIsLoaded;
 
@@ -694,25 +694,28 @@ begin
 
   try
     //Draw the plot in the Chart
-    for i := 0 to PlotImage.Count - 1 do
+    for i := 0 to PlotImage.CurveCount - 1 do
     begin
       with TLineSeries(MainPlot.Series.Items[i]) do
       begin
         Clear;
-        if (PlotImage.Scale.IsValid and PlotImage.ucurves[i].HasPoints) then
+        with PlotImage.Scale do
         begin
-          SeriesColor := PlotImage.ucurves[i].Color;
-          Pointer.Style := psCircle;
-          Pointer.Brush.Color := PlotImage.ucurves[i].Color;
-          Pointer.Pen.Color := clBlack;
-          ShowLines := not PlotImage.ucurves[i].ShowAsSymbols;
-          ShowPoints := PlotImage.ucurves[i].ShowAsSymbols;
-          try
-            PtCv := PlotImage.PlotCurves[i];
-            for j := 0 to PtCv.Count - 1 do
-              AddXY(PtCv.X[j], PtCv.Y[j]);
-          finally
-            PtCv.Free;
+          if (IsValid and Curves[i].HasPoints) then
+          begin
+            SeriesColor := Curves[i].Color;
+            Pointer.Style := psCircle;
+            Pointer.Brush.Color := Curves[i].Color;
+            Pointer.Pen.Color := clBlack;
+            ShowLines := not Curves[i].ShowAsSymbols;
+            ShowPoints := Curves[i].ShowAsSymbols;
+            try
+              PtCv := PlotCurves[i];
+              for j := 0 to PtCv.Count - 1 do
+                AddXY(PtCv.X[j], PtCv.Y[j]);
+            finally
+              PtCv.Free;
+            end;
           end;
         end;
       end;
@@ -859,29 +862,32 @@ begin
   //PlotImage.ColorIsSet := C = '1';
   Readln(F, C);
   SavedPoints := C = '1';
-  Read(F, X);  Read(F, Y);
-  PlotImage.Scale.ImagePoint[1] := TCurvePoint.Create(X, Y);
-  Read(F, X);  Read(F, Y);
-  PlotImage.Scale.ImagePoint[2] := TCurvePoint.Create(X, Y);
-  Read(F, X);  Readln(F, Y);
-  PlotImage.Scale.ImagePoint[3] := TCurvePoint.Create(X, Y);
-  Read(F, X);  Read(F, Y);
-  PlotImage.Scale.PlotPoint[1] := TCurvePoint.Create(X, Y);
-  Read(F, X);  Read(F, Y);
-  PlotImage.Scale.PlotPoint[2] := TCurvePoint.Create(X, Y);
-  Read(F, X);  Readln(F, Y);
-  PlotImage.Scale.PlotPoint[3] := TCurvePoint.Create(X, Y);
-  Readln(F, Co);
-  btnColor.ButtonColor := Co;
-  PlotImage.DigitCurve.Color := Co;
-  PlotImage.Curve.Clear;
+  with PlotImage.Scale do
+  begin
+    Read(F, X);  Read(F, Y);
+    ImagePoint[1] := TCurvePoint.Create(X, Y);
+    Read(F, X);  Read(F, Y);
+    ImagePoint[2] := TCurvePoint.Create(X, Y);
+    Read(F, X);  Readln(F, Y);
+    ImagePoint[3] := TCurvePoint.Create(X, Y);
+    Read(F, X);  Read(F, Y);
+    PlotPoint[1] := TCurvePoint.Create(X, Y);
+    Read(F, X);  Read(F, Y);
+    PlotPoint[2] := TCurvePoint.Create(X, Y);
+    Read(F, X);  Readln(F, Y);
+    PlotPoint[3] := TCurvePoint.Create(X, Y);
+    Readln(F, Co);
+    btnColor.ButtonColor := Co;
+    DigitCurve.Color := Co;
+    Curve.Clear;
+  end;
   if SavedPoints then
   begin
     Readln(F, X);
     while not EOF(F) do
     begin
       Readln(F, Y);
-      PlotImage.Curve.AddPoint(X, Y);
+      PlotImage.Scale.Curve.AddPoint(X, Y);
       X := X + 1;
     end;
   end;
@@ -1492,14 +1498,14 @@ var
   PtCv: TCurve;
 begin
   //Export digitization to a .csv file
-  SaveDataDlg.FileName := ExtractFilePath(DigitFileName) + PlotImage.DigitCurve.Name + '.csv';
+  SaveDataDlg.FileName := ExtractFilePath(DigitFileName) + PlotImage.Scale.DigitCurve.Name + '.csv';
   if SaveDataDlg.Execute then
   begin
     AssignFile(F, SaveDataDlg.FileName);
     Rewrite(F);
     Writeln(F, '"' + PlotImage.Scale.XLabel + '","' + PlotImage.Scale.YLabel + '"');
     try
-      PtCv := PlotImage.PlotCurve;
+      PtCv := PlotImage.Scale.PlotCurve;
       for i := 0 to PtCv.Count - 1 do
         Writeln(F, PtCv.Point[i].ToStr('%.5g'));
     finally
@@ -1718,7 +1724,7 @@ end;
 
 function TDigitMainForm.GetCurveCount: Integer;
 begin
-  Result := PlotImage.Count;
+  Result := PlotImage.CurveCount;
 end;
 
 function TDigitMainForm.GetManualZoom: Boolean;
@@ -1936,7 +1942,7 @@ begin
 
   FIsSaved := Value;
 
-  CurveCount := PlotImage.Count;
+  CurveCount := PlotImage.CurveCount;
 
   UpdateControls;
 
@@ -1968,7 +1974,7 @@ var
   i: Integer;
   TmpSeries: TLineSeries;
 begin
-  assert(Value = PlotImage.Count, 'Error: The number of curves is incorrect.');
+  assert(Value = PlotImage.CurveCount, 'Error: The number of curves is incorrect.');
 
   // Create or delete the required series
   if (MainPlot.Series.Count > Value) then
@@ -1989,19 +1995,19 @@ begin
       TmpSeries.AxisIndexX := MainPlot.BottomAxis.Index;
       TmpSeries.AxisIndexY := MainPlot.LeftAxis.Index;
 
-      tcCurves.Tabs.Add(PlotImage.ucurves[i].Name);
+      tcCurves.Tabs.Add(PlotImage.Scale.Curves[i].Name);
     end;
 
   // Update tabs and series
-  for i := 0 to PlotImage.Count - 1 do
+  for i := 0 to PlotImage.CurveCount - 1 do
   begin
     TmpSeries := TLineSeries(MainPlot.Series[i]);
-    TmpSeries.Title := PlotImage.ucurves[i].Name;
-    TmpSeries.SeriesColor := PlotImage.ucurves[i].Color;
+    TmpSeries.Title := PlotImage.Scale.Curves[i].Name;
+    TmpSeries.SeriesColor := PlotImage.Scale.Curves[i].Color;
     TmpSeries.LinePen.Width := 2;
     TmpSeries.Clear;
 
-    tcCurves.Tabs.Strings[i] := PlotImage.ucurves[i].Name;
+    tcCurves.Tabs.Strings[i] := PlotImage.Scale.Curves[i].Name;
   end;
 end;
 
@@ -2229,7 +2235,7 @@ procedure TDigitMainForm.CurveToGUI;
 var
   TmpCurve: TCurve;
 begin
-  with PlotImage.DigitCurve do
+  with PlotImage.Scale.DigitCurve do
   begin
     btnColor.ButtonColor := Color;
     if (Step > 0) then
@@ -2247,7 +2253,7 @@ begin
     edtSpread.Value := Spread;
 
     try
-      TmpCurve := PlotImage.PlotCurve;
+      TmpCurve := PlotImage.Scale.PlotCurve;
       if (TmpCurve.Count > 1) then
       begin
         seInterpPoints.Value := TmpCurve.Count;
@@ -2275,7 +2281,7 @@ end;
 
 procedure TDigitMainForm.GUIToCurve;
 begin
-  with PlotImage.DigitCurve do
+  with PlotImage.Scale.DigitCurve do
   begin
     Color := btnColor.ButtonColor;
     if (rgDirection.ItemIndex = 0) then
@@ -2302,7 +2308,7 @@ begin
         //We are selecting the color
         mdColor: begin
           btnColor.ButtonColor := PlotImage.GetPixel(X, Y);
-          PlotImage.DigitCurve.Color := PlotImage.GetPixel(X, Y);
+          PlotImage.Scale.DigitCurve.Color := PlotImage.GetPixel(X, Y);
           PlotImage.RedrawMarkers;
         end;
         mdMajorGridColor: btnMajorGrid.ButtonColor := PlotImage.GetPixel(X, Y);
@@ -2716,7 +2722,7 @@ end;
 procedure TDigitMainForm.ToolCurveAddExecute(Sender: TObject);
 begin
   PlotImage.AddCurve;
-  tcCurves.TabIndex := PlotImage.Count - 1;
+  tcCurves.TabIndex := PlotImage.CurveCount - 1;
   tcCurvesChange(Self);
 end;
 
@@ -2737,12 +2743,15 @@ procedure TDigitMainForm.ToolCurveNameExecute(Sender: TObject);
 var
   NewName: String;
 begin
-  NewName := InputBox('Curve name', 'New name:', PlotImage.DigitCurve.Name);
-  if (NewName <> PlotImage.DigitCurve.Name) then
+  with PlotImage.Scale.DigitCurve do
   begin
-    PlotImage.DigitCurve.Name := NewName;
-    tcCurves.Tabs.Strings[tcCurves.TabIndex] := NewName;
-    TLineSeries(MainPlot.Series[tcCurves.TabIndex]).Title := NewName;
+    NewName := InputBox('Curve name', 'New name:', Name);
+    if (NewName <> Name) then
+    begin
+      Name := NewName;
+      tcCurves.Tabs.Strings[tcCurves.TabIndex] := NewName;
+      TLineSeries(MainPlot.Series[tcCurves.TabIndex]).Title := NewName;
+    end;
   end;
 end;
 
