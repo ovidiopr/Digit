@@ -363,6 +363,7 @@ type
     procedure atInverseAxisToGraph(AX: Double; out AT: Double);
     procedure atInverseGraphToAxis(AX: Double; out AT: Double);
     procedure btnBackgroundColorChanged(Sender: TObject);
+    procedure btnColorColorChanged(Sender: TObject);
     procedure btnMajorGridColorChanged(Sender: TObject);
     procedure btnMinorGridColorChanged(Sender: TObject);
     procedure cbbCoordsChange(Sender: TObject);
@@ -450,6 +451,8 @@ type
     procedure tcCurvesChange(Sender: TObject);
     procedure tcCurvesTabClose(Sender: TObject; ATabIndex: integer;
       var ACanClose, ACanContinue: boolean);
+    procedure tcCurvesTabDblClick(Sender: TObject; AIndex: integer);
+    procedure tcCurvesTabPlusClick(Sender: TObject);
     procedure ToolAdjustCurveExecute(Sender: TObject);
     procedure ToolAdjustNoiseExecute(Sender: TObject);
     procedure ToolCancelActionExecute(Sender: TObject);
@@ -507,6 +510,9 @@ type
     procedure UpdatePlotYScale;
     procedure LogAxis(AChart: TChart; AxisIndex: Integer; Enable: Boolean; Base: Double);
     procedure InverseAxis(AChart: TChart; AxisIndex: Integer; Enable: Boolean);
+
+    procedure RenameCurve; overload;
+    procedure RenameCurve(Index: Integer); overload;
 
     procedure SetDigitFileName(Value: TFileName);
     procedure SetIsSaved(Value: Boolean); overload;
@@ -1068,6 +1074,18 @@ begin
   begin
     PlotImage.GridMask.BckgndColor := btnBackground.ButtonColor;
     PlotImage.IsChanged := True;
+  end;
+end;
+
+procedure TDigitMainForm.btnColorColorChanged(Sender: TObject);
+var
+  d: TATTabData;
+begin
+  d := tcCurves.GetTabData(tcCurves.TabIndex);
+  if (d <> nil) then
+  begin
+    d.TabColor := btnColor.ButtonColor;
+    tcCurves.Invalidate;
   end;
 end;
 
@@ -1909,6 +1927,35 @@ begin
   end;
 end;
 
+procedure TDigitMainForm.RenameCurve;
+begin
+  RenameCurve(tcCurves.TabIndex);
+end;
+
+procedure TDigitMainForm.RenameCurve(Index: Integer);
+var
+  d: TATTabData;
+  NewName: String;
+begin
+  with PlotImage.Scale.DigitCurve do
+  begin
+    NewName := InputBox('Curve name', 'New name:', Name);
+    if (NewName <> Name) then
+    begin
+      Name := NewName;
+      //tcCurves.Tabs.Strings[Index] := NewName;
+      d := tcCurves.GetTabData(Index);
+      if (d <> nil) then
+      begin
+        d.TabCaption := NewName;
+        tcCurves.Invalidate;
+      end;
+
+      TLineSeries(MainPlot.Series[Index]).Title := NewName;
+    end;
+  end;
+end;
+
 procedure TDigitMainForm.SetDigitFileName(Value: TFileName);
 begin
   FDigitFileName := Value;
@@ -2705,6 +2752,18 @@ begin
   ACanClose := False;
 end;
 
+procedure TDigitMainForm.tcCurvesTabDblClick(Sender: TObject; AIndex: integer);
+begin
+  if ToolCurveName.Enabled then
+    RenameCurve(AIndex);
+end;
+
+procedure TDigitMainForm.tcCurvesTabPlusClick(Sender: TObject);
+begin
+  if ToolCurveAdd.Enabled then
+    ToolCurveAdd.Execute;
+end;
+
 procedure TDigitMainForm.ToolAdjustCurveExecute(Sender: TObject);
 begin
   GUIToCurve;
@@ -2765,27 +2824,8 @@ begin
 end;
 
 procedure TDigitMainForm.ToolCurveNameExecute(Sender: TObject);
-var
-  d: TATTabData;
-  NewName: String;
 begin
-  with PlotImage.Scale.DigitCurve do
-  begin
-    NewName := InputBox('Curve name', 'New name:', Name);
-    if (NewName <> Name) then
-    begin
-      Name := NewName;
-      //tcCurves.Tabs.Strings[tcCurves.TabIndex] := NewName;
-      d := tcCurves.GetTabData(tcCurves.TabIndex);
-      if (d <> nil) then
-      begin
-        d.TabCaption := NewName;
-        tcCurves.Invalidate;
-      end;
-
-      TLineSeries(MainPlot.Series[tcCurves.TabIndex]).Title := NewName;
-    end;
-  end;
+  RenameCurve;
 end;
 
 procedure TDigitMainForm.ToolCurveRightExecute(Sender: TObject);
