@@ -49,6 +49,7 @@ type
   TStateChangeEvent = procedure(Sender: TObject; NewState: TPlotImageState) of Object;
   TMarkerDraggedEvent = procedure(Sender: TObject; Marker: TMarker; Zoom: Boolean) of Object;
   TZoomChangeEvent = procedure(Sender: TObject; Zoom: Double) of Object;
+  TScaleChangeEvent = procedure(Sender: TObject; Index: Integer) of Object;
 
   TPlotImage = class(TCustomControl)
   protected type
@@ -101,6 +102,7 @@ type
     FOnStateChanged: TStateChangeEvent;
     FOnMarkerDragged: TMarkerDraggedEvent;
     FOnZoomChanged: TZoomChangeEvent;
+    FOnScaleChanged: TScaleChangeEvent;
 
 
     procedure Paint; override;
@@ -344,6 +346,7 @@ type
     property OnStateChanged: TStateChangeEvent read FOnStateChanged write FOnStateChanged;
     property OnMarkerDragged: TMarkerDraggedEvent read FOnMarkerDragged write FOnMarkerDragged;
     property OnZoomChanged: TZoomChangeEvent read FOnZoomChanged write FOnZoomChanged;
+    property OnScaleChanged: TScaleChangeEvent read FOnScaleChanged write FOnScaleChanged;
   end;
 
 function CreateMarker(Size: TPoint; Symbol: Char; Color: TColor; LineWith: Integer = 3): TBGRABitmap;
@@ -2430,6 +2433,10 @@ begin
     UpdateMarkersInImage;
 
     OnChange := TmpOnChange;
+
+    // Notify the parent that the active scale has changed
+    if assigned(OnScaleChanged) then
+      OnScaleChanged(Self, Value);
   end;
 end;
 

@@ -1,7 +1,7 @@
 object DigitMainForm: TDigitMainForm
-  Left = 306
+  Left = 300
   Height = 472
-  Top = 268
+  Top = 209
   Width = 1100
   AllowDropFiles = True
   Caption = 'Digitizer'
@@ -1993,7 +1993,7 @@ object DigitMainForm: TDigitMainForm
           Height = 153
           Top = 0
           Width = 214
-          HorzScrollBar.Page = 166
+          HorzScrollBar.Page = 168
           VertScrollBar.Page = 151
           Align = alClient
           ClientHeight = 151
@@ -2500,15 +2500,15 @@ object DigitMainForm: TDigitMainForm
         ShowHint = True
         object sbScale: TScrollBox
           Left = 0
-          Height = 153
-          Top = 0
+          Height = 118
+          Top = 35
           Width = 214
           HorzScrollBar.Page = 181
-          VertScrollBar.Page = 151
+          VertScrollBar.Page = 116
           Align = alClient
           ChildSizing.EnlargeHorizontal = crsScaleChilds
           ChildSizing.ShrinkHorizontal = crsScaleChilds
-          ClientHeight = 151
+          ClientHeight = 116
           ClientWidth = 197
           ParentBackground = False
           TabOrder = 0
@@ -3492,6 +3492,39 @@ object DigitMainForm: TDigitMainForm
               OnEditingDone = EditPY1EditingDone
             end
           end
+        end
+        object tcScales: TATTabs
+          Left = 0
+          Height = 35
+          Top = 0
+          Width = 214
+          Align = alTop
+          ParentShowHint = False
+          ShowHint = True
+          Visible = False
+          Tabs = <>
+          DoubleBuffered = False
+          TabIndex = -1
+          ColorBg = clDefault
+          ColorSeparator = clDefault
+          ColorTabActive = 16250871
+          ColorTabPassive = clBtnFace
+          ColorTabOver = 14211288
+          ColorFont = clBlack
+          OptButtonLayout = '<>,v'
+          OptShowPinnedText = '!'
+          OptMouseDragEnabled = False
+          OptMouseDragOutEnabled = False
+          OptHintForX = 'Close tab'
+          OptHintForPlus = 'Add tab'
+          OptHintForArrowLeft = 'Scroll tabs left'
+          OptHintForArrowRight = 'Scroll tabs right'
+          OptHintForArrowMenu = 'Show tabs list'
+          OptHintForUser0 = '0'
+          OptHintForUser1 = '1'
+          OptHintForUser2 = '2'
+          OptHintForUser3 = '3'
+          OptHintForUser4 = '4'
         end
       end
       object tsPlotBox: TTabSheet
@@ -4922,7 +4955,7 @@ object DigitMainForm: TDigitMainForm
     object tbPlot: TToolBar
       Left = 0
       Height = 40
-      Top = 0
+      Top = 35
       Width = 707
       ButtonHeight = 36
       ButtonWidth = 32
@@ -5029,9 +5062,12 @@ object DigitMainForm: TDigitMainForm
     object tcCurves: TATTabs
       Left = 0
       Height = 35
-      Top = 40
+      Top = 0
       Width = 707
       Align = alTop
+      ParentColor = False
+      ParentShowHint = False
+      ShowHint = True
       Tabs = <>
       DoubleBuffered = False
       TabIndex = -1
@@ -5043,11 +5079,13 @@ object DigitMainForm: TDigitMainForm
       ColorFont = clBlack
       OptButtonLayout = '<>,v'
       OptShowPinnedText = '!'
-      OptHintForX = 'Close tab'
-      OptHintForPlus = 'Add tab'
-      OptHintForArrowLeft = 'Scroll tabs left'
-      OptHintForArrowRight = 'Scroll tabs right'
-      OptHintForArrowMenu = 'Show tabs list'
+      OptMouseDragEnabled = False
+      OptMouseDragOutEnabled = False
+      OptHintForX = 'Delete curve|Delete the active curve from the digitization'
+      OptHintForPlus = 'Add curve|Add a new curve to the digitization'
+      OptHintForArrowLeft = 'Scroll left|Scroll tabs left'
+      OptHintForArrowRight = 'Scroll right|Scroll tabs right'
+      OptHintForArrowMenu = 'Show list|Show curves list'
       OptHintForUser0 = '0'
       OptHintForUser1 = '1'
       OptHintForUser2 = '2'
