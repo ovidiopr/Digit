@@ -15,7 +15,7 @@ uses
   StdCtrls, Dialogs, Buttons, ExtCtrls, ComCtrls, TATypes, TASeries, TAGraph,
   TAChartAxis, TATransformations, TACustomSource, TAChartUtils, ClipBrd,
   ActnList, ValEdit, Spin, ExtDlgs, MaskEdit, BCTrackbarUpdown, FileUtil,
-  IniFiles, BGRABitmapTypes, GraphType, Grids, Math,
+  IniFiles, BGRABitmapTypes, GraphType, attabs, Grids, Math,
   urestore, uchartscale, uutils, ucoordinates, ucurves, uplotimage;
 
 type
@@ -27,7 +27,11 @@ type
   TDigitMainForm = class(TForm)
     lblInterpDegree: TLabel;
     LinearItem: TMenuItem;
+    MainPlot: TChart;
+    PageControl: TPageControl;
+    ScrollBox: TScrollBox;
     seInterpDegree: TSpinEdit;
+    tcCurves: TATTabs;
     ToolQuadraticItem: TMenuItem;
     ToolLinearItem: TMenuItem;
     QuadraticItem: TMenuItem;
@@ -149,8 +153,6 @@ type
     leData: TValueListEditor;
     LeftSplitter: TSplitter;
     MainPanel: TPanel;
-    MainPlot: TChart;
-    PageControl: TPageControl;
     pcInput: TPageControl;
     pnlData: TPanel;
     rgDirection: TRadioGroup;
@@ -159,7 +161,6 @@ type
     sbGrid: TScrollBox;
     sbPlotBox: TScrollBox;
     sbScale: TScrollBox;
-    ScrollBox: TScrollBox;
     seInterpPoints: TSpinEdit;
     sep07: TToolButton;
     sep08: TToolButton;
@@ -190,7 +191,6 @@ type
     btnZoomIn: TToolButton;
     btnZoomOut: TToolButton;
     btnZoomFit: TToolButton;
-    tcCurves: TTabControl;
     ToolDigitizeItem: TMenuItem;
     ToolDigitColorItem: TMenuItem;
     ToolDigitColor: TAction;
@@ -448,6 +448,8 @@ type
     procedure PlotScaleExecute(Sender: TObject);
     procedure tbZoomChange(Sender: TObject; AByUser: boolean);
     procedure tcCurvesChange(Sender: TObject);
+    procedure tcCurvesTabClose(Sender: TObject; ATabIndex: integer;
+      var ACanClose, ACanContinue: boolean);
     procedure ToolAdjustCurveExecute(Sender: TObject);
     procedure ToolAdjustNoiseExecute(Sender: TObject);
     procedure ToolCancelActionExecute(Sender: TObject);
@@ -833,7 +835,7 @@ begin
   //Check that the file exists
   if not FileExists(FileName) then
   begin
-    MessageDlg('The file ' + ExtractFileName(FileName) + ' doesn''t exists.', mtError, [mbOk], 0);
+    MessageDlg('The file ' + ExtractFileName(FileName) + ' does not exists.', mtError, [mbOk], 0);
     Exit;
   end;
 
@@ -1972,6 +1974,7 @@ end;
 procedure TDigitMainForm.SetCurveCount(Value: Integer);
 var
   i: Integer;
+  d: TATTabData;
   TmpSeries: TLineSeries;
 begin
   assert(Value = PlotImage.CurveCount, 'Error: The number of curves is incorrect.');
@@ -1995,7 +1998,8 @@ begin
       TmpSeries.AxisIndexX := MainPlot.BottomAxis.Index;
       TmpSeries.AxisIndexY := MainPlot.LeftAxis.Index;
 
-      tcCurves.Tabs.Add(PlotImage.Scale.Curves[i].Name);
+      //tcCurves.Tabs.Add(PlotImage.Scale.Curves[i].Name);
+      tcCurves.AddTab(tcCurves.TabCount, PlotImage.Scale.Curves[i].Name);
     end;
 
   // Update tabs and series
@@ -2007,7 +2011,14 @@ begin
     TmpSeries.LinePen.Width := 2;
     TmpSeries.Clear;
 
-    tcCurves.Tabs.Strings[i] := PlotImage.Scale.Curves[i].Name;
+    //tcCurves.Tabs.Strings[i] := PlotImage.Scale.Curves[i].Name;
+    d := tcCurves.GetTabData(i);
+    if (d <> nil) then
+    begin
+      d.TabCaption := PlotImage.Scale.Curves[i].Name;
+      d.TabColor := PlotImage.Scale.Curves[i].Color;
+      tcCurves.Invalidate;
+    end;
   end;
 end;
 
@@ -2680,6 +2691,20 @@ begin
   UpdateView;
 end;
 
+procedure TDigitMainForm.tcCurvesTabClose(Sender: TObject; ATabIndex: integer;
+  var ACanClose, ACanContinue: boolean);
+begin
+  with PlotImage do
+    if ImageIsLoaded and (State = piSetCurve) and (CurveCount > 1) then
+    begin
+      PlotImage.DeleteCurve(ATabIndex);
+      tcCurves.TabIndex := PlotImage.CurveIndex;
+      CurveToGUI;
+    end;
+
+  ACanClose := False;
+end;
+
 procedure TDigitMainForm.ToolAdjustCurveExecute(Sender: TObject);
 begin
   GUIToCurve;
@@ -2741,6 +2766,7 @@ end;
 
 procedure TDigitMainForm.ToolCurveNameExecute(Sender: TObject);
 var
+  d: TATTabData;
   NewName: String;
 begin
   with PlotImage.Scale.DigitCurve do
@@ -2749,7 +2775,14 @@ begin
     if (NewName <> Name) then
     begin
       Name := NewName;
-      tcCurves.Tabs.Strings[tcCurves.TabIndex] := NewName;
+      //tcCurves.Tabs.Strings[tcCurves.TabIndex] := NewName;
+      d := tcCurves.GetTabData(tcCurves.TabIndex);
+      if (d <> nil) then
+      begin
+        d.TabCaption := NewName;
+        tcCurves.Invalidate;
+      end;
+
       TLineSeries(MainPlot.Series[tcCurves.TabIndex]).Title := NewName;
     end;
   end;

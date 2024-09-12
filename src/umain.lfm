@@ -4918,113 +4918,6 @@ object DigitMainForm: TDigitMainForm
     ClientWidth = 707
     ParentBackground = False
     TabOrder = 7
-    object tcCurves: TTabControl
-      Left = 0
-      Height = 374
-      Top = 40
-      Width = 707
-      OnChange = tcCurvesChange
-      Align = alClient
-      TabOrder = 0
-      object PageControl: TPageControl
-        Left = 2
-        Height = 306
-        Top = 30
-        Width = 697
-        ActivePage = tsPicture
-        Align = alClient
-        BorderSpacing.CellAlignHorizontal = ccaCenter
-        TabIndex = 0
-        TabOrder = 1
-        TabPosition = tpBottom
-        object tsPicture: TTabSheet
-          Caption = 'Picture'
-          ClientHeight = 278
-          ClientWidth = 691
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Default'
-          ParentFont = False
-          object ScrollBox: TScrollBox
-            Left = 0
-            Height = 278
-            Top = 0
-            Width = 691
-            HorzScrollBar.Page = 1
-            VertScrollBar.Page = 1
-            Align = alClient
-            ParentBackground = False
-            TabOrder = 0
-          end
-        end
-        object tsPlot: TTabSheet
-          Caption = 'Plot'
-          ClientHeight = 278
-          ClientWidth = 691
-          Font.Color = clBlack
-          Font.Height = -11
-          Font.Name = 'Default'
-          ImageIndex = 1
-          ParentFont = False
-          object MainPlot: TChart
-            Left = 0
-            Height = 278
-            Top = 0
-            Width = 691
-            AxisList = <            
-              item
-                Grid.Style = psClear
-                Grid.Visible = False
-                Intervals.MaxLength = 200
-                Marks.LabelBrush.Style = bsClear
-                Minors = <>
-                Title.LabelFont.CharSet = ANSI_CHARSET
-                Title.LabelFont.Height = -16
-                Title.LabelFont.Name = 'Arial'
-                Title.LabelFont.Orientation = 900
-                Title.LabelFont.Pitch = fpVariable
-                Title.LabelFont.Quality = fqDraft
-                Title.Visible = True
-                Title.Caption = 'Y'
-                Title.LabelBrush.Style = bsClear
-                Title.TextFormat = tfHTML
-              end            
-              item
-                Grid.Style = psSolid
-                Grid.Visible = False
-                Intervals.MaxLength = 200
-                Alignment = calBottom
-                Marks.LabelBrush.Style = bsClear
-                Minors = <>
-                Title.LabelFont.CharSet = ANSI_CHARSET
-                Title.LabelFont.Height = -16
-                Title.LabelFont.Name = 'Arial'
-                Title.LabelFont.Pitch = fpVariable
-                Title.LabelFont.Quality = fqDraft
-                Title.Visible = True
-                Title.Caption = 'X'
-                Title.LabelBrush.Style = bsClear
-                Title.TextFormat = tfHTML
-              end>
-            BackColor = clWhite
-            Foot.Brush.Color = clBtnFace
-            Foot.Font.Color = clBlue
-            Legend.Alignment = laTopCenter
-            Legend.ColumnCount = 6
-            Legend.TextFormat = tfHTML
-            Legend.Visible = True
-            Title.Brush.Color = clBtnFace
-            Title.Font.Color = clBlue
-            Title.Text.Strings = (
-              'TAChart'
-            )
-            Align = alClient
-            OnMouseLeave = MainPlotMouseLeave
-            OnMouseMove = MainPlotMouseMove
-          end
-        end
-      end
-    end
     object tbPlot: TToolBar
       Left = 0
       Height = 40
@@ -5039,7 +4932,7 @@ object DigitMainForm: TDigitMainForm
       ParentFont = False
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 1
+      TabOrder = 0
       object btnAddCurve: TToolButton
         Left = 1
         Top = 2
@@ -5130,6 +5023,135 @@ object DigitMainForm: TDigitMainForm
         Left = 201
         Top = 2
         Action = ToolAdjustNoise
+      end
+    end
+    object tcCurves: TATTabs
+      Left = 0
+      Height = 35
+      Top = 40
+      Width = 707
+      Align = alTop
+      ParentColor = False
+      Tabs = <>
+      DoubleBuffered = False
+      TabIndex = -1
+      ColorBg = clDefault
+      ColorSeparator = clDefault
+      ColorTabActive = 16250871
+      ColorTabPassive = clBtnFace
+      ColorTabOver = 14211288
+      ColorFont = clBlack
+      OptButtonLayout = '<>,v'
+      OptShowPinnedText = '!'
+      OptHintForX = 'Close tab'
+      OptHintForPlus = 'Add tab'
+      OptHintForArrowLeft = 'Scroll tabs left'
+      OptHintForArrowRight = 'Scroll tabs right'
+      OptHintForArrowMenu = 'Show tabs list'
+      OptHintForUser0 = '0'
+      OptHintForUser1 = '1'
+      OptHintForUser2 = '2'
+      OptHintForUser3 = '3'
+      OptHintForUser4 = '4'
+      OnTabChanged = tcCurvesChange
+      OnTabClose = tcCurvesTabClose
+    end
+    object PageControl: TPageControl
+      Left = 0
+      Height = 339
+      Top = 75
+      Width = 707
+      ActivePage = tsPicture
+      Align = alClient
+      BorderSpacing.CellAlignHorizontal = ccaCenter
+      TabIndex = 0
+      TabOrder = 2
+      TabPosition = tpBottom
+      object tsPicture: TTabSheet
+        Caption = 'Picture'
+        ClientHeight = 311
+        ClientWidth = 701
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Default'
+        ParentFont = False
+        object ScrollBox: TScrollBox
+          Left = 0
+          Height = 311
+          Top = 0
+          Width = 701
+          HorzScrollBar.Page = 1
+          VertScrollBar.Page = 1
+          Align = alClient
+          ParentBackground = False
+          TabOrder = 0
+        end
+      end
+      object tsPlot: TTabSheet
+        Caption = 'Plot'
+        ClientHeight = 311
+        ClientWidth = 701
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Default'
+        ImageIndex = 1
+        ParentFont = False
+        object MainPlot: TChart
+          Left = 0
+          Height = 311
+          Top = 0
+          Width = 701
+          AxisList = <          
+            item
+              Grid.Style = psClear
+              Grid.Visible = False
+              Intervals.MaxLength = 200
+              Marks.LabelBrush.Style = bsClear
+              Minors = <>
+              Title.LabelFont.CharSet = ANSI_CHARSET
+              Title.LabelFont.Height = -16
+              Title.LabelFont.Name = 'Arial'
+              Title.LabelFont.Orientation = 900
+              Title.LabelFont.Pitch = fpVariable
+              Title.LabelFont.Quality = fqDraft
+              Title.Visible = True
+              Title.Caption = 'Y'
+              Title.LabelBrush.Style = bsClear
+              Title.TextFormat = tfHTML
+            end          
+            item
+              Grid.Style = psSolid
+              Grid.Visible = False
+              Intervals.MaxLength = 200
+              Alignment = calBottom
+              Marks.LabelBrush.Style = bsClear
+              Minors = <>
+              Title.LabelFont.CharSet = ANSI_CHARSET
+              Title.LabelFont.Height = -16
+              Title.LabelFont.Name = 'Arial'
+              Title.LabelFont.Pitch = fpVariable
+              Title.LabelFont.Quality = fqDraft
+              Title.Visible = True
+              Title.Caption = 'X'
+              Title.LabelBrush.Style = bsClear
+              Title.TextFormat = tfHTML
+            end>
+          BackColor = clWhite
+          Foot.Brush.Color = clBtnFace
+          Foot.Font.Color = clBlue
+          Legend.Alignment = laTopCenter
+          Legend.ColumnCount = 6
+          Legend.TextFormat = tfHTML
+          Legend.Visible = True
+          Title.Brush.Color = clBtnFace
+          Title.Font.Color = clBlue
+          Title.Text.Strings = (
+            'TAChart'
+          )
+          Align = alClient
+          OnMouseLeave = MainPlotMouseLeave
+          OnMouseMove = MainPlotMouseMove
+        end
       end
     end
   end

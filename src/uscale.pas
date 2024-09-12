@@ -661,7 +661,7 @@ begin
 
         assert(SavedCurveCount = RealCurveCount,
                Format('Error: The number of saved curves (%d)' +
-                      ' doesn''t match the expected value (%d).',
+                      ' does not match the expected value (%d).',
                       [RealCurveCount, SavedCurveCount]));
       end;
 
