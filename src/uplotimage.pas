@@ -170,8 +170,6 @@ type
     procedure UpdateRegion(UpdateArea: TRect); overload;
     procedure UpdateRegion; overload;
 
-    procedure EraseCurve(Curve: TDigitCurve);
-
     procedure RectIntersection(Po, Pf: TCurvePoint; var Pini, Pend: TCurvePoint);
     procedure XAxisCoords(var Pini, Pend: TCurvePoint);
     procedure YAxisCoords(var Pini, Pend: TCurvePoint);
@@ -2386,6 +2384,7 @@ begin
 
     // Change the state
     FState := Value;
+    UpdateRegion(ClientRect);
 
     // Update the markers in the image
     UpdateMarkersInImage;
@@ -2398,6 +2397,7 @@ end;
 
 procedure TPlotImage.SetCurveIndex(Value: Integer);
 var
+  TmpRect: TRect;
   TmpOnChange: TNotifyEvent;
 begin
   if (Value >= 0) and (Value < CurveCount) and (Value <> CurveIndex) then
@@ -2407,8 +2407,14 @@ begin
 
     // First, update all the markers in the curve
     UpdateMarkersInCurve;
+
     // Now change the active curve
+    TmpRect := Scale.DigitCurve.CurveRect;
     Scale.CurveIndex := Value;
+    TmpRect.Union(Scale.DigitCurve.CurveRect);
+    if (State = piSetCurve) then
+      UpdateRegion(TmpRect);
+
     // Finally, update all the new markers in the image
     UpdateMarkersInImage;
 
@@ -2429,6 +2435,7 @@ begin
     UpdateMarkersInCurve;
     // Now change the active scale
     FScaleIndex := Value;
+    UpdateRegion(ClientRect);
     // Finally, update all the new markers in the image
     UpdateMarkersInImage;
 
@@ -2449,13 +2456,17 @@ begin
 end;
 
 procedure TPlotImage.SetPoint(Index: Integer; const Value: TCurvePoint);
+var
+  TmpRect: TRect;
 begin
   with Scale do
     if (FromPlotToImg(Value) <> DigitCurve.Curve.Point[Index]) then
     begin
-      EraseCurve(DigitCurve);
+      TmpRect := DigitCurve.CurveRect;
       DigitCurve.Curve.Point[Index] := FromPlotToImg(Value);
-      DigitCurve.Draw(Canvas);
+      TmpRect.Union(DigitCurve.CurveRect);
+      if (State = piSetCurve) then
+        UpdateRegion(TmpRect);
 
       FIsChanged := True;
     end;
@@ -2541,11 +2552,6 @@ end;
 procedure TPlotImage.UpdateRegion;
 begin
   UpdateRegion(SelectionRect);
-end;
-
-procedure TPlotImage.EraseCurve(Curve: TDigitCurve);
-begin
-  Curve.Draw(Canvas);
 end;
 
 procedure TPlotImage.RectIntersection(Po, Pf: TCurvePoint;
@@ -2811,7 +2817,7 @@ procedure TPlotImage.ClearCurve(Index: Integer);
 begin
   if (Index >= 0) and (Index < CurveCount) then
   begin
-    EraseCurve(Scale.Curves[Index]);
+    UpdateRegion(Scale.Curves[Index].CurveRect);
     Scale.Curves[Index].Clear;
 
     IsChanged := True;
@@ -2819,27 +2825,37 @@ begin
 end;
 
 procedure TPlotImage.UndoCurveChanges;
+var
+  TmpRect: TRect;
 begin
-  if Scale.DigitCurve.CanGoBack then
-  begin
-    EraseCurve(Scale.DigitCurve);
-    Scale.DigitCurve.GoBack;
-    Scale.DigitCurve.Draw(Canvas);
+  with Scale.DigitCurve do
+    if CanGoBack then
+    begin
+      TmpRect := CurveRect;
+      GoBack;
+      TmpRect.Union(CurveRect);
+      if (State = piSetCurve) then
+        UpdateRegion(TmpRect);
 
-    IsChanged := True;
-  end;
+      IsChanged := True;
+    end;
 end;
 
 procedure TPlotImage.RedoCurveChanges;
+var
+  TmpRect: TRect;
 begin
-  if Scale.DigitCurve.CanGoForward then
-  begin
-    EraseCurve(Scale.DigitCurve);
-    Scale.DigitCurve.GoForward;
-    Scale.DigitCurve.Draw(Canvas);
+  with Scale.DigitCurve do
+    if CanGoForward then
+    begin
+      TmpRect := CurveRect;
+      GoForward;
+      TmpRect.Union(CurveRect);
+      if (State = piSetCurve) then
+        UpdateRegion(TmpRect);
 
-    IsChanged := True;
-  end;
+      IsChanged := True;
+    end;
 end;
 
 procedure TPlotImage.SortCurve;
@@ -2869,6 +2885,7 @@ end;
 procedure TPlotImage.Smooth(k, d: Integer; Index: Integer);
 var
   i: Integer;
+  TmpRect: TRect;
   TmpCurve: TCurve;
 begin
   try
@@ -2877,15 +2894,18 @@ begin
     TmpCurve.SortCurve;
     TmpCurve.Smooth(k, d);
 
-    if (Index = CurveIndex) then
-      EraseCurve(Scale.DigitCurve);
+    if (Index = CurveIndex) and (State = piSetCurve) then
+      TmpRect := Scale.DigitCurve.CurveRect;
 
     Scale.Curves[Index].NextCurve(False);
     for i := 0 to TmpCurve.Count - 1 do
       Scale.Curves[Index].Curve.AddPoint(Scale.FromPlotToImg(TmpCurve.Point[i]));
 
-    if (Index = CurveIndex) then
-      Scale.DigitCurve.Draw(Canvas);
+    if (Index = CurveIndex) and (State = piSetCurve) then
+    begin
+      TmpRect.Union(Scale.DigitCurve.CurveRect);
+      UpdateRegion(TmpRect);
+    end;
 
     IsChanged := True;
   finally
@@ -2907,6 +2927,7 @@ end;
 procedure TPlotImage.Interpolate(n, d: Integer; Index: Integer; IntType: TInterpolation = itpBSpline);
 var
   i: Integer;
+  TmpRect: TRect;
   TmpCurve: TCurve;
 begin
   try
@@ -2915,16 +2936,19 @@ begin
     TmpCurve.SortCurve;
     TmpCurve.Interpolate(n, d, IntType);
 
-    if (Index = CurveIndex) then
-      EraseCurve(Scale.DigitCurve);
+    if (Index = CurveIndex) and (State = piSetCurve) then
+      TmpRect := Scale.DigitCurve.CurveRect;
 
     Scale.Curves[Index].NextCurve(False);
     Scale.Curves[Index].ShowAsSymbols := False;
     for i := 0 to TmpCurve.Count - 1 do
       Scale.Curves[Index].Curve.AddPoint(Scale.FromPlotToImg(TmpCurve.Point[i]));
 
-    if (Index = CurveIndex) then
-      Scale.DigitCurve.Draw(Canvas);
+    if (Index = CurveIndex) and (State = piSetCurve) then
+    begin
+      TmpRect.Union(Scale.DigitCurve.CurveRect);
+      UpdateRegion(TmpRect);
+    end;
 
     IsChanged := True;
   finally
@@ -2946,6 +2970,7 @@ end;
 procedure TPlotImage.Interpolate(Xo, Xf: Double; n, d: Integer; Index: Integer; IntType: TInterpolation = itpBSpline);
 var
   i: Integer;
+  TmpRect: TRect;
   TmpCurve: TCurve;
 begin
   try
@@ -2954,16 +2979,19 @@ begin
     TmpCurve.SortCurve;
     TmpCurve.Interpolate(Xo, Xf, n, d, IntType);
 
-    if (Index = CurveIndex) then
-      EraseCurve(Scale.DigitCurve);
+    if (Index = CurveIndex) and (State = piSetCurve) then
+      TmpRect := Scale.DigitCurve.CurveRect;
 
     Scale.Curves[Index].NextCurve(False);
     Scale.Curves[Index].ShowAsSymbols := False;
     for i := 0 to TmpCurve.Count - 1 do
       Scale.Curves[Index].Curve.AddPoint(Scale.FromPlotToImg(TmpCurve.Point[i]));
 
-    if (Index = CurveIndex) then
-      Scale.DigitCurve.Draw(Canvas);
+    if (Index = CurveIndex) and (State = piSetCurve) then
+    begin
+      TmpRect.Union(Scale.DigitCurve.CurveRect);
+      UpdateRegion(TmpRect);
+    end;
 
     IsChanged := True;
   finally
@@ -2983,19 +3011,27 @@ begin
 end;
 
 procedure TPlotImage.CorrectCurve(Po, Pf: TPoint; IsStep: Boolean = True);
+var
+  TmpRect: TRect;
 begin
-  EraseCurve(Scale.DigitCurve);
+  TmpRect := Scale.DigitCurve.CurveRect;
   Scale.DigitCurve.CorrectCurve(Po, Pf, IsStep);
-  Scale.DigitCurve.Draw(Canvas);
+  TmpRect.Union(Scale.DigitCurve.CurveRect);
+  if (State = piSetCurve) then
+    UpdateRegion(TmpRect);
 
   IsChanged := True;
 end;
 
 procedure TPlotImage.CorrectCurve(Po, Pf: TCurvePoint; IsStep: Boolean = True);
+var
+  TmpRect: TRect;
 begin
-  EraseCurve(Scale.DigitCurve);
+  TmpRect := Scale.DigitCurve.CurveRect;
   Scale.DigitCurve.CorrectCurve(Po, Pf, IsStep);
-  Scale.DigitCurve.Draw(Canvas);
+  TmpRect.Union(Scale.DigitCurve.CurveRect);
+  if (State = piSetCurve) then
+    UpdateRegion(TmpRect);
 
   IsChanged := True;
 end;
@@ -3047,55 +3083,79 @@ begin
 end;
 
 procedure TPlotImage.GroupPoints(Region: TRect);
+var
+  TmpRect: TRect;
 begin
-  EraseCurve(Scale.DigitCurve);
+  TmpRect := Scale.DigitCurve.CurveRect;
   Scale.DigitCurve.GroupPointsInRegion(Region);
-  Scale.DigitCurve.Draw(Canvas);
+  TmpRect.Union(Scale.DigitCurve.CurveRect);
+  if (State = piSetCurve) then
+    UpdateRegion(TmpRect);
 
   IsChanged := True;
 end;
 
 procedure TPlotImage.DeletePoints(Region: TRect);
+var
+  TmpRect: TRect;
 begin
-  EraseCurve(Scale.DigitCurve);
+  TmpRect := Scale.DigitCurve.CurveRect;
   Scale.DigitCurve.DeletePointsInRegion(Region);
-  Scale.DigitCurve.Draw(Canvas);
+  TmpRect.Union(Scale.DigitCurve.CurveRect);
+  if (State = piSetCurve) then
+    UpdateRegion(TmpRect);
 
   IsChanged := True;
 end;
 
 procedure TPlotImage.MoveCurveUp;
+var
+  TmpRect: TRect;
 begin
-  EraseCurve(Scale.DigitCurve);
+  TmpRect := Scale.DigitCurve.CurveRect;
   Scale.DigitCurve.AddToY(-1);
-  Scale.DigitCurve.Draw(Canvas);
+  TmpRect.Union(Scale.DigitCurve.CurveRect);
+  if (State = piSetCurve) then
+    UpdateRegion(TmpRect);
 
   IsChanged := True;
 end;
 
 procedure TPlotImage.MoveCurveDown;
+var
+  TmpRect: TRect;
 begin
-  EraseCurve(Scale.DigitCurve);
+  TmpRect := Scale.DigitCurve.CurveRect;
   Scale.DigitCurve.AddToY(1);
-  Scale.DigitCurve.Draw(Canvas);
+  TmpRect.Union(Scale.DigitCurve.CurveRect);
+  if (State = piSetCurve) then
+    UpdateRegion(TmpRect);
 
   IsChanged := True;
 end;
 
 procedure TPlotImage.MoveCurveLeft;
+var
+  TmpRect: TRect;
 begin
-  EraseCurve(Scale.DigitCurve);
+  TmpRect := Scale.DigitCurve.CurveRect;
   Scale.DigitCurve.AddToX(-1);
-  Scale.DigitCurve.Draw(Canvas);
+  TmpRect.Union(Scale.DigitCurve.CurveRect);
+  if (State = piSetCurve) then
+    UpdateRegion(TmpRect);
 
   IsChanged := True;
 end;
 
 procedure TPlotImage.MoveCurveRight;
+var
+  TmpRect: TRect;
 begin
-  EraseCurve(Scale.DigitCurve);
+  TmpRect := Scale.DigitCurve.CurveRect;
   Scale.DigitCurve.AddToX(1);
-  Scale.DigitCurve.Draw(Canvas);
+  TmpRect.Union(Scale.DigitCurve.CurveRect);
+  if (State = piSetCurve) then
+    UpdateRegion(TmpRect);
 
   IsChanged := True;
 end;

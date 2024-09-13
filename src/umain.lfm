@@ -1993,7 +1993,7 @@ object DigitMainForm: TDigitMainForm
           Height = 153
           Top = 0
           Width = 214
-          HorzScrollBar.Page = 168
+          HorzScrollBar.Page = 166
           VertScrollBar.Page = 151
           Align = alClient
           ClientHeight = 151
@@ -3499,6 +3499,7 @@ object DigitMainForm: TDigitMainForm
           Top = 0
           Width = 214
           Align = alTop
+          ParentColor = False
           ParentShowHint = False
           ShowHint = True
           Visible = False
@@ -5065,11 +5066,10 @@ object DigitMainForm: TDigitMainForm
       Top = 0
       Width = 707
       Align = alTop
-      ParentColor = False
       ParentShowHint = False
       ShowHint = True
       Tabs = <>
-      DoubleBuffered = False
+      DoubleBuffered = True
       TabIndex = -1
       ColorBg = clDefault
       ColorSeparator = clDefault
@@ -5078,6 +5078,8 @@ object DigitMainForm: TDigitMainForm
       ColorTabOver = 14211288
       ColorFont = clBlack
       OptButtonLayout = '<>,v'
+      OptVarWidth = True
+      OptSpaceSide = 0
       OptShowPinnedText = '!'
       OptMouseDragEnabled = False
       OptMouseDragOutEnabled = False
