@@ -449,11 +449,15 @@ type
     procedure PlotExportExecute(Sender: TObject);
     procedure PlotScaleExecute(Sender: TObject);
     procedure tbZoomChange(Sender: TObject; AByUser: boolean);
-    procedure tcCurvesChange(Sender: TObject);
+    procedure tcCurvesTabChanged(Sender: TObject);
     procedure tcCurvesTabClose(Sender: TObject; ATabIndex: integer;
       var ACanClose, ACanContinue: boolean);
     procedure tcCurvesTabDblClick(Sender: TObject; AIndex: integer);
     procedure tcCurvesTabPlusClick(Sender: TObject);
+    procedure tcScalesTabChanged(Sender: TObject);
+    procedure tcScalesTabClose(Sender: TObject; ATabIndex: integer;
+      var ACanClose, ACanContinue: boolean);
+    procedure tcScalesTabPlusClick(Sender: TObject);
     procedure ToolAdjustCurveExecute(Sender: TObject);
     procedure ToolAdjustNoiseExecute(Sender: TObject);
     procedure ToolCancelActionExecute(Sender: TObject);
@@ -491,6 +495,7 @@ type
     function CheckSaveStatus: Boolean;
 
     function GetIsSaved: Boolean;
+    function GetScaleCount: Integer;
     function GetCurveCount: Integer;
     function GetManualZoom: Boolean;
     function GetZoomXmin: Double;
@@ -519,6 +524,7 @@ type
     procedure SetIsSaved(Value: Boolean); overload;
     procedure SetIsSaved(Value, UpdateTable: Boolean); overload;
     procedure SetMouseMode(Value: TMouseMode);
+    procedure SetScaleCount(Value: Integer);
     procedure SetCurveCount(Value: Integer);
     procedure SetManualZoom(Value: Boolean);
     procedure SetZoomXmin(Value: Double);
@@ -567,6 +573,7 @@ type
     property DigitFileName: TFileName read FDigitFileName write SetDigitFileName;
     property IsSaved: Boolean read GetIsSaved write SetIsSaved;
     property MouseMode: TMouseMode read FMouseMode write SetMouseMode;
+    property ScaleCount: Integer read GetScaleCount write SetScaleCount;
     property CurveCount: Integer read GetCurveCount write SetCurveCount;
     property ManualZoom: Boolean read GetManualZoom write SetManualZoom;
     property ZoomXmin: Double read GetZoomXmin write SetZoomXmin;
@@ -1743,6 +1750,11 @@ begin
   Result := FIsSaved;
 end;
 
+function TDigitMainForm.GetScaleCount: Integer;
+begin
+  Result := PlotImage.ScaleCount;
+end;
+
 function TDigitMainForm.GetCurveCount: Integer;
 begin
   Result := PlotImage.CurveCount;
@@ -1992,6 +2004,7 @@ begin
 
   FIsSaved := Value;
 
+  ScaleCount := PlotImage.ScaleCount;
   CurveCount := PlotImage.CurveCount;
 
   UpdateControls;
@@ -2016,6 +2029,39 @@ begin
     mdSegments,
     mdGroup,
     mdDelete: PlotImage.Cursor := crCross;
+  end;
+end;
+
+procedure TDigitMainForm.SetScaleCount(Value: Integer);
+var
+  i: Integer;
+  d: TATTabData;
+begin
+  assert(Value = PlotImage.ScaleCount, 'Error: The number of scales is incorrect.');
+
+  // Create or delete the required tabs
+  if (tcScales.TabCount > Value) then
+    for i := tcScales.TabCount - 1 downto Value do
+    begin
+      tcScales.Tabs.Delete(i);
+    end
+  else
+    for i := tcScales.TabCount to Value - 1 do
+    begin
+      //tcScales.Tabs.Add(PlotImage.Scale.Curves[i].Name);
+      tcScales.AddTab(tcScales.TabCount, PlotImage.Scales[i].Name);
+    end;
+
+  // Update tabs
+  for i := 0 to PlotImage.ScaleCount - 1 do
+  begin
+    //tcScales.Tabs.Strings[i] := PlotImage.Scales[i].Name;
+    d := tcScales.GetTabData(i);
+    if (d <> nil) then
+    begin
+      d.TabCaption := PlotImage.Scales[i].Name;
+      tcScales.Invalidate;
+    end;
   end;
 end;
 
@@ -2069,7 +2115,6 @@ begin
     end;
   end;
 end;
-
 
 procedure TDigitMainForm.SetManualZoom(Value: Boolean);
 begin
@@ -2725,7 +2770,7 @@ begin
       PlotImage.Zoom := Value/100;
 end;
 
-procedure TDigitMainForm.tcCurvesChange(Sender: TObject);
+procedure TDigitMainForm.tcCurvesTabChanged(Sender: TObject);
 begin
   //First, update the active curve
   GUIToCurve;
@@ -2763,6 +2808,50 @@ procedure TDigitMainForm.tcCurvesTabPlusClick(Sender: TObject);
 begin
   if ToolCurveAdd.Enabled then
     ToolCurveAdd.Execute;
+end;
+
+procedure TDigitMainForm.tcScalesTabChanged(Sender: TObject);
+begin
+  //Change active scale
+  PlotImage.ScaleIndex := tcScales.TabIndex;
+  // Update the curve list
+  CurveCount := PlotImage.CurveCount;
+  //Finally, update the control values
+  CurveToGUI;
+  //Update the control values
+  UpdateControls;
+
+  UpdateView;
+end;
+
+procedure TDigitMainForm.tcScalesTabClose(Sender: TObject; ATabIndex: integer;
+  var ACanClose, ACanContinue: boolean);
+begin
+  with PlotImage do
+    if ImageIsLoaded and (ScaleCount > 1) then
+    begin
+      PlotImage.DeleteScale(ATabIndex);
+      tcScales.TabIndex := PlotImage.ScaleIndex;
+      CurveToGUI;
+    end;
+
+  ACanClose := False;
+end;
+
+procedure TDigitMainForm.tcScalesTabPlusClick(Sender: TObject);
+begin
+  with PlotImage do
+  begin
+    AddScale;
+    ScaleIndex := ScaleCount - 1;
+    SetPlotPointMarkers(True);
+  end;
+
+  // Update the scale list
+  ScaleCount := PlotImage.ScaleCount;
+
+  tcScales.TabIndex := PlotImage.ScaleIndex;
+  tcScalesTabChanged(Self);
 end;
 
 procedure TDigitMainForm.ToolAdjustCurveExecute(Sender: TObject);
@@ -2808,7 +2897,7 @@ procedure TDigitMainForm.ToolCurveAddExecute(Sender: TObject);
 begin
   PlotImage.AddCurve;
   tcCurves.TabIndex := PlotImage.CurveCount - 1;
-  tcCurvesChange(Self);
+  tcCurvesTabChanged(Self);
 end;
 
 procedure TDigitMainForm.ToolCurveDeleteExecute(Sender: TObject);

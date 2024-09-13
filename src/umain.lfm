@@ -1964,8 +1964,8 @@ object DigitMainForm: TDigitMainForm
     end
     object pcInput: TPageControl
       Left = 0
-      Height = 189
-      Top = 5
+      Height = 154
+      Top = 40
       Width = 220
       ActivePage = tsCurve
       Align = alClient
@@ -1983,21 +1983,21 @@ object DigitMainForm: TDigitMainForm
       object tsCurve: TTabSheet
         Hint = 'Curve options|Options to configure the digitization of the current curve'
         Caption = 'Curve'
-        ClientHeight = 153
+        ClientHeight = 118
         ClientWidth = 214
         ImageIndex = 17
         ParentShowHint = False
         ShowHint = True
         object sbCurve: TScrollBox
           Left = 0
-          Height = 153
+          Height = 118
           Top = 0
           Width = 214
-          HorzScrollBar.Page = 166
-          VertScrollBar.Page = 151
+          HorzScrollBar.Page = 168
+          VertScrollBar.Page = 116
           Align = alClient
-          ClientHeight = 151
-          ClientWidth = 212
+          ClientHeight = 116
+          ClientWidth = 197
           ParentBackground = False
           TabOrder = 0
           object lblColor: TLabel
@@ -2025,7 +2025,7 @@ object DigitMainForm: TDigitMainForm
             Left = 44
             Height = 25
             Top = 2
-            Width = 163
+            Width = 148
             Anchors = [akTop, akLeft, akRight]
             BorderSpacing.Left = 5
             BorderSpacing.Top = 2
@@ -2048,7 +2048,7 @@ object DigitMainForm: TDigitMainForm
             Left = 5
             Height = 56
             Top = 29
-            Width = 202
+            Width = 187
             Anchors = [akTop, akLeft, akRight]
             AutoFill = True
             BorderSpacing.Left = 5
@@ -2063,7 +2063,7 @@ object DigitMainForm: TDigitMainForm
             ChildSizing.Layout = cclLeftToRightThenTopToBottom
             ChildSizing.ControlsPerLine = 1
             ClientHeight = 29
-            ClientWidth = 192
+            ClientWidth = 177
             Font.Color = clBlack
             Font.Height = -11
             Font.Name = 'Default'
@@ -2105,7 +2105,7 @@ object DigitMainForm: TDigitMainForm
             Left = 40
             Height = 22
             Top = 90
-            Width = 167
+            Width = 152
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -2168,7 +2168,7 @@ object DigitMainForm: TDigitMainForm
             Border.Style = bboSolid
             Rounding.RoundX = 1
             Rounding.RoundY = 1
-            Font.Color = clBlack
+            Font.Color = clWindowText
             Font.Height = -11
             Font.Name = 'Default'
             HasTrackBar = True
@@ -2208,7 +2208,7 @@ object DigitMainForm: TDigitMainForm
             Left = 57
             Height = 22
             Top = 113
-            Width = 150
+            Width = 135
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -2311,7 +2311,7 @@ object DigitMainForm: TDigitMainForm
             Left = 69
             Height = 22
             Top = 136
-            Width = 138
+            Width = 123
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -2413,7 +2413,7 @@ object DigitMainForm: TDigitMainForm
             Left = 79
             Height = 22
             Top = 159
-            Width = 128
+            Width = 113
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -2493,7 +2493,7 @@ object DigitMainForm: TDigitMainForm
         Hint = 'Set scale|Set plot scale'
         AutoSize = True
         Caption = 'Scale'
-        ClientHeight = 153
+        ClientHeight = 118
         ClientWidth = 214
         ImageIndex = 41
         ParentShowHint = False
@@ -2501,7 +2501,7 @@ object DigitMainForm: TDigitMainForm
         object sbScale: TScrollBox
           Left = 0
           Height = 118
-          Top = 35
+          Top = 0
           Width = 214
           HorzScrollBar.Page = 181
           VertScrollBar.Page = 116
@@ -2632,7 +2632,7 @@ object DigitMainForm: TDigitMainForm
               Height = 19
               Top = 22
               Width = 138
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Default'
               Font.Style = [fsBold]
@@ -2722,7 +2722,7 @@ object DigitMainForm: TDigitMainForm
               Height = 19
               Top = 20
               Width = 140
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Default'
               Font.Style = [fsBold]
@@ -2858,10 +2858,9 @@ object DigitMainForm: TDigitMainForm
               Border.Style = bboSolid
               Rounding.RoundX = 1
               Rounding.RoundY = 1
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Default'
-              Font.Style = [fsBold]
               HasTrackBar = True
               ArrowColor = clBtnText
               Constraints.MaxHeight = 22
@@ -2876,6 +2875,10 @@ object DigitMainForm: TDigitMainForm
               Top = 15
               Width = 87
               Color = clBtnFace
+              Font.Color = clWindowText
+              Font.Height = -13
+              Font.Name = 'Default'
+              ParentFont = False
               TabOrder = 1
               OnEditingDone = EditPX1EditingDone
             end
@@ -2957,10 +2960,9 @@ object DigitMainForm: TDigitMainForm
               Border.Style = bboSolid
               Rounding.RoundX = 1
               Rounding.RoundY = 1
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Default'
-              Font.Style = [fsBold]
               HasTrackBar = True
               ArrowColor = clBtnText
               Constraints.MaxHeight = 22
@@ -2974,6 +2976,10 @@ object DigitMainForm: TDigitMainForm
               Height = 22
               Top = 39
               Width = 87
+              Font.Color = clWindowText
+              Font.Height = -13
+              Font.Name = 'Default'
+              ParentFont = False
               TabOrder = 3
               OnEditingDone = EditPY1EditingDone
             end
@@ -3104,10 +3110,9 @@ object DigitMainForm: TDigitMainForm
               Border.Style = bboSolid
               Rounding.RoundX = 1
               Rounding.RoundY = 1
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Default'
-              Font.Style = [fsBold]
               HasTrackBar = True
               ArrowColor = clBtnText
               Constraints.MaxHeight = 22
@@ -3121,6 +3126,10 @@ object DigitMainForm: TDigitMainForm
               Height = 22
               Top = 15
               Width = 87
+              Font.Color = clWindowText
+              Font.Height = -13
+              Font.Name = 'Default'
+              ParentFont = False
               TabOrder = 1
               OnEditingDone = EditPX1EditingDone
             end
@@ -3202,10 +3211,9 @@ object DigitMainForm: TDigitMainForm
               Border.Style = bboSolid
               Rounding.RoundX = 1
               Rounding.RoundY = 1
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Default'
-              Font.Style = [fsBold]
               HasTrackBar = True
               ArrowColor = clBtnText
               Constraints.MaxHeight = 22
@@ -3219,6 +3227,10 @@ object DigitMainForm: TDigitMainForm
               Height = 22
               Top = 39
               Width = 87
+              Font.Color = clWindowText
+              Font.Height = -13
+              Font.Name = 'Default'
+              ParentFont = False
               TabOrder = 3
               OnEditingDone = EditPY1EditingDone
             end
@@ -3362,10 +3374,9 @@ object DigitMainForm: TDigitMainForm
               Border.Style = bboSolid
               Rounding.RoundX = 1
               Rounding.RoundY = 1
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Default'
-              Font.Style = [fsBold]
               HasTrackBar = True
               ArrowColor = clBtnText
               Constraints.MaxHeight = 22
@@ -3379,10 +3390,9 @@ object DigitMainForm: TDigitMainForm
               Height = 22
               Top = 15
               Width = 87
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -13
               Font.Name = 'Default'
-              Font.Style = [fsBold]
               ParentFont = False
               TabOrder = 1
               OnEditingDone = EditPX1EditingDone
@@ -3466,10 +3476,9 @@ object DigitMainForm: TDigitMainForm
               Border.Style = bboSolid
               Rounding.RoundX = 1
               Rounding.RoundY = 1
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Default'
-              Font.Style = [fsBold]
               HasTrackBar = True
               ArrowColor = clBtnText
               Constraints.MaxHeight = 22
@@ -3483,68 +3492,33 @@ object DigitMainForm: TDigitMainForm
               Height = 22
               Top = 39
               Width = 87
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -13
               Font.Name = 'Default'
-              Font.Style = [fsBold]
               ParentFont = False
               TabOrder = 3
               OnEditingDone = EditPY1EditingDone
             end
           end
         end
-        object tcScales: TATTabs
-          Left = 0
-          Height = 35
-          Top = 0
-          Width = 214
-          Align = alTop
-          ParentColor = False
-          ParentShowHint = False
-          ShowHint = True
-          Visible = False
-          Tabs = <>
-          DoubleBuffered = False
-          TabIndex = -1
-          ColorBg = clDefault
-          ColorSeparator = clDefault
-          ColorTabActive = 16250871
-          ColorTabPassive = clBtnFace
-          ColorTabOver = 14211288
-          ColorFont = clBlack
-          OptButtonLayout = '<>,v'
-          OptShowPinnedText = '!'
-          OptMouseDragEnabled = False
-          OptMouseDragOutEnabled = False
-          OptHintForX = 'Close tab'
-          OptHintForPlus = 'Add tab'
-          OptHintForArrowLeft = 'Scroll tabs left'
-          OptHintForArrowRight = 'Scroll tabs right'
-          OptHintForArrowMenu = 'Show tabs list'
-          OptHintForUser0 = '0'
-          OptHintForUser1 = '1'
-          OptHintForUser2 = '2'
-          OptHintForUser3 = '3'
-          OptHintForUser4 = '4'
-        end
       end
       object tsPlotBox: TTabSheet
         Hint = 'Set plot box|Set plot box'
         Caption = 'Box'
-        ClientHeight = 153
+        ClientHeight = 118
         ClientWidth = 214
         ImageIndex = 42
         ParentShowHint = False
         ShowHint = True
         object sbPlotBox: TScrollBox
           Left = 0
-          Height = 153
+          Height = 118
           Top = 0
           Width = 214
           HorzScrollBar.Page = 97
-          VertScrollBar.Page = 151
+          VertScrollBar.Page = 116
           Align = alClient
-          ClientHeight = 151
+          ClientHeight = 116
           ClientWidth = 197
           ParentBackground = False
           TabOrder = 0
@@ -3652,10 +3626,9 @@ object DigitMainForm: TDigitMainForm
               Border.Style = bboSolid
               Rounding.RoundX = 1
               Rounding.RoundY = 1
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Default'
-              Font.Style = [fsBold]
               HasTrackBar = True
               ArrowColor = clBtnText
               Constraints.MaxHeight = 22
@@ -3742,10 +3715,9 @@ object DigitMainForm: TDigitMainForm
               Border.Style = bboSolid
               Rounding.RoundX = 1
               Rounding.RoundY = 1
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Default'
-              Font.Style = [fsBold]
               HasTrackBar = True
               ArrowColor = clBtnText
               Constraints.MaxHeight = 22
@@ -3858,10 +3830,9 @@ object DigitMainForm: TDigitMainForm
               Border.Style = bboSolid
               Rounding.RoundX = 1
               Rounding.RoundY = 1
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Default'
-              Font.Style = [fsBold]
               HasTrackBar = True
               ArrowColor = clBtnText
               Constraints.MaxHeight = 22
@@ -3948,10 +3919,9 @@ object DigitMainForm: TDigitMainForm
               Border.Style = bboSolid
               Rounding.RoundX = 1
               Rounding.RoundY = 1
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Default'
-              Font.Style = [fsBold]
               HasTrackBar = True
               ArrowColor = clBtnText
               Constraints.MaxHeight = 22
@@ -4064,10 +4034,9 @@ object DigitMainForm: TDigitMainForm
               Border.Style = bboSolid
               Rounding.RoundX = 1
               Rounding.RoundY = 1
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Default'
-              Font.Style = [fsBold]
               HasTrackBar = True
               ArrowColor = clBtnText
               Constraints.MaxHeight = 22
@@ -4154,10 +4123,9 @@ object DigitMainForm: TDigitMainForm
               Border.Style = bboSolid
               Rounding.RoundX = 1
               Rounding.RoundY = 1
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Default'
-              Font.Style = [fsBold]
               HasTrackBar = True
               ArrowColor = clBtnText
               Constraints.MaxHeight = 22
@@ -4270,10 +4238,9 @@ object DigitMainForm: TDigitMainForm
               Border.Style = bboSolid
               Rounding.RoundX = 1
               Rounding.RoundY = 1
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Default'
-              Font.Style = [fsBold]
               HasTrackBar = True
               ArrowColor = clBtnText
               Constraints.MaxHeight = 22
@@ -4360,10 +4327,9 @@ object DigitMainForm: TDigitMainForm
               Border.Style = bboSolid
               Rounding.RoundX = 1
               Rounding.RoundY = 1
-              Font.Color = clBlack
+              Font.Color = clWindowText
               Font.Height = -11
               Font.Name = 'Default'
-              Font.Style = [fsBold]
               HasTrackBar = True
               ArrowColor = clBtnText
               Constraints.MaxHeight = 22
@@ -4402,7 +4368,7 @@ object DigitMainForm: TDigitMainForm
       object tsGrid: TTabSheet
         Hint = 'Grid options|Options to remove the grid from the plot'
         Caption = 'Grid'
-        ClientHeight = 153
+        ClientHeight = 118
         ClientWidth = 214
         ImageIndex = 38
         ParentShowHint = False
@@ -4433,13 +4399,13 @@ object DigitMainForm: TDigitMainForm
         end
         object sbGrid: TScrollBox
           Left = 0
-          Height = 113
+          Height = 78
           Top = 40
           Width = 214
           HorzScrollBar.Page = 145
-          VertScrollBar.Page = 111
+          VertScrollBar.Page = 76
           Align = alClient
-          ClientHeight = 111
+          ClientHeight = 76
           ClientWidth = 197
           ParentBackground = False
           TabOrder = 1
@@ -4696,6 +4662,7 @@ object DigitMainForm: TDigitMainForm
             Rounding.RoundX = 1
             Rounding.RoundY = 1
             Font.Color = clWindowText
+            Font.Height = -11
             Font.Name = 'Arial'
             HasTrackBar = True
             ArrowColor = clBtnText
@@ -4797,6 +4764,7 @@ object DigitMainForm: TDigitMainForm
             Rounding.RoundX = 1
             Rounding.RoundY = 1
             Font.Color = clWindowText
+            Font.Height = -11
             Font.Name = 'Arial'
             HasTrackBar = True
             ArrowColor = clBtnText
@@ -4920,6 +4888,7 @@ object DigitMainForm: TDigitMainForm
             Rounding.RoundX = 1
             Rounding.RoundY = 1
             Font.Color = clWindowText
+            Font.Height = -11
             Font.Name = 'Arial'
             HasTrackBar = True
             ArrowColor = clBtnText
@@ -4933,6 +4902,44 @@ object DigitMainForm: TDigitMainForm
           end
         end
       end
+    end
+    object tcScales: TATTabs
+      Left = 0
+      Height = 35
+      Top = 0
+      Width = 220
+      Align = alTop
+      ParentColor = False
+      ParentShowHint = False
+      ShowHint = True
+      Tabs = <>
+      DoubleBuffered = True
+      TabIndex = -1
+      ColorBg = clDefault
+      ColorSeparator = clDefault
+      ColorTabActive = 16250871
+      ColorTabPassive = clBtnFace
+      ColorTabOver = 14211288
+      ColorFont = clBlack
+      ColorArrow = clWhite
+      ColorArrowOver = 14211288
+      OptButtonLayout = '<>,v'
+      OptShowPinnedText = '!'
+      OptMouseDragEnabled = False
+      OptMouseDragOutEnabled = False
+      OptHintForX = 'Close tab'
+      OptHintForPlus = 'Add tab'
+      OptHintForArrowLeft = 'Scroll tabs left'
+      OptHintForArrowRight = 'Scroll tabs right'
+      OptHintForArrowMenu = 'Show tabs list'
+      OptHintForUser0 = '0'
+      OptHintForUser1 = '1'
+      OptHintForUser2 = '2'
+      OptHintForUser3 = '3'
+      OptHintForUser4 = '4'
+      OnTabChanged = tcScalesTabChanged
+      OnTabPlusClick = tcScalesTabPlusClick
+      OnTabClose = tcScalesTabClose
     end
   end
   object LeftSplitter: TSplitter
@@ -5066,6 +5073,7 @@ object DigitMainForm: TDigitMainForm
       Top = 0
       Width = 707
       Align = alTop
+      ParentColor = False
       ParentShowHint = False
       ShowHint = True
       Tabs = <>
@@ -5077,6 +5085,8 @@ object DigitMainForm: TDigitMainForm
       ColorTabPassive = clBtnFace
       ColorTabOver = 14211288
       ColorFont = clBlack
+      ColorArrow = clWhite
+      ColorArrowOver = 14211288
       OptButtonLayout = '<>,v'
       OptVarWidth = True
       OptSpaceSide = 0
@@ -5093,7 +5103,7 @@ object DigitMainForm: TDigitMainForm
       OptHintForUser2 = '2'
       OptHintForUser3 = '3'
       OptHintForUser4 = '4'
-      OnTabChanged = tcCurvesChange
+      OnTabChanged = tcCurvesTabChanged
       OnTabPlusClick = tcCurvesTabPlusClick
       OnTabClose = tcCurvesTabClose
       OnTabDblClick = tcCurvesTabDblClick

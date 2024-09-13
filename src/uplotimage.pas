@@ -167,8 +167,8 @@ type
     procedure UpdateMarkersInCurve;
     procedure UpdateMarkersInImage;
 
-    procedure UpdateRegion(UpdateArea: TRect); overload;
-    procedure UpdateRegion; overload;
+    procedure RepaintRegion(UpdateArea: TRect); overload;
+    procedure RepaintRegion; overload;
 
     procedure RectIntersection(Po, Pf: TCurvePoint; var Pini, Pend: TCurvePoint);
     procedure XAxisCoords(var Pini, Pend: TCurvePoint);
@@ -227,7 +227,7 @@ type
 
     procedure AddMarker(Position: TPoint; NewMarker: Boolean = True); overload;
     procedure AddMarker(Marker: TMarker; NewMarker: Boolean = True); overload;
-    procedure UpdateMarker(Marker: TMarker);
+    procedure RepaintMarker(Marker: TMarker);
     procedure DeleteMarker(Marker: TMarker; RealDelete: Boolean = True); overload;
     procedure DeleteMarker(Index: Integer; RealDelete: Boolean = True); overload;
     procedure DeleteMarkerUnderCursor;
@@ -500,7 +500,6 @@ begin
   FMarkerList.Free;
 
   FScales.Free;
-  //FScale.Free;
 
   inherited Destroy;
 end;
@@ -517,8 +516,6 @@ begin
   FScales.Add(TScale.Create('Scale1'));
 
   FScaleIndex := 0;
-
-  //FScale.Reset;
 
   FMarkers.Clear;
   ActiveMarker := nil;
@@ -1622,15 +1619,15 @@ procedure TPlotImage.AddMarker(Marker: TMarker; NewMarker: Boolean = True);
 begin
   Markers.Insert(0, Marker);
   ActiveMarker := Marker;
-  UpdateMarker(Marker);
+  RepaintMarker(Marker);
 
   if NewMarker then
     IsChanged := True;
 end;
 
-procedure TPlotImage.UpdateMarker(Marker: TMarker);
+procedure TPlotImage.RepaintMarker(Marker: TMarker);
 begin
-  UpdateRegion(Marker.Rect);
+  RepaintRegion(Marker.Rect);
 end;
 
 procedure TPlotImage.DeleteMarker(Marker: TMarker; RealDelete: Boolean = True);
@@ -1713,12 +1710,12 @@ begin
         begin
           if (ActiveMarker = BoxMarkers[i]) then
           begin
-            UpdateRegion(Rect[Zoom]);
+            RepaintRegion(Rect[Zoom]);
             Vertex[i - 1] := NewPos/Zoom;
 
             EdgeMarkers[i].Move(Zoom*Edge[i - 1]);
             EdgeMarkers[PrevVertIdx(i - 1) + 1].Move(Zoom*Edge[PrevVertIdx(i - 1)]);
-            UpdateRegion(Rect[Zoom]);
+            RepaintRegion(Rect[Zoom]);
           end;
 
           if (ActiveMarker = EdgeMarkers[i]) then
@@ -1731,7 +1728,7 @@ begin
             // Check that no marker moves out of the image
             if ClientRect.Contains(P1) and ClientRect.Contains(P2) then
             begin
-              UpdateRegion(Rect[Zoom]);
+              RepaintRegion(Rect[Zoom]);
 
               BoxMarkers[NextVertIdx(i - 1) + 1].Move(P1);
               BoxMarkers[i].Move(P2);
@@ -1739,7 +1736,7 @@ begin
               EdgeMarkers[NextVertIdx(i - 1) + 1].Move(Zoom*Edge[NextVertIdx(i - 1)]);
               EdgeMarkers[PrevVertIdx(i - 1) + 1].Move(Zoom*Edge[PrevVertIdx(i - 1)]);
 
-              UpdateRegion(Rect[Zoom]);
+              RepaintRegion(Rect[Zoom]);
 
               NewPos := Zoom*Edge[i - 1];
             end
@@ -1754,9 +1751,9 @@ begin
 
       if (NewPos <> ActiveMArker.Position) then
       begin
-        UpdateMarker(ActiveMarker);
+        RepaintMarker(ActiveMarker);
         ActiveMarker.Move(NewPos);
-        UpdateMarker(ActiveMarker);
+        RepaintMarker(ActiveMarker);
 
         IsChanged := True;
       end;
@@ -1992,12 +1989,12 @@ begin
 
     if Dragging then
     begin
-      UpdateMarker(FClickedMarker);
+      RepaintMarker(FClickedMarker);
 
       if (State = piSetScale) then
       begin
-        UpdateRegion(XAxisRect);
-        UpdateRegion(YAxisRect);
+        RepaintRegion(XAxisRect);
+        RepaintRegion(YAxisRect);
       end;
 
       if ClientRect.Contains(MouseMovePos) then
@@ -2009,8 +2006,8 @@ begin
 
       if (State = piSetScale) then
       begin
-        UpdateRegion(XAxisRect);
-        UpdateRegion(YAxisRect);
+        RepaintRegion(XAxisRect);
+        RepaintRegion(YAxisRect);
       end;
 
       if (State = piSetPlotBox) then
@@ -2118,10 +2115,10 @@ begin
           for i := 1 to NumEdges do
             TmpRect.Union(EdgeMarkers[i].Rect);
 
-          UpdateRegion(TmpRect);
+          RepaintRegion(TmpRect);
         end;
 
-      UpdateMarker(FClickedMarker);
+      RepaintMarker(FClickedMarker);
       MarkerUnderCursor := FClickedMarker;
 
       InMouseMove := False;
@@ -2139,7 +2136,7 @@ begin
 
       //Refresh the rectangle containing the old and new selection
       TmpRect.Union(FSelectionRect);
-      UpdateRegion(TmpRect);
+      RepaintRegion(TmpRect);
 
       InMouseMove := False;
 
@@ -2248,13 +2245,13 @@ begin
           OnRegionSelected(Self, FSelectionRect);
 
         SelectingRegion := False;
-        UpdateRegion;
+        RepaintRegion;
       end;
 
       if Assigned(FClickedMarker) then
       begin
         Markers.Move(Markers.IndexOf(FClickedMarker), 0);
-        UpdateMarker(FClickedMarker);
+        RepaintMarker(FClickedMarker);
       end;
     end;
 
@@ -2277,10 +2274,10 @@ begin
     FMarkerUnderCursor := Marker;
 
     if Assigned(OldMarker) then
-      UpdateMarker(OldMarker);
+      RepaintMarker(OldMarker);
 
     if Assigned(MarkerUnderCursor) then
-      UpdateMarker(MarkerUnderCursor);
+      RepaintMarker(MarkerUnderCursor);
   end;
 end;
 
@@ -2294,10 +2291,10 @@ begin
     FActiveMarker := Marker;
 
     if Assigned(OldMarker) then
-      UpdateMarker(OldMarker);
+      RepaintMarker(OldMarker);
 
     if Assigned(ActiveMarker) then
-      UpdateMarker(ActiveMarker);
+      RepaintMarker(ActiveMarker);
   end;
 end;
 
@@ -2384,7 +2381,7 @@ begin
 
     // Change the state
     FState := Value;
-    UpdateRegion(ClientRect);
+    RepaintRegion(ClientRect);
 
     // Update the markers in the image
     UpdateMarkersInImage;
@@ -2413,7 +2410,7 @@ begin
     Scale.CurveIndex := Value;
     TmpRect.Union(Scale.DigitCurve.CurveRect);
     if (State = piSetCurve) then
-      UpdateRegion(TmpRect);
+      RepaintRegion(TmpRect);
 
     // Finally, update all the new markers in the image
     UpdateMarkersInImage;
@@ -2435,7 +2432,7 @@ begin
     UpdateMarkersInCurve;
     // Now change the active scale
     FScaleIndex := Value;
-    UpdateRegion(ClientRect);
+    RepaintRegion(ClientRect);
     // Finally, update all the new markers in the image
     UpdateMarkersInImage;
 
@@ -2466,7 +2463,7 @@ begin
       DigitCurve.Curve.Point[Index] := FromPlotToImg(Value);
       TmpRect.Union(DigitCurve.CurveRect);
       if (State = piSetCurve) then
-        UpdateRegion(TmpRect);
+        RepaintRegion(TmpRect);
 
       FIsChanged := True;
     end;
@@ -2539,7 +2536,7 @@ begin
   end;
 end;
 
-procedure TPlotImage.UpdateRegion(UpdateArea: TRect);
+procedure TPlotImage.RepaintRegion(UpdateArea: TRect);
 begin
   Canvas.ClipRect := UpdateArea;
   {$ifdef windows}
@@ -2549,9 +2546,9 @@ begin
   {$endif}
 end;
 
-procedure TPlotImage.UpdateRegion;
+procedure TPlotImage.RepaintRegion;
 begin
-  UpdateRegion(SelectionRect);
+  RepaintRegion(SelectionRect);
 end;
 
 procedure TPlotImage.RectIntersection(Po, Pf: TCurvePoint;
@@ -2817,7 +2814,7 @@ procedure TPlotImage.ClearCurve(Index: Integer);
 begin
   if (Index >= 0) and (Index < CurveCount) then
   begin
-    UpdateRegion(Scale.Curves[Index].CurveRect);
+    RepaintRegion(Scale.Curves[Index].CurveRect);
     Scale.Curves[Index].Clear;
 
     IsChanged := True;
@@ -2835,7 +2832,7 @@ begin
       GoBack;
       TmpRect.Union(CurveRect);
       if (State = piSetCurve) then
-        UpdateRegion(TmpRect);
+        RepaintRegion(TmpRect);
 
       IsChanged := True;
     end;
@@ -2852,7 +2849,7 @@ begin
       GoForward;
       TmpRect.Union(CurveRect);
       if (State = piSetCurve) then
-        UpdateRegion(TmpRect);
+        RepaintRegion(TmpRect);
 
       IsChanged := True;
     end;
@@ -2904,7 +2901,7 @@ begin
     if (Index = CurveIndex) and (State = piSetCurve) then
     begin
       TmpRect.Union(Scale.DigitCurve.CurveRect);
-      UpdateRegion(TmpRect);
+      RepaintRegion(TmpRect);
     end;
 
     IsChanged := True;
@@ -2947,7 +2944,7 @@ begin
     if (Index = CurveIndex) and (State = piSetCurve) then
     begin
       TmpRect.Union(Scale.DigitCurve.CurveRect);
-      UpdateRegion(TmpRect);
+      RepaintRegion(TmpRect);
     end;
 
     IsChanged := True;
@@ -2990,7 +2987,7 @@ begin
     if (Index = CurveIndex) and (State = piSetCurve) then
     begin
       TmpRect.Union(Scale.DigitCurve.CurveRect);
-      UpdateRegion(TmpRect);
+      RepaintRegion(TmpRect);
     end;
 
     IsChanged := True;
@@ -3018,7 +3015,7 @@ begin
   Scale.DigitCurve.CorrectCurve(Po, Pf, IsStep);
   TmpRect.Union(Scale.DigitCurve.CurveRect);
   if (State = piSetCurve) then
-    UpdateRegion(TmpRect);
+    RepaintRegion(TmpRect);
 
   IsChanged := True;
 end;
@@ -3031,7 +3028,7 @@ begin
   Scale.DigitCurve.CorrectCurve(Po, Pf, IsStep);
   TmpRect.Union(Scale.DigitCurve.CurveRect);
   if (State = piSetCurve) then
-    UpdateRegion(TmpRect);
+    RepaintRegion(TmpRect);
 
   IsChanged := True;
 end;
@@ -3090,7 +3087,7 @@ begin
   Scale.DigitCurve.GroupPointsInRegion(Region);
   TmpRect.Union(Scale.DigitCurve.CurveRect);
   if (State = piSetCurve) then
-    UpdateRegion(TmpRect);
+    RepaintRegion(TmpRect);
 
   IsChanged := True;
 end;
@@ -3103,7 +3100,7 @@ begin
   Scale.DigitCurve.DeletePointsInRegion(Region);
   TmpRect.Union(Scale.DigitCurve.CurveRect);
   if (State = piSetCurve) then
-    UpdateRegion(TmpRect);
+    RepaintRegion(TmpRect);
 
   IsChanged := True;
 end;
@@ -3116,7 +3113,7 @@ begin
   Scale.DigitCurve.AddToY(-1);
   TmpRect.Union(Scale.DigitCurve.CurveRect);
   if (State = piSetCurve) then
-    UpdateRegion(TmpRect);
+    RepaintRegion(TmpRect);
 
   IsChanged := True;
 end;
@@ -3129,7 +3126,7 @@ begin
   Scale.DigitCurve.AddToY(1);
   TmpRect.Union(Scale.DigitCurve.CurveRect);
   if (State = piSetCurve) then
-    UpdateRegion(TmpRect);
+    RepaintRegion(TmpRect);
 
   IsChanged := True;
 end;
@@ -3142,7 +3139,7 @@ begin
   Scale.DigitCurve.AddToX(-1);
   TmpRect.Union(Scale.DigitCurve.CurveRect);
   if (State = piSetCurve) then
-    UpdateRegion(TmpRect);
+    RepaintRegion(TmpRect);
 
   IsChanged := True;
 end;
@@ -3155,7 +3152,7 @@ begin
   Scale.DigitCurve.AddToX(1);
   TmpRect.Union(Scale.DigitCurve.CurveRect);
   if (State = piSetCurve) then
-    UpdateRegion(TmpRect);
+    RepaintRegion(TmpRect);
 
   IsChanged := True;
 end;
