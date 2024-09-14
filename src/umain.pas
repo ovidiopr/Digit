@@ -132,7 +132,7 @@ type
     tbResetBox: TToolButton;
     tbShowHideGrid: TToolButton;
     tcCurves: TATTabs;
-    tcScales: TATTabs;
+    tcPlots: TATTabs;
     ToolQuadraticItem: TMenuItem;
     ToolLinearItem: TMenuItem;
     QuadraticItem: TMenuItem;
@@ -454,10 +454,11 @@ type
       var ACanClose, ACanContinue: boolean);
     procedure tcCurvesTabDblClick(Sender: TObject; AIndex: integer);
     procedure tcCurvesTabPlusClick(Sender: TObject);
-    procedure tcScalesTabChanged(Sender: TObject);
-    procedure tcScalesTabClose(Sender: TObject; ATabIndex: integer;
+    procedure tcPlotsTabChanged(Sender: TObject);
+    procedure tcPlotsTabClose(Sender: TObject; ATabIndex: integer;
       var ACanClose, ACanContinue: boolean);
-    procedure tcScalesTabPlusClick(Sender: TObject);
+    procedure tcPlotsTabDblClick(Sender: TObject; AIndex: integer);
+    procedure tcPlotsTabPlusClick(Sender: TObject);
     procedure ToolAdjustCurveExecute(Sender: TObject);
     procedure ToolAdjustNoiseExecute(Sender: TObject);
     procedure ToolCancelActionExecute(Sender: TObject);
@@ -516,6 +517,9 @@ type
     procedure UpdatePlotYScale;
     procedure LogAxis(AChart: TChart; AxisIndex: Integer; Enable: Boolean; Base: Double);
     procedure InverseAxis(AChart: TChart; AxisIndex: Integer; Enable: Boolean);
+
+    procedure RenamePlot; overload;
+    procedure RenamePlot(Index: Integer); overload;
 
     procedure RenameCurve; overload;
     procedure RenameCurve(Index: Integer); overload;
@@ -619,9 +623,10 @@ end;
 
 function TDigitMainForm.XLine(Y, Shift: Integer): Integer;
 begin
-  Result := Round(PlotImage.Scale.ImagePoint[2].X + Shift + (Y - PlotImage.Scale.ImagePoint[2].Y)*
-                  (PlotImage.Scale.ImagePoint[1].X - PlotImage.Scale.ImagePoint[2].X)/
-                  (PlotImage.Scale.ImagePoint[1].Y - PlotImage.Scale.ImagePoint[2].Y));
+  with PlotImage.Plot.Scale do
+    Result := Round(ImagePoint[2].X + Shift + (Y - ImagePoint[2].Y)*
+                   (ImagePoint[1].X - ImagePoint[2].X)/
+                   (ImagePoint[1].Y - ImagePoint[2].Y));
 end;
 
 procedure TDigitMainForm.UpdateControls;
@@ -649,8 +654,8 @@ begin
     ModeMinorGridColor.Enabled := ImageIsLoaded and (State = piSetGrid);
     ModeBackgroundColor.Enabled := ImageIsLoaded and (State = piSetGrid);
 
-    ToolDigitLine.Enabled := Scale.IsValid and ColorIsSet and (State = piSetCurve);
-    ToolDigitColor.Enabled := Scale.IsValid and ColorIsSet and (State = piSetCurve);
+    ToolDigitLine.Enabled := Plot.Scale.IsValid and ColorIsSet and (State = piSetCurve);
+    ToolDigitColor.Enabled := Plot.Scale.IsValid and ColorIsSet and (State = piSetCurve);
     ToolDigitMarkers.Enabled := ToolDigitLine.Enabled and (Markers.Count > 0);
     ToolAdjustCurve.Enabled := (State = piSetCurve) and HasPoints;
     ToolAdjustNoise.Enabled := (State = piSetCurve) and HasPoints;
@@ -676,7 +681,7 @@ begin
     MarkersMoveRight.Enabled := ImageIsLoaded and assigned(ActiveMarker);
     MarkersDelete.Enabled := ImageIsLoaded and assigned(ActiveMarker) and not ActiveMarker.IsPersistent;
 
-    ToolCorrectDistortion.Enabled := ImageIsLoaded and (State = piSetPlotBox) and PlotImage.Scale.PlotBox.IsConvex;
+    ToolCorrectDistortion.Enabled := ImageIsLoaded and (State = piSetPlotBox) and PlotImage.Plot.Box.IsConvex;
     ToolResetBox.Enabled := ImageIsLoaded and (State = piSetPlotBox);
 
     GridRemoval.Enabled := ImageIsLoaded and (State = piSetGrid) and not (GridMask.IsValid and GridMask.IsActive);
@@ -715,9 +720,9 @@ begin
       with TLineSeries(MainPlot.Series.Items[i]) do
       begin
         Clear;
-        with PlotImage.Scale do
+        with PlotImage.Plot do
         begin
-          if (IsValid and Curves[i].HasPoints) then
+          if (Scale.IsValid and Curves[i].HasPoints) then
           begin
             SeriesColor := Curves[i].Color;
             Pointer.Style := psCircle;
@@ -760,7 +765,7 @@ begin
     // Copy the values to the table
     leData.Strings.Clear;
     with PlotImage do
-      if (Scale.IsValid and HasPoints) then
+      if (Plot.Scale.IsValid and HasPoints) then
       begin
         // Update the curve properties
         seInterpPoints.Value := NumPoints;
@@ -808,11 +813,14 @@ begin
   Initialize;
   if PlotImage.LoadFromXML(FileName, OpenPictureDlg) then
   begin
-    leData.TitleCaptions[0] := PlotImage.Scale.XLabel;
-    leData.TitleCaptions[1] := PlotImage.Scale.YLabel;
-    leData.Invalidate;
-    MainPlot.BottomAxis.Title.Caption := PlotImage.Scale.XLabel;
-    MainPlot.LeftAxis.Title.Caption := PlotImage.Scale.YLabel;
+    with PlotImage.Plot.Scale do
+    begin
+      leData.TitleCaptions[0] := XLabel;
+      leData.TitleCaptions[1] := YLabel;
+      leData.Invalidate;
+      MainPlot.BottomAxis.Title.Caption := XLabel;
+      MainPlot.LeftAxis.Title.Caption := YLabel;
+    end;
 
     UpdatePlotXScale;
     UpdatePlotYScale;
@@ -863,9 +871,9 @@ begin
   Readln(F, S);
   ImageName := S;
   Readln(F, S);
-  PlotImage.Scale.XLabel := S;
+  PlotImage.Plot.Scale.XLabel := S;
   Readln(F, S);
-  PlotImage.Scale.YLabel := S;
+  PlotImage.Plot.Scale.YLabel := S;
   Read(F, C);
   PlotImage.ImageIsLoaded := C = '1';
   Read(F, C);
@@ -878,7 +886,7 @@ begin
   //PlotImage.ColorIsSet := C = '1';
   Readln(F, C);
   SavedPoints := C = '1';
-  with PlotImage.Scale do
+  with PlotImage.Plot do
   begin
     Read(F, X);  Read(F, Y);
     ImagePoint[1] := TCurvePoint.Create(X, Y);
@@ -903,7 +911,7 @@ begin
     while not EOF(F) do
     begin
       Readln(F, Y);
-      PlotImage.Scale.Curve.AddPoint(X, Y);
+      PlotImage.Plot.Curve.AddPoint(X, Y);
       X := X + 1;
     end;
   end;
@@ -931,9 +939,9 @@ begin
   if PlotImage.ImageIsLoaded then
     with PlotImage do
     begin
-      AxesPoint[1] := Scale.ImagePoint[1];
-      AxesPoint[2] := Scale.ImagePoint[2];
-      AxesPoint[3] := Scale.ImagePoint[3];
+      AxesPoint[1] := Plot.Scale.ImagePoint[1];
+      AxesPoint[2] := Plot.Scale.ImagePoint[2];
+      AxesPoint[3] := Plot.Scale.ImagePoint[3];
     end;
 
   IsSaved := False;
@@ -1021,7 +1029,7 @@ end;
 
 procedure TDigitMainForm.DigitizeFromHereItemClick(Sender: TObject);
 begin
-  if PlotImage.Scale.IsValid then
+  if PlotImage.Plot.Scale.IsValid then
   begin
     GUIToCurve;
 
@@ -1060,11 +1068,12 @@ begin
     end;
   end;
 
-  if (PlotImage.Scale.CoordSystem <> TCoordSystem(cbbCoords.ItemIndex)) then
-  begin
-    PlotImage.Scale.CoordSystem := TCoordSystem(cbbCoords.ItemIndex);
-    PlotImage.Scale.PlotBox.PolarCoordinates := (PlotImage.Scale.CoordSystem = csPolar);
-  end;
+  with PlotImage.Plot do
+    if (Scale.CoordSystem <> TCoordSystem(cbbCoords.ItemIndex)) then
+    begin
+      Scale.CoordSystem := TCoordSystem(cbbCoords.ItemIndex);
+      Box.PolarCoordinates := (Scale.CoordSystem = csPolar);
+    end;
 end;
 
 procedure TDigitMainForm.btnMajorGridColorChanged(Sender: TObject);
@@ -1118,9 +1127,9 @@ end;
 
 procedure TDigitMainForm.cbbXScaleChange(Sender: TObject);
 begin
-  if (PlotImage.Scale.XScale <> TScaleType(cbbXScale.ItemIndex)) then
+  if (PlotImage.Plot.Scale.XScale <> TScaleType(cbbXScale.ItemIndex)) then
   begin
-    PlotImage.Scale.XScale := TScaleType(cbbXScale.ItemIndex);
+    PlotImage.Plot.Scale.XScale := TScaleType(cbbXScale.ItemIndex);
     UpdatePlotXScale;
 
     PlotImage.IsChanged := True;
@@ -1129,9 +1138,9 @@ end;
 
 procedure TDigitMainForm.cbbYScaleChange(Sender: TObject);
 begin
-  if (PlotImage.Scale.YScale <> TScaleType(cbbYScale.ItemIndex)) then
+  if (PlotImage.Plot.Scale.YScale <> TScaleType(cbbYScale.ItemIndex)) then
   begin
-    PlotImage.Scale.YScale := TScaleType(cbbYScale.ItemIndex);
+    PlotImage.Plot.Scale.YScale := TScaleType(cbbYScale.ItemIndex);
     UpdatePlotYScale;
 
     PlotImage.IsChanged := True;
@@ -1227,13 +1236,13 @@ begin
   with TEdit(Sender) do
   begin
     if TryStrToFloat(Text, Value) and
-       (Value <> PlotImage.Scale.PlotPoint[Tag].X) then
+       (Value <> PlotImage.Plot.Scale.PlotPoint[Tag].X) then
     begin
-      PlotImage.Scale.PlotPoint[Tag] := PlotPoint[Tag];
+      PlotImage.Plot.Scale.PlotPoint[Tag] := PlotPoint[Tag];
       PlotImage.IsChanged := True;
     end
     else
-      Text := FloatToStr(PlotImage.Scale.PlotPoint[Tag].X);
+      Text := FloatToStr(PlotImage.Plot.Scale.PlotPoint[Tag].X);
   end;
 end;
 
@@ -1244,13 +1253,13 @@ begin
   with TEdit(Sender) do
   begin
     if TryStrToFloat(Text, Value) and
-       (Value <> PlotImage.Scale.PlotPoint[Tag].Y) then
+       (Value <> PlotImage.Plot.Scale.PlotPoint[Tag].Y) then
     begin
-      PlotImage.Scale.PlotPoint[Tag] := PlotPoint[Tag];
+      PlotImage.Plot.Scale.PlotPoint[Tag] := PlotPoint[Tag];
       PlotImage.IsChanged := True;
     end
     else
-      Text := FloatToStr(PlotImage.Scale.PlotPoint[Tag].Y);
+      Text := FloatToStr(PlotImage.Plot.Scale.PlotPoint[Tag].Y);
   end;
 end;
 
@@ -1319,9 +1328,9 @@ end;
 
 procedure TDigitMainForm.edtXEditingDone(Sender: TObject);
 begin
-  if (PlotImage.Scale.XLabel <> edtX.Text) then
+  if (PlotImage.Plot.Scale.XLabel <> edtX.Text) then
   begin
-    PlotImage.Scale.XLabel := edtX.Text;
+    PlotImage.Plot.Scale.XLabel := edtX.Text;
     leData.TitleCaptions[0] := edtX.Text;
     leData.Invalidate;
 
@@ -1331,9 +1340,9 @@ end;
 
 procedure TDigitMainForm.edtYEditingDone(Sender: TObject);
 begin
-  if (PlotImage.Scale.YLabel <> edtY.Text) then
+  if (PlotImage.Plot.Scale.YLabel <> edtY.Text) then
   begin
-    PlotImage.Scale.YLabel := edtY.Text;
+    PlotImage.Plot.Scale.YLabel := edtY.Text;
     leData.TitleCaptions[1] := edtY.Text;
     leData.Invalidate;
 
@@ -1526,14 +1535,15 @@ var
   PtCv: TCurve;
 begin
   //Export digitization to a .csv file
-  SaveDataDlg.FileName := ExtractFilePath(DigitFileName) + PlotImage.Scale.DigitCurve.Name + '.csv';
+  SaveDataDlg.FileName := ExtractFilePath(DigitFileName) + PlotImage.Plot.DigitCurve.Name + '.csv';
   if SaveDataDlg.Execute then
   begin
     AssignFile(F, SaveDataDlg.FileName);
     Rewrite(F);
-    Writeln(F, '"' + PlotImage.Scale.XLabel + '","' + PlotImage.Scale.YLabel + '"');
+    Writeln(F, '"' + PlotImage.Plot.Scale.XLabel +
+               '","' + PlotImage.Plot.Scale.YLabel + '"');
     try
-      PtCv := PlotImage.Scale.PlotCurve;
+      PtCv := PlotImage.Plot.PlotCurve;
       for i := 0 to PtCv.Count - 1 do
         Writeln(F, PtCv.Point[i].ToStr('%.5g'));
     finally
@@ -1602,7 +1612,7 @@ begin
       leData.EditorMode := False;
 
       with PlotImage do
-        if (Scale.IsValid and HasPoints) then
+        if (Plot.Scale.IsValid and HasPoints) then
         begin
           // Copy a new batch of values to the table
           n := leData.RowCount - 1;
@@ -1688,22 +1698,22 @@ begin
     piSetScale: begin
       with PlotImage do
       begin
-        cbbCoords.ItemIndex := Integer(Scale.CoordSystem);
-        cbbXScale.ItemIndex := Integer(Scale.XScale);
-        edtX.Text := Scale.XLabel;
-        cbbYScale.ItemIndex := Integer(Scale.YScale);
-        edtY.Text := Scale.YLabel;
+        cbbCoords.ItemIndex := Integer(Plot.Scale.CoordSystem);
+        cbbXScale.ItemIndex := Integer(Plot.Scale.XScale);
+        edtX.Text := Plot.Scale.XLabel;
+        cbbYScale.ItemIndex := Integer(Plot.Scale.YScale);
+        edtY.Text := Plot.Scale.YLabel;
 
-        ImagePoint[1] := Scale.ImagePoint[1];
-        PlotPoint[1] := Scale.PlotPoint[1];
-        ImagePoint[2] := Scale.ImagePoint[2];
-        PlotPoint[2] := Scale.PlotPoint[2];
-        ImagePoint[3] := Scale.ImagePoint[3];
-        PlotPoint[3] := Scale.PlotPoint[3];
+        ImagePoint[1] := Plot.Scale.ImagePoint[1];
+        PlotPoint[1] := Plot.Scale.PlotPoint[1];
+        ImagePoint[2] := Plot.Scale.ImagePoint[2];
+        PlotPoint[2] := Plot.Scale.PlotPoint[2];
+        ImagePoint[3] := Plot.Scale.ImagePoint[3];
+        PlotPoint[3] := Plot.Scale.PlotPoint[3];
       end;
     end;
     piSetPlotBox: begin
-      with PlotImage.Scale.PlotBox do
+      with PlotImage.Plot.Box do
       begin
         EditVX1.Value := Round(Vertex[0].X);
         EditVY1.Value := Round(Vertex[0].Y);
@@ -1752,7 +1762,7 @@ end;
 
 function TDigitMainForm.GetScaleCount: Integer;
 begin
-  Result := PlotImage.ScaleCount;
+  Result := PlotImage.PlotCount;
 end;
 
 function TDigitMainForm.GetCurveCount: Integer;
@@ -1861,7 +1871,7 @@ end;
 
 procedure TDigitMainForm.UpdatePlotXScale;
 begin
-  case PlotImage.Scale.XScale of
+  case PlotImage.Plot.Scale.XScale of
     stLog: LogAxis(MainPlot, 1, True, 10);
     stLn: LogAxis(MainPlot, 1, True, 2.71828182845905);
     stInverse: InverseAxis(MainPlot, 1, True);
@@ -1872,7 +1882,7 @@ end;
 
 procedure TDigitMainForm.UpdatePlotYScale;
 begin
-  case PlotImage.Scale.YScale of
+  case PlotImage.Plot.Scale.YScale of
     stLog: LogAxis(MainPlot, 0, True, 10);
     stLn: LogAxis(MainPlot, 0, True, 2.71828182845905);
     stInverse: InverseAxis(MainPlot, 0, True);
@@ -1940,6 +1950,35 @@ begin
   end;
 end;
 
+procedure TDigitMainForm.RenamePlot;
+begin
+  RenamePlot(tcPlots.TabIndex);
+end;
+
+procedure TDigitMainForm.RenamePlot(Index: Integer);
+var
+  d: TATTabData;
+  NewName: String;
+begin
+  with PlotImage.Plot do
+  begin
+    NewName := InputBox('Plot name', 'New name:', Name);
+    if (NewName <> Name) then
+    begin
+      Name := NewName;
+      //tcPlots.Tabs.Strings[Index] := NewName;
+      d := tcPlots.GetTabData(Index);
+      if (d <> nil) then
+      begin
+        d.TabCaption := NewName;
+        tcPlots.Invalidate;
+      end;
+
+      IsSaved := False;
+    end;
+  end;
+end;
+
 procedure TDigitMainForm.RenameCurve;
 begin
   RenameCurve(tcCurves.TabIndex);
@@ -1950,7 +1989,7 @@ var
   d: TATTabData;
   NewName: String;
 begin
-  with PlotImage.Scale.DigitCurve do
+  with PlotImage.Plot.DigitCurve do
   begin
     NewName := InputBox('Curve name', 'New name:', Name);
     if (NewName <> Name) then
@@ -1965,6 +2004,8 @@ begin
       end;
 
       TLineSeries(MainPlot.Series[Index]).Title := NewName;
+
+      IsSaved := False;
     end;
   end;
 end;
@@ -2004,7 +2045,7 @@ begin
 
   FIsSaved := Value;
 
-  ScaleCount := PlotImage.ScaleCount;
+  ScaleCount := PlotImage.PlotCount;
   CurveCount := PlotImage.CurveCount;
 
   UpdateControls;
@@ -2037,30 +2078,30 @@ var
   i: Integer;
   d: TATTabData;
 begin
-  assert(Value = PlotImage.ScaleCount, 'Error: The number of scales is incorrect.');
+  assert(Value = PlotImage.PlotCount, 'Error: The number of scales is incorrect.');
 
   // Create or delete the required tabs
-  if (tcScales.TabCount > Value) then
-    for i := tcScales.TabCount - 1 downto Value do
+  if (tcPlots.TabCount > Value) then
+    for i := tcPlots.TabCount - 1 downto Value do
     begin
-      tcScales.Tabs.Delete(i);
+      tcPlots.Tabs.Delete(i);
     end
   else
-    for i := tcScales.TabCount to Value - 1 do
+    for i := tcPlots.TabCount to Value - 1 do
     begin
-      //tcScales.Tabs.Add(PlotImage.Scale.Curves[i].Name);
-      tcScales.AddTab(tcScales.TabCount, PlotImage.Scales[i].Name);
+      //tcPlots.Tabs.Add(PlotImage.Plot.Curves[i].Name);
+      tcPlots.AddTab(tcPlots.TabCount, PlotImage.Plots[i].Name);
     end;
 
   // Update tabs
-  for i := 0 to PlotImage.ScaleCount - 1 do
+  for i := 0 to PlotImage.PlotCount - 1 do
   begin
-    //tcScales.Tabs.Strings[i] := PlotImage.Scales[i].Name;
-    d := tcScales.GetTabData(i);
+    //tcPlots.Tabs.Strings[i] := PlotImage.Plots[i].Name;
+    d := tcPlots.GetTabData(i);
     if (d <> nil) then
     begin
-      d.TabCaption := PlotImage.Scales[i].Name;
-      tcScales.Invalidate;
+      d.TabCaption := PlotImage.Plots[i].Name;
+      tcPlots.Invalidate;
     end;
   end;
 end;
@@ -2092,25 +2133,25 @@ begin
       TmpSeries.AxisIndexX := MainPlot.BottomAxis.Index;
       TmpSeries.AxisIndexY := MainPlot.LeftAxis.Index;
 
-      //tcCurves.Tabs.Add(PlotImage.Scale.Curves[i].Name);
-      tcCurves.AddTab(tcCurves.TabCount, PlotImage.Scale.Curves[i].Name);
+      //tcCurves.Tabs.Add(PlotImage.Plot.Curves[i].Name);
+      tcCurves.AddTab(tcCurves.TabCount, PlotImage.Plot.Curves[i].Name);
     end;
 
   // Update tabs and series
   for i := 0 to PlotImage.CurveCount - 1 do
   begin
     TmpSeries := TLineSeries(MainPlot.Series[i]);
-    TmpSeries.Title := PlotImage.Scale.Curves[i].Name;
-    TmpSeries.SeriesColor := PlotImage.Scale.Curves[i].Color;
+    TmpSeries.Title := PlotImage.Plot.Curves[i].Name;
+    TmpSeries.SeriesColor := PlotImage.Plot.Curves[i].Color;
     TmpSeries.LinePen.Width := 2;
     TmpSeries.Clear;
 
-    //tcCurves.Tabs.Strings[i] := PlotImage.Scale.Curves[i].Name;
+    //tcCurves.Tabs.Strings[i] := PlotImage.Plot.Curves[i].Name;
     d := tcCurves.GetTabData(i);
     if (d <> nil) then
     begin
-      d.TabCaption := PlotImage.Scale.Curves[i].Name;
-      d.TabColor := PlotImage.Scale.Curves[i].Color;
+      d.TabCaption := PlotImage.Plot.Curves[i].Name;
+      d.TabColor := PlotImage.Plot.Curves[i].Color;
       tcCurves.Invalidate;
     end;
   end;
@@ -2339,7 +2380,7 @@ procedure TDigitMainForm.CurveToGUI;
 var
   TmpCurve: TCurve;
 begin
-  with PlotImage.Scale.DigitCurve do
+  with PlotImage.Plot.DigitCurve do
   begin
     btnColor.ButtonColor := Color;
     if (Step > 0) then
@@ -2357,7 +2398,7 @@ begin
     edtSpread.Value := Spread;
 
     try
-      TmpCurve := PlotImage.Scale.PlotCurve;
+      TmpCurve := PlotImage.Plot.PlotCurve;
       if (TmpCurve.Count > 1) then
       begin
         seInterpPoints.Value := TmpCurve.Count;
@@ -2385,7 +2426,7 @@ end;
 
 procedure TDigitMainForm.GUIToCurve;
 begin
-  with PlotImage.Scale.DigitCurve do
+  with PlotImage.Plot.DigitCurve do
   begin
     Color := btnColor.ButtonColor;
     if (rgDirection.ItemIndex = 0) then
@@ -2412,7 +2453,7 @@ begin
         //We are selecting the color
         mdColor: begin
           btnColor.ButtonColor := PlotImage.GetPixel(X, Y);
-          PlotImage.Scale.DigitCurve.Color := PlotImage.GetPixel(X, Y);
+          PlotImage.Plot.DigitCurve.Color := PlotImage.GetPixel(X, Y);
           PlotImage.RedrawMarkers;
         end;
         mdMajorGridColor: btnMajorGrid.ButtonColor := PlotImage.GetPixel(X, Y);
@@ -2423,7 +2464,7 @@ begin
       UpdateControls;
     end;
     mbRight: begin
-      DigitizeFromHereItem.Enabled := PlotImage.Scale.IsValid and PlotImage.ColorIsSet;
+      DigitizeFromHereItem.Enabled := PlotImage.Plot.Scale.IsValid and PlotImage.ColorIsSet;
       TmpPoint.X := X/PlotImage.Zoom;
       TmpPoint.Y := Y/PlotImage.Zoom;
     end;
@@ -2452,7 +2493,7 @@ begin
     else
       StatusBar.Panels[1].Text := Format('%d, %d (%.1f, %.1f)',
                                          [X, Y, X/Zoom, Y/Zoom]);
-    if Scale.IsValid then
+    if Plot.Scale.IsValid then
     begin
       Pt := ConvertCoords(X, Y);
       StatusBar.Panels[2].Text := Pt.ToStr('%.4g');
@@ -2553,13 +2594,13 @@ begin
   case PlotImage.State of
     piSetScale: begin
       if (Marker = PlotImage.AxesMarkers[1]) then
-        UpdateEditors(PlotImage.Scale.ImagePoint[1], EditIX1, EditIY1);
+        UpdateEditors(PlotImage.Plot.Scale.ImagePoint[1], EditIX1, EditIY1);
 
       if (Marker = PlotImage.AxesMarkers[2]) then
-        UpdateEditors(PlotImage.Scale.ImagePoint[2], EditIX2, EditIY2);
+        UpdateEditors(PlotImage.Plot.Scale.ImagePoint[2], EditIX2, EditIY2);
 
       if (Marker = PlotImage.AxesMarkers[3]) then
-        UpdateEditors(PlotImage.Scale.ImagePoint[3], EditIX3, EditIY3);
+        UpdateEditors(PlotImage.Plot.Scale.ImagePoint[3], EditIX3, EditIY3);
     end;
     piSetPlotBox: begin
       if (Marker = PlotImage.BoxMarkers[1]) then
@@ -2625,16 +2666,16 @@ begin
   StatusBar.Panels[1].Text := '';
   Pt := MainPlot.ImageToGraph(TPoint.Create(X, Y));
 
-  if Assigned(PlotImage) and Assigned(PlotImage.Scale) then
+  if Assigned(PlotImage) and Assigned(PlotImage.Plot) then
   begin
     // Calculate the correct value for the X axis
-    case PlotImage.Scale.XScale of
+    case PlotImage.Plot.Scale.XScale of
       stLog: Pt.X := Power(10, Pt.X);
       stLn: Pt.X := Exp(Pt.X);
       stInverse: Pt.X := 1/Pt.X;
     end;
     // Calculate the correct value for the Y axis
-    case PlotImage.Scale.YScale of
+    case PlotImage.Plot.Scale.YScale of
       stLog: Pt.Y := Power(10, Pt.Y);
       stLn: Pt.Y := Exp(Pt.Y);
       stInverse: Pt.Y := 1/Pt.Y;
@@ -2810,10 +2851,10 @@ begin
     ToolCurveAdd.Execute;
 end;
 
-procedure TDigitMainForm.tcScalesTabChanged(Sender: TObject);
+procedure TDigitMainForm.tcPlotsTabChanged(Sender: TObject);
 begin
   //Change active scale
-  PlotImage.ScaleIndex := tcScales.TabIndex;
+  PlotImage.PlotIndex := tcPlots.TabIndex;
   // Update the curve list
   CurveCount := PlotImage.CurveCount;
   //Finally, update the control values
@@ -2824,34 +2865,39 @@ begin
   UpdateView;
 end;
 
-procedure TDigitMainForm.tcScalesTabClose(Sender: TObject; ATabIndex: integer;
+procedure TDigitMainForm.tcPlotsTabClose(Sender: TObject; ATabIndex: integer;
   var ACanClose, ACanContinue: boolean);
 begin
   with PlotImage do
-    if ImageIsLoaded and (ScaleCount > 1) then
+    if ImageIsLoaded and (PlotCount > 1) then
     begin
-      PlotImage.DeleteScale(ATabIndex);
-      tcScales.TabIndex := PlotImage.ScaleIndex;
+      PlotImage.DeletePlot(ATabIndex);
+      tcPlots.TabIndex := PlotImage.PlotIndex;
       CurveToGUI;
     end;
 
   ACanClose := False;
 end;
 
-procedure TDigitMainForm.tcScalesTabPlusClick(Sender: TObject);
+procedure TDigitMainForm.tcPlotsTabDblClick(Sender: TObject; AIndex: integer);
+begin
+  RenamePlot(AIndex);
+end;
+
+procedure TDigitMainForm.tcPlotsTabPlusClick(Sender: TObject);
 begin
   with PlotImage do
   begin
-    AddScale;
-    ScaleIndex := ScaleCount - 1;
+    AddPlot;
+    PlotIndex := PlotCount - 1;
     SetPlotPointMarkers(True);
   end;
 
   // Update the scale list
-  ScaleCount := PlotImage.ScaleCount;
+  ScaleCount := PlotImage.PlotCount;
 
-  tcScales.TabIndex := PlotImage.ScaleIndex;
-  tcScalesTabChanged(Self);
+  tcPlots.TabIndex := PlotImage.PlotIndex;
+  tcPlotsTabChanged(Self);
 end;
 
 procedure TDigitMainForm.ToolAdjustCurveExecute(Sender: TObject);
@@ -3027,7 +3073,7 @@ procedure TDigitMainForm.ToolResetBoxExecute(Sender: TObject);
 begin
   PlotImage.ResetPlotBox;
 
-  with PlotImage.Scale.PlotBox do
+  with PlotImage.Plot.Box do
   begin
     EditVX1.Value := Round(Vertex[0].X);
     EditVY1.Value := Round(Vertex[0].Y);

@@ -5,129 +5,150 @@ unit uscale;
 interface
 
 uses
-  Classes, SysUtils, Fgl, DOM, Math, uutils, ucoordinates, ucurves;
+  Classes, SysUtils, Fgl, DOM, Math, ucoordinates, ucurves;
 
 type
-  TScale = class(TObject)
-  protected type
-    TCurveList = specialize TFPGObjectList<TDigitCurve>;
-  private
-    { Private declarations }
-    FName: String;
+    TScale = class(TObject)
+    protected type
+      TCurveList = specialize TFPGObjectList<TDigitCurve>;
+    private
+      { Private declarations }
+      FCoords: TCoordSystem;
+      FXScale: TScaleType;
+      FYScale: TScaleType;
 
-    FCoords: TCoordSystem;
-    FXScale: TScaleType;
-    FYScale: TScaleType;
+      FXLabel: String;
+      FYLabel: String;
 
-    FXLabel: String;
-    FYLabel: String;
+      FPntImg: TScalePoints;
+      FPntPlt: TScalePoints;
 
-    FPntImg: TScalePoints;
-    FPntPlt: TScalePoints;
+      FImgPointIsSet: Array [1..3] of Boolean;
+      FPltPointIsSet: Array [1..3] of Boolean;
 
-    FImgPointIsSet: Array [1..3] of Boolean;
-    FPltPointIsSet: Array [1..3] of Boolean;
+      function GetImagePoint(Index: Integer): TCurvePoint;
+      function GetPlotPoint(Index: Integer): TCurvePoint;
+      function GetPointIsSet(Index: Integer): Boolean;
+      function GetPointsAreSet: Boolean;
+      function GetIsValidScale: Boolean;
 
-    FPlotBox: TPlotQuad;
+      procedure SetCoordSystem(const Value: TCoordSystem);
+      procedure SetImagePoint(Index: Integer; const Value: TCurvePoint);
+      procedure SetPlotPoint(Index: Integer; const Value: TCurvePoint);
+    protected
+      { Protected declarations }
+    public
+      { Public declarations }
+      {@exclude}
+      constructor Create;
+      {@exclude}
+      destructor Destroy; override;
 
-    FCurves: TCurveList;
-    FCurveIndex: Integer;
+      procedure Reset;
 
-    function GetCurveCount: Integer;
-    function GetCurve(Index: Integer): TDigitCurve;
-    function GetActiveCurve: TCurve;
-    function GetDigitCurve: TDigitCurve;
-    function GetPlotCurves(Index: Integer): TCurve;
-    function GetPlotCurve: TCurve;
+      function FromImgToPlot(p: TCurvePoint): TCurvePoint; overload;
+      function FromImgToPlot(X, Y: Double): TCurvePoint; overload;
+      function FromPlotToImg(p: TCurvePoint): TCurvePoint; overload;
+      function FromPlotToImg(X, Y: Double): TCurvePoint; overload;
 
-    function GetImagePoint(Index: Integer): TCurvePoint;
-    function GetPlotPoint(Index: Integer): TCurvePoint;
-    function GetPointIsSet(Index: Integer): Boolean;
-    function GetPointsAreSet: Boolean;
-    function GetIsValidScale: Boolean;
+      function Distance(P1, P2: TCurvePoint): Double;
 
-    procedure SetCurveIndex(Value: Integer);
+      function Nx(Pi: TCurvePoint): TCurvePoint;
+      function Ny(Pi: TCurvePoint): TCurvePoint;
+      function dx(Pi: TCurvePoint): Double;
+      function dy(Pi: TCurvePoint): Double;
 
-    procedure SetName(Value: String);
+      function ImportFromXML(Item: TDOMNode): Boolean;
+      function ExportToXML(Doc: TXMLDocument): TDOMNode;
 
-    procedure SetCoordSystem(const Value: TCoordSystem);
-    procedure SetImagePoint(Index: Integer; const Value: TCurvePoint);
-    procedure SetPlotPoint(Index: Integer; const Value: TCurvePoint);
-  protected
-    { Protected declarations }
-  public
-    { Public declarations }
-    {@exclude}
-    constructor Create(Name: String);
-    {@exclude}
-    destructor Destroy; override;
+      property CoordSystem: TCoordSystem read FCoords write SetCoordSystem;
+      property XScale: TScaleType read FXScale write FXScale;
+      property YScale: TScaleType read FYScale write FYScale;
+      property XLabel: String read FXLabel write FXLabel;
+      property YLabel: String read FYLabel write FYLabel;
+      property ImagePoints: TScalePoints read FPntImg;
+      property PlotPoints: TScalePoints read FPntPlt;
 
-    procedure Reset;
+      property ImagePoint[Index: Integer]: TCurvePoint read GetImagePoint write SetImagePoint;
+      property PlotPoint[Index: Integer]: TCurvePoint read GetPlotPoint write SetPlotPoint;
+      property PointIsSet[Index: Integer]: Boolean read GetPointIsSet;
+      property AllPointsAreSet: Boolean read GetPointsAreSet;
+      property IsValid: Boolean read GetIsValidScale;
+    end;
 
-    function FromImgToPlot(p: TCurvePoint): TCurvePoint; overload;
-    function FromImgToPlot(X, Y: Double): TCurvePoint; overload;
-    function FromPlotToImg(p: TCurvePoint): TCurvePoint; overload;
-    function FromPlotToImg(X, Y: Double): TCurvePoint; overload;
+TPlot = class(TObject)
+protected type
+  TCurveList = specialize TFPGObjectList<TDigitCurve>;
+private
+  { Private declarations }
+  FName: String;
 
-    function Distance(P1, P2: TCurvePoint): Double;
+  FScale: TScale;
 
-    function Nx(Pi: TCurvePoint): TCurvePoint;
-    function Ny(Pi: TCurvePoint): TCurvePoint;
-    function dx(Pi: TCurvePoint): Double;
-    function dy(Pi: TCurvePoint): Double;
+  FBox: TPlotQuad;
 
-    procedure AddCurve; overload;
-    procedure AddCurve(Position: Integer); overload;
-    procedure DeleteCurve; overload;
-    procedure DeleteCurve(Index: Integer); overload;
+  FCurves: TCurveList;
+  FCurveIndex: Integer;
 
-    function ImportFromXML(Item: TDOMNode): Boolean;
-    function ExportToXML(Doc: TXMLDocument): TDOMNode;
+  function GetCurveCount: Integer;
+  function GetCurve(Index: Integer): TDigitCurve;
+  function GetActiveCurve: TCurve;
+  function GetDigitCurve: TDigitCurve;
+  function GetPlotCurves(Index: Integer): TCurve;
+  function GetPlotCurve: TCurve;
 
-    {Return the name of the scale}
-    property Name: String read FName write SetName;
+  procedure SetCurveIndex(Value: Integer);
 
-    property CoordSystem: TCoordSystem read FCoords write SetCoordSystem;
-    property XScale: TScaleType read FXScale write FXScale;
-    property YScale: TScaleType read FYScale write FYScale;
-    property XLabel: String read FXLabel write FXLabel;
-    property YLabel: String read FYLabel write FYLabel;
-    property ImagePoints: TScalePoints read FPntImg;
-    property PlotPoints: TScalePoints read FPntPlt;
+  procedure SetName(Value: String);
+protected
+  { Protected declarations }
+public
+  { Public declarations }
+  {@exclude}
+  constructor Create(Name: String);
+  {@exclude}
+  destructor Destroy; override;
 
-    property ImagePoint[Index: Integer]: TCurvePoint read GetImagePoint write SetImagePoint;
-    property PlotPoint[Index: Integer]: TCurvePoint read GetPlotPoint write SetPlotPoint;
-    property PointIsSet[Index: Integer]: Boolean read GetPointIsSet;
-    property AllPointsAreSet: Boolean read GetPointsAreSet;
-    property PlotBox: TPlotQuad read FPlotBox;
-    property IsValid: Boolean read GetIsValidScale;
+  procedure Reset;
 
-    {Return the number of curves}
-    property CurveCount: Integer read GetCurveCount;
-    {Return the index of the active curve}
-    property CurveIndex: Integer read FCurveIndex write SetCurveIndex;
-    {Return the curve}
-    property Curves[Index: Integer]: TDigitCurve read GetCurve; default;
-    {Return the active curve (TCurve)}
-    property Curve: TCurve read GetActiveCurve;
-    {Return the active curve (TDigitCurve)}
-    property DigitCurve: TDigitCurve read GetDigitCurve;
-    {Return the given curve converted to plot scale}
-    property PlotCurves[Index: Integer]: TCurve read GetPlotCurves;
-    {Return the active curve converted to plot scale}
-    property PlotCurve: TCurve read GetPlotCurve;
-  end;
+  procedure AddCurve; overload;
+  procedure AddCurve(Position: Integer); overload;
+  procedure DeleteCurve; overload;
+  procedure DeleteCurve(Index: Integer); overload;
+
+  function ImportFromXML(Item: TDOMNode): Boolean;
+  function ExportToXML(Doc: TXMLDocument): TDOMNode;
+
+  {Return the name of the plot}
+  property Name: String read FName write SetName;
+
+  {Return the scale}
+  property Scale: TScale read FScale;
+
+  {Return the box}
+  property Box: TPlotQuad read FBox;
+
+  {Return the number of curves}
+  property CurveCount: Integer read GetCurveCount;
+  {Return the index of the active curve}
+  property CurveIndex: Integer read FCurveIndex write SetCurveIndex;
+  {Return the curve}
+  property Curves[Index: Integer]: TDigitCurve read GetCurve; default;
+  {Return the active curve (TCurve)}
+  property Curve: TCurve read GetActiveCurve;
+  {Return the active curve (TDigitCurve)}
+  property DigitCurve: TDigitCurve read GetDigitCurve;
+  {Return the given curve converted to plot scale}
+  property PlotCurves[Index: Integer]: TCurve read GetPlotCurves;
+  {Return the active curve converted to plot scale}
+  property PlotCurve: TCurve read GetPlotCurve;
+end;
 
 implementation
 
 //===============================| TScale |===============================//
-constructor TScale.Create(Name: String);
+constructor TScale.Create;
 begin
-  FName := Name;
-
-  FPlotBox := TPlotQuad.Create;
-  FCurves := TCurveList.Create;
-
   inherited Create;
 
   Reset;
@@ -135,9 +156,6 @@ end;
 
 destructor TScale.Destroy;
 begin
-  FPlotBox.Free;
-  FCurves.Free;
-
   inherited Destroy;
 end;
 
@@ -160,13 +178,6 @@ begin
     FImgPointIsSet[i] := False;
     FPltPointIsSet[i] := False;
   end;
-
-  FPlotBox.Reset;
-
-  FCurves.Clear;
-  FCurves.Add(TDigitCurve.Create('Curve1'));
-
-  FCurveIndex := 0;
 end;
 
 function TScale.FromImgToPlot(p: TCurvePoint): TCurvePoint;
@@ -370,48 +381,6 @@ begin
   Result := Distance(FromImgToPlot(Pi + Ny(Pi)), FromImgToPlot(Pi - Ny(Pi)))/2;
 end;
 
-function TScale.GetCurveCount: Integer;
-begin
-  Result := FCurves.Count;
-end;
-
-function TScale.GetCurve(Index: Integer): TDigitCurve;
-begin
-  if (Index >= 0) and (Index < CurveCount) then
-    Result := FCurves[Index]
-  else
-    Result := nil;
-end;
-
-function TScale.GetActiveCurve: TCurve;
-begin
-  Result := DigitCurve.Curve;
-end;
-
-function TScale.GetDigitCurve: TDigitCurve;
-begin
-  Result := FCurves[CurveIndex];
-end;
-
-// Warning: any time that we call this function, we must free the curve
-// created here, or we will have a memoory leak
-function TScale.GetPlotCurves(Index: Integer): TCurve;
-var
-  i: Integer;
-begin
-  Result := TCurve.Create;
-  with FCurves[Index].Curve do
-  begin
-    for i := 0 to Count - 1 do
-      Result.AddPoint(FromImgToPlot(Point[i]));
-  end;
-end;
-
-function TScale.GetPlotCurve: TCurve;
-begin
-  Result := GetPlotCurves(CurveIndex);
-end;
-
 function TScale.GetImagePoint(Index: Integer): TCurvePoint;
 begin
   if (Index in [1..3]) then
@@ -453,25 +422,6 @@ begin
   end;
 end;
 
-procedure TScale.SetCurveIndex(Value: Integer);
-begin
-  if (Value >= 0) and (Value < FCurves.Count) and (Value <> CurveIndex) then
-  begin
-    // First, update all the markers in the curve
-    //UpdateMarkersInCurve;
-    // Now change the active curve
-    FCurveIndex := Value;
-    // Finally, update all the new markers in the image
-    //UpdateMarkersInImage;
-  end;
-end;
-
-procedure TScale.SetName(Value: String);
-begin
-  if (Value <> FName) then
-    FName := Value;
-end;
-
 procedure TScale.SetCoordSystem(const Value: TCoordSystem);
 var
   i: Integer;
@@ -486,7 +436,7 @@ begin
       for i := 1 to 3 do
         PlotPoint[i] := CartesianToPolar(PlotPoint[i]);
 
-    PlotBox.PolarCoordinates := (FCoords = csPolar);
+    //Box.PolarCoordinates := (FCoords = csPolar);
   end;
 end;
 
@@ -505,34 +455,6 @@ begin
   begin
     FPntPlt[Index] := Value;
     FPltPointIsSet[Index] := True;
-  end;
-end;
-
-procedure TScale.AddCurve;
-begin
-  FCurves.Add(TDigitCurve.Create('Curve' + IntToStr(FCurves.Count + 1)));
-end;
-
-procedure TScale.AddCurve(Position: Integer);
-begin
-  if (Position >= 0) and (Position < FCurves.Count) then
-    FCurves.Insert(Position, TDigitCurve.Create('Curve' + IntToStr(Position) + 'b'))
-  else
-    FCurves.Add(TDigitCurve.Create('Curve' + IntToStr(FCurves.Count + 1)));
-end;
-
-procedure TScale.DeleteCurve;
-begin
-  DeleteCurve(CurveIndex);
-end;
-
-procedure TScale.DeleteCurve(Index: Integer);
-begin
-  if (Index >= 0) and (Index < FCurves.Count) then
-  begin
-    FCurves.Delete(Index);
-    if (CurveIndex >= FCurves.Count) then
-      FCurveIndex := FCurves.Count - 1;
   end;
 end;
 
@@ -577,8 +499,6 @@ begin
     begin
       for i := 0 to Length - 1 do
       begin
-        if (Item[i].CompareName('Name') = 0) then
-          Name := UTF8Encode(Item[i].NodeValue);
         if (Item[i].CompareName('Coordinates') = 0) then
           CoordSystem := StrToCoordSystem(UTF8Encode(UnicodeUpperCase(Item[i].NodeValue)));
         if (Item[i].CompareName('XScale') = 0) then
@@ -594,10 +514,6 @@ begin
     Child := Item.FirstChild;
     while Assigned(Child) do
     begin
-      // Read PlotBox parameters
-      if (Child.CompareName('PlotBox') = 0) then
-        PlotBox.ImportFromXML(Child);
-
       for i := 1 to 3 do
       begin
         // Image points
@@ -630,6 +546,269 @@ begin
           end;
 
           PlotPoint[i] := TCurvePoint.Create(X, Y);
+        end;
+      end;
+
+      // Go for the next image point or plot point
+      Child := Child.NextSibling;
+    end;
+
+    Result := True;
+  except
+    // Do nothing, just catch the error
+  end;
+end;
+
+function TScale.ExportToXML(Doc: TXMLDocument): TDOMNode;
+var
+  i: Integer;
+  PointNode: TDOMNode;
+
+function CoordSystemToStr(Value: TCoordSystem): String;
+begin
+  if (Value = csPolar) then
+    Result := 'Polar'
+  else
+    Result := 'Cartesian';
+end;
+
+function ScaleTypeToStr(Value: TScaleType): String;
+begin
+  case Value of
+    stLog: Result := 'Log';
+    stLn: Result := 'Ln';
+    stInverse: Result := 'Inverse';
+    else Result := 'Linear';
+  end;
+end;
+
+begin
+  try
+    // Create scale node
+    Result := Doc.CreateElement('scale');
+    with TDOMElement(Result) do
+    begin
+      SetAttribute('Coordinates', UTF8Decode(CoordSystemToStr(CoordSystem)));
+      SetAttribute('XScale', UTF8Decode(ScaleTypeToStr(XScale)));
+      SetAttribute('YScale', UTF8Decode(ScaleTypeToStr(YScale)));
+      SetAttribute('XLabel', UTF8Decode(XLabel));
+      SetAttribute('YLabel', UTF8Decode(YLabel));
+    end;
+
+    // Image points
+    for i := 1 to 3 do
+    begin
+      PointNode := Doc.CreateElement(UTF8Decode('ImagePoint' + IntToStr(i)));
+      TDOMElement(PointNode).SetAttribute('X', UTF8Decode(FloatToStr(ImagePoint[i].X)));
+      TDOMElement(PointNode).SetAttribute('Y', UTF8Decode(FloatToStr(ImagePoint[i].Y)));
+      Result.Appendchild(PointNode);
+    end;
+
+    // Plot points
+    for i := 1 to 3 do
+    begin
+      PointNode := Doc.CreateElement(UTF8Decode('PlotPoint' + IntToStr(i)));
+      TDOMElement(PointNode).SetAttribute('X', UTF8Decode(FloatToStr(PlotPoint[i].X)));
+      TDOMElement(PointNode).SetAttribute('Y', UTF8Decode(FloatToStr(PlotPoint[i].Y)));
+      Result.Appendchild(PointNode);
+    end;
+  except
+    Result := nil;
+  end;
+end;
+
+//===============================| TScale |================================//
+
+
+//===============================| TPlot |=================================//
+constructor TPlot.Create(Name: String);
+begin
+  FName := Name;
+
+  FScale := TScale.Create;
+  FBox := TPlotQuad.Create;
+  FCurves := TCurveList.Create;
+
+  inherited Create;
+
+  Reset;
+end;
+
+destructor TPlot.Destroy;
+begin
+  FScale.Free;
+  FBox.Free;
+  FCurves.Free;
+
+  inherited Destroy;
+end;
+
+procedure TPlot.Reset;
+begin
+  FScale.Reset;
+
+  FBox.Reset;
+
+  FCurves.Clear;
+  FCurves.Add(TDigitCurve.Create('Curve1'));
+
+  FCurveIndex := 0;
+end;
+
+function TPlot.GetCurveCount: Integer;
+begin
+  Result := FCurves.Count;
+end;
+
+function TPlot.GetCurve(Index: Integer): TDigitCurve;
+begin
+  if (Index >= 0) and (Index < CurveCount) then
+    Result := FCurves[Index]
+  else
+    Result := nil;
+end;
+
+function TPlot.GetActiveCurve: TCurve;
+begin
+  Result := DigitCurve.Curve;
+end;
+
+function TPlot.GetDigitCurve: TDigitCurve;
+begin
+  Result := FCurves[CurveIndex];
+end;
+
+// Warning: any time that we call this function, we must free the curve
+// created here, or we will have a memoory leak
+function TPlot.GetPlotCurves(Index: Integer): TCurve;
+var
+  i: Integer;
+begin
+  Result := TCurve.Create;
+  with FCurves[Index].Curve do
+  begin
+    for i := 0 to Count - 1 do
+      Result.AddPoint(Scale.FromImgToPlot(Point[i]));
+  end;
+end;
+
+function TPlot.GetPlotCurve: TCurve;
+begin
+  Result := GetPlotCurves(CurveIndex);
+end;
+
+procedure TPlot.SetCurveIndex(Value: Integer);
+begin
+  if (Value >= 0) and (Value < FCurves.Count) and (Value <> CurveIndex) then
+  begin
+    // First, update all the markers in the curve
+    //UpdateMarkersInCurve;
+    // Now change the active curve
+    FCurveIndex := Value;
+    // Finally, update all the new markers in the image
+    //UpdateMarkersInImage;
+  end;
+end;
+
+procedure TPlot.SetName(Value: String);
+begin
+  if (Value <> FName) then
+    FName := Value;
+end;
+
+procedure TPlot.AddCurve;
+begin
+  FCurves.Add(TDigitCurve.Create('Curve' + IntToStr(FCurves.Count + 1)));
+end;
+
+procedure TPlot.AddCurve(Position: Integer);
+begin
+  if (Position >= 0) and (Position < FCurves.Count) then
+    FCurves.Insert(Position, TDigitCurve.Create('Curve' + IntToStr(Position) + 'b'))
+  else
+    FCurves.Add(TDigitCurve.Create('Curve' + IntToStr(FCurves.Count + 1)));
+end;
+
+procedure TPlot.DeleteCurve;
+begin
+  DeleteCurve(CurveIndex);
+end;
+
+procedure TPlot.DeleteCurve(Index: Integer);
+begin
+  if (Index >= 0) and (Index < FCurves.Count) then
+  begin
+    FCurves.Delete(Index);
+    if (CurveIndex >= FCurves.Count) then
+      FCurveIndex := FCurves.Count - 1;
+  end;
+end;
+
+function TPlot.ImportFromXML(Item: TDOMNode): Boolean;
+var
+  i, j: Integer;
+  X, Y: Double;
+  SavedCurveCount,
+  RealCurveCount: Integer;
+  Child, CurveChild: TDOMNode;
+begin
+  Result := False;
+
+  try
+    Name := '';
+    with Item.Attributes do
+    begin
+      for i := 0 to Length - 1 do
+      begin
+        if (Item[i].CompareName('Name') = 0) then
+          Name := UTF8Encode(Item[i].NodeValue);
+      end;
+    end;
+    Child := Item.FirstChild;
+    while Assigned(Child) do
+    begin
+      // Read scale parameters
+      if (Child.CompareName('scale') = 0) then
+        Scale.ImportFromXML(Child);
+
+      // Read box parameters
+      if (Child.CompareName('PlotBox') = 0) or
+         (Child.CompareName('box') = 0) then
+        Box.ImportFromXML(Child);
+
+      // For older versions of the document
+      for i := 1 to 3 do
+      begin
+        // Image points
+        if (Child.CompareName(UTF8Decode('ImagePoint' + IntToStr(i))) = 0) then
+        begin
+          X := 0.0;
+          Y := 0.0;
+          for j := 0 to Child.Attributes.Length - 1 do
+          begin
+            if (Child.Attributes.Item[j].CompareName('X') = 0) then
+              X := StrToFloat(UTF8Encode(Child.Attributes.Item[j].NodeValue));
+            if (Child.Attributes.Item[j].CompareName('Y') = 0) then
+              Y := StrToFloat(UTF8Encode(Child.Attributes.Item[j].NodeValue));
+          end;
+
+          Scale.ImagePoint[i] := TCurvePoint.Create(X, Y);
+        end;
+
+        // Plot points
+        if (Child.CompareName(UTF8Decode('PlotPoint' + IntToStr(i))) = 0) then
+        begin
+          X := 0.0;
+          Y := 0.0;
+          for j := 0 to Child.Attributes.Length - 1 do
+          begin
+            if (Child.Attributes.Item[j].CompareName('X') = 0) then
+              X := StrToFloat(UTF8Encode(Child.Attributes.Item[j].NodeValue));
+            if (Child.Attributes.Item[j].CompareName('Y') = 0) then
+              Y := StrToFloat(UTF8Encode(Child.Attributes.Item[j].NodeValue));
+          end;
+
+          Scale.PlotPoint[i] := TCurvePoint.Create(X, Y);
         end;
       end;
 
@@ -668,6 +847,7 @@ begin
       // Go for the next image point or plot point
       Child := Child.NextSibling;
     end;
+    Box.PolarCoordinates := (Scale.CoordSystem = csPolar);
 
     Result := True;
   except
@@ -675,64 +855,24 @@ begin
   end;
 end;
 
-function TScale.ExportToXML(Doc: TXMLDocument): TDOMNode;
+function TPlot.ExportToXML(Doc: TXMLDocument): TDOMNode;
 var
   i: Integer;
-  PointNode, CurveNode: TDOMNode;
-
-function CoordSystemToStr(Value: TCoordSystem): String;
-begin
-  if (Value = csPolar) then
-    Result := 'Polar'
-  else
-    Result := 'Cartesian';
-end;
-
-function ScaleTypeToStr(Value: TScaleType): String;
-begin
-  case Value of
-    stLog: Result := 'Log';
-    stLn: Result := 'Ln';
-    stInverse: Result := 'Inverse';
-    else Result := 'Linear';
-  end;
-end;
-
+  CurveNode: TDOMNode;
 begin
   try
-    // Create scale node
-    Result := Doc.CreateElement('scale');
+    // Create plot node
+    Result := Doc.CreateElement('plot');
     with TDOMElement(Result) do
-    begin
       SetAttribute('Name', UTF8Decode(Name));
-      SetAttribute('Coordinates', UTF8Decode(CoordSystemToStr(CoordSystem)));
-      SetAttribute('XScale', UTF8Decode(ScaleTypeToStr(XScale)));
-      SetAttribute('YScale', UTF8Decode(ScaleTypeToStr(YScale)));
-      SetAttribute('XLabel', UTF8Decode(XLabel));
-      SetAttribute('YLabel', UTF8Decode(YLabel));
-    end;
 
-    // Add PlotBox node
-    Result.AppendChild(PlotBox.ExportToXML(Doc));
+    // Add scale node
+    Result.AppendChild(Scale.ExportToXML(Doc));
 
-    // Image points
-    for i := 1 to 3 do
-    begin
-      PointNode := Doc.CreateElement(UTF8Decode('ImagePoint' + IntToStr(i)));
-      TDOMElement(PointNode).SetAttribute('X', UTF8Decode(FloatToStr(ImagePoint[i].X)));
-      TDOMElement(PointNode).SetAttribute('Y', UTF8Decode(FloatToStr(ImagePoint[i].Y)));
-      Result.Appendchild(PointNode);
-    end;
+    // Add box node
+    Result.AppendChild(Box.ExportToXML(Doc));
 
-    // Plot points
-    for i := 1 to 3 do
-    begin
-      PointNode := Doc.CreateElement(UTF8Decode('PlotPoint' + IntToStr(i)));
-      TDOMElement(PointNode).SetAttribute('X', UTF8Decode(FloatToStr(PlotPoint[i].X)));
-      TDOMElement(PointNode).SetAttribute('Y', UTF8Decode(FloatToStr(PlotPoint[i].Y)));
-      Result.Appendchild(PointNode);
-    end;
-
+    // Add curves node
     CurveNode := Doc.CreateElement('curves');
     TDOMElement(CurveNode).SetAttribute('Count', UTF8Decode(IntToStr(CurveCount)));
 
@@ -746,8 +886,7 @@ begin
     Result := nil;
   end;
 end;
-
-//===============================| TScale |================================//
+//===============================| TPlot |=================================//
 
 
 end.

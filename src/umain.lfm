@@ -2514,13 +2514,13 @@ object DigitMainForm: TDigitMainForm
           TabOrder = 0
           object gbCoord: TGroupBox
             Left = 0
-            Height = 47
+            Height = 40
             Top = 0
             Width = 197
             Align = alTop
             AutoSize = True
             Caption = 'Coordinates'
-            ClientHeight = 20
+            ClientHeight = 13
             ClientWidth = 187
             Font.Color = clBlack
             Font.Height = -11
@@ -2553,7 +2553,7 @@ object DigitMainForm: TDigitMainForm
           object gbX: TGroupBox
             Left = 0
             Height = 68
-            Top = 47
+            Top = 40
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2645,7 +2645,7 @@ object DigitMainForm: TDigitMainForm
           object gbY: TGroupBox
             Left = 0
             Height = 66
-            Top = 115
+            Top = 108
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2735,7 +2735,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint1: TGroupBox
             Left = 0
             Height = 88
-            Top = 181
+            Top = 174
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2987,7 +2987,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint2: TGroupBox
             Left = 0
             Height = 88
-            Top = 269
+            Top = 262
             Width = 197
             Align = alTop
             AutoSize = True
@@ -3238,7 +3238,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint3: TGroupBox
             Left = 0
             Height = 88
-            Top = 357
+            Top = 350
             Width = 197
             Align = alTop
             AutoSize = True
@@ -4903,7 +4903,7 @@ object DigitMainForm: TDigitMainForm
         end
       end
     end
-    object tcScales: TATTabs
+    object tcPlots: TATTabs
       Left = 0
       Height = 35
       Top = 0
@@ -4927,19 +4927,20 @@ object DigitMainForm: TDigitMainForm
       OptShowPinnedText = '!'
       OptMouseDragEnabled = False
       OptMouseDragOutEnabled = False
-      OptHintForX = 'Close tab'
-      OptHintForPlus = 'Add tab'
-      OptHintForArrowLeft = 'Scroll tabs left'
-      OptHintForArrowRight = 'Scroll tabs right'
-      OptHintForArrowMenu = 'Show tabs list'
+      OptHintForX = 'Delete plot|Delete this plot from the digitization'
+      OptHintForPlus = 'Add plot|Add a new plot to the digitization'
+      OptHintForArrowLeft = 'Scroll left|Scroll tabs left'
+      OptHintForArrowRight = 'Scroll right|Scroll tabs right'
+      OptHintForArrowMenu = 'Show list|Show plots list'
       OptHintForUser0 = '0'
       OptHintForUser1 = '1'
       OptHintForUser2 = '2'
       OptHintForUser3 = '3'
       OptHintForUser4 = '4'
-      OnTabChanged = tcScalesTabChanged
-      OnTabPlusClick = tcScalesTabPlusClick
-      OnTabClose = tcScalesTabClose
+      OnTabChanged = tcPlotsTabChanged
+      OnTabPlusClick = tcPlotsTabPlusClick
+      OnTabClose = tcPlotsTabClose
+      OnTabDblClick = tcPlotsTabDblClick
     end
   end
   object LeftSplitter: TSplitter
@@ -5093,7 +5094,7 @@ object DigitMainForm: TDigitMainForm
       OptShowPinnedText = '!'
       OptMouseDragEnabled = False
       OptMouseDragOutEnabled = False
-      OptHintForX = 'Delete curve|Delete the active curve from the digitization'
+      OptHintForX = 'Delete curve|Delete this curve from the digitization'
       OptHintForPlus = 'Add curve|Add a new curve to the digitization'
       OptHintForArrowLeft = 'Scroll left|Scroll tabs left'
       OptHintForArrowRight = 'Scroll right|Scroll tabs right'

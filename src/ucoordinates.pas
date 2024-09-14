@@ -817,8 +817,8 @@ var
   VertexNode: TDOMNode;
 begin
   try
-    // Create scale node
-    Result := Doc.CreateElement('PlotBox');
+    // Create box node
+    Result := Doc.CreateElement('box');
     with TDOMElement(Result) do
     begin
       SetAttribute('NumVertices', UTF8Decode(IntToStr(NumVertices)));
