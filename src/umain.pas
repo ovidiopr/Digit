@@ -1601,7 +1601,7 @@ var
   i, n, r: Integer;
 begin
   // We are approaching the end, and there are hidden values
-  if (aRow >= (leData.RowCount - 10)) and
+  if (aRow >= (leData.RowCount - 50)) and
      (PlotImage.NumPoints > (leData.RowCount - 1))then
   begin
     // Make sure that there are no previous events in the stack

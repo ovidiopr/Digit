@@ -1914,7 +1914,7 @@ object DigitMainForm: TDigitMainForm
         TabOrder = 0
         OnSelectCell = leDataSelectCell
         OnValidateEntry = leDataValidateEntry
-        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing, goRowSelect, goThumbTracking]
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing, goRowSelect, goThumbTracking, goScrollKeepVisible]
         Strings.Strings = (
           ''
         )
@@ -4924,6 +4924,7 @@ object DigitMainForm: TDigitMainForm
       ColorArrow = clWhite
       ColorArrowOver = 14211288
       OptButtonLayout = '<>,v'
+      OptSpaceSide = 0
       OptShowPinnedText = '!'
       OptMouseDragOutEnabled = False
       OptHintForX = 'Delete plot|Delete this plot from the digitization'
