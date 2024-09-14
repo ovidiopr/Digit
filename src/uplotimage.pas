@@ -2931,7 +2931,7 @@ begin
     TmpCurve := Plot.PlotCurves[Index];
 
     TmpCurve.SortCurve;
-    TmpCurve.Interpolate(n, d, IntType);
+    TmpCurve.Interpolate(n, d, Plot.Scale.XScale, IntType);
 
     if (Index = CurveIndex) and (State = piSetCurve) then
       TmpRect := Plot.DigitCurve.CurveRect;
@@ -2974,7 +2974,7 @@ begin
     TmpCurve := Plot.PlotCurves[Index];
 
     TmpCurve.SortCurve;
-    TmpCurve.Interpolate(Xo, Xf, n, d, IntType);
+    TmpCurve.Interpolate(Xo, Xf, n, d, Plot.Scale.XScale, IntType);
 
     if (Index = CurveIndex) and (State = piSetCurve) then
       TmpRect := Plot.DigitCurve.CurveRect;

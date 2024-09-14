@@ -551,6 +551,7 @@ type
     procedure UpdateZoomImage(P: TPoint); overload;
     procedure ClearZoomImage;
 
+    procedure UpdateGUI;
     procedure CurveToGUI;
     procedure GUIToCurve;
   public
@@ -1693,51 +1694,7 @@ begin
   UpdateControls;
 
   // Update relevant fields
-  case TPlotImageState(pcInput.ActivePageIndex) of
-    piSetCurve: CurveToGUI;
-    piSetScale: begin
-      with PlotImage do
-      begin
-        cbbCoords.ItemIndex := Integer(Plot.Scale.CoordSystem);
-        cbbXScale.ItemIndex := Integer(Plot.Scale.XScale);
-        edtX.Text := Plot.Scale.XLabel;
-        cbbYScale.ItemIndex := Integer(Plot.Scale.YScale);
-        edtY.Text := Plot.Scale.YLabel;
-
-        ImagePoint[1] := Plot.Scale.ImagePoint[1];
-        PlotPoint[1] := Plot.Scale.PlotPoint[1];
-        ImagePoint[2] := Plot.Scale.ImagePoint[2];
-        PlotPoint[2] := Plot.Scale.PlotPoint[2];
-        ImagePoint[3] := Plot.Scale.ImagePoint[3];
-        PlotPoint[3] := Plot.Scale.PlotPoint[3];
-      end;
-    end;
-    piSetPlotBox: begin
-      with PlotImage.Plot.Box do
-      begin
-        EditVX1.Value := Round(Vertex[0].X);
-        EditVY1.Value := Round(Vertex[0].Y);
-        EditVX2.Value := Round(Vertex[1].X);
-        EditVY2.Value := Round(Vertex[1].Y);
-        EditVX3.Value := Round(Vertex[2].X);
-        EditVY3.Value := Round(Vertex[2].Y);
-        EditVX4.Value := Round(Vertex[3].X);
-        EditVY4.Value := Round(Vertex[3].Y);
-      end;
-    end;
-    piSetGrid: begin
-      with PlotImage.GridMask do
-      begin
-        btnMajorGrid.ButtonColor := MajorGridColor;
-        btnMinorGrid.ButtonColor := MinorGridColor;
-        btnBackground.ButtonColor := BckgndColor;
-        edtGridTolerance.Value := Tolerance;
-        edtGridThreshold.Value := Round(100*Threshold);
-        chbRebuildCurve.Checked := FixCurve;
-        edtGridMask.Value := MaskSize;
-      end;
-    end;
-  end;
+  UpdateGUI;
 
 end;
 
@@ -2376,6 +2333,56 @@ begin
   end;
 end;
 
+procedure TDigitMainForm.UpdateGUI;
+begin
+  // Update relevant fields
+  case TPlotImageState(pcInput.ActivePageIndex) of
+    piSetCurve: CurveToGUI;
+    piSetScale: begin
+      with PlotImage do
+      begin
+        cbbCoords.ItemIndex := Integer(Plot.Scale.CoordSystem);
+        cbbXScale.ItemIndex := Integer(Plot.Scale.XScale);
+        edtX.Text := Plot.Scale.XLabel;
+        cbbYScale.ItemIndex := Integer(Plot.Scale.YScale);
+        edtY.Text := Plot.Scale.YLabel;
+
+        ImagePoint[1] := Plot.Scale.ImagePoint[1];
+        PlotPoint[1] := Plot.Scale.PlotPoint[1];
+        ImagePoint[2] := Plot.Scale.ImagePoint[2];
+        PlotPoint[2] := Plot.Scale.PlotPoint[2];
+        ImagePoint[3] := Plot.Scale.ImagePoint[3];
+        PlotPoint[3] := Plot.Scale.PlotPoint[3];
+      end;
+    end;
+    piSetPlotBox: begin
+      with PlotImage.Plot.Box do
+      begin
+        EditVX1.Value := Round(Vertex[0].X);
+        EditVY1.Value := Round(Vertex[0].Y);
+        EditVX2.Value := Round(Vertex[1].X);
+        EditVY2.Value := Round(Vertex[1].Y);
+        EditVX3.Value := Round(Vertex[2].X);
+        EditVY3.Value := Round(Vertex[2].Y);
+        EditVX4.Value := Round(Vertex[3].X);
+        EditVY4.Value := Round(Vertex[3].Y);
+      end;
+    end;
+    piSetGrid: begin
+      with PlotImage.GridMask do
+      begin
+        btnMajorGrid.ButtonColor := MajorGridColor;
+        btnMinorGrid.ButtonColor := MinorGridColor;
+        btnBackground.ButtonColor := BckgndColor;
+        edtGridTolerance.Value := Tolerance;
+        edtGridThreshold.Value := Round(100*Threshold);
+        chbRebuildCurve.Checked := FixCurve;
+        edtGridMask.Value := MaskSize;
+      end;
+    end;
+  end;
+end;
+
 procedure TDigitMainForm.CurveToGUI;
 var
   TmpCurve: TCurve;
@@ -2857,11 +2864,11 @@ begin
   PlotImage.PlotIndex := tcPlots.TabIndex;
   // Update the curve list
   CurveCount := PlotImage.CurveCount;
-  //Finally, update the control values
-  CurveToGUI;
-  //Update the control values
-  UpdateControls;
 
+  // Update the GUI
+  UpdateGUI;
+
+  UpdateControls;
   UpdateView;
 end;
 
