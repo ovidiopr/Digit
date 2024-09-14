@@ -235,6 +235,8 @@ type
     procedure ShiftActiveMarker(Delta: TPoint);
     procedure RedrawMarkers;
 
+    function MovePlot(FromIdx, ToIdx: Integer): Boolean;
+
     procedure AddPlot; overload;
     procedure AddPlot(Position: Integer); overload;
     procedure DeletePlot; overload;
@@ -2737,6 +2739,20 @@ begin
   finally
     IsChanged := True;
     Visible := ImageIsLoaded;
+  end;
+end;
+
+function TPlotImage.MovePlot(FromIdx, ToIdx: Integer): Boolean;
+begin
+  Result := (FromIdx <> ToIdx) and
+            (FromIdx >= 0) and (FromIdx < FPlots.Count) and
+            (ToIdx >= 0) and (ToIdx < FPlots.Count);
+
+  if Result then
+  begin
+    FPlots.Move(FromIdx, ToIdx);
+
+    IsChanged := True;
   end;
 end;
 

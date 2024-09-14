@@ -453,11 +453,15 @@ type
     procedure tcCurvesTabClose(Sender: TObject; ATabIndex: integer;
       var ACanClose, ACanContinue: boolean);
     procedure tcCurvesTabDblClick(Sender: TObject; AIndex: integer);
+    procedure tcCurvesTabDragging(Sender: TObject; AIndexFrom,
+      AIndexTo: integer; var ACanDrop: boolean);
     procedure tcCurvesTabPlusClick(Sender: TObject);
     procedure tcPlotsTabChanged(Sender: TObject);
     procedure tcPlotsTabClose(Sender: TObject; ATabIndex: integer;
       var ACanClose, ACanContinue: boolean);
     procedure tcPlotsTabDblClick(Sender: TObject; AIndex: integer);
+    procedure tcPlotsTabDragging(Sender: TObject; AIndexFrom,
+      AIndexTo: integer; var ACanDrop: boolean);
     procedure tcPlotsTabPlusClick(Sender: TObject);
     procedure ToolAdjustCurveExecute(Sender: TObject);
     procedure ToolAdjustNoiseExecute(Sender: TObject);
@@ -2852,6 +2856,19 @@ begin
     RenameCurve(AIndex);
 end;
 
+procedure TDigitMainForm.tcCurvesTabDragging(Sender: TObject; AIndexFrom,
+  AIndexTo: integer; var ACanDrop: boolean);
+begin
+  ACanDrop := PlotImage.Plot.MoveCurve(AIndexFrom, AIndexTo);
+
+  if ACanDrop then
+  begin
+    CurveToGUI;
+    tcCurves.TabIndex := AIndexTo;
+    IsSaved := False;
+  end;
+end;
+
 procedure TDigitMainForm.tcCurvesTabPlusClick(Sender: TObject);
 begin
   if ToolCurveAdd.Enabled then
@@ -2889,6 +2906,18 @@ end;
 procedure TDigitMainForm.tcPlotsTabDblClick(Sender: TObject; AIndex: integer);
 begin
   RenamePlot(AIndex);
+end;
+
+procedure TDigitMainForm.tcPlotsTabDragging(Sender: TObject; AIndexFrom,
+  AIndexTo: integer; var ACanDrop: boolean);
+begin
+  ACanDrop := PlotImage.MovePlot(AIndexFrom, AIndexTo);
+
+  if ACanDrop then
+  begin
+    UpdateGUI;
+    tcPlots.TabIndex := AIndexTo;
+  end;
 end;
 
 procedure TDigitMainForm.tcPlotsTabPlusClick(Sender: TObject);

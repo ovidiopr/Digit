@@ -111,6 +111,8 @@ public
 
   procedure Reset;
 
+  function MoveCurve(FromIdx, ToIdx: Integer): Boolean;
+
   procedure AddCurve; overload;
   procedure AddCurve(Position: Integer); overload;
   procedure DeleteCurve; overload;
@@ -714,6 +716,16 @@ procedure TPlot.SetName(Value: String);
 begin
   if (Value <> FName) then
     FName := Value;
+end;
+
+function TPlot.MoveCurve(FromIdx, ToIdx: Integer): Boolean;
+begin
+  Result := (FromIdx <> ToIdx) and
+            (FromIdx >= 0) and (FromIdx < FCurves.Count) and
+            (ToIdx >= 0) and (ToIdx < FCurves.Count);
+
+  if Result then
+    FCurves.Move(FromIdx, ToIdx);
 end;
 
 procedure TPlot.AddCurve;

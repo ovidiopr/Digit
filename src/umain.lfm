@@ -4925,7 +4925,6 @@ object DigitMainForm: TDigitMainForm
       ColorArrowOver = 14211288
       OptButtonLayout = '<>,v'
       OptShowPinnedText = '!'
-      OptMouseDragEnabled = False
       OptMouseDragOutEnabled = False
       OptHintForX = 'Delete plot|Delete this plot from the digitization'
       OptHintForPlus = 'Add plot|Add a new plot to the digitization'
@@ -4941,6 +4940,7 @@ object DigitMainForm: TDigitMainForm
       OnTabPlusClick = tcPlotsTabPlusClick
       OnTabClose = tcPlotsTabClose
       OnTabDblClick = tcPlotsTabDblClick
+      OnTabDragging = tcPlotsTabDragging
     end
   end
   object LeftSplitter: TSplitter
@@ -5092,7 +5092,6 @@ object DigitMainForm: TDigitMainForm
       OptVarWidth = True
       OptSpaceSide = 0
       OptShowPinnedText = '!'
-      OptMouseDragEnabled = False
       OptMouseDragOutEnabled = False
       OptHintForX = 'Delete curve|Delete this curve from the digitization'
       OptHintForPlus = 'Add curve|Add a new curve to the digitization'
@@ -5108,6 +5107,7 @@ object DigitMainForm: TDigitMainForm
       OnTabPlusClick = tcCurvesTabPlusClick
       OnTabClose = tcCurvesTabClose
       OnTabDblClick = tcCurvesTabDblClick
+      OnTabDragging = tcCurvesTabDragging
     end
     object PageControl: TPageControl
       Left = 0
