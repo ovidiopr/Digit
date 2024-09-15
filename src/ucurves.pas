@@ -1033,7 +1033,7 @@ begin
   if (Index >= 0) and (Index < FValidCurves) then
     Result := FCurves[Index]
   else
-    Result := nil;
+    Result := Nil;
 end;
 
 function TDigitCurve.GetActiveCurve: TCurve;

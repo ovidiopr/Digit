@@ -58,7 +58,7 @@ function GetProgramVersion: String;
 var
   info: TFileVersionInfo;
 begin
-  info := TFileVersionInfo.Create(nil);
+  info := TFileVersionInfo.Create(Nil);
   try
     info.ReadFileInfo;
     Result := Format('%s [built %s]',

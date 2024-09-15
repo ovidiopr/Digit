@@ -696,7 +696,7 @@ begin
       Result.Appendchild(PointNode);
     end;
   except
-    Result := nil;
+    Result := Nil;
   end;
 end;
 
@@ -752,7 +752,7 @@ begin
   if (Index >= 0) and (Index < CurveCount) then
     Result := FCurves[Index]
   else
-    Result := nil;
+    Result := Nil;
 end;
 
 function TPlot.GetActiveCurve: TCurve;
@@ -876,11 +876,11 @@ end;
 
 procedure TPlot.DeleteCurve(Index: Integer);
 begin
-  if (Index >= 0) and (Index < FCurves.Count) then
+  if (Index >= 0) and (Index < CurveCount) then
   begin
     FCurves.Delete(Index);
-    if (CurveIndex >= FCurves.Count) then
-      FCurveIndex := FCurves.Count - 1;
+    if (CurveIndex >= CurveCount) then
+      CurveIndex := CurveCount - 1;
 
     // Notify the parent that the Plot has changed
     if assigned(OnChange) then
@@ -1027,7 +1027,7 @@ begin
     // Save curves node
     Result.AppendChild(CurveNode);
   except
-    Result := nil;
+    Result := Nil;
   end;
 end;
 //===============================| TPlot |=================================//

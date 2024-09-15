@@ -859,7 +859,7 @@ begin
       Result.Appendchild(VertexNode);
     end;
   except
-    Result := nil;
+    Result := Nil;
   end;
 end;
 

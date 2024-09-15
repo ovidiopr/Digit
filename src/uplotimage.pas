@@ -289,7 +289,7 @@ type
     function GetZoomImage(w, h: Integer; Region: TRect): TBitmap;
 
     function SaveToXML(FileName: TFileName): Boolean;
-    function LoadFromXML(FileName: TFileName; PictureDlg: TOpenPictureDialog = nil): Boolean;
+    function LoadFromXML(FileName: TFileName; PictureDlg: TOpenPictureDialog = Nil): Boolean;
 
     property Zoom: Double read FZoom write SetZoom;
     property Options: TPlotOptions read FOptions write FOptions;
@@ -528,14 +528,14 @@ begin
   FPlotIndex := 0;
 
   FMarkers.Clear;
-  ActiveMarker := nil;
-  MarkerUnderCursor := nil;
+  ActiveMarker := Nil;
+  MarkerUnderCursor := Nil;
   for i := 1 to 3 do
-    FAxesMarkers[i] := nil;
+    FAxesMarkers[i] := Nil;
   for i := 1 to 4 do
   begin
-    FBoxMarkers[i] := nil;
-    FEdgeMarkers[i] := nil;
+    FBoxMarkers[i] := Nil;
+    FEdgeMarkers[i] := Nil;
   end;
 
   FOldCursor := Cursor;
@@ -1253,7 +1253,7 @@ begin
   if (Index in [1..3]) and assigned(FAxesMarkers[Index]) then
     Result := FAxesMarkers[Index]
   else
-    Result := nil;
+    Result := Nil;
 end;
 
 function TPlotImage.GetBoxMarkers(Index: Integer): TMarker;
@@ -1261,7 +1261,7 @@ begin
   if (Index in [1..4]) and assigned(FBoxMarkers[Index]) then
     Result := FBoxMarkers[Index]
   else
-    Result := nil;
+    Result := Nil;
 end;
 
 function TPlotImage.GetEdgeMarkers(Index: Integer): TMarker;
@@ -1269,7 +1269,7 @@ begin
   if (Index in [1..4]) and assigned(FEdgeMarkers[Index]) then
     Result := FEdgeMarkers[Index]
   else
-    Result := nil;
+    Result := Nil;
 end;
 
 function TPlotImage.XAxisRect: TRect;
@@ -1399,7 +1399,7 @@ var
   i: Integer;
   X: Double;
 begin
-  Result := nil;
+  Result := Nil;
   if (State = piSetCurve) then
   begin
     X := Markers[0].Position.X;
@@ -1418,7 +1418,7 @@ var
   i: Integer;
   X: Double;
 begin
-  Result := nil;
+  Result := Nil;
   if (State = piSetCurve) then
   begin
     X := Markers[0].Position.X;
@@ -1437,7 +1437,7 @@ var
   i: Integer;
   Y: Double;
 begin
-  Result := nil;
+  Result := Nil;
   if (State = piSetCurve) then
   begin
     Y := Markers[0].Position.Y;
@@ -1456,7 +1456,7 @@ var
   i: Integer;
   Y: Double;
 begin
-  Result := nil;
+  Result := Nil;
   if (State = piSetCurve) then
   begin
     Y := Markers[0].Position.Y;
@@ -1648,26 +1648,26 @@ begin
   begin
     if (FClickedMarker = Marker) then
     begin
-      FClickedMarker := nil;
+      FClickedMarker := Nil;
       Dragging := False;
     end;
 
     if ActiveMarker = Marker then
-      ActiveMarker := nil;
+      ActiveMarker := Nil;
 
     if (MarkerUnderCursor = Marker) then
-      MarkerUnderCursor := nil;
+      MarkerUnderCursor := Nil;
 
     for i := 1 to 3 do
       if (FAxesMarkers[i] = Marker) then
-        FAxesMarkers[i] := nil;
+        FAxesMarkers[i] := Nil;
 
     for i := 1 to Plot.Box.NumVertices do
     begin
       if (FBoxMarkers[i] = Marker) then
-        FBoxMarkers[i] := nil;
+        FBoxMarkers[i] := Nil;
       if (FEdgeMarkers[i] = Marker) then
-        FEdgeMarkers[i] := nil;
+        FEdgeMarkers[i] := Nil;
     end;
 
     Markers.Remove(Marker);
@@ -1929,7 +1929,7 @@ var
 begin
   if Button = mbLeft then
   begin
-    HitMarker := nil;
+    HitMarker := Nil;
     for i := 0 to Markers.Count - 1 do
     begin
       Marker := Markers[i];
@@ -1961,7 +1961,7 @@ begin
     end;
 
     // No marker under cursor, we are selecting a region
-    if (HitMarker = nil) and (State = piSetCurve) then
+    if (HitMarker = Nil) and (State = piSetCurve) then
     begin
       SelectingRegion := True;
       FSelectionRect := TRect.Create(X, Y, X, Y);
@@ -2154,7 +2154,7 @@ begin
     end;
   end;
 
-  HitMarker := nil;
+  HitMarker := Nil;
   for i := 0 to Markers.Count - 1 do
   begin
     Marker := Markers[i];
@@ -2265,7 +2265,7 @@ begin
       end;
     end;
 
-    FClickedMarker := nil;
+    FClickedMarker := Nil;
   end;
 
   if not WasDragging then
@@ -2344,12 +2344,12 @@ begin
   if (Index >= 0) and (Index < PlotCount) then
     Result := FPlots[Index]
   else
-    Result := nil;
+    Result := Nil;
 end;
 
 function TPlotImage.GetActivePlot: TPlot;
 begin
-  Result := FPlots[PlotIndex];
+  Result := GetPlot(PlotIndex);
 end;
 
 function TPlotImage.GetPoint(Index: Integer): TCurvePoint;
@@ -2411,7 +2411,7 @@ begin
   if (Value >= 0) and (Value < CurveCount) and (Value <> CurveIndex) then
   begin
     TmpOnChange := OnChange;
-    OnChange := nil;
+    OnChange := Nil;
 
     OldValue := Plot.CurveIndex;
     // Notify the parent that the active curve is about to change
@@ -2447,7 +2447,7 @@ begin
   if (Value >= 0) and (Value < PlotCount) and (Value <> PlotIndex) then
   begin
     TmpOnChange := OnChange;
-    OnChange := nil;
+    OnChange := Nil;
 
     OldValue := FPlotIndex;
     // Notify the parent that the active plot is about to change
@@ -2473,13 +2473,11 @@ end;
 procedure TPlotImage.SetIsChanged(Value: Boolean);
 begin
   if (Value <> FIsChanged) then
-  begin
     FIsChanged := Value;
 
-    // Notify the parent that the PlotImage has changed
-    if (assigned(OnChange) and IsChanged) then
-      OnChange(Self);
-  end;
+  // Notify the parent that the PlotImage has changed
+  if (assigned(OnChange) and IsChanged) then
+    OnChange(Self);
 end;
 
 procedure TPlotImage.SetPoint(Index: Integer; const Value: TCurvePoint);
@@ -2511,9 +2509,9 @@ procedure TPlotImage.UpdateMarkersInCurve;
 var
   i: Integer;
 begin
-  if (State = piSetCurve) then
+  if (State = piSetCurve) and assigned(Plot) and assigned(Plot.DigitCurve) then
   begin
-    Plot.DigitCurve.ClearMarkers;
+    ClearMarkers;
     for i := Markers.Count - 1 downto 0 do
       Plot.DigitCurve.AddMarker(Markers[i].Position/Zoom);
 
@@ -2782,7 +2780,8 @@ begin
 
   if Result then
   begin
-    //CurveIndex := ToIdx;
+    UpdateMarkersInImage;
+
     IsChanged := True;
   end;
 end;
@@ -2839,11 +2838,11 @@ end;
 
 procedure TPlotImage.DeletePlot(Index: Integer);
 begin
-  if (Index >= 0) and (Index < FPlots.Count) then
+  if (Index >= 0) and (Index < PlotCount) then
   begin
     FPlots.Delete(Index);
-    if (PlotIndex >= FPlots.Count) then
-      FPlotIndex := FPlots.Count - 1;
+    if (PlotIndex >= PlotCount) then
+      PlotIndex := PlotCount - 1;
 
     IsChanged := True;
   end;
@@ -3434,7 +3433,7 @@ begin
   end;
 end;
 
-function TPlotImage.LoadFromXML(FileName: TFileName; PictureDlg: TOpenPictureDialog = nil): Boolean;
+function TPlotImage.LoadFromXML(FileName: TFileName; PictureDlg: TOpenPictureDialog = Nil): Boolean;
 var
   i, w, h,
   SavedCurveCount,
@@ -3457,7 +3456,7 @@ var
   TmpOnChange: TNotifyEvent;
 begin
   TmpOnChange := OnChange;
-  OnChange := nil;
+  OnChange := Nil;
 
   ImageIsLoaded := False;
 

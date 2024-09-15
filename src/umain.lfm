@@ -4940,8 +4940,8 @@ object DigitMainForm: TDigitMainForm
       OnTabChanged = tcPlotsTabChanged
       OnTabPlusClick = tcPlotsTabPlusClick
       OnTabClose = tcPlotsTabClose
+      OnTabMove = tcPlotsTabMove
       OnTabDblClick = tcPlotsTabDblClick
-      OnTabDragging = tcPlotsTabDragging
     end
   end
   object LeftSplitter: TSplitter
@@ -5079,8 +5079,8 @@ object DigitMainForm: TDigitMainForm
       OnTabChanged = tcCurvesTabChanged
       OnTabPlusClick = tcCurvesTabPlusClick
       OnTabClose = tcCurvesTabClose
+      OnTabMove = tcCurvesTabMove
       OnTabDblClick = tcCurvesTabDblClick
-      OnTabDragging = tcCurvesTabDragging
     end
     object PageControl: TPageControl
       Left = 0
