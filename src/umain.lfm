@@ -2514,13 +2514,13 @@ object DigitMainForm: TDigitMainForm
           TabOrder = 0
           object gbCoord: TGroupBox
             Left = 0
-            Height = 40
+            Height = 47
             Top = 0
             Width = 197
             Align = alTop
             AutoSize = True
             Caption = 'Coordinates'
-            ClientHeight = 13
+            ClientHeight = 20
             ClientWidth = 187
             Font.Color = clBlack
             Font.Height = -11
@@ -2553,7 +2553,7 @@ object DigitMainForm: TDigitMainForm
           object gbX: TGroupBox
             Left = 0
             Height = 68
-            Top = 40
+            Top = 47
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2645,7 +2645,7 @@ object DigitMainForm: TDigitMainForm
           object gbY: TGroupBox
             Left = 0
             Height = 66
-            Top = 108
+            Top = 115
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2735,7 +2735,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint1: TGroupBox
             Left = 0
             Height = 88
-            Top = 174
+            Top = 181
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2987,7 +2987,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint2: TGroupBox
             Left = 0
             Height = 88
-            Top = 262
+            Top = 269
             Width = 197
             Align = alTop
             AutoSize = True
@@ -3238,7 +3238,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint3: TGroupBox
             Left = 0
             Height = 88
-            Top = 350
+            Top = 357
             Width = 197
             Align = alTop
             AutoSize = True
@@ -4977,36 +4977,15 @@ object DigitMainForm: TDigitMainForm
       ParentShowHint = False
       ShowHint = True
       TabOrder = 0
-      object btnAddCurve: TToolButton
-        Left = 1
-        Top = 2
-        Action = ToolCurveAdd
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object btnDelCurve: TToolButton
-        Left = 37
-        Top = 2
-        Action = ToolCurveDelete
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object btnEditName: TToolButton
-        Left = 73
-        Top = 2
-        Action = ToolCurveName
-        ParentShowHint = False
-        ShowHint = True
-      end
       object sep07: TToolButton
-        Left = 109
+        Left = 229
         Height = 36
         Top = 2
         Caption = 'sep07'
         Style = tbsSeparator
       end
       object btnDigitize: TToolButton
-        Left = 117
+        Left = 1
         Top = 2
         Action = ToolDigitLine
         DropdownMenu = DigitizeMenu
@@ -5015,56 +4994,49 @@ object DigitMainForm: TDigitMainForm
         Style = tbsDropDown
       end
       object btnMoveUp: TToolButton
-        Left = 237
+        Left = 121
         Top = 2
         Action = ToolCurveUp
         ParentShowHint = False
         ShowHint = True
       end
       object btnMoveDown: TToolButton
-        Left = 273
+        Left = 157
         Top = 2
         Action = ToolCurveDown
         ParentShowHint = False
         ShowHint = True
       end
       object btnClear: TToolButton
-        Left = 309
+        Left = 193
         Top = 2
         Action = ToolClear
         ParentShowHint = False
         ShowHint = True
       end
       object btnAdjustCurve: TToolButton
-        Left = 165
+        Left = 49
         Top = 2
         Action = ToolAdjustCurve
         ParentShowHint = False
         ShowHint = True
       end
-      object sep08: TToolButton
-        Left = 345
-        Height = 36
-        Top = 2
-        Caption = 'sep08'
-        Style = tbsSeparator
-      end
       object btnExportPlot: TToolButton
-        Left = 353
+        Left = 237
         Top = 2
         Action = PlotExport
         ParentShowHint = False
         ShowHint = True
       end
       object btnSetScale: TToolButton
-        Left = 389
+        Left = 273
         Top = 2
         Action = PlotScale
         ParentShowHint = False
         ShowHint = True
       end
       object btnAdjustNoise: TToolButton
-        Left = 201
+        Left = 85
         Top = 2
         Action = ToolAdjustNoise
       end
@@ -5308,6 +5280,29 @@ object DigitMainForm: TDigitMainForm
         Action = ModeDeletePoints
       end
     end
+    object PlotMenu: TMenuItem
+      Caption = 'P&lot'
+      object PlotAddItem: TMenuItem
+        Action = ToolPlotAdd
+      end
+      object PlotDeleteItem: TMenuItem
+        Action = ToolPlotDelete
+      end
+      object PlotNameItem: TMenuItem
+        Action = ToolPlotName
+      end
+      object Separator2: TMenuItem
+        Caption = '-'
+      end
+      object ChartExportItem: TMenuItem
+        Action = PlotExport
+        Caption = 'E&xport plot'
+        Hint = 'Export plot|Export plot as image'
+      end
+      object ChartScaleItem: TMenuItem
+        Action = PlotScale
+      end
+    end
     object CurveMenu: TMenuItem
       Caption = '&Curve'
       object CurveAddItem: TMenuItem
@@ -5407,17 +5402,6 @@ object DigitMainForm: TDigitMainForm
       end
       object MarkerDelItem: TMenuItem
         Action = MarkersDelete
-      end
-    end
-    object PlotMenu: TMenuItem
-      Caption = 'P&lot'
-      object ChartExportItem: TMenuItem
-        Action = PlotExport
-        Caption = 'E&xport plot'
-        Hint = 'Export plot|Export plot as image'
-      end
-      object ChartScaleItem: TMenuItem
-        Action = PlotScale
       end
     end
     object Help1: TMenuItem
@@ -5869,10 +5853,31 @@ object DigitMainForm: TDigitMainForm
     end
     object ToolCurveName: TAction
       Category = 'Tools'
-      Caption = 'Edit &name'
-      Hint = 'Edit name|Edit the name of the active curve'
+      Caption = 'Edit curve &name'
+      Hint = 'Edit curve name|Edit the name of the active curve'
       ImageIndex = 27
       OnExecute = ToolCurveNameExecute
+    end
+    object ToolPlotAdd: TAction
+      Category = 'Tools'
+      Caption = '&Add plot'
+      Hint = 'Add plot|Add a new plot to the digitization'
+      ImageIndex = 25
+      OnExecute = ToolPlotAddExecute
+    end
+    object ToolPlotDelete: TAction
+      Category = 'Tools'
+      Caption = '&Delete plot'
+      Hint = 'Delete plot|Delete the active plot from the digitization'
+      ImageIndex = 26
+      OnExecute = ToolPlotDeleteExecute
+    end
+    object ToolPlotName: TAction
+      Category = 'Tools'
+      Caption = 'Edit &plot name'
+      Hint = 'Edit plot name|Edit the name of the active plot'
+      ImageIndex = 27
+      OnExecute = ToolPlotNameExecute
     end
     object ToolPlotOptions: TAction
       Category = 'Tools'

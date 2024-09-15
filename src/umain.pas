@@ -25,6 +25,13 @@ type
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
+    PlotNameItem: TMenuItem;
+    PlotDeleteItem: TMenuItem;
+    PlotAddItem: TMenuItem;
+    Separator2: TMenuItem;
+    ToolPlotDelete: TAction;
+    ToolPlotName: TAction;
+    ToolPlotAdd: TAction;
     btnBackground: TColorButton;
     btnBackgroundColor: TSpeedButton;
     btnColor: TColorButton;
@@ -142,13 +149,10 @@ type
     atInverse: TUserDefinedAxisTransform;
     AxisTransformInv: TChartAxisTransformations;
     atLog: TLogarithmAxisTransform;
-    btnAddCurve: TToolButton;
     btnAdjustCurve: TToolButton;
     btnAdjustNoise: TToolButton;
     btnClear: TToolButton;
-    btnDelCurve: TToolButton;
     btnDigitize: TToolButton;
-    btnEditName: TToolButton;
     btnExportPlot: TToolButton;
     btnMoveDown: TToolButton;
     btnMoveUp: TToolButton;
@@ -170,7 +174,6 @@ type
     RightSplitter: TSplitter;
     seInterpPoints: TSpinEdit;
     sep07: TToolButton;
-    sep08: TToolButton;
     seSGDegree: TSpinEdit;
     seSGKernel: TSpinEdit;
     seXf: TFloatSpinEdit;
@@ -478,6 +481,9 @@ type
     procedure ToolDigitMarkersExecute(Sender: TObject);
     procedure ToolBSplinesExecute(Sender: TObject);
     procedure ToolLinearExecute(Sender: TObject);
+    procedure ToolPlotAddExecute(Sender: TObject);
+    procedure ToolPlotDeleteExecute(Sender: TObject);
+    procedure ToolPlotNameExecute(Sender: TObject);
     procedure ToolPolynomialExecute(Sender: TObject);
     procedure ToolResetBoxExecute(Sender: TObject);
     procedure ToolPlotOptionsExecute(Sender: TObject);
@@ -677,6 +683,10 @@ begin
     ToolCurveAdd.Enabled := ImageIsLoaded and (State = piSetCurve);
     ToolCurveDelete.Enabled := ImageIsLoaded and (State = piSetCurve) and (CurveCount > 1);
     ToolCurveName.Enabled := ImageIsLoaded and (State = piSetCurve) and (CurveCount > 0);
+
+    ToolPlotAdd.Enabled := ImageIsLoaded and (State = piSetCurve);
+    ToolPlotDelete.Enabled := ImageIsLoaded and (PlotCount > 1);
+    ToolPlotName.Enabled := ImageIsLoaded and (PlotCount > 0);
 
     ToolPlotOptions.Enabled := ImageIsLoaded;
 
@@ -2859,13 +2869,12 @@ end;
 procedure TDigitMainForm.tcCurvesTabDragging(Sender: TObject; AIndexFrom,
   AIndexTo: integer; var ACanDrop: boolean);
 begin
-  ACanDrop := PlotImage.Plot.MoveCurve(AIndexFrom, AIndexTo);
+  ACanDrop := PlotImage.MoveCurve(AIndexFrom, AIndexTo);
 
   if ACanDrop then
   begin
     CurveToGUI;
     tcCurves.TabIndex := AIndexTo;
-    IsSaved := False;
   end;
 end;
 
@@ -2895,8 +2904,8 @@ begin
   with PlotImage do
     if ImageIsLoaded and (PlotCount > 1) then
     begin
-      PlotImage.DeletePlot(ATabIndex);
-      tcPlots.TabIndex := PlotImage.PlotIndex;
+      DeletePlot(ATabIndex);
+      tcPlots.TabIndex := PlotIndex;
       CurveToGUI;
     end;
 
@@ -2905,7 +2914,8 @@ end;
 
 procedure TDigitMainForm.tcPlotsTabDblClick(Sender: TObject; AIndex: integer);
 begin
-  RenamePlot(AIndex);
+  if ToolPlotName.Enabled then
+    RenamePlot(AIndex);
 end;
 
 procedure TDigitMainForm.tcPlotsTabDragging(Sender: TObject; AIndexFrom,
@@ -2922,18 +2932,8 @@ end;
 
 procedure TDigitMainForm.tcPlotsTabPlusClick(Sender: TObject);
 begin
-  with PlotImage do
-  begin
-    AddPlot;
-    PlotIndex := PlotCount - 1;
-    SetPlotPointMarkers(True);
-  end;
-
-  // Update the scale list
-  ScaleCount := PlotImage.PlotCount;
-
-  tcPlots.TabIndex := PlotImage.PlotIndex;
-  tcPlotsTabChanged(Self);
+  if ToolPlotAdd.Enabled then
+    ToolPlotAdd.Execute;
 end;
 
 procedure TDigitMainForm.ToolAdjustCurveExecute(Sender: TObject);
@@ -2984,9 +2984,12 @@ end;
 
 procedure TDigitMainForm.ToolCurveDeleteExecute(Sender: TObject);
 begin
-  PlotImage.DeleteCurve;
-  tcCurves.TabIndex := PlotImage.CurveIndex;
-  CurveToGUI;
+  with PlotImage do
+  begin
+    DeleteCurve;
+    tcCurves.TabIndex := CurveIndex;
+    CurveToGUI;
+  end;
 end;
 
 procedure TDigitMainForm.ToolCurveLeftExecute(Sender: TObject);
@@ -3085,6 +3088,37 @@ begin
   TmpOpt.DefaultItp := itpLinear;
   PlotImage.Options := TmpOpt;
   btnResample.Action := TAction(Sender);
+end;
+
+procedure TDigitMainForm.ToolPlotAddExecute(Sender: TObject);
+begin
+  with PlotImage do
+  begin
+    AddPlot;
+    PlotIndex := PlotCount - 1;
+    SetPlotPointMarkers(True);
+  end;
+
+  // Update the scale list
+  ScaleCount := PlotImage.PlotCount;
+
+  tcPlots.TabIndex := PlotImage.PlotIndex;
+  tcPlotsTabChanged(Self);
+end;
+
+procedure TDigitMainForm.ToolPlotDeleteExecute(Sender: TObject);
+begin
+  with PlotImage do
+  begin
+    DeletePlot;
+    tcPlots.TabIndex := PlotIndex;
+    CurveToGUI;
+  end;
+end;
+
+procedure TDigitMainForm.ToolPlotNameExecute(Sender: TObject);
+begin
+  RenamePlot;
 end;
 
 procedure TDigitMainForm.ToolPolynomialExecute(Sender: TObject);

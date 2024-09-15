@@ -725,7 +725,12 @@ begin
             (ToIdx >= 0) and (ToIdx < FCurves.Count);
 
   if Result then
+  begin
     FCurves.Move(FromIdx, ToIdx);
+
+    if (CurveIndex = FromIdx) then
+      FCurveIndex := ToIdx;
+  end;
 end;
 
 procedure TPlot.AddCurve;

@@ -235,6 +235,7 @@ type
     procedure ShiftActiveMarker(Delta: TPoint);
     procedure RedrawMarkers;
 
+    function MoveCurve(FromIdx, ToIdx: Integer): Boolean;
     function MovePlot(FromIdx, ToIdx: Integer): Boolean;
 
     procedure AddPlot; overload;
@@ -2742,6 +2743,14 @@ begin
   end;
 end;
 
+function TPlotImage.MoveCurve(FromIdx, ToIdx: Integer): Boolean;
+begin
+  Result := Plot.MoveCurve(FromIdx, ToIdx);
+
+  if Result then
+    IsChanged := True;
+end;
+
 function TPlotImage.MovePlot(FromIdx, ToIdx: Integer): Boolean;
 begin
   Result := (FromIdx <> ToIdx) and
@@ -2751,6 +2760,8 @@ begin
   if Result then
   begin
     FPlots.Move(FromIdx, ToIdx);
+
+    UpdateMarkersInImage;
 
     IsChanged := True;
   end;
