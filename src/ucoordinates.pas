@@ -47,6 +47,8 @@ type
     FSine: Double;
     FCosine: Double;
 
+    FOnChange: TNotifyEvent;
+
     function GetNumvertices: Integer;
     function GetVertex(Index: Integer): TCurvePoint;
     function GetEdge(Index: Integer): TCurvePoint;
@@ -96,6 +98,8 @@ type
     property DrawPoints[Zoom: Double]: ArrayOfTPointF read GetDrawPoints;
     property Rect[Zoom: Double]: TRect read GetRect;
     property Rotated: Boolean read FRotated;
+  published
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
   end;
 
   TPlotQuad = class(TPolygon)
@@ -258,7 +262,7 @@ begin
   FCosine := 1.0;
 
   for i := 0 to NumVertices - 1 do
-    Vertex[i] := TCurvePoint.Create(-1, -1);
+    FVertices[i] := TCurvePoint.Create(-1, -1);
 end;
 
 procedure TPolygon.MoveVertex(Index: Integer; Pn: TCurvePoint);
@@ -274,6 +278,10 @@ begin
     Idx1 := PrevVertIdx(Index);
     Idx2 := PrevVertIdx(Idx1);
     FVertices[Idx1] := CalcVertexPos(Pn, Vertex[Idx2], Idx1, Idx2);
+
+    // Notify the parent that the Polygon has changed
+    if assigned(OnChange) then
+      OnChange(Self);
   end;
 end;
 
@@ -290,6 +298,10 @@ begin
     Idx1 := Index;
     Idx2 := PrevVertIdx(Index);
     FVertices[Idx1] := CalcVertexPos(Pn, Vertex[Idx2], Index, Idx2);
+
+    // Notify the parent that the Polygon has changed
+    if assigned(OnChange) then
+      OnChange(Self);
   end;
 end;
 
@@ -335,6 +347,10 @@ begin
     CancelRotation;
 
     RecalcSlopes;
+
+    // Notify the parent that the Polygon has changed
+    if assigned(OnChange) then
+      OnChange(Self);
   end;
 end;
 
@@ -489,9 +505,16 @@ end;
 
 procedure TPolygon.SetNumVertices(const Value: Integer);
 begin
-  SetLength(FVertices, Value);
-  SetLength(FSlopes, Value);
-  SetLength(FHoriLines, Value);
+  if (Value >= 3) then
+  begin
+    SetLength(FVertices, Value);
+    SetLength(FSlopes, Value);
+    SetLength(FHoriLines, Value);
+
+    // Notify the parent that the Polygon has changed
+    if assigned(OnChange) then
+      OnChange(Self);
+  end;
 end;
 
 procedure TPolygon.SetVertex(Index: Integer; const Value: TCurvePoint);
@@ -501,6 +524,10 @@ begin
     FVertices[Index] := Value;
 
     RecalcSlopes;
+
+    // Notify the parent that the Polygon has changed
+    if assigned(OnChange) then
+      OnChange(Self);
   end;
 end;
 
@@ -780,7 +807,7 @@ begin
       end;
     end;
     Child := Item.FirstChild;
-    while Assigned(Child) do
+    while assigned(Child) do
     begin
       for i := 1 to NumVertices do
       begin

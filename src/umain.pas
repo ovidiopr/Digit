@@ -434,6 +434,10 @@ type
     procedure PlotImageStateChanged(Sender: TObject; NewState: TPlotImageState);
     procedure PlotImageMarkerDragged(Sender: TObject; Marker: TMarker; Zoom: Boolean);
     procedure PlotImageZoomChanged(Sender: TObject; Zoom: Double);
+    procedure PlotImageActivePlotChanging(Sender: TObject; OldIndex, NewIndex: Integer);
+    procedure PlotImageActivePlotChanged(Sender: TObject; OldIndex, NewIndex: Integer);
+    procedure PlotImageActiveCurveChanging(Sender: TObject; OldIndex, NewIndex: Integer);
+    procedure PlotImageActiveCurveChanged(Sender: TObject; OldIndex, NewIndex: Integer);
     procedure InputPanelResize(Sender: TObject);
     procedure MainPlotMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
@@ -1461,6 +1465,10 @@ begin
     OnStateChanged := @PlotImageStateChanged;
     OnMarkerDragged := @PlotImageMarkerDragged;
     OnZoomChanged := @PlotImageZoomChanged;
+    OnActivePlotChanging := @PlotImageActivePlotChanging;
+    OnActivePlotChanged := @PlotImageActivePlotChanged;
+    OnActiveCurveChanging := @PlotImageActiveCurveChanging;
+    OnActiveCurveChanged := @PlotImageActiveCurveChanged;
 
     Options.LoadFromFile(GetIniName);
   end;
@@ -1704,12 +1712,8 @@ end;
 
 procedure TDigitMainForm.pcInputChange(Sender: TObject);
 begin
+  // Update PlotImage state
   PlotImage.State := TPlotImageState(pcInput.ActivePageIndex);
-  UpdateControls;
-
-  // Update relevant fields
-  UpdateGUI;
-
 end;
 
 function TDigitMainForm.CheckSaveStatus: Boolean;
@@ -2587,9 +2591,12 @@ end;
 procedure TDigitMainForm.PlotImageStateChanged(Sender: TObject; NewState: TPlotImageState);
 begin
   if (pcInput.ActivePageIndex <> Integer(NewState)) then
-  begin
     pcInput.ActivePageIndex := Integer(NewState);
-  end;
+
+  UpdateControls;
+
+  // Update relevant fields
+  UpdateGUI;
 end;
 
 procedure TDigitMainForm.PlotImageMarkerDragged(Sender: TObject; Marker: TMarker; Zoom: Boolean);
@@ -2648,6 +2655,50 @@ begin
   tbZoom.Value := Round(Zoom*100);
 end;
 
+procedure TDigitMainForm.PlotImageActivePlotChanging(Sender: TObject; OldIndex, NewIndex: Integer);
+begin
+  // TODO
+end;
+
+procedure TDigitMainForm.PlotImageActivePlotChanged(Sender: TObject; OldIndex, NewIndex: Integer);
+begin
+  //Change active tab
+  if (tcPlots.TabIndex <> NewIndex) then
+    tcPlots.TabIndex := NewIndex;
+
+  // Update the curve list
+  CurveCount := PlotImage.CurveCount;
+
+  // Update the GUI
+  UpdateGUI;
+
+  //Update the control values
+  UpdateControls;
+
+  UpdateView;
+end;
+
+procedure TDigitMainForm.PlotImageActiveCurveChanging(Sender: TObject; OldIndex, NewIndex: Integer);
+begin
+  // Update the active curve
+  GUIToCurve;
+end;
+
+procedure TDigitMainForm.PlotImageActiveCurveChanged(Sender: TObject; OldIndex, NewIndex: Integer);
+begin
+  // Change active tab
+  if (tcCurves.TabIndex <> NewIndex) then
+    tcCurves.TabIndex := NewIndex;
+
+  // Update the GUI
+  UpdateGUI;
+
+  //Update the control values
+  UpdateControls;
+
+  UpdateView;
+end;
+
 procedure TDigitMainForm.InputPanelResize(Sender: TObject);
 begin
   ZoomImage.Height := InputPanel.Width;
@@ -2687,7 +2738,7 @@ begin
   StatusBar.Panels[1].Text := '';
   Pt := MainPlot.ImageToGraph(TPoint.Create(X, Y));
 
-  if Assigned(PlotImage) and Assigned(PlotImage.Plot) then
+  if assigned(PlotImage) and assigned(PlotImage.Plot) then
   begin
     // Calculate the correct value for the X axis
     case PlotImage.Plot.Scale.XScale of
@@ -2834,16 +2885,8 @@ end;
 
 procedure TDigitMainForm.tcCurvesTabChanged(Sender: TObject);
 begin
-  //First, update the active curve
-  GUIToCurve;
   //Change active curve
   PlotImage.CurveIndex := tcCurves.TabIndex;
-  //Finally, update the control values
-  CurveToGUI;
-  //Update the control values
-  UpdateControls;
-
-  UpdateView;
 end;
 
 procedure TDigitMainForm.tcCurvesTabClose(Sender: TObject; ATabIndex: integer;
@@ -2886,16 +2929,8 @@ end;
 
 procedure TDigitMainForm.tcPlotsTabChanged(Sender: TObject);
 begin
-  //Change active scale
+  //Change active plot
   PlotImage.PlotIndex := tcPlots.TabIndex;
-  // Update the curve list
-  CurveCount := PlotImage.CurveCount;
-
-  // Update the GUI
-  UpdateGUI;
-
-  UpdateControls;
-  UpdateView;
 end;
 
 procedure TDigitMainForm.tcPlotsTabClose(Sender: TObject; ATabIndex: integer;

@@ -196,6 +196,8 @@ type
     FInterval: Integer;
     FTolerance: Integer;
     FSpread: Integer;
+
+    FOnChange: TNotifyEvent;
   private
     function GetCount: Integer;
     function GetColor: TColor;
@@ -214,7 +216,10 @@ type
     procedure SetCurveIndex(Value: Integer);
     procedure SetMarker(Index: Integer; const Value: TCurvePoint);
 
+    procedure SetStep(Value: Integer);
+    procedure SetInterval(Value: Integer);
     procedure SetTolerance(Value: Integer);
+    procedure SetSpread(Value: Integer);
   public
     constructor Create(Name: String);
     destructor Destroy; override;
@@ -272,16 +277,18 @@ type
     property MarkerCount: Integer read GetMarkerCount;
     property Markers[Index: Integer]: TCurvePoint read GetMarker write SetMarker;
 
-    property Step: Integer read FStep write FStep;
-    property Interval: Integer read FInterval write FInterval;
+    property Step: Integer read FStep write SetStep;
+    property Interval: Integer read FInterval write SetInterval;
     property Tolerance: Integer read FTolerance write SetTolerance;
-    property Spread: Integer read FSpread write FSpread;
+    property Spread: Integer read FSpread write SetSpread;
 
     property ColorIsSet: Boolean read GetColorIsSet;
     property HasPoints: Boolean read GetHasPoints;
 
     property ValidPoints: Boolean read GetValidPoints write FValidPoints;
     property AllPoints: TIsland read FAllPoints;
+  published
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
   end;
 
 implementation
@@ -1065,7 +1072,13 @@ end;
 procedure TDigitCurve.SetName(Value: String);
 begin
   if (Value <> FName) then
+  begin
     FName := Value;
+
+    // Notify the parent that the DigitCurve has changed
+    if assigned(OnChange) then
+      OnChange(Self);
+  end;
 end;
 
 procedure TDigitCurve.SetColor(Value: TColor);
@@ -1076,25 +1089,71 @@ begin
 
     FValidPoints := False;
     FAllPoints.Clear;
+
+    // Notify the parent that the DigitCurve has changed
+    if assigned(OnChange) then
+      OnChange(Self);
   end;
 end;
 
 procedure TDigitCurve.SetShowAsSymbols(Value: Boolean);
 begin
-  if assigned(Curve) then
+  if assigned(Curve) and (Curve.ShowAsSymbols <> Value) then
+  begin
     Curve.ShowAsSymbols := Value;
+
+    // Notify the parent that the DigitCurve has changed
+    if assigned(OnChange) then
+      OnChange(Self);
+  end;
 end;
 
 procedure TDigitCurve.SetCurveIndex(Value: Integer);
 begin
-  if (Value >= 0) and (Value < FValidCurves) then
+  if (Value >= 0) and (Value < FValidCurves) and (FCurveIndex <> Value) then
+  begin
     FCurveIndex := Value;
+
+    // Notify the parent that the DigitCurve has changed
+    if assigned(OnChange) then
+      OnChange(Self);
+  end;
 end;
 
 procedure TDigitCurve.SetMarker(Index: Integer; const Value: TCurvePoint);
 begin
-  if (Index >= 0) and (Index < FMarkers.Count) then
+  if (Index >= 0) and (Index < FMarkers.Count) and (FMarkers[Index] <> Value) then
+  begin
     FMarkers[Index] := Value;
+
+    // Notify the parent that the DigitCurve has changed
+    if assigned(OnChange) then
+      OnChange(Self);
+  end;
+end;
+
+procedure TDigitCurve.SetStep(Value: Integer);
+begin
+  if (Value <> FStep) then
+  begin
+    FStep := Value;
+
+    // Notify the parent that the DigitCurve has changed
+    if assigned(OnChange) then
+      OnChange(Self);
+  end;
+end;
+
+procedure TDigitCurve.SetInterval(Value: Integer);
+begin
+  if (Value <> FInterval) then
+  begin
+    FInterval := Value;
+
+    // Notify the parent that the DigitCurve has changed
+    if assigned(OnChange) then
+      OnChange(Self);
+  end;
 end;
 
 procedure TDigitCurve.SetTolerance(Value: Integer);
@@ -1105,6 +1164,22 @@ begin
 
     FValidPoints := False;
     FAllPoints.Clear;
+
+    // Notify the parent that the DigitCurve has changed
+    if assigned(OnChange) then
+      OnChange(Self);
+  end;
+end;
+
+procedure TDigitCurve.SetSpread(Value: Integer);
+begin
+  if (Value <> FSpread) then
+  begin
+    FSpread := Value;
+
+    // Notify the parent that the DigitCurve has changed
+    if assigned(OnChange) then
+      OnChange(Self);
   end;
 end;
 
@@ -1298,7 +1373,7 @@ begin
     RealPointCount := 0;
     RealMarkerCount := 0;
     Child := Item.FirstChild;
-    while Assigned(Child) do
+    while assigned(Child) do
     begin
       // Curve markers and  points
       if (Child.CompareName('marker') = 0) or (Child.CompareName('point') = 0) then

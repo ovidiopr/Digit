@@ -50,6 +50,7 @@ type
   TMarkerDraggedEvent = procedure(Sender: TObject; Marker: TMarker; Zoom: Boolean) of Object;
   TZoomChangeEvent = procedure(Sender: TObject; Zoom: Double) of Object;
   TScaleChangeEvent = procedure(Sender: TObject; Index: Integer) of Object;
+  TItemChangeEvent = procedure(Sender: TObject; OldIndex, NewIndex: Integer) of Object;
 
   TPlotImage = class(TCustomControl)
   protected type
@@ -102,8 +103,10 @@ type
     FOnStateChanged: TStateChangeEvent;
     FOnMarkerDragged: TMarkerDraggedEvent;
     FOnZoomChanged: TZoomChangeEvent;
-    FOnScaleChanged: TScaleChangeEvent;
-
+    FOnActivePlotChanging: TItemChangeEvent;
+    FOnActivePlotChanged: TItemChangeEvent;
+    FOnActiveCurveChanging: TItemChangeEvent;
+    FOnActiveCurveChanged: TItemChangeEvent;
 
     procedure Paint; override;
     procedure Resize; override;
@@ -176,6 +179,8 @@ type
 
     procedure LoadImage(FileName: TFileName); overload;
     procedure LoadImage(Stream: TStream); overload;
+
+    procedure ChildChange(Sender: TObject);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -347,7 +352,10 @@ type
     property OnStateChanged: TStateChangeEvent read FOnStateChanged write FOnStateChanged;
     property OnMarkerDragged: TMarkerDraggedEvent read FOnMarkerDragged write FOnMarkerDragged;
     property OnZoomChanged: TZoomChangeEvent read FOnZoomChanged write FOnZoomChanged;
-    property OnScaleChanged: TScaleChangeEvent read FOnScaleChanged write FOnScaleChanged;
+    property OnActivePlotChanging: TItemChangeEvent read FOnActivePlotChanging write FOnActivePlotChanging;
+    property OnActivePlotChanged: TItemChangeEvent read FOnActivePlotChanged write FOnActivePlotChanged;
+    property OnActiveCurveChanging: TItemChangeEvent read FOnActiveCurveChanging write FOnActiveCurveChanging;
+    property OnActiveCurveChanged: TItemChangeEvent read FOnActiveCurveChanged write FOnActiveCurveChanged;
   end;
 
 function CreateMarker(Size: TPoint; Symbol: Char; Color: TColor; LineWith: Integer = 3): TBGRABitmap;
@@ -487,7 +495,6 @@ begin
   FMarkerList := TCurve.Create;
 
   FPlots := TPlotList.Create;
-  //FScale := TScale.Create;
 
   Reset;
 end;
@@ -608,7 +615,7 @@ begin
   if (not Plot.DigitCurve.ValidPoints) then
   begin
     // Notify the parent that it must show the progress bar
-    if Assigned(OnShowProgress) then
+    if assigned(OnShowProgress) then
       OnShowProgress(Self, 0, 'Finding points...');
 
     RunningAction := True;
@@ -645,7 +652,7 @@ begin
         inc(p2);
 
         // Notify the parent that it must update the progress bar
-        if Assigned(OnShowProgress) then
+        if assigned(OnShowProgress) then
           OnShowProgress(Self, Round(100*(j*PlotImg.Width + i)/
                                      (PlotImg.Width*PlotImg.Height)),
                                      'Finding points...');
@@ -658,7 +665,7 @@ begin
     //Plot.DigitCurve.AllPoints.SortCurve;
 
     // Notify the parent that it must hide the progress bar
-    if Assigned(OnHideProgress) then
+    if assigned(OnHideProgress) then
       OnHideProgress(Self);
 
     Plot.DigitCurve.ValidPoints := not CancelAction;
@@ -770,7 +777,7 @@ begin
   Interval := Plot.DigitCurve.Interval;
 
   // Notify the parent that it must show the progress bar
-  if Assigned(OnShowProgress) then
+  if assigned(OnShowProgress) then
     OnShowProgress(Self, 0, 'Digitizing spectrum...');
 
   Plot.DigitCurve.NextCurve(False);
@@ -836,7 +843,7 @@ begin
     end;
 
     // Notify the parent that it must update the progress bar
-    if Assigned(OnShowProgress) then
+    if assigned(OnShowProgress) then
     begin
       case ML.Count of
         0..2: begin
@@ -862,7 +869,7 @@ begin
         ((ML.Count > 2) and (i >= ML.Count - 1));
 
   // Notify the parent that it must hide the progress bar
-  if Assigned(OnHideProgress) then
+  if assigned(OnHideProgress) then
     OnHideProgress(Self);
 
   SortCurve;
@@ -920,7 +927,7 @@ begin
     SetLength(n, Plot.DigitCurve.AllPoints.Count);
 
     // Notify the parent that it must show the progress bar
-    if Assigned(OnShowProgress) then
+    if assigned(OnShowProgress) then
       OnShowProgress(Self, 0, 'Digitizing spectrum...');
 
     Plot.DigitCurve.NextCurve(False);
@@ -932,7 +939,7 @@ begin
       for i := 1 to Plot.DigitCurve.AllPoints.Count - 1 do
       begin
         // Notify the parent that it must update the progress bar
-        if Assigned(OnShowProgress) then
+        if assigned(OnShowProgress) then
           OnShowProgress(Self, Round(100*(i + 1)/Plot.DigitCurve.AllPoints.Count), 'Digitizing spectrum...');
 
         Added := False;
@@ -958,7 +965,7 @@ begin
     end;
 
     // Notify the parent that it must hide the progress bar
-    if Assigned(OnHideProgress) then
+    if assigned(OnHideProgress) then
       OnHideProgress(Self);
 
     SortCurve;
@@ -1053,7 +1060,7 @@ begin
       NewPoints.Clear;
 
       // Notify the parent that it must show the progress bar
-      if Assigned(OnShowProgress) then
+      if assigned(OnShowProgress) then
         OnShowProgress(Self, 0, 'Adjusting curve...');
 
       Island := TIsland.Create;
@@ -1113,7 +1120,7 @@ begin
         end;
 
         // Notify the parent that it must update the progress bar
-        if Assigned(OnShowProgress) then
+        if assigned(OnShowProgress) then
           OnShowProgress(Self, Round(100*(i + 1)/Plot.Curve.Count), 'Adjusting curve...');
 
         Application.ProcessMessages;
@@ -1125,7 +1132,7 @@ begin
         Plot.Curve.AddPoint(NewPoints[i]);
 
       // Notify the parent that it must hide the progress bar
-      if Assigned(OnHideProgress) then
+      if assigned(OnHideProgress) then
         OnHideProgress(Self);
     finally
       NewPoints.Free;
@@ -1157,7 +1164,7 @@ begin
       NewPoints.Clear;
 
       // Notify the parent that it must show the progress bar
-      if Assigned(OnShowProgress) then
+      if assigned(OnShowProgress) then
         OnShowProgress(Self, 0, 'Converting curve to symbols...');
 
       Island := TIsland.Create;
@@ -1174,7 +1181,7 @@ begin
         end;
 
         // Notify the parent that it must update the progress bar
-        if Assigned(OnShowProgress) then
+        if assigned(OnShowProgress) then
           OnShowProgress(Self, Round(100*(i + 1)/Plot.Curve.Count),
                          'Converting curve to symbols...');
 
@@ -1188,7 +1195,7 @@ begin
         Plot.Curve.AddPoint(NewPoints[i]);
 
       // Notify the parent that it must hide the progress bar
-      if Assigned(OnHideProgress) then
+      if assigned(OnHideProgress) then
         OnHideProgress(Self);
     finally
       NewPoints.Free;
@@ -1243,7 +1250,7 @@ end;
 
 function TPlotImage.GetAxesMarkers(Index: Integer): TMarker;
 begin
-  if (Index in [1..3]) and Assigned(FAxesMarkers[Index]) then
+  if (Index in [1..3]) and assigned(FAxesMarkers[Index]) then
     Result := FAxesMarkers[Index]
   else
     Result := nil;
@@ -1251,7 +1258,7 @@ end;
 
 function TPlotImage.GetBoxMarkers(Index: Integer): TMarker;
 begin
-  if (Index in [1..4]) and Assigned(FBoxMarkers[Index]) then
+  if (Index in [1..4]) and assigned(FBoxMarkers[Index]) then
     Result := FBoxMarkers[Index]
   else
     Result := nil;
@@ -1259,7 +1266,7 @@ end;
 
 function TPlotImage.GetEdgeMarkers(Index: Integer): TMarker;
 begin
-  if (Index in [1..4]) and Assigned(FEdgeMarkers[Index]) then
+  if (Index in [1..4]) and assigned(FEdgeMarkers[Index]) then
     Result := FEdgeMarkers[Index]
   else
     Result := nil;
@@ -1271,7 +1278,7 @@ var
   Xmin, Xmax,
   Ymin, Ymax: Integer;
 begin
-  if Assigned(FAxesMarkers[2]) and Assigned(FAxesMarkers[3]) then
+  if assigned(FAxesMarkers[2]) and assigned(FAxesMarkers[3]) then
   begin
     RectIntersection(AxesMarkers[2].Position, AxesMarkers[3].Position, Pini, Pend);
 
@@ -1292,7 +1299,7 @@ var
   Xmin, Xmax,
   Ymin, Ymax: Integer;
 begin
-  if Assigned(FAxesMarkers[2]) and Assigned(FAxesMarkers[1]) then
+  if assigned(FAxesMarkers[2]) and assigned(FAxesMarkers[1]) then
   begin
     RectIntersection(AxesMarkers[2].Position, AxesMarkers[1].Position, Pini, Pend);
 
@@ -1355,7 +1362,7 @@ procedure TPlotImage.SetAxesPoint(Index: Integer; const Value: TCurvePoint);
 begin
   if (Index in [1..3]) and (Plot.Scale.ImagePoint[Index] <> Value) then
   begin
-    if Assigned(FAxesMarkers[Index]) then
+    if assigned(FAxesMarkers[Index]) then
       FAxesMarkers[Index].Position := Zoom*Value;
 
     Plot.Scale.ImagePoint[Index] := Value;
@@ -1371,16 +1378,16 @@ begin
   if (Index in [1..4]) and
      (Plot.Box[Index - 1] <> Value) then
   begin
-    if Assigned(FBoxMarkers[Index]) then
+    if assigned(FBoxMarkers[Index]) then
       FBoxMarkers[Index].Position := Zoom*Value;
 
     Plot.Box[Index - 1] := Value;
 
-    if Assigned(FEdgeMarkers[Index]) then
+    if assigned(FEdgeMarkers[Index]) then
       FEdgeMarkers[Index].Position := Zoom*Plot.Box.Edge[Index - 1];
 
     Idx := Plot.Box.PrevVertIdx(Index - 1) + 1;
-    if Assigned(FEdgeMarkers[Idx]) then
+    if assigned(FEdgeMarkers[Idx]) then
       FEdgeMarkers[Idx].Position := Zoom*Plot.Box.Edge[Idx - 1];
 
     IsChanged := True;
@@ -1637,7 +1644,7 @@ procedure TPlotImage.DeleteMarker(Marker: TMarker; RealDelete: Boolean = True);
 var
   i: Integer;
 begin
-  if Assigned(Marker) then
+  if assigned(Marker) then
   begin
     if (FClickedMarker = Marker) then
     begin
@@ -1665,7 +1672,7 @@ begin
 
     Markers.Remove(Marker);
 
-    if (not Assigned(ActiveMarker)) and (Markers.Count > 0) then
+    if (not assigned(ActiveMarker)) and (Markers.Count > 0) then
       ActiveMarker := Markers[0];
 
     if RealDelete then
@@ -1696,7 +1703,7 @@ var
   OldPos,
   P1, P2: TCurvePoint;
 begin
-  if Assigned(ActiveMarker) then
+  if assigned(ActiveMarker) then
   begin
     NewPos := ActiveMarker.Position + Delta;
 
@@ -1853,14 +1860,14 @@ begin
   for i := Markers.Count - 1 downto 0 do
     Markers[i].Draw(WhiteBoard, PaintRect);
 
-  if Assigned(ActiveMarker) and
+  if assigned(ActiveMarker) and
      not (ActiveMarker.Rect*PaintRect).IsEmpty then
   begin
     with WhiteBoard.Canvas do
       DrawFocusRect(ActiveMarker.Rect);
   end;
 
-  if Assigned(MarkerUnderCursor) and
+  if assigned(MarkerUnderCursor) and
      (MarkerUnderCursor <> ActiveMarker) and
      not (MarkerUnderCursor.Rect*PaintRect).IsEmpty then
   begin
@@ -1938,7 +1945,7 @@ begin
     ActiveMarker := HitMarker;
 
     // Define the action to perform when dragging
-    if (State = piSetPlotBox) and Assigned(FClickedMarker) then
+    if (State = piSetPlotBox) and assigned(FClickedMarker) then
     begin
       if IsInArray(FClickedMarker, FBoxMarkers) then
       begin
@@ -1983,7 +1990,7 @@ begin
 
   inherited MouseMove(Shift, MouseMovePos.X, MouseMovePos.Y);
 
-  if Assigned(FClickedMarker) then
+  if assigned(FClickedMarker) then
   begin
     if not Dragging then
       if (Abs(MouseMovePos.X - FClickedPoint.X) > 5) or
@@ -2177,12 +2184,12 @@ begin
     begin
       Dragging := False;
 
-      if (State = piSetScale) and Assigned(FClickedMarker) then
+      if (State = piSetScale) and assigned(FClickedMarker) then
         for i := 1 to 3 do
           if (FClickedMarker = AxesMarkers[i]) then
             Plot.Scale.ImagePoint[i] := FClickedMarker.Position/Zoom;
 
-      if Assigned(OnMarkerDragged) and Assigned(FClickedMarker) then
+      if assigned(OnMarkerDragged) and assigned(FClickedMarker) then
       begin
         // Notify that neighboring markers have moved
         if (State = piSetPlotBox) then
@@ -2244,14 +2251,14 @@ begin
           end;
 
         // Notify the parent that the user has selected a region
-        if Assigned(OnRegionSelected) then
+        if assigned(OnRegionSelected) then
           OnRegionSelected(Self, FSelectionRect);
 
         SelectingRegion := False;
         RepaintRegion;
       end;
 
-      if Assigned(FClickedMarker) then
+      if assigned(FClickedMarker) then
       begin
         Markers.Move(Markers.IndexOf(FClickedMarker), 0);
         RepaintMarker(FClickedMarker);
@@ -2276,10 +2283,10 @@ begin
     OldMarker := MarkerUnderCursor;
     FMarkerUnderCursor := Marker;
 
-    if Assigned(OldMarker) then
+    if assigned(OldMarker) then
       RepaintMarker(OldMarker);
 
-    if Assigned(MarkerUnderCursor) then
+    if assigned(MarkerUnderCursor) then
       RepaintMarker(MarkerUnderCursor);
   end;
 end;
@@ -2293,10 +2300,10 @@ begin
     OldMarker := ActiveMarker;
     FActiveMarker := Marker;
 
-    if Assigned(OldMarker) then
+    if assigned(OldMarker) then
       RepaintMarker(OldMarker);
 
-    if Assigned(ActiveMarker) then
+    if assigned(ActiveMarker) then
       RepaintMarker(ActiveMarker);
   end;
 end;
@@ -2399,11 +2406,17 @@ procedure TPlotImage.SetCurveIndex(Value: Integer);
 var
   TmpRect: TRect;
   TmpOnChange: TNotifyEvent;
+  OldValue: Integer;
 begin
   if (Value >= 0) and (Value < CurveCount) and (Value <> CurveIndex) then
   begin
     TmpOnChange := OnChange;
     OnChange := nil;
+
+    OldValue := Plot.CurveIndex;
+    // Notify the parent that the active curve is about to change
+    if assigned(OnActiveCurveChanging) then
+      OnActiveCurveChanging(Self, OldValue, Value);
 
     // First, update all the markers in the curve
     UpdateMarkersInCurve;
@@ -2419,17 +2432,27 @@ begin
     UpdateMarkersInImage;
 
     OnChange := TmpOnChange;
+
+    // Notify the parent that the active curve has changed
+    if assigned(OnActiveCurveChanged) then
+      OnActiveCurveChanged(Self, OldValue, Value);
   end;
 end;
 
 procedure TPlotImage.SetPlotIndex(Value: Integer);
 var
   TmpOnChange: TNotifyEvent;
+  OldValue: Integer;
 begin
-  if (Value >= 0) and (Value < FPlots.Count) and (Value <> PlotIndex) then
+  if (Value >= 0) and (Value < PlotCount) and (Value <> PlotIndex) then
   begin
     TmpOnChange := OnChange;
     OnChange := nil;
+
+    OldValue := FPlotIndex;
+    // Notify the parent that the active plot is about to change
+    if assigned(OnActivePlotChanging) then
+      OnActivePlotChanging(Self, OldValue, Value);
 
     // First, update all the markers in the curve
     UpdateMarkersInCurve;
@@ -2441,18 +2464,22 @@ begin
 
     OnChange := TmpOnChange;
 
-    // Notify the parent that the active Plot has changed
-    if assigned(OnScaleChanged) then
-      OnScaleChanged(Self, Value);
+    // Notify the parent that the active plot has changed
+    if assigned(OnActivePlotChanged) then
+      OnActivePlotChanged(Self, OldValue, Value);
   end;
 end;
 
 procedure TPlotImage.SetIsChanged(Value: Boolean);
 begin
-  FIsChanged := Value;
+  if (Value <> FIsChanged) then
+  begin
+    FIsChanged := Value;
 
-  if (Assigned(FOnChange) and FIsChanged) then
-    FOnChange(Self);
+    // Notify the parent that the PlotImage has changed
+    if (assigned(OnChange) and IsChanged) then
+      OnChange(Self);
+  end;
 end;
 
 procedure TPlotImage.SetPoint(Index: Integer; const Value: TCurvePoint);
@@ -2660,7 +2687,7 @@ end;
 
 procedure TPlotImage.XAxisCoords(var Pini, Pend: TCurvePoint);
 begin
-  if Assigned(FAxesMarkers[2]) and Assigned(FAxesMarkers[3]) then
+  if assigned(FAxesMarkers[2]) and assigned(FAxesMarkers[3]) then
     RectIntersection(AxesMarkers[2].Position, AxesMarkers[3].Position, Pini, Pend)
   else
     with Plot.Scale do
@@ -2669,7 +2696,7 @@ end;
 
 procedure TPlotImage.YAxisCoords(var Pini, Pend: TCurvePoint);
 begin
-  if Assigned(FAxesMarkers[2]) and Assigned(FAxesMarkers[1]) then
+  if assigned(FAxesMarkers[2]) and assigned(FAxesMarkers[1]) then
     RectIntersection(AxesMarkers[2].Position, AxesMarkers[1].Position, Pini, Pend)
   else
     with Plot.Scale do
@@ -2743,12 +2770,21 @@ begin
   end;
 end;
 
+procedure TPlotImage.ChildChange(Sender: TObject);
+begin
+  // Some child (Plot, Grid) has changed
+  IsChanged := True;
+end;
+
 function TPlotImage.MoveCurve(FromIdx, ToIdx: Integer): Boolean;
 begin
   Result := Plot.MoveCurve(FromIdx, ToIdx);
 
   if Result then
+  begin
+    //CurveIndex := ToIdx;
     IsChanged := True;
+  end;
 end;
 
 function TPlotImage.MovePlot(FromIdx, ToIdx: Integer): Boolean;
@@ -2768,20 +2804,32 @@ begin
 end;
 
 procedure TPlotImage.AddPlot;
+var
+  TmpPlot: TPlot;
 begin
-  FPlots.Add(TPlot.Create('Plot' + IntToStr(FPlots.Count + 1)));
+  TmpPlot := TPlot.Create('Plot' + IntToStr(FPlots.Count + 1));
+  TmpPlot.OnChange := @ChildChange;
+
+  FPlots.Add(TmpPlot);
 
   IsChanged := True;
 end;
 
 procedure TPlotImage.AddPlot(Position: Integer);
+var
+  TmpPlot: TPlot;
 begin
   if (Position >= 0) and (Position < FPlots.Count) then
-    FPlots.Insert(Position, TPlot.Create('Plot' + IntToStr(Position) + 'b'))
-  else
-    FPlots.Add(TPlot.Create('Plot' + IntToStr(FPlots.Count + 1)));
+  begin
+    TmpPlot := TPlot.Create('Plot' + IntToStr(Position) + 'b');
+    TmpPlot.OnChange := @ChildChange;
 
-  IsChanged := True;
+    FPlots.Insert(Position, TmpPlot);
+
+    IsChanged := True;
+  end
+  else
+    AddPlot;
 end;
 
 procedure TPlotImage.DeletePlot;
@@ -3429,7 +3477,7 @@ begin
     PlotBoxLoaded := (DigitVersion > 1);
 
     Child := XMLDoc.DocumentElement.FirstChild;
-    while Assigned(Child) do
+    while assigned(Child) do
     begin
       if (Child.CompareName('document') = 0) then
       begin
@@ -3444,7 +3492,7 @@ begin
         end;
 
         DigitChild := Child.FirstChild;
-        while Assigned(DigitChild) do
+        while assigned(DigitChild) do
         begin
           if (DigitChild.CompareName('image') = 0) then
           begin
@@ -3465,23 +3513,23 @@ begin
             ImgName := '';
 
             ImageChild := DigitChild.FirstChild;
-            while Assigned(ImageChild) do
+            while assigned(ImageChild) do
             begin
               if (ImageChild.CompareName('path') = 0) then
-                if Assigned(ImageChild.FirstChild) then
+                if assigned(ImageChild.FirstChild) then
                   Path := UTF8Encode(ImageChild.FirstChild.NodeValue)
                 else
                   Path := '';
 
               if (ImageChild.CompareName('name') = 0) then
-                if Assigned(ImageChild.FirstChild) then
+                if assigned(ImageChild.FirstChild) then
                   ImgName := UTF8Encode(ImageChild.FirstChild.NodeValue)
                 else
                   ImgName := '';
 
               // It is the data image
               if (ImageChild.CompareName('data') = 0) and
-                 Assigned(ImageChild.FirstChild) then
+                 assigned(ImageChild.FirstChild) then
               begin
                 // Extract the image data as a Base64 string
                 EncBuffer := UTF8Encode(ImageChild.FirstChild.NodeValue);
@@ -3537,7 +3585,7 @@ begin
 
         RealPlotCount := 0;
         PlotChild := Child.FirstChild;
-        while Assigned(PlotChild) do
+        while assigned(PlotChild) do
         begin
           if (PlotChild.CompareName('scale') = 0) or
              (PlotChild.CompareName('plot') = 0) then
@@ -3570,7 +3618,7 @@ begin
 
         RealCurveCount := 0;
         CurveChild := Child.FirstChild;
-        while Assigned(CurveChild) do
+        while assigned(CurveChild) do
         begin
           if (CurveChild.CompareName('curve') = 0) then
           begin

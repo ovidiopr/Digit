@@ -738,7 +738,7 @@ begin
     end;
 
     Child := Item.FirstChild;
-    while Assigned(Child) do
+    while assigned(Child) do
     begin
       // Grid data
       if (Child.CompareName('data') = 0) then
