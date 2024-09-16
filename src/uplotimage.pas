@@ -2520,7 +2520,7 @@ var
 begin
   if (State = piSetCurve) and assigned(Plot) and assigned(Plot.DigitCurve) then
   begin
-    ClearMarkers;
+    Plot.DigitCurve.ClearMarkers;
     for i := Markers.Count - 1 downto 0 do
       Plot.DigitCurve.AddMarker(Markers[i].Position/Zoom);
 
