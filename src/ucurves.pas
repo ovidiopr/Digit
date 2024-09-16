@@ -227,7 +227,7 @@ type
     procedure Reset;
     procedure Clear;
     procedure Draw(Canvas: TCanvas; Zoom: Double = 1);
-    function CurveRect: TRect;
+    function CurveRect(Zoom: Double = 1): TRect;
 
     procedure CorrectCurve(Po, Pf: TCurvePoint; IsStep: Boolean = True);
     procedure DeletePointsInRegion(Region: TRect);
@@ -1203,32 +1203,33 @@ begin
   end;
 end;
 
-function TDigitCurve.CurveRect: TRect;
+function TDigitCurve.CurveRect(Zoom: Double = 1): TRect;
 var
-  i,
+  i: Integer;
   Xo, Xf,
-  Yo, Yf: Integer;
+  Yo, Yf: Double;
 begin
   if (Curve.Count > 0) then
   begin
-    Xo := Round(Curve.X[0]);
-    Xf := Round(Curve.X[0]);
-    Yo := Round(Curve.Y[0]);
-    Yf := Round(Curve.Y[0]);
+    Xo := Curve.X[0];
+    Xf := Curve.X[0];
+    Yo := Curve.Y[0];
+    Yf := Curve.Y[0];
 
     for i := 1 to Curve.Count - 1 do
     begin
-      if (Round(Curve.X[i]) < Xo) then
-        Xo := Round(Curve.X[i]);
-      if (Round(Curve.X[i]) > Xf) then
-        Xf := Round(Curve.X[i]);
-      if (Round(Curve.Y[i]) < Yo) then
-        Yo := Round(Curve.Y[i]);
-      if (Round(Curve.Y[i]) > Yf) then
-        Yf := Round(Curve.Y[i]);
+      if (Curve.X[i] < Xo) then
+        Xo := Curve.X[i];
+      if (Curve.X[i] > Xf) then
+        Xf := Curve.X[i];
+      if (Curve.Y[i] < Yo) then
+        Yo := Curve.Y[i];
+      if (Curve.Y[i] > Yf) then
+        Yf := Curve.Y[i];
     end;
 
-    Result := TRect.Create(Xo, Yo, Xf, Yf);
+    Result := TRect.Create(Round(Zoom*Xo), Round(Zoom*Yo),
+                           Round(Zoom*Xf), Round(Zoom*Yf));
   end
   else
     Result := TRect.Create(0, 0, 0, 0);

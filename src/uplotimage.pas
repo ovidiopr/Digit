@@ -2424,9 +2424,9 @@ begin
     UpdateMarkersInCurve;
 
     // Now change the active curve
-    TmpRect := Plot.DigitCurve.CurveRect;
+    TmpRect := Plot.DigitCurve.CurveRect(Zoom);
     Plot.CurveIndex := Value;
-    TmpRect.Union(Plot.DigitCurve.CurveRect);
+    TmpRect.Union(Plot.DigitCurve.CurveRect(Zoom));
     if (State = piSetCurve) then
       RepaintRegion(TmpRect);
 
@@ -2489,9 +2489,9 @@ begin
   with Plot do
     if (Scale.FromPlotToImg(Value) <> DigitCurve.Curve.Point[Index]) then
     begin
-      TmpRect := DigitCurve.CurveRect;
+      TmpRect := DigitCurve.CurveRect(Zoom);
       DigitCurve.Curve.Point[Index] := Scale.FromPlotToImg(Value);
-      TmpRect.Union(DigitCurve.CurveRect);
+      TmpRect.Union(DigitCurve.CurveRect(Zoom));
       if (State = piSetCurve) then
         RepaintRegion(TmpRect);
 
@@ -2890,7 +2890,7 @@ procedure TPlotImage.ClearCurve(Index: Integer);
 begin
   if (Index >= 0) and (Index < CurveCount) then
   begin
-    RepaintRegion(Plot.Curves[Index].CurveRect);
+    RepaintRegion(Plot.Curves[Index].CurveRect(Zoom));
     Plot.Curves[Index].Clear;
 
     IsChanged := True;
@@ -2904,9 +2904,9 @@ begin
   with Plot.DigitCurve do
     if CanGoBack then
     begin
-      TmpRect := CurveRect;
+      TmpRect := CurveRect(Zoom);
       GoBack;
-      TmpRect.Union(CurveRect);
+      TmpRect.Union(CurveRect(Zoom));
       if (State = piSetCurve) then
         RepaintRegion(TmpRect);
 
@@ -2921,9 +2921,9 @@ begin
   with Plot.DigitCurve do
     if CanGoForward then
     begin
-      TmpRect := CurveRect;
+      TmpRect := CurveRect(Zoom);
       GoForward;
-      TmpRect.Union(CurveRect);
+      TmpRect.Union(CurveRect(Zoom));
       if (State = piSetCurve) then
         RepaintRegion(TmpRect);
 
@@ -2968,7 +2968,7 @@ begin
     TmpCurve.Smooth(k, d);
 
     if (Index = CurveIndex) and (State = piSetCurve) then
-      TmpRect := Plot.DigitCurve.CurveRect;
+      TmpRect := Plot.DigitCurve.CurveRect(Zoom);
 
     Plot.Curves[Index].NextCurve(False);
     for i := 0 to TmpCurve.Count - 1 do
@@ -2976,7 +2976,7 @@ begin
 
     if (Index = CurveIndex) and (State = piSetCurve) then
     begin
-      TmpRect.Union(Plot.DigitCurve.CurveRect);
+      TmpRect.Union(Plot.DigitCurve.CurveRect(Zoom));
       RepaintRegion(TmpRect);
     end;
 
@@ -3010,7 +3010,7 @@ begin
     TmpCurve.Interpolate(n, d, Plot.Scale.XScale, IntType);
 
     if (Index = CurveIndex) and (State = piSetCurve) then
-      TmpRect := Plot.DigitCurve.CurveRect;
+      TmpRect := Plot.DigitCurve.CurveRect(Zoom);
 
     Plot.Curves[Index].NextCurve(False);
     Plot.Curves[Index].ShowAsSymbols := False;
@@ -3019,7 +3019,7 @@ begin
 
     if (Index = CurveIndex) and (State = piSetCurve) then
     begin
-      TmpRect.Union(Plot.DigitCurve.CurveRect);
+      TmpRect.Union(Plot.DigitCurve.CurveRect(Zoom));
       RepaintRegion(TmpRect);
     end;
 
@@ -3053,7 +3053,7 @@ begin
     TmpCurve.Interpolate(Xo, Xf, n, d, Plot.Scale.XScale, IntType);
 
     if (Index = CurveIndex) and (State = piSetCurve) then
-      TmpRect := Plot.DigitCurve.CurveRect;
+      TmpRect := Plot.DigitCurve.CurveRect(Zoom);
 
     Plot.Curves[Index].NextCurve(False);
     Plot.Curves[Index].ShowAsSymbols := False;
@@ -3062,7 +3062,7 @@ begin
 
     if (Index = CurveIndex) and (State = piSetCurve) then
     begin
-      TmpRect.Union(Plot.DigitCurve.CurveRect);
+      TmpRect.Union(Plot.DigitCurve.CurveRect(Zoom));
       RepaintRegion(TmpRect);
     end;
 
@@ -3087,9 +3087,9 @@ procedure TPlotImage.CorrectCurve(Po, Pf: TPoint; IsStep: Boolean = True);
 var
   TmpRect: TRect;
 begin
-  TmpRect := Plot.DigitCurve.CurveRect;
+  TmpRect := Plot.DigitCurve.CurveRect(Zoom);
   Plot.DigitCurve.CorrectCurve(Po, Pf, IsStep);
-  TmpRect.Union(Plot.DigitCurve.CurveRect);
+  TmpRect.Union(Plot.DigitCurve.CurveRect(Zoom));
   if (State = piSetCurve) then
     RepaintRegion(TmpRect);
 
@@ -3100,9 +3100,9 @@ procedure TPlotImage.CorrectCurve(Po, Pf: TCurvePoint; IsStep: Boolean = True);
 var
   TmpRect: TRect;
 begin
-  TmpRect := Plot.DigitCurve.CurveRect;
+  TmpRect := Plot.DigitCurve.CurveRect(Zoom);
   Plot.DigitCurve.CorrectCurve(Po, Pf, IsStep);
-  TmpRect.Union(Plot.DigitCurve.CurveRect);
+  TmpRect.Union(Plot.DigitCurve.CurveRect(Zoom));
   if (State = piSetCurve) then
     RepaintRegion(TmpRect);
 
@@ -3167,9 +3167,9 @@ procedure TPlotImage.GroupPoints(Region: TRect);
 var
   TmpRect: TRect;
 begin
-  TmpRect := Plot.DigitCurve.CurveRect;
+  TmpRect := Plot.DigitCurve.CurveRect(Zoom);
   Plot.DigitCurve.GroupPointsInRegion(Region);
-  TmpRect.Union(Plot.DigitCurve.CurveRect);
+  TmpRect.Union(Plot.DigitCurve.CurveRect(Zoom));
   if (State = piSetCurve) then
     RepaintRegion(TmpRect);
 
@@ -3180,9 +3180,9 @@ procedure TPlotImage.DeletePoints(Region: TRect);
 var
   TmpRect: TRect;
 begin
-  TmpRect := Plot.DigitCurve.CurveRect;
+  TmpRect := Plot.DigitCurve.CurveRect(Zoom);
   Plot.DigitCurve.DeletePointsInRegion(Region);
-  TmpRect.Union(Plot.DigitCurve.CurveRect);
+  TmpRect.Union(Plot.DigitCurve.CurveRect(Zoom));
   if (State = piSetCurve) then
     RepaintRegion(TmpRect);
 
@@ -3193,9 +3193,9 @@ procedure TPlotImage.MoveCurveUp;
 var
   TmpRect: TRect;
 begin
-  TmpRect := Plot.DigitCurve.CurveRect;
+  TmpRect := Plot.DigitCurve.CurveRect(Zoom);
   Plot.DigitCurve.AddToY(-1);
-  TmpRect.Union(Plot.DigitCurve.CurveRect);
+  TmpRect.Union(Plot.DigitCurve.CurveRect(Zoom));
   if (State = piSetCurve) then
     RepaintRegion(TmpRect);
 
@@ -3206,9 +3206,9 @@ procedure TPlotImage.MoveCurveDown;
 var
   TmpRect: TRect;
 begin
-  TmpRect := Plot.DigitCurve.CurveRect;
+  TmpRect := Plot.DigitCurve.CurveRect(Zoom);
   Plot.DigitCurve.AddToY(1);
-  TmpRect.Union(Plot.DigitCurve.CurveRect);
+  TmpRect.Union(Plot.DigitCurve.CurveRect(Zoom));
   if (State = piSetCurve) then
     RepaintRegion(TmpRect);
 
@@ -3219,9 +3219,9 @@ procedure TPlotImage.MoveCurveLeft;
 var
   TmpRect: TRect;
 begin
-  TmpRect := Plot.DigitCurve.CurveRect;
+  TmpRect := Plot.DigitCurve.CurveRect(Zoom);
   Plot.DigitCurve.AddToX(-1);
-  TmpRect.Union(Plot.DigitCurve.CurveRect);
+  TmpRect.Union(Plot.DigitCurve.CurveRect(Zoom));
   if (State = piSetCurve) then
     RepaintRegion(TmpRect);
 
@@ -3232,9 +3232,9 @@ procedure TPlotImage.MoveCurveRight;
 var
   TmpRect: TRect;
 begin
-  TmpRect := Plot.DigitCurve.CurveRect;
+  TmpRect := Plot.DigitCurve.CurveRect(Zoom);
   Plot.DigitCurve.AddToX(1);
-  TmpRect.Union(Plot.DigitCurve.CurveRect);
+  TmpRect.Union(Plot.DigitCurve.CurveRect(Zoom));
   if (State = piSetCurve) then
     RepaintRegion(TmpRect);
 
