@@ -23,7 +23,18 @@ type
 
     FIsValid: Boolean;
     FIsActive: Boolean;
+
+    FOnChange: TNotifyEvent;
   private
+    procedure SetMajorGridColor(const Value: TColor);
+    procedure SetMinorGridColor(const Value: TColor);
+    procedure SetBckgndColor(const Value: TColor);
+    procedure SetTolerance(const Value: Integer);
+    procedure SetThreshold(const Value: Double);
+    procedure SetFixCurve(const Value: Boolean);
+    procedure SetMaskSize(const Value: Integer);
+    procedure SetIsValid(const Value: Boolean);
+    procedure SetIsActive(const Value: Boolean);
   public
     constructor Create(Width, Height: Integer);
     destructor Destroy; override;
@@ -41,15 +52,17 @@ type
     function ExportToXML(Doc: TXMLDocument): TDOMNode;
 
     property Mask: TBGRABitmap read FMask;
-    property MajorGridColor: TColor read FMajorGridColor write FMajorGridColor;
-    property MinorGridColor: TColor read FMinorGridColor write FMinorGridColor;
-    property BckgndColor: TColor read FBckgndColor write FBckgndColor;
-    property Tolerance: Integer read FTolerance write FTolerance;
-    property Threshold: Double read FThreshold write FThreshold;
-    property FixCurve: Boolean read FFixCurve write FFixCurve;
-    property MaskSize: Integer read FMaskSize write FMaskSize;
-    property IsValid: Boolean read FIsValid write FIsValid;
-    property IsActive: Boolean read FIsActive write FIsActive;
+    property MajorGridColor: TColor read FMajorGridColor write SetMajorGridColor;
+    property MinorGridColor: TColor read FMinorGridColor write SetMinorGridColor;
+    property BckgndColor: TColor read FBckgndColor write SetBckgndColor;
+    property Tolerance: Integer read FTolerance write SetTolerance;
+    property Threshold: Double read FThreshold write SetThreshold;
+    property FixCurve: Boolean read FFixCurve write SetFixCurve;
+    property MaskSize: Integer read FMaskSize write SetMaskSize;
+    property IsValid: Boolean read FIsValid write SetIsValid;
+    property IsActive: Boolean read FIsActive write SetIsActive;
+  published
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
   end;
 
 implementation
@@ -82,6 +95,114 @@ procedure TGridMask.SetSize(Width, Height: Integer);
 begin
   FMask.SetSize(Width, Height);
   FMask.FillTransparent;
+end;
+
+procedure TGridMask.SetMajorGridColor(const Value: TColor);
+begin
+  if (Value <> FMajorGridColor) then
+  begin
+    FMajorGridColor := Value;
+
+    // Notify the parent that the GridMask has changed
+    if assigned(OnChange) then
+      OnChange(Self);
+  end;
+end;
+
+procedure TGridMask.SetMinorGridColor(const Value: TColor);
+begin
+  if (Value <> FMinorGridColor) then
+  begin
+    FMinorGridColor := Value;
+
+    // Notify the parent that the GridMask has changed
+    if assigned(OnChange) then
+      OnChange(Self);
+  end;
+end;
+
+procedure TGridMask.SetBckgndColor(const Value: TColor);
+begin
+  if (Value <> FBckgndColor) then
+  begin
+    FBckgndColor := Value;
+
+    // Notify the parent that the GridMask has changed
+    if assigned(OnChange) then
+      OnChange(Self);
+  end;
+end;
+
+procedure TGridMask.SetTolerance(const Value: Integer);
+begin
+  if (Value <> FTolerance) then
+  begin
+    FTolerance := Value;
+
+    // Notify the parent that the GridMask has changed
+    if assigned(OnChange) then
+      OnChange(Self);
+  end;
+end;
+
+procedure TGridMask.SetThreshold(const Value: Double);
+begin
+  if (Value <> FThreshold) then
+  begin
+    FThreshold := Value;
+
+    // Notify the parent that the GridMask has changed
+    if assigned(OnChange) then
+      OnChange(Self);
+  end;
+end;
+
+procedure TGridMask.SetFixCurve(const Value: Boolean);
+begin
+  if (Value <> FFixCurve) then
+  begin
+    FFixCurve := Value;
+
+    // Notify the parent that the GridMask has changed
+    if assigned(OnChange) then
+      OnChange(Self);
+  end;
+end;
+
+procedure TGridMask.SetMaskSize(const Value: Integer);
+begin
+  if (Value <> FMaskSize) then
+  begin
+    FMaskSize := Value;
+
+    // Notify the parent that the GridMask has changed
+    if assigned(OnChange) then
+      OnChange(Self);
+  end;
+end;
+
+procedure TGridMask.SetIsValid(const Value: Boolean);
+begin
+  if (Value <> FIsValid) then
+  begin
+    FIsValid := Value;
+
+    // Notify the parent that the GridMask has changed
+    if assigned(OnChange) then
+      OnChange(Self);
+  end;
+end;
+
+procedure TGridMask.SetIsActive(const Value: Boolean);
+begin
+  if (Value <> FIsActive) then
+  begin
+    FIsActive := Value;
+
+    // Notify the parent that the GridMask has changed
+    if assigned(OnChange) then
+      OnChange(Self);
+  end;
 end;
 
 procedure TGridMask.RemoveCartesianGrid(PlotImg: TBGRABitmap; Box: TPlotQuad);

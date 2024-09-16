@@ -489,7 +489,9 @@ begin
   FPlotImg := TBGRABitmap.Create;
   FZoomImg := TBGRABitmap.Create;
   FWhiteBoard := TBGRABitmap.Create;
+
   FGridMask := TGridMask.Create(0, 0);
+  FGridMask.OnChange := @ChildChange;
 
   FMarkers := TMarkerList.Create;
   FMarkerList := TCurve.Create;
@@ -2770,7 +2772,7 @@ end;
 
 procedure TPlotImage.ChildChange(Sender: TObject);
 begin
-  // Some child (Plot, Grid) has changed
+  // Some child (Plot, GridMask) has changed
   IsChanged := True;
 end;
 
