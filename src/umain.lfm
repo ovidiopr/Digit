@@ -4929,6 +4929,7 @@ object DigitMainForm: TDigitMainForm
       ColorArrow = clWhite
       ColorArrowOver = 14211288
       OptButtonLayout = '<>,v'
+      OptTabWidthMinimalHidesX = 15
       OptSpaceSide = 0
       OptShowPinnedText = '!'
       OptMouseDragOutEnabled = False
@@ -5068,6 +5069,7 @@ object DigitMainForm: TDigitMainForm
       ColorArrowOver = 14211288
       OptButtonLayout = '<>,v'
       OptVarWidth = True
+      OptTabWidthMinimalHidesX = 15
       OptSpaceSide = 0
       OptShowPinnedText = '!'
       OptMouseDragOutEnabled = False

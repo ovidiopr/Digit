@@ -1966,7 +1966,8 @@ begin
     end;
 
     // No marker under cursor, we are selecting a region
-    if (HitMarker = Nil) and (State = piSetCurve) then
+    if (HitMarker = Nil) and (State = piSetCurve) and
+       not (ssCtrl in Shift) then
     begin
       SelectingRegion := True;
       FSelectionRect := TRect.Create(X, Y, X, Y);
