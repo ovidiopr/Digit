@@ -1517,6 +1517,8 @@ begin
   // Tools shortcuts
   ToolCurveAdd.ShortCut := scMeta + VK_T; // Command + T
   ToolCurveDelete.ShortCut := scMeta + VK_W; // Command + W
+  ToolPlotAdd.ShortCut := scMeta + VK_P; // Command + P
+  ToolPlotDelete.ShortCut := scMeta + VK_D; // Command + D
   {$ENDIF}
 end;
 

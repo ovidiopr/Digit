@@ -5871,6 +5871,7 @@ object DigitMainForm: TDigitMainForm
       Hint = 'Add plot|Add a new plot to the digitization'
       ImageIndex = 25
       OnExecute = ToolPlotAddExecute
+      ShortCut = 16464
     end
     object ToolPlotDelete: TAction
       Category = 'Tools'
@@ -5878,6 +5879,7 @@ object DigitMainForm: TDigitMainForm
       Hint = 'Delete plot|Delete the active plot from the digitization'
       ImageIndex = 26
       OnExecute = ToolPlotDeleteExecute
+      ShortCut = 16452
     end
     object ToolPlotName: TAction
       Category = 'Tools'
