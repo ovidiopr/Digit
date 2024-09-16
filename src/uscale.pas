@@ -731,13 +731,17 @@ begin
 end;
 
 procedure TPlot.Reset;
+var
+  TmpCurve: TDigitCurve;
 begin
   FScale.Reset;
 
   FBox.Reset;
 
   FCurves.Clear;
-  FCurves.Add(TDigitCurve.Create('Curve1'));
+  TmpCurve := TDigitCurve.Create('Curve1');
+  TmpCurve.OnChange := @ChildChange;
+  FCurves.Add(TmpCurve);
 
   FCurveIndex := 0;
 end;

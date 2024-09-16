@@ -519,13 +519,16 @@ end;
 procedure TPlotImage.Reset;
 var
   i: Integer;
+  TmpPlot: TPlot;
 begin
   FState := piSetCurve;
   FDragAction := daNone;
   FZoom := 1;
 
   FPlots.Clear;
-  FPlots.Add(TPlot.Create('Plot1'));
+  TmpPlot := TPlot.Create('Plot1');
+  TmpPlot.OnChange := @ChildChange;
+  FPlots.Add(TmpPlot);
 
   FPlotIndex := 0;
 
