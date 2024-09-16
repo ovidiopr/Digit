@@ -2459,12 +2459,15 @@ begin
     if assigned(OnActivePlotChanging) then
       OnActivePlotChanging(Self, OldValue, Value);
 
-    // First, update all the markers in the curve
+    // Update all the markers in the curve
     UpdateMarkersInCurve;
-    // Now change the active Plot
+    // Change the active Plot
     FPlotIndex := Value;
+    // Update the active Curve
+    //CurveIndex := Plots[Value].CurveIndex;
     RepaintRegion(ClientRect);
-    // Finally, update all the new markers in the image
+
+    // Update all the new markers in the image
     UpdateMarkersInImage;
 
     OnChange := TmpOnChange;

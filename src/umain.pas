@@ -390,6 +390,10 @@ type
     procedure edtGridMaskChange(Sender: TObject; AByUser: boolean);
     procedure edtGridThresholdChange(Sender: TObject; AByUser: boolean);
     procedure edtGridToleranceChange(Sender: TObject; AByUser: boolean);
+    procedure edtIntervalChange(Sender: TObject; AByUser: boolean);
+    procedure edtSpreadChange(Sender: TObject; AByUser: boolean);
+    procedure edtStepChange(Sender: TObject; AByUser: boolean);
+    procedure edtToleranceChange(Sender: TObject; AByUser: boolean);
     procedure edtXEditingDone(Sender: TObject);
     procedure edtYEditingDone(Sender: TObject);
     procedure FileImportDigitExecute(Sender: TObject);
@@ -455,6 +459,7 @@ type
     procedure ModeGroupPointsExecute(Sender: TObject);
     procedure PlotExportExecute(Sender: TObject);
     procedure PlotScaleExecute(Sender: TObject);
+    procedure rgDirectionSelectionChanged(Sender: TObject);
     procedure tbZoomChange(Sender: TObject; AByUser: boolean);
     procedure tcCurvesTabChanged(Sender: TObject);
     procedure tcCurvesTabClose(Sender: TObject; ATabIndex: integer;
@@ -565,7 +570,6 @@ type
 
     procedure UpdateGUI;
     procedure CurveToGUI;
-    procedure GUIToCurve;
   public
     { Public declarations }
     TmpPoint: TCurvePoint;
@@ -1048,8 +1052,6 @@ procedure TDigitMainForm.DigitizeFromHereItemClick(Sender: TObject);
 begin
   if PlotImage.Plot.Scale.IsValid then
   begin
-    GUIToCurve;
-
     PlotImage.DigitizeSpectrum(TmpPoint);
 
     CurveToGUI;
@@ -1115,6 +1117,12 @@ procedure TDigitMainForm.btnColorColorChanged(Sender: TObject);
 var
   d: TATTabData;
 begin
+  if (PlotImage.Plot.DigitCurve.Color <> btnColor.ButtonColor) then
+  begin
+    PlotImage.Plot.DigitCurve.Color := btnColor.ButtonColor;
+    //PlotImage.IsChanged := True;
+  end;
+
   d := tcCurves.GetTabData(tcCurves.TabIndex);
   if assigned(d) then
   begin
@@ -1317,30 +1325,49 @@ end;
 procedure TDigitMainForm.edtGridMaskChange(Sender: TObject; AByUser: boolean);
 begin
   if AByUser and (PlotImage.GridMask.MaskSize <> edtGridMask.Value) then
-  begin
     PlotImage.GridMask.MaskSize := edtGridMask.Value;
-    PlotImage.IsChanged := True;
-  end;
 end;
 
 procedure TDigitMainForm.edtGridThresholdChange(Sender: TObject;
   AByUser: boolean);
 begin
   if AByUser and (PlotImage.GridMask.Threshold <> edtGridThreshold.Value/100) then
-  begin
     PlotImage.GridMask.Threshold := edtGridThreshold.Value/100;
-    PlotImage.IsChanged := True;
-  end;
 end;
 
 procedure TDigitMainForm.edtGridToleranceChange(Sender: TObject;
   AByUser: boolean);
 begin
   if AByUser and (PlotImage.GridMask.Tolerance <> edtGridTolerance.Value) then
-  begin
     PlotImage.GridMask.Tolerance := edtGridTolerance.Value;
-    PlotImage.IsChanged := True;
-  end;
+end;
+
+procedure TDigitMainForm.edtIntervalChange(Sender: TObject; AByUser: boolean);
+begin
+  if AByUser and (PlotImage.Plot.DigitCurve.Interval <> edtInterval.Value) then
+    PlotImage.Plot.DigitCurve.Interval := edtInterval.Value;
+end;
+
+procedure TDigitMainForm.edtSpreadChange(Sender: TObject; AByUser: boolean);
+begin
+  if AByUser and (PlotImage.Plot.DigitCurve.Spread <> edtSpread.Value) then
+    PlotImage.Plot.DigitCurve.Spread := edtSpread.Value;
+end;
+
+procedure TDigitMainForm.edtStepChange(Sender: TObject; AByUser: boolean);
+begin
+  if (rgDirection.ItemIndex = 0) then
+    if AByUser and (PlotImage.Plot.DigitCurve.Step <> edtStep.Value) then
+      PlotImage.Plot.DigitCurve.Step := edtStep.Value
+  else
+    if AByUser and (PlotImage.Plot.DigitCurve.Step <> -edtStep.Value) then
+      PlotImage.Plot.DigitCurve.Step := -edtStep.Value;
+end;
+
+procedure TDigitMainForm.edtToleranceChange(Sender: TObject; AByUser: boolean);
+begin
+  if AByUser and (PlotImage.Plot.DigitCurve.Tolerance <> edtTolerance.Value) then
+    PlotImage.Plot.DigitCurve.Tolerance := edtTolerance.Value;
 end;
 
 procedure TDigitMainForm.edtXEditingDone(Sender: TObject);
@@ -2441,21 +2468,6 @@ begin
     GridShowHide.ImageIndex := 39;
 end;
 
-procedure TDigitMainForm.GUIToCurve;
-begin
-  with PlotImage.Plot.DigitCurve do
-  begin
-    Color := btnColor.ButtonColor;
-    if (rgDirection.ItemIndex = 0) then
-      Step := edtStep.Value
-    else
-      Step := -edtStep.Value;
-    Interval := edtInterval.Value;
-    Tolerance := edtTolerance.Value;
-    Spread := edtSpread.Value;
-  end;
-end;
-
 procedure TDigitMainForm.PlotImageMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
@@ -2649,7 +2661,7 @@ end;
 
 procedure TDigitMainForm.PlotImageActivePlotChanging(Sender: TObject; OldIndex, NewIndex: Integer);
 begin
-  // TODO
+  // Nothing (for now)
 end;
 
 procedure TDigitMainForm.PlotImageActivePlotChanged(Sender: TObject; OldIndex, NewIndex: Integer);
@@ -2660,6 +2672,9 @@ begin
 
   // Update the curve list
   CurveCount := PlotImage.CurveCount;
+
+  // Update curve tab
+  tcCurves.TabIndex := PlotImage.CurveIndex;
 
   // Update the GUI
   UpdateGUI;
@@ -2672,8 +2687,7 @@ end;
 
 procedure TDigitMainForm.PlotImageActiveCurveChanging(Sender: TObject; OldIndex, NewIndex: Integer);
 begin
-  // Update the active curve
-  GUIToCurve;
+  // Nothing (for now)
 end;
 
 procedure TDigitMainForm.PlotImageActiveCurveChanged(Sender: TObject; OldIndex, NewIndex: Integer);
@@ -2868,6 +2882,11 @@ begin
   end;
 end;
 
+procedure TDigitMainForm.rgDirectionSelectionChanged(Sender: TObject);
+begin
+  edtStepChange(Sender, True);
+end;
+
 procedure TDigitMainForm.tbZoomChange(Sender: TObject; AByUser: boolean);
 begin
   if AByUser then
@@ -2961,7 +2980,6 @@ end;
 
 procedure TDigitMainForm.ToolAdjustCurveExecute(Sender: TObject);
 begin
-  GUIToCurve;
   PlotImage.AdjustCurve;
   PlotImage.Invalidate;
   CurveToGUI;
@@ -2969,7 +2987,6 @@ end;
 
 procedure TDigitMainForm.ToolAdjustNoiseExecute(Sender: TObject);
 begin
-  GUIToCurve;
   PlotImage.AdjustCurve(True);
   PlotImage.Invalidate;
   CurveToGUI;
@@ -2983,7 +3000,6 @@ end;
 
 procedure TDigitMainForm.ToolConvertToSymbolsExecute(Sender: TObject);
 begin
-  GUIToCurve;
   PlotImage.ConvertCurveToSymbols;
   CurveToGUI;
 end;
@@ -3036,7 +3052,6 @@ procedure TDigitMainForm.ToolDigitColorExecute(Sender: TObject);
 var
   TmpOpt: TPlotOptions;
 begin
-  GUIToCurve;
   //Digitize curve
   PlotImage.DigitizeColor;
   CurveToGUI;
@@ -3051,7 +3066,6 @@ procedure TDigitMainForm.ToolDigitLineExecute(Sender: TObject);
 var
   TmpOpt: TPlotOptions;
 begin
-  GUIToCurve;
   //Digitize curve
   PlotImage.DigitizeSpectrum;
   CurveToGUI;
@@ -3066,7 +3080,6 @@ procedure TDigitMainForm.ToolDigitMarkersExecute(Sender: TObject);
 var
   TmpOpt: TPlotOptions;
 begin
-  GUIToCurve;
   //Fill curve from markers
   PlotImage.DigitizeMarkers;
   CurveToGUI;
@@ -3081,7 +3094,6 @@ procedure TDigitMainForm.ToolBSplinesExecute(Sender: TObject);
 var
   TmpOpt: TPlotOptions;
 begin
-  GUIToCurve;
   //Replace the curve by interpolated values
   PlotImage.Interpolate(seXo.Value, seXf.Value,
                         seInterpPoints.Value,
@@ -3099,7 +3111,6 @@ procedure TDigitMainForm.ToolLinearExecute(Sender: TObject);
 var
   TmpOpt: TPlotOptions;
 begin
-  GUIToCurve;
   //Replace the curve by interpolated values
   PlotImage.Interpolate(seXo.Value, seXf.Value,
                         seInterpPoints.Value,
@@ -3148,7 +3159,6 @@ procedure TDigitMainForm.ToolPolynomialExecute(Sender: TObject);
 var
   TmpOpt: TPlotOptions;
 begin
-  GUIToCurve;
   //Replace the curve by interpolated values
   PlotImage.Interpolate(seXo.Value, seXf.Value,
                         seInterpPoints.Value,
@@ -3205,7 +3215,6 @@ end;
 
 procedure TDigitMainForm.ToolClearExecute(Sender: TObject);
 begin
-  GUIToCurve;
   //Clear the curve
   TLineSeries(MainPlot.Series[PlotImage.CurveIndex]).Clear;
   PlotImage.ClearCurve;
@@ -3214,7 +3223,6 @@ end;
 
 procedure TDigitMainForm.EditUndoExecute(Sender: TObject);
 begin
-  GUIToCurve;
   //Undo the last change to the curve
   PlotImage.UndoCurveChanges;
   CurveToGUI;
@@ -3223,7 +3231,6 @@ end;
 
 procedure TDigitMainForm.EditRedoExecute(Sender: TObject);
 begin
-  GUIToCurve;
   //Redo the last change to the curve
   PlotImage.RedoCurveChanges;
   CurveToGUI;
@@ -3233,7 +3240,6 @@ procedure TDigitMainForm.ToolSplinesExecute(Sender: TObject);
 var
   TmpOpt: TPlotOptions;
 begin
-  GUIToCurve;
   //Replace the curve by interpolated values
   PlotImage.Interpolate(seXo.Value, seXf.Value,
                         seInterpPoints.Value,

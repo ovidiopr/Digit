@@ -2073,6 +2073,7 @@ object DigitMainForm: TDigitMainForm
               'Left to Right (CCW)'
               'Right to Left (CW)'
             )
+            OnSelectionChanged = rgDirectionSelectionChanged
             ParentBackground = False
             ParentFont = False
             TabOrder = 0
@@ -2112,6 +2113,7 @@ object DigitMainForm: TDigitMainForm
             LongTimeInterval = 400
             MinValue = 1
             MaxValue = 200
+            OnChange = edtStepChange
             Value = 1
             ShortTimeInterval = 100
             Background.Color = clWindow
@@ -2215,6 +2217,7 @@ object DigitMainForm: TDigitMainForm
             LongTimeInterval = 400
             MinValue = 0
             MaxValue = 1000
+            OnChange = edtIntervalChange
             Value = 50
             ShortTimeInterval = 100
             Background.Color = clWindow
@@ -2318,6 +2321,7 @@ object DigitMainForm: TDigitMainForm
             LongTimeInterval = 400
             MinValue = 1
             MaxValue = 255
+            OnChange = edtToleranceChange
             Value = 32
             ShortTimeInterval = 100
             Background.Color = clWindow
@@ -2420,6 +2424,7 @@ object DigitMainForm: TDigitMainForm
             LongTimeInterval = 400
             MinValue = 0
             MaxValue = 100
+            OnChange = edtSpreadChange
             Value = 4
             ShortTimeInterval = 100
             Background.Color = clWindow
