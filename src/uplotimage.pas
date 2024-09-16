@@ -1199,6 +1199,9 @@ begin
       for i := 0 to NewPoints.Count - 1 do
         Plot.Curve.AddPoint(NewPoints[i]);
 
+      // Sort curve
+      Plot.Curve.SortCurve;
+
       // Notify the parent that it must hide the progress bar
       if assigned(OnHideProgress) then
         OnHideProgress(Self);
