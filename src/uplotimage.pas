@@ -994,7 +994,7 @@ begin
     for i := 0 to Markers.Count - 1 do
       Plot.Curve.AddPoint(Markers[i].Position/Zoom);
 
-    Plot.Curve.SortCurve;
+    SortCurve;
 
     IsChanged := True;
   end;
@@ -1200,7 +1200,7 @@ begin
         Plot.Curve.AddPoint(NewPoints[i]);
 
       // Sort curve
-      Plot.Curve.SortCurve;
+      SortCurve;
 
       // Notify the parent that it must hide the progress bar
       if assigned(OnHideProgress) then
