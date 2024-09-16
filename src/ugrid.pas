@@ -9,6 +9,8 @@ uses
   DOM, Base64, Math, uutils, ucoordinates, ucurves;
 
 type
+  TBoxArray = Array of TPlotQuad;
+
   TGridMask = class
   protected
     FMask: TBGRABitmap;
@@ -41,11 +43,11 @@ type
 
     procedure SetSize(Width, Height: Integer);
 
-    procedure RemoveCartesianGrid(PlotImg: TBGRABitmap; Box: TPlotQuad);
-    procedure RemovePolarGrid(PlotImg: TBGRABitmap; Box: TPlotQuad;
+    procedure RemoveCartesianGrid(PlotImg: TBGRABitmap; Boxes: TBoxArray);
+    procedure RemovePolarGrid(PlotImg: TBGRABitmap; Boxes: TBoxArray;
                               Pc: TCurvePoint);
 
-    procedure RebuildCurve(PlotImg: TBGRABitmap; Box: TPlotQuad;
+    procedure RebuildCurve(PlotImg: TBGRABitmap; Boxes: TBoxArray;
                            CurveColor: TColor);
 
     function ImportFromXML(Item: TDOMNode): Boolean;
@@ -66,6 +68,20 @@ type
   end;
 
 implementation
+
+function BoxesContain(Boxes: TBoxArray; P: TCurvePoint): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  for i := Low(Boxes) to High(Boxes) do
+  begin
+    Result := Result or Boxes[i].Contains(P);
+
+    // If one box contains the point we can finish checking
+    if Result then Break;
+  end;
+end;
 
 //=============================|TGridMask|====================================//
 constructor TGridMask.Create(Width, Height: Integer);
@@ -205,7 +221,7 @@ begin
   end;
 end;
 
-procedure TGridMask.RemoveCartesianGrid(PlotImg: TBGRABitmap; Box: TPlotQuad);
+procedure TGridMask.RemoveCartesianGrid(PlotImg: TBGRABitmap; Boxes: TBoxArray);
 const
   angle_step = 1;
 var
@@ -260,7 +276,7 @@ begin
         p := Scanline[j];
         for i := 0 to Width - 1 do
         begin
-          grid_points[i, j] := Box.Contains(TCurvePoint.Create(i, j)) and
+          grid_points[i, j] := BoxesContain(Boxes, TCurvePoint.Create(i, j)) and
                               (AreSimilar(p^.red, p^.green, p^.blue, R1, G1, B1, Tolerance) or
                                AreSimilar(p^.red, p^.green, p^.blue, R2, G2, B2, Tolerance));
           inc(p);
@@ -445,7 +461,7 @@ begin
   end;
 end;
 
-procedure TGridMask.RemovePolarGrid(PlotImg: TBGRABitmap; Box: TPlotQuad; Pc: TCurvePoint);
+procedure TGridMask.RemovePolarGrid(PlotImg: TBGRABitmap; Boxes: TBoxArray; Pc: TCurvePoint);
 const
   angle_step = 0.5;
 var
@@ -499,7 +515,7 @@ begin
         for i := 0 to Width - 1 do
         begin
           //grid_points[i, j] := p^.red or (p^.green shl 8) or (p^.blue shl 16);
-          grid_points[i, j] := Box.Contains(TCurvePoint.Create(i, j)) and
+          grid_points[i, j] := BoxesContain(Boxes, TCurvePoint.Create(i, j)) and
                               (AreSimilar(p^.red, p^.green, p^.blue, R1, G1, B1, Tolerance) or
                                AreSimilar(p^.red, p^.green, p^.blue, R2, G2, B2, Tolerance));
           inc(p);
@@ -675,7 +691,7 @@ begin
   end;
 end;
 
-procedure TGridMask.RebuildCurve(PlotImg: TBGRABitmap; Box: TPlotQuad;
+procedure TGridMask.RebuildCurve(PlotImg: TBGRABitmap; Boxes: TBoxArray;
                                  CurveColor: TColor);
 var
   i, j, k, l: Integer;
@@ -713,7 +729,7 @@ begin
       p := PlotImg.Scanline[j];
       for i := 0 to PlotImg.Width - 1 do
       begin
-        curve_points[i, j] := Box.Contains(TCurvePoint.Create(i, j)) and
+        curve_points[i, j] := BoxesContain(Boxes, TCurvePoint.Create(i, j)) and
                               AreSimilar(p^.red, p^.green, p^.blue,
                                          R1, G1, B1, Tolerance);
 

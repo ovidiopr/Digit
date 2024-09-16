@@ -3126,6 +3126,7 @@ procedure TPlotImage.RemoveGrid(LineColor1, LineColor2, BckgndColor: TColor;
                                 MaskSize: Integer = 5);
 var
   i: Integer;
+  Boxes: TBoxArray;
 begin
   try
     GridMask.MajorGridColor := LineColor1;
@@ -3136,21 +3137,28 @@ begin
     GridMask.FixCurve := FixCurve;
     GridMask.MaskSize := MaskSize;
 
-    //Plot.Box.PolarCoordinates := (Plot.CoordSystem = csPolar);
+    SetLength(Boxes, PlotCount);
+    for i := Low(Boxes) to High(Boxes) do
+    begin
+      Plots[i].Box.PolarCoordinates := (Plot.Scale.CoordSystem = csPolar);
+      Boxes[i] := Plots[i].Box;
+    end;
 
     if Plot.Scale.CoordSystem = csCartesian then
-      GridMask.RemoveCartesianGrid(PlotImg, Plot.Box)
+      GridMask.RemoveCartesianGrid(PlotImg, Boxes)
     else
-      GridMask.RemovePolarGrid(PlotImg, Plot.Box, Plot.Scale.ImagePoint[2]);
+      GridMask.RemovePolarGrid(PlotImg, Boxes, Plot.Scale.ImagePoint[2]);
 
     if GridMask.FixCurve then
     begin
       for i := 0 to CurveCount - 1 do
-        GridMask.RebuildCurve(PlotImg, Plot.Box, Plot.Curves[i].Color);
+        GridMask.RebuildCurve(PlotImg, Boxes, Plot.Curves[i].Color);
     end;
 
     ResetZoomImage;
   finally
+    SetLength(Boxes, 0);
+
     IsChanged := True;
   end;
 end;
