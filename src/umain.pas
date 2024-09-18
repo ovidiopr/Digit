@@ -2489,9 +2489,24 @@ begin
           PlotImage.Plot.DigitCurve.Color := PlotImage.GetPixel(X, Y);
           PlotImage.RedrawMarkers;
         end;
-        mdMajorGridColor: btnMajorGrid.ButtonColor := PlotImage.GetPixel(X, Y);
-        mdMinorGridColor: btnMinorGrid.ButtonColor := PlotImage.GetPixel(X, Y);
-        mdBackgroundColor: btnBackground.ButtonColor := PlotImage.GetPixel(X, Y);
+        mdMajorGridColor: begin
+          btnMajorGrid.ButtonColor := PlotImage.GetPixel(X, Y);
+          MouseMode := mdCursor;
+          ModeCursor.Checked := True;
+          ModeMajorGridColor.Checked := False;
+        end;
+        mdMinorGridColor: begin
+          btnMinorGrid.ButtonColor := PlotImage.GetPixel(X, Y);
+          MouseMode := mdCursor;
+          ModeCursor.Checked := True;
+          ModeMinorGridColor.Checked := False;
+        end;
+        mdBackgroundColor: begin
+          btnBackground.ButtonColor := PlotImage.GetPixel(X, Y);
+          MouseMode := mdCursor;
+          ModeCursor.Checked := True;
+          ModeBackgroundColor.Checked := False;
+        end;
       end;
 
       UpdateControls;
