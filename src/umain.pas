@@ -2235,16 +2235,16 @@ procedure TDigitMainForm.SetImagePoint(Index: Integer; const Value: TCurvePoint)
 begin
   case Index of
     1: begin
-      EditIX1.Value := Round(Value.X);
-      EditIY1.Value := Round(Value.Y);
+      EditIX1.Value := Round(PlotImage.Zoom*Value.X);
+      EditIY1.Value := Round(PlotImage.Zoom*Value.Y);
     end;
     2: begin
-      EditIX2.Value := Round(Value.X);
-      EditIY2.Value := Round(Value.Y);
+      EditIX2.Value := Round(PlotImage.Zoom*Value.X);
+      EditIY2.Value := Round(PlotImage.Zoom*Value.Y);
     end;
     3: begin
-      EditIX3.Value := Round(Value.X);
-      EditIY3.Value := Round(Value.Y);
+      EditIX3.Value := Round(PlotImage.Zoom*Value.X);
+      EditIY3.Value := Round(PlotImage.Zoom*Value.Y);
     end;
   end;
 end;
@@ -2399,14 +2399,14 @@ begin
     piSetPlotBox: begin
       with PlotImage.Plot.Box do
       begin
-        EditVX1.Value := Round(Vertex[0].X);
-        EditVY1.Value := Round(Vertex[0].Y);
-        EditVX2.Value := Round(Vertex[1].X);
-        EditVY2.Value := Round(Vertex[1].Y);
-        EditVX3.Value := Round(Vertex[2].X);
-        EditVY3.Value := Round(Vertex[2].Y);
-        EditVX4.Value := Round(Vertex[3].X);
-        EditVY4.Value := Round(Vertex[3].Y);
+        EditVX1.Value := Round(PlotImage.Zoom*Vertex[0].X);
+        EditVY1.Value := Round(PlotImage.Zoom*Vertex[0].Y);
+        EditVX2.Value := Round(PlotImage.Zoom*Vertex[1].X);
+        EditVY2.Value := Round(PlotImage.Zoom*Vertex[1].Y);
+        EditVX3.Value := Round(PlotImage.Zoom*Vertex[2].X);
+        EditVY3.Value := Round(PlotImage.Zoom*Vertex[2].Y);
+        EditVX4.Value := Round(PlotImage.Zoom*Vertex[3].X);
+        EditVY4.Value := Round(PlotImage.Zoom*Vertex[3].Y);
       end;
     end;
     piSetGrid: begin
@@ -2661,6 +2661,7 @@ end;
 procedure TDigitMainForm.PlotImageZoomChanged(Sender: TObject; Zoom: Double);
 begin
   tbZoom.Value := Round(Zoom*100);
+  UpdateGUI;
 end;
 
 procedure TDigitMainForm.PlotImageActivePlotChanging(Sender: TObject; OldIndex, NewIndex: Integer);
@@ -3182,14 +3183,14 @@ begin
 
   with PlotImage.Plot.Box do
   begin
-    EditVX1.Value := Round(Vertex[0].X);
-    EditVY1.Value := Round(Vertex[0].Y);
-    EditVX2.Value := Round(Vertex[1].X);
-    EditVY2.Value := Round(Vertex[1].Y);
-    EditVX3.Value := Round(Vertex[2].X);
-    EditVY3.Value := Round(Vertex[2].Y);
-    EditVX4.Value := Round(Vertex[3].X);
-    EditVY4.Value := Round(Vertex[3].Y);
+    EditVX1.Value := Round(PlotImage.Zoom*Vertex[0].X);
+    EditVY1.Value := Round(PlotImage.Zoom*Vertex[0].Y);
+    EditVX2.Value := Round(PlotImage.Zoom*Vertex[1].X);
+    EditVY2.Value := Round(PlotImage.Zoom*Vertex[1].Y);
+    EditVX3.Value := Round(PlotImage.Zoom*Vertex[2].X);
+    EditVY3.Value := Round(PlotImage.Zoom*Vertex[2].Y);
+    EditVX4.Value := Round(PlotImage.Zoom*Vertex[3].X);
+    EditVY4.Value := Round(PlotImage.Zoom*Vertex[3].Y);
   end;
 end;
 

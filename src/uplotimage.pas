@@ -3569,11 +3569,12 @@ begin
           end;
           // All image parameters have been read
 
-          // Read Plot parameters
-          if (DigitChild.CompareName('scale') = 0) then
+          // Read Plot parameters (only for older versions)
+          if (DigitChild.CompareName('scale') = 0) and
+             (DigitVersion < 1.5) then
             Plot.Scale.ImportFromXML(DigitChild);
 
-          // Read Box parameters
+          // Read Box parameters (only for older versions)
           if (DigitChild.CompareName('PlotBox') = 0) and
              (DigitVersion <= 1.0) then
             with Plot.Box do
