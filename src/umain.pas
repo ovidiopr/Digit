@@ -361,7 +361,7 @@ type
     tsGrid: TTabSheet;
     tsPicture: TTabSheet;
     tsPlot: TTabSheet;
-    tsPlotBox: TTabSheet;
+    tsBox: TTabSheet;
     tsScale: TTabSheet;
     ZoomImage: TImage;
     procedure atInverseAxisToGraph(AX: Double; out AT: Double);
@@ -653,7 +653,7 @@ begin
     //pcInput.Enabled := ImageIsLoaded;
     tsCurve.Enabled := ImageIsLoaded;
     tsScale.Enabled := ImageIsLoaded;
-    tsPlotBox.Enabled := ImageIsLoaded;
+    tsBox.Enabled := ImageIsLoaded;
     tsGrid.Enabled := ImageIsLoaded;
 
     FileSave.Enabled :=  ImageIsLoaded and (not IsSaved);
@@ -910,17 +910,17 @@ begin
   with PlotImage.Plot do
   begin
     Read(F, X);  Read(F, Y);
-    ImagePoint[1] := TCurvePoint.Create(X, Y);
+    Scale.ImagePoint[1] := TCurvePoint.Create(X, Y);
     Read(F, X);  Read(F, Y);
-    ImagePoint[2] := TCurvePoint.Create(X, Y);
+    Scale.ImagePoint[2] := TCurvePoint.Create(X, Y);
     Read(F, X);  Readln(F, Y);
-    ImagePoint[3] := TCurvePoint.Create(X, Y);
+    Scale.ImagePoint[3] := TCurvePoint.Create(X, Y);
     Read(F, X);  Read(F, Y);
-    PlotPoint[1] := TCurvePoint.Create(X, Y);
+    Scale.PlotPoint[1] := TCurvePoint.Create(X, Y);
     Read(F, X);  Read(F, Y);
-    PlotPoint[2] := TCurvePoint.Create(X, Y);
+    Scale.PlotPoint[2] := TCurvePoint.Create(X, Y);
     Read(F, X);  Readln(F, Y);
-    PlotPoint[3] := TCurvePoint.Create(X, Y);
+    Scale.PlotPoint[3] := TCurvePoint.Create(X, Y);
     Readln(F, Co);
     btnColor.ButtonColor := Co;
     DigitCurve.Color := Co;
@@ -963,6 +963,8 @@ begin
       AxesPoint[1] := Plot.Scale.ImagePoint[1];
       AxesPoint[2] := Plot.Scale.ImagePoint[2];
       AxesPoint[3] := Plot.Scale.ImagePoint[3];
+
+      ResetPlotBox;
     end;
 
   IsSaved := False;
