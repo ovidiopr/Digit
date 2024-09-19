@@ -25,12 +25,14 @@ type
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
+    EditZoomResize: TAction;
     PlotNameItem: TMenuItem;
     PlotDeleteItem: TMenuItem;
     PlotAddItem: TMenuItem;
     Separator2: TMenuItem;
     btnCancel: TToolButton;
     sep08: TToolButton;
+    btnResize: TToolButton;
     ToolPlotDelete: TAction;
     ToolPlotName: TAction;
     ToolPlotAdd: TAction;
@@ -389,6 +391,7 @@ type
     procedure EditZoomInExecute(Sender: TObject);
     procedure EditZoomOriginalExecute(Sender: TObject);
     procedure EditZoomOutExecute(Sender: TObject);
+    procedure EditZoomResizeExecute(Sender: TObject);
     procedure edtGridMaskChange(Sender: TObject; AByUser: boolean);
     procedure edtGridThresholdChange(Sender: TObject; AByUser: boolean);
     procedure edtGridToleranceChange(Sender: TObject; AByUser: boolean);
@@ -718,10 +721,11 @@ begin
     EditCopyCurve.Enabled := (State = piSetCurve) and HasPoints;
 
     tbZoom.Enabled := ImageIsLoaded;
-    EditZoomOriginal.Enabled := ImageIsLoaded;
+    EditZoomOriginal.Enabled := ImageIsLoaded and (PlotImage.Zoom <> 1);
     EditZoomIn.Enabled := ImageIsLoaded;
     EditZoomOut.Enabled := ImageIsLoaded;
     EditZoomFit.Enabled := ImageIsLoaded;
+    EditZoomResize.Enabled := ImageIsLoaded and (PlotImage.Zoom <> 1);
   end;
 end;
 
@@ -1307,6 +1311,14 @@ end;
 procedure TDigitMainForm.EditZoomOutExecute(Sender: TObject);
 begin
   PlotImage.ZoomOut;
+end;
+
+procedure TDigitMainForm.EditZoomResizeExecute(Sender: TObject);
+begin
+  if (MessageDlg('You are about to resize the current plot image.' +
+                 ' This action cannot be undone. Continue?',
+                 mtWarning, [mbYes, mbNo], 0) = mrYes) then
+    PlotImage.ResizeToZoom;
 end;
 
 procedure TDigitMainForm.edtGridMaskChange(Sender: TObject; AByUser: boolean);
@@ -2659,7 +2671,9 @@ end;
 procedure TDigitMainForm.PlotImageZoomChanged(Sender: TObject; Zoom: Double);
 begin
   tbZoom.Value := Round(Zoom*100);
+
   UpdateGUI;
+  UpdateControls;
 end;
 
 procedure TDigitMainForm.PlotImageActivePlotChanging(Sender: TObject; OldIndex, NewIndex: Integer);

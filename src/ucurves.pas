@@ -263,6 +263,8 @@ type
     property Name: String read FName write SetName;
     {Return the number of curves (fixed)}
     property Count: Integer read GetCount;
+    {Return the number of valid curves (curves with data)}
+    property ValidCurves: Integer read FValidCurves;
     {Return the index of the active curve}
     property CurveIndex: Integer read FCurveIndex write SetCurveIndex;
     {Return the curve}

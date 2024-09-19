@@ -170,8 +170,8 @@ type
     procedure UpdateMarkersInCurve;
     procedure UpdateMarkersInImage;
 
-    procedure RepaintRegion(UpdateArea: TRect); overload;
-    procedure RepaintRegion; overload;
+    procedure RepaintRegion(UpdateArea: TRect);
+    procedure RepaintAll;
 
     procedure RectIntersection(Po, Pf: TCurvePoint; var Pini, Pend: TCurvePoint);
     procedure XAxisCoords(var Pini, Pend: TCurvePoint);
@@ -229,6 +229,7 @@ type
     procedure ZoomIn;
     procedure ZoomOut;
     procedure ZoomFitBest;
+    procedure ResizeToZoom;
 
     procedure AddMarker(Position: TPoint; NewMarker: Boolean = True); overload;
     procedure AddMarker(Marker: TMarker; NewMarker: Boolean = True); overload;
@@ -1627,6 +1628,45 @@ begin
     Zoom := Parent.ClientHeight/PlotImg.Height;
 end;
 
+procedure TPlotImage.ResizeToZoom;
+var
+  i, j, k, l: Integer;
+begin
+  if (Zoom <> 1) then
+  begin
+    for i := 0 to PlotCount - 1 do
+    begin
+      // Update the scales
+      with Plots[i].Scale do
+        for j := 1 to 3 do
+          ImagePoint[j] := Zoom*ImagePoint[j];
+
+      // Update the boxes
+      with Plots[i].Box do
+        for j := 0 to NumVertices - 1 do
+          Vertex[j] := Zoom*Vertex[j];
+
+      // Update the curves
+      for j := 0 to Plots[i].CurveCount - 1 do
+        for k := 0 to Plots[i].Curves[j].ValidCurves - 1 do
+          with Plots[i].Curves[j].Curves[k] do
+            for l := 0 to Count - 1 do
+              Point[l] := Zoom*Point[l];
+    end;
+
+    PlotImg.ResampleFilter := rfSpline;
+    BGRAReplace(FPlotImg, PlotImg.Resample(Width, Height, rmFineResample));
+
+    GridMask.ResizeMask(Width, Height);
+
+    Zoom := 1.0;
+
+    RepaintAll;
+
+    IsChanged := True;
+  end;
+end;
+
 procedure TPlotImage.AddMarker(Position: TPoint; NewMarker: Boolean = True);
 var
   BMP: TBGRABitmap;
@@ -2266,7 +2306,7 @@ begin
           OnRegionSelected(Self, FSelectionRect);
 
         SelectingRegion := False;
-        RepaintRegion;
+        RepaintRegion(FSelectionRect);
       end;
 
       if assigned(FClickedMarker) then
@@ -2402,7 +2442,7 @@ begin
 
     // Change the state
     FState := Value;
-    RepaintRegion(ClientRect);
+    RepaintAll;
 
     // Update the markers in the image
     UpdateMarkersInImage;
@@ -2471,7 +2511,7 @@ begin
     FPlotIndex := Value;
     // Update the active Curve
     //CurveIndex := Plots[Value].CurveIndex;
-    RepaintRegion(ClientRect);
+    RepaintAll;
 
     // Update all the new markers in the image
     UpdateMarkersInImage;
@@ -2588,9 +2628,9 @@ begin
   {$endif}
 end;
 
-procedure TPlotImage.RepaintRegion;
+procedure TPlotImage.RepaintAll;
 begin
-  RepaintRegion(SelectionRect);
+  RepaintRegion(ClientRect);
 end;
 
 procedure TPlotImage.RectIntersection(Po, Pf: TCurvePoint;

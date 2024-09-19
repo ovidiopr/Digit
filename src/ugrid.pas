@@ -42,6 +42,7 @@ type
     destructor Destroy; override;
 
     procedure SetSize(Width, Height: Integer);
+    procedure ResizeMask(Width, Height: Integer);
 
     procedure RemoveCartesianGrid(PlotImg: TBGRABitmap; Boxes: TBoxArray);
     procedure RemovePolarGrid(PlotImg: TBGRABitmap; Boxes: TBoxArray;
@@ -111,6 +112,12 @@ procedure TGridMask.SetSize(Width, Height: Integer);
 begin
   FMask.SetSize(Width, Height);
   FMask.FillTransparent;
+end;
+
+procedure TGridMask.ResizeMask(Width, Height: Integer);
+begin
+  FMask.ResampleFilter := rfSpline;
+  BGRAReplace(FMask, FMask.Resample(Width, Height, rmFineResample));
 end;
 
 procedure TGridMask.SetMajorGridColor(const Value: TColor);
