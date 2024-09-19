@@ -656,15 +656,17 @@ begin
         inc(p1);
         inc(p2);
 
-        // Notify the parent that it must update the progress bar
-        if assigned(OnShowProgress) then
-          OnShowProgress(Self, Round(100*(j*PlotImg.Width + i)/
-                                     (PlotImg.Width*PlotImg.Height)),
-                                     'Finding points...');
-
         Application.ProcessMessages;
         if CancelAction then Break;
       end;
+
+      // Notify the parent that it must update the progress bar
+      if assigned(OnShowProgress) then
+        OnShowProgress(Self, Round(100*((j + 1)*PlotImg.Width)/
+                                   (PlotImg.Width*PlotImg.Height)),
+                                   'Finding points...');
+
+      Application.ProcessMessages;
       if CancelAction then Break;
     end;
     //Plot.DigitCurve.AllPoints.SortCurve;

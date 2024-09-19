@@ -363,7 +363,7 @@ end;
 
 function TPolygon.GetNumVertices: Integer;
 begin
-  Result :=  Length(FVertices);
+  Result := Length(FVertices);
 end;
 
 function TPolygon.GetVertex(Index: Integer): TCurvePoint;
@@ -386,7 +386,7 @@ begin
       Result := FVertices[Index];
   end
   else
-    Result :=  TCurvePoint.Create(-1, -1);
+    Result := TCurvePoint.Create(-1, -1);
 end;
 
 function TPolygon.GetEdge(Index: Integer): TCurvePoint;
@@ -399,7 +399,7 @@ begin
       Result := (Vertex[Index] + Vertex[Index + 1])/2;
   end
   else
-    Result :=  TCurvePoint.Create(-1, -1);
+    Result := TCurvePoint.Create(-1, -1);
 end;
 
 function TPolygon.GetCenter: TCurvePoint;
@@ -464,22 +464,23 @@ end;
 
 function TPolygon.GetRect(Zoom: Double): TRect;
 var
-  i, Xo, Yo, Xf, Yf: Integer;
+  i: Integer;
+  Xo, Yo, Xf, Yf: Double;
 begin
   Result := TRect.Create(0, 0, 0, 0);
 
   if (NumVertices > 0) then
   begin
-    Xo := Round(Vertex[0].X);
-    Yo := Round(Vertex[0].Y);
-    Xf := Round(Vertex[0].X);
-    Yf := Round(Vertex[0].Y);
+    Xo := Vertex[0].X;
+    Yo := Vertex[0].Y;
+    Xf := Vertex[0].X;
+    Yf := Vertex[0].Y;
     for i := 1 to NumVertices -1 do
     begin
-      if (Vertex[i].X < Xo) then Xo := Round(Vertex[i].X);
-      if (Vertex[i].Y < Yo) then Yo := Round(Vertex[i].Y);
-      if (Vertex[i].X > Xf) then Xf := Round(Vertex[i].X);
-      if (Vertex[i].Y > Yf) then Yf := Round(Vertex[i].Y);
+      if (Vertex[i].X < Xo) then Xo := Vertex[i].X;
+      if (Vertex[i].Y < Yo) then Yo := Vertex[i].Y;
+      if (Vertex[i].X > Xf) then Xf := Vertex[i].X;
+      if (Vertex[i].Y > Yf) then Yf := Vertex[i].Y;
     end;
 
     Result := TRect.Create(Round(Xo*Zoom), Round(Yo*Zoom),
@@ -505,7 +506,7 @@ end;
 
 procedure TPolygon.SetNumVertices(const Value: Integer);
 begin
-  if (Value >= 3) then
+  if (Value >= 3) and (Value <> NumVertices) then
   begin
     SetLength(FVertices, Value);
     SetLength(FSlopes, Value);

@@ -29,6 +29,8 @@ type
     PlotDeleteItem: TMenuItem;
     PlotAddItem: TMenuItem;
     Separator2: TMenuItem;
+    btnCancel: TToolButton;
+    sep08: TToolButton;
     ToolPlotDelete: TAction;
     ToolPlotName: TAction;
     ToolPlotAdd: TAction;
@@ -635,7 +637,7 @@ uses uabout, uoptions;
 
 function ColorDelta(C1, C2: LongInt): Real;
 begin
-  Result := Sqrt((C1 - C2)*(C1 - C2));
+  Result := Abs(C1 - C2);
 end;
 
 function TDigitMainForm.XLine(Y, Shift: Integer): Integer;
@@ -1019,6 +1021,10 @@ begin
   case PlotImage.Options.DefaultItp of
     itpSpline:
       btnResample.Action := ToolSplines;
+    itpLinear:
+      btnResample.Action := ToolLinear;
+    itpPoly:
+      btnResample.Action := ToolPolynomial;
     else
       btnResample.Action := ToolBSplines;
   end;
@@ -1100,19 +1106,13 @@ end;
 procedure TDigitMainForm.btnMajorGridColorChanged(Sender: TObject);
 begin
   if (PlotImage.GridMask.MajorGridColor <> btnMajorGrid.ButtonColor) then
-  begin
     PlotImage.GridMask.MajorGridColor := btnMajorGrid.ButtonColor;
-    PlotImage.IsChanged := True;
-  end;
 end;
 
 procedure TDigitMainForm.btnBackgroundColorChanged(Sender: TObject);
 begin
   if (PlotImage.GridMask.BckgndColor <> btnBackground.ButtonColor) then
-  begin
     PlotImage.GridMask.BckgndColor := btnBackground.ButtonColor;
-    PlotImage.IsChanged := True;
-  end;
 end;
 
 procedure TDigitMainForm.btnColorColorChanged(Sender: TObject);
@@ -1120,10 +1120,7 @@ var
   d: TATTabData;
 begin
   if (PlotImage.Plot.DigitCurve.Color <> btnColor.ButtonColor) then
-  begin
     PlotImage.Plot.DigitCurve.Color := btnColor.ButtonColor;
-    //PlotImage.IsChanged := True;
-  end;
 
   d := tcCurves.GetTabData(tcCurves.TabIndex);
   if assigned(d) then
@@ -1146,10 +1143,7 @@ end;
 procedure TDigitMainForm.btnMinorGridColorChanged(Sender: TObject);
 begin
   if (PlotImage.GridMask.MinorGridColor <> btnMinorGrid.ButtonColor) then
-  begin
     PlotImage.GridMask.MinorGridColor := btnMinorGrid.ButtonColor;
-    PlotImage.IsChanged := True;
-  end;
 end;
 
 procedure TDigitMainForm.cbbXScaleChange(Sender: TObject);
@@ -1158,8 +1152,6 @@ begin
   begin
     PlotImage.Plot.Scale.XScale := TScaleType(cbbXScale.ItemIndex);
     UpdatePlotXScale;
-
-    PlotImage.IsChanged := True;
   end;
 end;
 
@@ -1169,18 +1161,13 @@ begin
   begin
     PlotImage.Plot.Scale.YScale := TScaleType(cbbYScale.ItemIndex);
     UpdatePlotYScale;
-
-    PlotImage.IsChanged := True;
   end;
 end;
 
 procedure TDigitMainForm.chbRebuildCurveChange(Sender: TObject);
 begin
   if (PlotImage.GridMask.FixCurve <> chbRebuildCurve.Checked) then
-  begin
     PlotImage.GridMask.FixCurve := chbRebuildCurve.Checked;
-    PlotImage.IsChanged := True;
-  end;
 end;
 
 procedure TDigitMainForm.EditCopyCurveExecute(Sender: TObject);
@@ -1266,7 +1253,6 @@ begin
        (Value <> PlotImage.Plot.Scale.PlotPoint[Tag].X) then
     begin
       PlotImage.Plot.Scale.PlotPoint[Tag] := PlotPoint[Tag];
-      PlotImage.IsChanged := True;
     end
     else
       Text := FloatToStr(PlotImage.Plot.Scale.PlotPoint[Tag].X);
@@ -1283,7 +1269,6 @@ begin
        (Value <> PlotImage.Plot.Scale.PlotPoint[Tag].Y) then
     begin
       PlotImage.Plot.Scale.PlotPoint[Tag] := PlotPoint[Tag];
-      PlotImage.IsChanged := True;
     end
     else
       Text := FloatToStr(PlotImage.Plot.Scale.PlotPoint[Tag].Y);
@@ -1435,8 +1420,8 @@ end;
 
 procedure TDigitMainForm.FormShow(Sender: TObject);
 var
-  i     : Byte;
-  S     : String;
+  i: Byte;
+  S: String;
 begin
   if MustOpen then
   begin
@@ -1457,12 +1442,6 @@ begin
     MustOpen := False;
   end;
   UpdateControls;
-
-  {$ifdef darwin}
-  // This fixes a bug in MacOs (tcCurves is not following the Align 'alClient')
-  InputPanel.Width := InputPanel.Width + 1;
-  InputPanel.Width := InputPanel.Width - 1;
-  {$endif}
 end;
 
 procedure TDigitMainForm.FormCreate(Sender: TObject);
@@ -1816,7 +1795,7 @@ end;
 function TDigitMainForm.GetCoords: TCoordSystem;
 begin
   case cbbCoords.ItemIndex of
-    0, 1: Result := TCoordSystem(cbbCoords.ItemIndex);
+    0..1: Result := TCoordSystem(cbbCoords.ItemIndex);
     else
       Result := csCartesian;
   end;
@@ -1825,7 +1804,7 @@ end;
 function TDigitMainForm.GetXScale: TScaleType;
 begin
   case cbbXScale.ItemIndex of
-    0, 1, 2, 3: Result := TScaleType(cbbXScale.ItemIndex);
+    0..3: Result := TScaleType(cbbXScale.ItemIndex);
     else
       Result := stLinear;
   end;
@@ -1834,7 +1813,7 @@ end;
 function TDigitMainForm.GetYScale: TScaleType;
 begin
   case cbbYScale.ItemIndex of
-    0, 1, 2, 3: Result := TScaleType(cbbYScale.ItemIndex);
+    0..3: Result := TScaleType(cbbYScale.ItemIndex);
     else
       Result := stLinear;
   end;
@@ -1864,11 +1843,11 @@ function TDigitMainForm.GetPlotPoint(Index: Integer): TCurvePoint;
 begin
   case Index of
     1: Result := TCurvePoint.Create(StrToFloat(EditPX1.Text),
-                               StrToFloat(EditPY1.Text));
+                                    StrToFloat(EditPY1.Text));
     2: Result := TCurvePoint.Create(StrToFloat(EditPX2.Text),
-                               StrToFloat(EditPY2.Text));
+                                    StrToFloat(EditPY2.Text));
     3: Result := TCurvePoint.Create(StrToFloat(EditPX3.Text),
-                               StrToFloat(EditPY3.Text));
+                                    StrToFloat(EditPY3.Text));
     else Result := TCurvePoint.Create(0, 0);
   end;
 end;
@@ -2080,7 +2059,8 @@ var
   i: Integer;
   d: TATTabData;
 begin
-  assert(Value = PlotImage.PlotCount, 'Error: The number of scales is incorrect.');
+  assert(Value = PlotImage.PlotCount,
+         'Error: The number of scales is incorrect.');
 
   // Create or delete the required tabs
   if (tcPlots.TabCount > Value) then
@@ -2112,7 +2092,8 @@ var
   d: TATTabData;
   TmpSeries: TLineSeries;
 begin
-  assert(Value = PlotImage.CurveCount, 'Error: The number of curves is incorrect.');
+  assert(Value = PlotImage.CurveCount,
+         'Error: The number of curves is incorrect.');
 
   // Create or delete the required series
   if (MainPlot.Series.Count > Value) then
@@ -2380,20 +2361,20 @@ begin
   case TPlotImageState(pcInput.ActivePageIndex) of
     piSetCurve: CurveToGUI;
     piSetScale: begin
-      with PlotImage do
+      with PlotImage.Plot do
       begin
-        cbbCoords.ItemIndex := Integer(Plot.Scale.CoordSystem);
-        cbbXScale.ItemIndex := Integer(Plot.Scale.XScale);
-        edtX.Text := Plot.Scale.XLabel;
-        cbbYScale.ItemIndex := Integer(Plot.Scale.YScale);
-        edtY.Text := Plot.Scale.YLabel;
+        cbbCoords.ItemIndex := Integer(Scale.CoordSystem);
+        cbbXScale.ItemIndex := Integer(Scale.XScale);
+        edtX.Text := Scale.XLabel;
+        cbbYScale.ItemIndex := Integer(Scale.YScale);
+        edtY.Text := Scale.YLabel;
 
-        ImagePoint[1] := Plot.Scale.ImagePoint[1];
-        PlotPoint[1] := Plot.Scale.PlotPoint[1];
-        ImagePoint[2] := Plot.Scale.ImagePoint[2];
-        PlotPoint[2] := Plot.Scale.PlotPoint[2];
-        ImagePoint[3] := Plot.Scale.ImagePoint[3];
-        PlotPoint[3] := Plot.Scale.PlotPoint[3];
+        ImagePoint[1] := Scale.ImagePoint[1];
+        PlotPoint[1] := Scale.PlotPoint[1];
+        ImagePoint[2] := Scale.ImagePoint[2];
+        PlotPoint[2] := Scale.PlotPoint[2];
+        ImagePoint[3] := Scale.ImagePoint[3];
+        PlotPoint[3] := Scale.PlotPoint[3];
       end;
     end;
     piSetPlotBox: begin
@@ -2589,6 +2570,7 @@ end;
 procedure TDigitMainForm.PlotImageShowProgress(Sender: TObject; Progress: Cardinal; Msg: String);
 begin
   ToolCancelAction.Enabled := True;
+  btnCancel.Visible := True;
   ProgressBar.Visible := True;
   ProgressBar.Position := Progress;
   StatusBar.Panels[4].Text := Format('%s (Esc to cancel)', [Msg]);
@@ -2597,6 +2579,7 @@ end;
 procedure TDigitMainForm.PlotImageHideProgress(Sender: TObject);
 begin
   ToolCancelAction.Enabled := False;
+  btnCancel.Visible := False;
   ProgressBar.Visible := False;
   StatusBar.Panels[4].Text := '';
 end;
