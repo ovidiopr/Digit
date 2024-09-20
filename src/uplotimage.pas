@@ -221,6 +221,7 @@ type
     function ConvertCoords(X, Y: Double): TCurvePoint; overload;
 
     procedure SwitchGrid;
+    procedure MergeGridMask;
     procedure ResetPlotBox;
 
     procedure PasteImage(Stream: TStream);
@@ -1539,6 +1540,31 @@ begin
   WhiteBoard.PutImage(0, 0, ZoomImg, dmSet);
 
   IsChanged := True;
+end;
+
+procedure TPlotImage.MergeGridMask;
+var
+  Rect: TRect;
+begin
+  if GridMask.IsActive then
+  begin
+    // Copy the mask over the original image
+    Rect := TRect.Create(TPoint.Create(0, 0), PlotImg.Width, PlotImg.Height);
+    PlotImg.Canvas.CopyRect(Rect, GridMask.Mask.Canvas, Rect);
+
+    with GridMask do
+    begin
+      // Reset the mask
+      SetSize(PlotImg.Width, PlotImg.Height);
+      IsValid := False;
+      IsActive := False;
+    end;
+
+    ResetZoomImage;
+
+    WhiteBoard.SetSize(Width, Height);
+    WhiteBoard.PutImage(0, 0, ZoomImg, dmSet);
+  end;
 end;
 
 procedure TPlotImage.ResetPlotBox;

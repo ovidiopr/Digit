@@ -25,7 +25,9 @@ type
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
+    GridMergeMask: TAction;
     EditZoomResize: TAction;
+    EditZoomResizeItem: TMenuItem;
     PlotNameItem: TMenuItem;
     PlotDeleteItem: TMenuItem;
     PlotAddItem: TMenuItem;
@@ -33,6 +35,7 @@ type
     btnCancel: TToolButton;
     sep08: TToolButton;
     btnResize: TToolButton;
+    btnMergeMask: TToolButton;
     ToolPlotDelete: TAction;
     ToolPlotName: TAction;
     ToolPlotAdd: TAction;
@@ -193,7 +196,7 @@ type
     EditZoomInItem: TMenuItem;
     EditZoomOutItem: TMenuItem;
     EditZoomFitItem: TMenuItem;
-    Separator1: TMenuItem;
+    N7: TMenuItem;
     sep09: TToolButton;
     btnZoomOriginal: TToolButton;
     btnZoomIn: TToolButton;
@@ -218,7 +221,6 @@ type
     ToolDigitMarkers: TAction;
     EditPasteImage: TAction;
     EditPasteImageItem: TMenuItem;
-    N7: TMenuItem;
     ModeBackgroundColor: TAction;
     ModeMinorGridColor: TAction;
     ModeMajorGridColor: TAction;
@@ -415,6 +417,7 @@ type
     procedure FileImageExecute(Sender: TObject);
     procedure FileExportExecute(Sender: TObject);
     procedure gbResampleResize(Sender: TObject);
+    procedure GridMergeMaskExecute(Sender: TObject);
     procedure GridRemovalExecute(Sender: TObject);
     procedure GridShowHideExecute(Sender: TObject);
     procedure HelpAboutExecute(Sender: TObject);
@@ -683,6 +686,8 @@ begin
     ToolAdjustNoise.Enabled := (State = piSetCurve) and HasPoints;
     ToolBSplines.Enabled := (State = piSetCurve) and HasPoints;
     ToolSplines.Enabled := (State = piSetCurve) and HasPoints;
+    ToolLinear.Enabled := (State = piSetCurve) and HasPoints;
+    Toolpolynomial.Enabled := (State = piSetCurve) and HasPoints;
     ToolSmooth.Enabled := (State = piSetCurve) and HasPoints;
     ToolConvertToSymbols.Enabled := (State = piSetCurve) and HasPoints;
     ToolCurveUp.Enabled := (State = piSetCurve) and HasPoints;
@@ -699,8 +704,6 @@ begin
     ToolPlotDelete.Enabled := ImageIsLoaded and (PlotCount > 1);
     ToolPlotName.Enabled := ImageIsLoaded and (PlotCount > 0);
 
-    ToolPlotOptions.Enabled := ImageIsLoaded;
-
     MarkersMoveUp.Enabled := ImageIsLoaded and assigned(ActiveMarker);
     MarkersMoveDown.Enabled := ImageIsLoaded and assigned(ActiveMarker);
     MarkersMoveLeft.Enabled := ImageIsLoaded and assigned(ActiveMarker);
@@ -712,6 +715,7 @@ begin
 
     GridRemoval.Enabled := ImageIsLoaded and (State = piSetGrid) and not (GridMask.IsValid and GridMask.IsActive);
     GridShowHide.Enabled := ImageIsLoaded and (State = piSetGrid) and GridMask.IsValid;
+    GridMergeMask.Enabled := ImageIsLoaded and (State = piSetGrid) and GridMask.IsValid and GridMask.IsActive;
 
     PlotExport.Enabled := (State = piSetCurve) and HasPoints;
     PlotScale.Enabled := (State = piSetCurve) and HasPoints;
@@ -848,6 +852,9 @@ begin
       MainPlot.BottomAxis.Title.Caption := XLabel;
       MainPlot.LeftAxis.Title.Caption := YLabel;
     end;
+
+    tcPlots.TabIndex := PlotImage.PlotIndex;
+    tcCurves.TabIndex := PlotImage.PlotIndex;
 
     UpdatePlotXScale;
     UpdatePlotYScale;
@@ -1600,6 +1607,14 @@ procedure TDigitMainForm.gbResampleResize(Sender: TObject);
 begin
   SeXo.Width := (SeXo.Width + SeXf.Width) div 2;
   leData.ColWidths[0] := leData.Width div 2;
+end;
+
+procedure TDigitMainForm.GridMergeMaskExecute(Sender: TObject);
+begin
+  if (MessageDlg('You are about to merge the grid mask with the plot image.' +
+                 ' This action cannot be undone. Continue?',
+                 mtWarning, [mbYes, mbNo], 0) = mrYes) then
+    PlotImage.MergeGridMask;
 end;
 
 procedure TDigitMainForm.GridRemovalExecute(Sender: TObject);
@@ -2582,6 +2597,7 @@ end;
 procedure TDigitMainForm.PlotImageShowProgress(Sender: TObject; Progress: Cardinal; Msg: String);
 begin
   ToolCancelAction.Enabled := True;
+  sep08.Visible := True;
   btnCancel.Visible := True;
   ProgressBar.Visible := True;
   ProgressBar.Position := Progress;
@@ -2591,6 +2607,7 @@ end;
 procedure TDigitMainForm.PlotImageHideProgress(Sender: TObject);
 begin
   ToolCancelAction.Enabled := False;
+  sep08.Visible := False;
   btnCancel.Visible := False;
   ProgressBar.Visible := False;
   StatusBar.Panels[4].Text := '';
@@ -3209,7 +3226,22 @@ end;
 procedure TDigitMainForm.ToolPlotOptionsExecute(Sender: TObject);
 begin
   if OptionsDlg.Execute(PlotImage.Options) then
+  begin
     PlotImage.Options := OptionsDlg.Options;
+
+    case PlotImage.Options.DefaultDig of
+      digColor: btnDigitize.Action := ToolDigitColor;
+      digMarkers: btnDigitize.Action := ToolDigitMarkers;
+      else btnDigitize.Action := ToolDigitLine;
+    end;
+
+    case PlotImage.Options.DefaultItp of
+      itpSpline: btnResample.Action := ToolSplines;
+      itpLinear: btnResample.Action := ToolLinear;
+      itpPoly: btnResample.Action := Toolpolynomial;
+      else btnResample.Action := ToolBSplines;
+    end;
+  end;
 end;
 
 procedure TDigitMainForm.ToolSmoothExecute(Sender: TObject);

@@ -30,10 +30,10 @@ object OptionsDlg: TOptionsDlg
       AnchorSideRight.Side = asrBottom
       AnchorSideBottom.Control = pnButtons
       AnchorSideBottom.Side = asrBottom
-      Left = 208
+      Left = 214
       Height = 33
       Top = 6
-      Width = 84
+      Width = 78
       Anchors = [akTop, akRight, akBottom]
       AutoSize = True
       BorderSpacing.Left = 5
@@ -53,10 +53,10 @@ object OptionsDlg: TOptionsDlg
       AnchorSideRight.Control = btnAccept
       AnchorSideBottom.Control = pnButtons
       AnchorSideBottom.Side = asrBottom
-      Left = 120
+      Left = 132
       Height = 33
       Top = 6
-      Width = 83
+      Width = 77
       Anchors = [akTop, akRight, akBottom]
       AutoSize = True
       BorderSpacing.Left = 5
@@ -78,7 +78,7 @@ object OptionsDlg: TOptionsDlg
       Left = 6
       Height = 33
       Top = 6
-      Width = 91
+      Width = 85
       Anchors = [akTop, akLeft, akBottom]
       AutoSize = True
       BorderSpacing.Left = 5
@@ -191,6 +191,8 @@ object OptionsDlg: TOptionsDlg
         Items.Strings = (
           'B-Splines'
           'Splines'
+          'Line'
+          'Polynomial'
         )
         ParentFont = False
         Style = csDropDownList

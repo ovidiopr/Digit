@@ -58,13 +58,13 @@ begin
   Result.BgndColor := btnBgndColor.ButtonColor;
 
   case cbbDigitType.ItemIndex of
-    0, 1, 2: Result.DefaultDig := TDigitization(cbbDigitType.ItemIndex);
+    0..2: Result.DefaultDig := TDigitization(cbbDigitType.ItemIndex);
     else
       Result.DefaultDig := digLine;
   end;
 
   case cbbInterpType.ItemIndex of
-    0, 1: Result.DefaultItp := TInterpolation(cbbInterpType.ItemIndex);
+    0..3: Result.DefaultItp := TInterpolation(cbbInterpType.ItemIndex);
     else
       Result.DefaultItp := itpBSpline;
   end;
@@ -89,7 +89,9 @@ begin
 
   case Value.DefaultItp of
     itpBSpline,
-    itpSpline: cbbInterpType.ItemIndex := Integer(Value.DefaultItp);
+    itpSpline,
+    itpLinear,
+    itpPoly: cbbInterpType.ItemIndex := Integer(Value.DefaultItp);
     else
       cbbInterpType.ItemIndex := -1;
   end;
