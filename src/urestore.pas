@@ -8,7 +8,7 @@ uses SysUtils, Forms, LCLIntf, LCLType;
 
 type
   EWinRestorer = class(Exception);
-  TWhatSave = (default, Size, Location, State);
+  TWhatSave = (svDefault, svSize, svLocation, svState);
   STWhatSave = set of TWhatSave;
   TWinRestorer = class(TObject)
     protected
@@ -24,7 +24,7 @@ type
    end;
 
 const
-  WhatSave_All = [Size, Location, State];
+  WhatSave_All = [svSize, svLocation, svState];
 
 var
   GlobalWinRestorer: TWinRestorer;
@@ -36,7 +36,7 @@ uses IniFiles;
 constructor TWinRestorer.Create(IniName: TFileName; DefaultWhatSave: STWhatSave);
 begin
   inherited Create;
-  if default in DefaultWhatSave then
+  if svDefault in DefaultWhatSave then
     raise EWinRestorer.Create('Attempt to initialize default window position' +
                               ' paramaters with set containing [default]' +
                               ' item. Default params may contain only members' +
@@ -58,9 +58,9 @@ begin
   try
     SectionNm := mIniSect;
     FormNm := TheForm.ClassName;
-    if default in What then What := mDefaultWhat;
+    if svDefault in What then What := mDefaultWhat;
     n := 1;
-    if State in What then
+    if svState in What then
       n := Ini.ReadInteger(SectionNm, FormNm + '_WindowState', 0);
       case n of
         1: begin
@@ -75,12 +75,12 @@ begin
             h := Height;
             w := Width;
           end;
-          if Size in What then
+          if svSize in What then
           begin
             w := Ini.ReadInteger(SectionNm, FormNm + '_Width', w);
             h := Ini.ReadInteger(SectionNm, FormNm + '_Height', h);
           end;
-          if Location in What then
+          if svLocation in What then
           begin
             t := Ini.ReadInteger(SectionNm, FormNm + '_Top', t);
             l := Ini.ReadInteger(SectionNm, FormNm + '_Left', l);
@@ -106,18 +106,18 @@ begin
   try
     SectionNm := mIniSect;
     FormNm := TheForm.ClassName;
-    if default in What then w := mDefaultWhat else w := mDefaultWhat;
-    if Size in w then
+    if svDefault in What then w := mDefaultWhat else w := mDefaultWhat;
+    if svSize in w then
     begin
       Ini.WriteInteger(SectionNm, FormNm + '_Width', TheForm.Width);
       Ini.WriteInteger(SectionNm, FormNm + '_Height', TheForm.Height);
     end;
-    if Location in w then
+    if svLocation in w then
     begin
       Ini.WriteInteger(SectionNm, FormNm + '_Top', TheForm.Top);
       Ini.WriteInteger(SectionNm, FormNm + '_Left', TheForm.Left);
     end;
-    if State in w then
+    if svState in w then
       case TheForm.WindowState of
         wsMinimized: Ini.WriteInteger(SectionNm, FormNm + '_WindowState', 1);
         wsNormal: Ini.WriteInteger(SectionNm, FormNm + '_WindowState', 2);

@@ -43,6 +43,7 @@ type
 
   TMarkerList = specialize TFPGObjectList<TMarker>;
 
+  TPrintMessageEvent = procedure(Sender: TObject; Msg: String; MsgType: TMsgDlgType) of Object;
   TShowProgressEvent = procedure(Sender: TObject; Progress: Cardinal; Msg: String) of Object;
   THideProgressEvent = procedure(Sender: TObject) of Object;
   TSelectRegionEvent = procedure(Sender: TObject; RegionRect: TRect) of Object;
@@ -97,6 +98,7 @@ type
     FIsChanged: Boolean;
     FOnChange: TNotifyEvent;
 
+    FOnPrintMessage: TPrintMessageEvent;
     FOnShowProgress: TShowProgressEvent;
     FOnHideProgress: THideProgressEvent;
     FOnRegionSelected: TSelectRegionEvent;
@@ -348,6 +350,7 @@ type
     property CanRedo: Boolean read GetCanRedo;
   published
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    property OnPrintMessage: TPrintMessageEvent read FOnPrintMessage write FOnPrintMessage;
     property OnShowProgress: TShowProgressEvent read FOnShowProgress write FOnShowProgress;
     property OnHideProgress: THideProgressEvent read FOnHideProgress write FOnHideProgress;
     property OnRegionSelected: TSelectRegionEvent read FOnRegionSelected write FOnRegionSelected;
@@ -625,6 +628,10 @@ begin
     if assigned(OnShowProgress) then
       OnShowProgress(Self, 0, 'Finding points...');
 
+    // Update the log
+    if assigned(OnPrintMessage) then
+      OnPrintMessage(Self, 'Finding points...', mtInformation);
+
     RunningAction := True;
     CancelAction := False;
 
@@ -676,6 +683,13 @@ begin
     // Notify the parent that it must hide the progress bar
     if assigned(OnHideProgress) then
       OnHideProgress(Self);
+
+    // Update the log
+    if assigned(OnPrintMessage) then
+      if CancelAction then
+        OnPrintMessage(Self, 'Action cancelled by user', mtWarning)
+      else
+        OnPrintMessage(Self, 'Done', mtInformation);
 
     Plot.DigitCurve.ValidPoints := not CancelAction;
 
@@ -789,6 +803,10 @@ begin
   if assigned(OnShowProgress) then
     OnShowProgress(Self, 0, 'Digitizing spectrum...');
 
+  // Update the log
+  if assigned(OnPrintMessage) then
+    OnPrintMessage(Self, 'Digitizing spectrum...', mtInformation);
+
   Plot.DigitCurve.NextCurve(False);
   Plot.Curve.AddPoint(Pi);
 
@@ -881,6 +899,13 @@ begin
   if assigned(OnHideProgress) then
     OnHideProgress(Self);
 
+  // Update the log
+  if assigned(OnPrintMessage) then
+    if CancelAction then
+      OnPrintMessage(Self, 'Action cancelled by user', mtWarning)
+    else
+      OnPrintMessage(Self, 'Done', mtInformation);
+
   SortCurve;
 
   IsChanged := True;
@@ -939,6 +964,10 @@ begin
     if assigned(OnShowProgress) then
       OnShowProgress(Self, 0, 'Digitizing spectrum...');
 
+    // Update the log
+    if assigned(OnPrintMessage) then
+      OnPrintMessage(Self, 'Digitizing spectrum...', mtInformation);
+
     Plot.DigitCurve.NextCurve(False);
 
     with Plot.Curve do
@@ -976,6 +1005,13 @@ begin
     // Notify the parent that it must hide the progress bar
     if assigned(OnHideProgress) then
       OnHideProgress(Self);
+
+    // Update the log
+    if assigned(OnPrintMessage) then
+      if CancelAction then
+        OnPrintMessage(Self, 'Action cancelled by user', mtWarning)
+      else
+        OnPrintMessage(Self, 'Done', mtInformation);
 
     SortCurve;
     //Curve.Interpolate(Curve.Count, itpBSpline);
@@ -1072,6 +1108,10 @@ begin
       if assigned(OnShowProgress) then
         OnShowProgress(Self, 0, 'Adjusting curve...');
 
+      // Update the log
+      if assigned(OnPrintMessage) then
+        OnPrintMessage(Self, 'Adjusting curve...', mtInformation);
+
       Island := TIsland.Create;
       Island.Clear;
       for i := 0 to Plot.Curve.Count - 1 do
@@ -1143,6 +1183,13 @@ begin
       // Notify the parent that it must hide the progress bar
       if assigned(OnHideProgress) then
         OnHideProgress(Self);
+
+      // Update the log
+      if assigned(OnPrintMessage) then
+        if CancelAction then
+          OnPrintMessage(Self, 'Action cancelled by user', mtWarning)
+        else
+          OnPrintMessage(Self, 'Done', mtInformation);
     finally
       NewPoints.Free;
       Island.Free;
@@ -1175,6 +1222,10 @@ begin
       // Notify the parent that it must show the progress bar
       if assigned(OnShowProgress) then
         OnShowProgress(Self, 0, 'Converting curve to symbols...');
+
+      // Update the log
+      if assigned(OnPrintMessage) then
+        OnPrintMessage(Self, 'Converting curve to symbols...', mtInformation);
 
       Island := TIsland.Create;
       Island.Clear;
@@ -1209,6 +1260,13 @@ begin
       // Notify the parent that it must hide the progress bar
       if assigned(OnHideProgress) then
         OnHideProgress(Self);
+
+      // Update the log
+      if assigned(OnPrintMessage) then
+        if CancelAction then
+          OnPrintMessage(Self, 'Action cancelled by user', mtWarning)
+        else
+          OnPrintMessage(Self, 'Done', mtInformation);
     finally
       NewPoints.Free;
       Island.Free;

@@ -16,7 +16,7 @@ uses
   TAChartAxis, TATransformations, TACustomSource, TAChartUtils, ClipBrd,
   ActnList, ValEdit, Spin, ExtDlgs, MaskEdit, BCTrackbarUpdown, FileUtil,
   IniFiles, BGRABitmapTypes, GraphType, attabs, Grids, Math,
-  urestore, uchartscale, uutils, ucoordinates, ucurves, uplotimage;
+  urestore, uchartscale, uutils, ucoordinates, ucurves, uplotimage, Types;
 
 type
   TMouseMode = (mdCursor, mdMarkers, mdColor, mdSteps, mdSegments,
@@ -28,9 +28,13 @@ type
     GridMergeMask: TAction;
     EditZoomResize: TAction;
     EditZoomResizeItem: TMenuItem;
+    MainPlot: TChart;
+    msgArea: TListBox;
+    PageControl: TPageControl;
     PlotNameItem: TMenuItem;
     PlotDeleteItem: TMenuItem;
     PlotAddItem: TMenuItem;
+    ScrollBox: TScrollBox;
     Separator2: TMenuItem;
     btnCancel: TToolButton;
     sep08: TToolButton;
@@ -129,15 +133,12 @@ type
     lblY3: TLabel;
     lblYScale: TLabel;
     LinearItem: TMenuItem;
-    MainPlot: TChart;
-    PageControl: TPageControl;
     pcInput: TPageControl;
     rgDirection: TRadioGroup;
     sbCurve: TScrollBox;
     sbGrid: TScrollBox;
     sbPlotBox: TScrollBox;
     sbScale: TScrollBox;
-    ScrollBox: TScrollBox;
     seInterpDegree: TSpinEdit;
     tbBox: TToolBar;
     tbCorrectDistortion: TToolButton;
@@ -365,9 +366,10 @@ type
     SaveProjectDlg: TSaveDialog;
     tsCurve: TTabSheet;
     tsGrid: TTabSheet;
+    tsBox: TTabSheet;
+    tsLog: TTabSheet;
     tsPicture: TTabSheet;
     tsPlot: TTabSheet;
-    tsBox: TTabSheet;
     tsScale: TTabSheet;
     ZoomImage: TImage;
     procedure atInverseAxisToGraph(AX: Double; out AT: Double);
@@ -430,6 +432,8 @@ type
     procedure ModeBackgroundColorExecute(Sender: TObject);
     procedure ModeMajorGridColorExecute(Sender: TObject);
     procedure ModeMinorGridColorExecute(Sender: TObject);
+    procedure msgAreaDrawItem(Control: TWinControl; Index: Integer;
+      ARect: TRect; State: TOwnerDrawState);
     procedure pcInputChange(Sender: TObject);
     procedure PlotImageMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -440,6 +444,7 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure PlotImageResize(Sender: TObject);
     procedure PlotImageChange(Sender: TObject);
+    procedure PlotImagePrintMessage(Sender: TObject; Msg: String; MsgType: TMsgDlgType);
     procedure PlotImageShowProgress(Sender: TObject; Progress: Cardinal; Msg: String);
     procedure PlotImageHideProgress(Sender: TObject);
     procedure PlotImageRegionSelected(Sender: TObject; RegionRect: TRect);
@@ -537,6 +542,8 @@ type
     function GetYLabel: String;
     function GetImagePoint(Index: Integer): TCurvePoint;
     function GetPlotPoint(Index: Integer): TCurvePoint;
+
+    procedure PrintUserMessage(Msg: String; MsgType: TMsgDlgType = mtInformation);
 
     procedure UpdatePlotXScale;
     procedure UpdatePlotYScale;
@@ -1466,7 +1473,7 @@ end;
 procedure TDigitMainForm.FormCreate(Sender: TObject);
 begin
   GlobalWinRestorer := TWinRestorer.Create(GetIniName, WHATSAVE_ALL);
-  GlobalWinRestorer.RestoreWin(Self, [size, location, state]);
+  GlobalWinRestorer.RestoreWin(Self, [svSize, svLocation, svState]);
   RestorePreferences;
 
   UpdatingTable := False;
@@ -1484,6 +1491,7 @@ begin
     OnMouseLeave := @PlotImageMouseLeave;
     OnResize := @PlotImageResize;
     OnChange := @PlotImageChange;
+    OnPrintMessage := @PlotImagePrintMessage;
     OnShowProgress := @PlotImageShowProgress;
     OnHideProgress := @PlotImageHideProgress;
     OnRegionSelected := @PlotImageRegionSelected;
@@ -1525,7 +1533,7 @@ end;
 procedure TDigitMainForm.FormClose(Sender: TObject;
   var AAction: TCloseAction);
 begin
-  GlobalWinRestorer.SaveWin(Self, [size, location, state]);
+  GlobalWinRestorer.SaveWin(Self, [svSize, svLocation, svState]);
   GlobalWinRestorer.Free;
   SavePreferences;
 
@@ -1745,6 +1753,22 @@ begin
   TAction(Sender).Checked := True;
 end;
 
+procedure TDigitMainForm.msgAreaDrawItem(Control: TWinControl; Index: Integer;
+  ARect: TRect; State: TOwnerDrawState);
+var
+  lb: TListBox absolute Control;
+  ts: TTextStyle;
+begin
+  lb.Canvas.Brush.Color := TColor(PtrUInt(lb.Items.Objects[Index]));
+  lb.Canvas.FillRect(ARect);
+
+  ts := lb.Canvas.TextStyle;
+  ts.Alignment := taLeftJustify;
+  ts.Layout := tlCenter;
+  lb.Canvas.Pen.Color := clBlack;
+  lb.Canvas.TextRect(ARect, ARect.Left+2, ARect.Top, lb.Items[Index], ts);
+end;
+
 procedure TDigitMainForm.pcInputChange(Sender: TObject);
 begin
   // Update PlotImage state
@@ -1878,6 +1902,24 @@ begin
     else Result := TCurvePoint.Create(0, 0);
   end;
 end;
+
+procedure TDigitMainForm.PrintUserMessage(Msg: String; MsgType: TMsgDlgType = mtInformation);
+begin
+  case MsgType of
+    mtWarning:
+      msgArea.Items.InsertObject(0, TimeToStr(Time) + ': ' + Msg,
+                                 TObject(PtrUInt($B6FCFF)));
+    mtError:
+      msgArea.Items.InsertObject(0, TimeToStr(Time) + ': ' + Msg,
+                                 TObject(PtrUInt($9E8FFF)));
+    else
+      msgArea.Items.InsertObject(0, TimeToStr(Time) + ': ' + Msg,
+                                 TObject(PtrUInt(msgArea.Color)));
+  end;
+
+  msgArea.ItemIndex := 0;
+end;
+
 
 procedure TDigitMainForm.UpdatePlotXScale;
 begin
@@ -2592,6 +2634,11 @@ procedure TDigitMainForm.PlotImageChange(Sender: TObject);
 begin
   // Only update the table when the scale changes
   SetIsSaved(False, PlotImage.State in [piSetCurve, piSetScale]);
+end;
+
+procedure TDigitMainForm.PlotImagePrintMessage(Sender: TObject; Msg: String; MsgType: TMsgDlgType);
+begin
+  PrintUserMessage(Msg, MsgType);
 end;
 
 procedure TDigitMainForm.PlotImageShowProgress(Sender: TObject; Progress: Cardinal; Msg: String);

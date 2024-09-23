@@ -2524,13 +2524,13 @@ object DigitMainForm: TDigitMainForm
           TabOrder = 0
           object gbCoord: TGroupBox
             Left = 0
-            Height = 40
+            Height = 47
             Top = 0
             Width = 197
             Align = alTop
             AutoSize = True
             Caption = 'Coordinates'
-            ClientHeight = 13
+            ClientHeight = 20
             ClientWidth = 187
             Font.Color = clBlack
             Font.Height = -11
@@ -2563,7 +2563,7 @@ object DigitMainForm: TDigitMainForm
           object gbX: TGroupBox
             Left = 0
             Height = 68
-            Top = 40
+            Top = 47
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2655,7 +2655,7 @@ object DigitMainForm: TDigitMainForm
           object gbY: TGroupBox
             Left = 0
             Height = 66
-            Top = 108
+            Top = 115
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2745,7 +2745,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint1: TGroupBox
             Left = 0
             Height = 88
-            Top = 174
+            Top = 181
             Width = 197
             Align = alTop
             AutoSize = True
@@ -2997,7 +2997,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint2: TGroupBox
             Left = 0
             Height = 88
-            Top = 262
+            Top = 269
             Width = 197
             Align = alTop
             AutoSize = True
@@ -3248,7 +3248,7 @@ object DigitMainForm: TDigitMainForm
           object gbPoint3: TGroupBox
             Left = 0
             Height = 88
-            Top = 350
+            Top = 357
             Width = 197
             Align = alTop
             AutoSize = True
@@ -5213,6 +5213,33 @@ object DigitMainForm: TDigitMainForm
           Align = alClient
           OnMouseLeave = MainPlotMouseLeave
           OnMouseMove = MainPlotMouseMove
+        end
+      end
+      object tsLog: TTabSheet
+        Caption = 'Log'
+        ClientHeight = 380
+        ClientWidth = 792
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'System'
+        ImageIndex = 2
+        ParentFont = False
+        object msgArea: TListBox
+          Left = 0
+          Height = 380
+          Top = 0
+          Width = 792
+          Align = alClient
+          Font.CharSet = ANSI_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'MS Sans Serif'
+          ItemHeight = 0
+          ParentFont = False
+          ScrollWidth = 631
+          Style = lbOwnerDrawFixed
+          TabOrder = 0
+          OnDrawItem = msgAreaDrawItem
         end
       end
     end

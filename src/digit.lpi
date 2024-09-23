@@ -34,7 +34,7 @@
           <Version Value="11"/>
           <PathDelim Value="\"/>
           <Target>
-            <Filename Value="..\build\$(TargetOS)-$(TargetCPU)\digit"/>
+            <Filename Value="..\build\debug\$(TargetOS)-$(TargetCPU)\digit"/>
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
@@ -74,7 +74,7 @@
           <Version Value="11"/>
           <PathDelim Value="\"/>
           <Target>
-            <Filename Value="..\build\$(TargetOS)-$(TargetCPU)\digit"/>
+            <Filename Value="..\build\release\$(TargetOS)-$(TargetCPU)\digit"/>
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
@@ -195,7 +195,7 @@
     <Version Value="11"/>
     <PathDelim Value="\"/>
     <Target>
-      <Filename Value="..\build\$(TargetOS)-$(TargetCPU)\digit"/>
+      <Filename Value="..\build\debug\$(TargetOS)-$(TargetCPU)\digit"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
