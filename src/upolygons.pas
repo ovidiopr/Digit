@@ -26,6 +26,7 @@ type
     function GetVertex(Index: Integer): TCurvePoint;
     function GetEdge(Index: Integer): TCurvePoint;
     function GetCenter: TCurvePoint;
+    function GetArea: Double;
     function GetPolygonPoints(Zoom: Double): ArrayOfTPointF;
     function GetDrawPoints(Zoom: Double): ArrayOfTPointF; virtual;
     function GetRect(Zoom: Double): TRect;
@@ -67,6 +68,7 @@ type
     property Vertex[Index: Integer]: TCurvePoint read GetVertex write SetVertex; default;
     property Edge[Index: Integer]: TCurvePoint read GetEdge;
     property Center: TCurvePoint read GetCenter;
+    property Area: Double read GetArea;
     property PolygonPoints[Zoom: Double]: ArrayOfTPointF read GetPolygonPoints;
     property DrawPoints[Zoom: Double]: ArrayOfTPointF read GetDrawPoints;
     property Rect[Zoom: Double]: TRect read GetRect;
@@ -301,6 +303,24 @@ begin
   end;
 
   Result := TCurvePoint.Create(Cx/A/3, Cy/A/3);
+end;
+
+function TPolygon.GetArea: Double;
+var
+  i, j: Integer;
+begin
+  Result := 0;
+
+  j := NumVertices - 1;
+  for i := 0 to NumVertices - 1 do
+  begin
+    Result := Result + FVertices[j].X*FVertices[i].Y -
+                       FVertices[i].X*FVertices[j].Y;
+
+    j := i;
+  end;
+
+  Result := 0.5*Abs(Result);
 end;
 
 function TPolygon.GetPolygonPoints(Zoom: Double): ArrayOfTPointF;
