@@ -19,7 +19,7 @@ Among the options available to the user for digitization are *grid removal*, for
 
 **Digit** has numerous features, among which we can mention:
 
-* Can import almost most common image file formats, including GIF, BMP, PNG, JPEG and TIFF.
+* Can import most common image file formats, including GIF, BMP, PNG, JPEG and TIFF.
 * Images can be pasted from the clipboard.
 * Plots can be zoomed, cropped and rotated.
 * Can handle skewed, tilted or distorted plots.
@@ -32,7 +32,7 @@ Among the options available to the user for digitization are *grid removal*, for
 * Markers can be used also to guide the automatic digitization.
 * Multiple data sets can be defined.
 * Automatic sorting of data values.
-* Tools for resampling ans smoothing data values.
+* Tools for resampling and smoothing data values.
 * Data can be exported as CSV or via clipboard.
 * Digitizations are saved as XML files to facilitate interoperability with similar programs.
 * Available for Windows, Mac, Linux, and can be compiled on any OS with support for [Lazarus](https://www.lazarus-ide.org/) and [FPC](https://www.freepascal.org/).
