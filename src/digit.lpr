@@ -13,7 +13,7 @@ uses
   uabout {AboutBox},
   ucurves,
   urestore,
-  uchartscale, uoptions, uutils, uplotimage, ugrid, uscale;
+  uchartscale, uoptions, uutils, uplotimage, ugrid, uscale, upolygons;
 
 {$R *.res}
 

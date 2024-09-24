@@ -5,7 +5,7 @@ unit uscale;
 interface
 
 uses
-  Classes, SysUtils, Fgl, DOM, Math, ucoordinates, ucurves;
+  Classes, SysUtils, Fgl, DOM, Math, ucoordinates, upolygons, ucurves;
 
 type
   TScale = class(TObject)

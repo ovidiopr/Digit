@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Graphics, BGRABitmap, BGRABitmapTypes, BGRAreadTiff,
-  DOM, Base64, Math, uutils, ucoordinates, ucurves;
+  DOM, Base64, Math, uutils, ucoordinates, upolygons, ucurves;
 
 type
   TBoxArray = Array of TPlotQuad;

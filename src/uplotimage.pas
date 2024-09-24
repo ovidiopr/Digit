@@ -721,7 +721,7 @@ end;
 begin
   Spread := Plot.DigitCurve.Spread;
 
-  P := GetcurvePoint(0, 0);
+  P := TCurvePoint.Create(0, 0);
   NoPnts := 0;
   dY := 0;
   Result := False;
