@@ -16,6 +16,7 @@ type
     btnAccept: TBitBtn;
     btnCancel: TBitBtn;
     btnXAxisColor: TColorButton;
+    btnOriginColor: TColorButton;
     btnYAxisColor: TColorButton;
     btnBgndColor: TColorButton;
     cbbDigitType: TComboBox;
@@ -23,11 +24,13 @@ type
     chbShowXAxis: TCheckBox;
     chbShowYAxis: TCheckBox;
     gbX: TGroupBox;
+    gbX1: TGroupBox;
     gbY: TGroupBox;
     lblInterpType: TLabel;
     lblDigitType: TLabel;
     lblXAxis: TLabel;
     lblBgndColor: TLabel;
+    lblOrigin: TLabel;
     lblYAxis: TLabel;
     pcScale: TPageControl;
     pnButtons: TPanel;
@@ -71,6 +74,7 @@ begin
 
   Result.ShowXAxis := chbShowXAxis.Checked;
   Result.ShowYAxis := chbShowYAxis.Checked;
+  Result.OriginColor := btnOriginColor.ButtonColor;
   Result.XAxisColor := btnXAxisColor.ButtonColor;
   Result.YAxisColor := btnYAxisColor.ButtonColor;
 end;
@@ -98,6 +102,7 @@ begin
 
   chbShowXAxis.Checked := Value.ShowXAxis;
   chbShowYAxis.Checked := Value.ShowYAxis;
+  btnOriginColor.ButtonColor := Value.OriginColor;
   btnXAxisColor.ButtonColor := Value.XAxisColor;
   btnYAxisColor.ButtonColor := Value.YAxisColor;
 end;

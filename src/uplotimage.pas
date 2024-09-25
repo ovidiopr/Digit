@@ -2668,7 +2668,7 @@ begin
 
       FAxesMarkers[1] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'+', Options.YAxisColor, 3),
                                         Zoom*Plot.Scale.ImagePoint[1], True);
-      FAxesMarkers[2] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'+', clGreen, 3),
+      FAxesMarkers[2] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'+', Options.OriginColor, 3),
                                         Zoom*Plot.Scale.ImagePoint[2], True);
       FAxesMarkers[3] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),'+', Options.XAxisColor, 3),
                                         Zoom*Plot.Scale.ImagePoint[3], True);

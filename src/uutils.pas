@@ -25,6 +25,7 @@ type
 
     ShowXAxis: Boolean;
     ShowYAxis: Boolean;
+    OriginColor: TColor;
     XAxisColor: TColor;
     YAxisColor: TColor;
 
@@ -425,6 +426,7 @@ begin
 
   po.ShowXAxis := True;
   po.ShowYAxis := True;
+  po.OriginColor := clGreen;
   po.XAxisColor := clBlack;
   po.YAxisColor := clRed;
 end;
@@ -442,6 +444,7 @@ begin
 
     ShowXAxis := IniFile.ReadBool('Plot', 'ShowXAxis', ShowXAxis);
     ShowYAxis := IniFile.ReadBool('Plot', 'ShowYAxis', ShowYAxis);
+    OriginColor := IniFile.ReadInteger('Plot', 'OriginColor', OriginColor);
     XAxisColor := IniFile.ReadInteger('Plot', 'XAxisColor', XAxisColor);
     YAxisColor := IniFile.ReadInteger('Plot', 'YAxisColor', YAxisColor);
   finally
@@ -462,6 +465,7 @@ begin
 
     IniFile.WriteBool('Plot', 'ShowXAxis', ShowXAxis);
     IniFile.WriteBool('Plot', 'ShowYAxis', ShowYAxis);
+    IniFile.WriteInteger('Plot', 'OriginColor', OriginColor);
     IniFile.WriteInteger('Plot', 'XAxisColor', XAxisColor);
     IniFile.WriteInteger('Plot', 'YAxisColor', YAxisColor);
   finally
