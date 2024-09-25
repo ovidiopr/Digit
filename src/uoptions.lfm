@@ -1,13 +1,13 @@
 object OptionsDlg: TOptionsDlg
   Left = 571
-  Height = 261
+  Height = 305
   Top = 312
-  Width = 298
+  Width = 305
   AutoSize = True
   BorderStyle = bsDialog
   Caption = 'Plot options'
-  ClientHeight = 261
-  ClientWidth = 298
+  ClientHeight = 305
+  ClientWidth = 305
   Position = poMainFormCenter
   LCLVersion = '3.4.0.0'
   object pnButtons: TPanel
@@ -17,11 +17,12 @@ object OptionsDlg: TOptionsDlg
     AnchorSideRight.Control = pcScale
     AnchorSideRight.Side = asrBottom
     Left = 0
-    Height = 45
-    Top = 216
-    Width = 298
-    ClientHeight = 45
-    ClientWidth = 298
+    Height = 39
+    Top = 255
+    Width = 309
+    Anchors = [akTop, akLeft, akRight]
+    ClientHeight = 39
+    ClientWidth = 309
     ParentFont = False
     TabOrder = 0
     object btnAccept: TBitBtn
@@ -31,10 +32,10 @@ object OptionsDlg: TOptionsDlg
       AnchorSideRight.Side = asrBottom
       AnchorSideBottom.Control = pnButtons
       AnchorSideBottom.Side = asrBottom
-      Left = 209
-      Height = 33
+      Left = 225
+      Height = 27
       Top = 6
-      Width = 83
+      Width = 78
       Anchors = [akTop, akRight, akBottom]
       AutoSize = True
       BorderSpacing.Left = 5
@@ -54,10 +55,10 @@ object OptionsDlg: TOptionsDlg
       AnchorSideRight.Control = btnAccept
       AnchorSideBottom.Control = pnButtons
       AnchorSideBottom.Side = asrBottom
-      Left = 122
-      Height = 33
+      Left = 143
+      Height = 27
       Top = 6
-      Width = 82
+      Width = 77
       Anchors = [akTop, akRight, akBottom]
       AutoSize = True
       BorderSpacing.Left = 5
@@ -77,9 +78,9 @@ object OptionsDlg: TOptionsDlg
       AnchorSideBottom.Control = pnButtons
       AnchorSideBottom.Side = asrBottom
       Left = 6
-      Height = 33
+      Height = 27
       Top = 6
-      Width = 89
+      Width = 85
       Anchors = [akTop, akLeft, akBottom]
       AutoSize = True
       BorderSpacing.Left = 5
@@ -92,30 +93,32 @@ object OptionsDlg: TOptionsDlg
     end
   end
   object pcScale: TPageControl
+    AnchorSideRight.Control = pnButtons
+    AnchorSideRight.Side = asrBottom
     Left = 0
-    Height = 216
+    Height = 255
     Top = 0
-    Width = 298
-    ActivePage = tsAxes
+    Width = 309
+    ActivePage = tsDefaults
+    AutoSize = True
     Font.Height = -11
     ParentFont = False
-    TabIndex = 1
+    TabIndex = 0
     TabOrder = 1
     object tsDefaults: TTabSheet
       Caption = 'Defaults'
-      ClientHeight = 190
-      ClientWidth = 290
+      ClientHeight = 219
+      ClientWidth = 303
       ParentFont = False
       object lblDigitType: TLabel
         AnchorSideLeft.Control = tsDefaults
         AnchorSideTop.Control = cbbDigitType
         AnchorSideTop.Side = asrCenter
-        AnchorSideBottom.Control = cbbDigitType
         AnchorSideBottom.Side = asrBottom
         Left = 5
         Height = 13
         Top = 7
-        Width = 63
+        Width = 68
         BorderSpacing.Left = 5
         Caption = 'Digitization:'
         Font.Height = -11
@@ -128,19 +131,18 @@ object OptionsDlg: TOptionsDlg
         AnchorSideLeft.Control = lblDigitType
         AnchorSideLeft.Side = asrBottom
         AnchorSideTop.Control = tsDefaults
-        AnchorSideRight.Control = tsDefaults
         AnchorSideRight.Side = asrBottom
-        Left = 73
-        Height = 21
+        Left = 78
+        Height = 20
         Top = 3
-        Width = 212
-        Anchors = [akTop, akLeft, akRight]
+        Width = 220
+        AutoSize = False
         BorderSpacing.Left = 5
         BorderSpacing.Top = 3
         BorderSpacing.Right = 5
         Font.Height = -11
         Font.Style = [fsBold]
-        ItemHeight = 13
+        ItemHeight = 26
         ItemIndex = 0
         Items.Strings = (
           'Following line'
@@ -156,12 +158,11 @@ object OptionsDlg: TOptionsDlg
         AnchorSideLeft.Control = tsDefaults
         AnchorSideTop.Control = cbbInterpType
         AnchorSideTop.Side = asrCenter
-        AnchorSideBottom.Control = cbbInterpType
         AnchorSideBottom.Side = asrBottom
         Left = 5
         Height = 13
-        Top = 31
-        Width = 71
+        Top = 30
+        Width = 76
         BorderSpacing.Left = 5
         Caption = 'Interpolation:'
         Font.Height = -11
@@ -177,17 +178,17 @@ object OptionsDlg: TOptionsDlg
         AnchorSideTop.Side = asrBottom
         AnchorSideRight.Control = tsDefaults
         AnchorSideRight.Side = asrBottom
-        Left = 81
-        Height = 21
-        Top = 27
-        Width = 204
+        Left = 86
+        Height = 20
+        Top = 26
+        Width = 212
         Anchors = [akTop, akLeft, akRight]
         BorderSpacing.Left = 5
         BorderSpacing.Top = 3
         BorderSpacing.Right = 5
         Font.Height = -11
         Font.Style = [fsBold]
-        ItemHeight = 13
+        ItemHeight = 26
         ItemIndex = 0
         Items.Strings = (
           'B-Splines'
@@ -206,11 +207,10 @@ object OptionsDlg: TOptionsDlg
         AnchorSideTop.Side = asrCenter
         Left = 5
         Height = 13
-        Top = 57
-        Width = 95
+        Top = 55
+        Width = 102
         BorderSpacing.Left = 5
         Caption = 'Background color:'
-        Font.Color = clBlack
         Font.Height = -11
         Font.Style = [fsBold]
         ParentColor = False
@@ -223,10 +223,10 @@ object OptionsDlg: TOptionsDlg
         AnchorSideTop.Side = asrBottom
         AnchorSideRight.Control = tsDefaults
         AnchorSideRight.Side = asrBottom
-        Left = 105
+        Left = 112
         Height = 25
-        Top = 51
-        Width = 180
+        Top = 49
+        Width = 186
         Anchors = [akTop, akLeft, akRight]
         BorderSpacing.Left = 5
         BorderSpacing.Top = 3
@@ -235,35 +235,31 @@ object OptionsDlg: TOptionsDlg
         BorderWidth = 2
         ButtonColorSize = 16
         ButtonColor = clWhite
-        Font.Color = clBlack
         Font.Height = -11
-        Font.Name = 'Default'
         ParentFont = False
       end
     end
     object tsAxes: TTabSheet
       Caption = 'Axes'
-      ClientHeight = 190
-      ClientWidth = 290
+      ClientHeight = 219
+      ClientWidth = 303
       ParentFont = False
       object gbX: TGroupBox
-        AnchorSideLeft.Control = tsDefaults
         AnchorSideTop.Control = gbX1
         AnchorSideTop.Side = asrBottom
-        AnchorSideRight.Control = tsDefaults
         AnchorSideRight.Side = asrBottom
         Left = 2
-        Height = 66
-        Top = 52
-        Width = 286
+        Height = 76
+        Top = 61
+        Width = 299
         Anchors = [akTop, akLeft, akRight]
         AutoSize = True
         BorderSpacing.Left = 2
         BorderSpacing.Top = 3
         BorderSpacing.Right = 2
         Caption = 'X axis'
-        ClientHeight = 48
-        ClientWidth = 282
+        ClientHeight = 49
+        ClientWidth = 289
         Font.Height = -11
         Font.Style = [fsBold]
         ParentFont = False
@@ -274,10 +270,10 @@ object OptionsDlg: TOptionsDlg
           AnchorSideTop.Side = asrCenter
           Left = 5
           Height = 13
-          Top = 29
-          Width = 54
+          Top = 30
+          Width = 34
           BorderSpacing.Left = 5
-          Caption = 'Axis color:'
+          Caption = 'Color:'
           Font.Color = clBlack
           Font.Height = -11
           Font.Style = [fsBold]
@@ -291,10 +287,10 @@ object OptionsDlg: TOptionsDlg
           AnchorSideTop.Side = asrBottom
           AnchorSideRight.Control = gbX
           AnchorSideRight.Side = asrBottom
-          Left = 64
+          Left = 44
           Height = 25
-          Top = 23
-          Width = 213
+          Top = 24
+          Width = 240
           Anchors = [akTop, akLeft, akRight]
           BorderSpacing.Left = 5
           BorderSpacing.Top = 3
@@ -313,9 +309,9 @@ object OptionsDlg: TOptionsDlg
           AnchorSideRight.Control = gbX
           AnchorSideRight.Side = asrBottom
           Left = 5
-          Height = 17
+          Height = 18
           Top = 3
-          Width = 272
+          Width = 279
           Anchors = [akTop, akLeft, akRight]
           BorderSpacing.Left = 5
           BorderSpacing.Top = 3
@@ -325,15 +321,13 @@ object OptionsDlg: TOptionsDlg
         end
       end
       object gbY: TGroupBox
-        AnchorSideLeft.Control = tsDefaults
         AnchorSideTop.Control = gbX
         AnchorSideTop.Side = asrBottom
-        AnchorSideRight.Control = tsDefaults
         AnchorSideRight.Side = asrBottom
         Left = 2
-        Height = 66
-        Top = 121
-        Width = 286
+        Height = 76
+        Top = 140
+        Width = 299
         Anchors = [akTop, akLeft, akRight]
         AutoSize = True
         BorderSpacing.Left = 2
@@ -341,8 +335,8 @@ object OptionsDlg: TOptionsDlg
         BorderSpacing.Right = 2
         BorderSpacing.Bottom = 3
         Caption = 'Y axis'
-        ClientHeight = 48
-        ClientWidth = 282
+        ClientHeight = 49
+        ClientWidth = 289
         Font.Height = -11
         Font.Style = [fsBold]
         ParentFont = False
@@ -350,9 +344,9 @@ object OptionsDlg: TOptionsDlg
         object chbShowYAxis: TCheckBox
           AnchorSideRight.Side = asrBottom
           Left = 5
-          Height = 17
+          Height = 18
           Top = 3
-          Width = 272
+          Width = 279
           Anchors = [akTop, akLeft, akRight]
           BorderSpacing.Left = 5
           BorderSpacing.Top = 3
@@ -365,10 +359,10 @@ object OptionsDlg: TOptionsDlg
           AnchorSideTop.Side = asrCenter
           Left = 5
           Height = 13
-          Top = 29
-          Width = 54
+          Top = 30
+          Width = 34
           BorderSpacing.Left = 5
-          Caption = 'Axis color:'
+          Caption = 'Color:'
           Font.Color = clBlack
           Font.Height = -11
           Font.Style = [fsBold]
@@ -381,10 +375,10 @@ object OptionsDlg: TOptionsDlg
           AnchorSideTop.Control = chbShowYAxis
           AnchorSideTop.Side = asrBottom
           AnchorSideRight.Side = asrBottom
-          Left = 64
+          Left = 44
           Height = 25
-          Top = 23
-          Width = 213
+          Top = 24
+          Width = 240
           Anchors = [akTop, akLeft, akRight]
           BorderSpacing.Left = 5
           BorderSpacing.Top = 3
@@ -399,22 +393,20 @@ object OptionsDlg: TOptionsDlg
         end
       end
       object gbX1: TGroupBox
-        AnchorSideLeft.Control = tsDefaults
         AnchorSideTop.Control = tsAxes
-        AnchorSideRight.Control = tsDefaults
         AnchorSideRight.Side = asrBottom
         Left = 4
-        Height = 46
+        Height = 55
         Top = 3
-        Width = 286
+        Width = 299
         Anchors = [akTop, akLeft, akRight]
         AutoSize = True
         BorderSpacing.Left = 2
         BorderSpacing.Top = 3
         BorderSpacing.Right = 2
-        Caption = 'X axis'
+        Caption = 'Origin'
         ClientHeight = 28
-        ClientWidth = 282
+        ClientWidth = 289
         Font.Height = -11
         Font.Style = [fsBold]
         ParentFont = False
@@ -426,9 +418,9 @@ object OptionsDlg: TOptionsDlg
           Left = 5
           Height = 13
           Top = 9
-          Width = 54
+          Width = 34
           BorderSpacing.Left = 5
-          Caption = 'Axis color:'
+          Caption = 'Color:'
           Font.Color = clBlack
           Font.Height = -11
           Font.Style = [fsBold]
@@ -441,10 +433,10 @@ object OptionsDlg: TOptionsDlg
           AnchorSideTop.Control = gbX1
           AnchorSideRight.Control = gbX1
           AnchorSideRight.Side = asrBottom
-          Left = 64
+          Left = 44
           Height = 25
           Top = 3
-          Width = 213
+          Width = 240
           Anchors = [akTop, akLeft, akRight]
           BorderSpacing.Left = 5
           BorderSpacing.Top = 3
