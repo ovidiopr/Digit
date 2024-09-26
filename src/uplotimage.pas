@@ -689,7 +689,7 @@ begin
       if CancelAction then
         OnPrintMessage(Self, 'Action cancelled by user', mtWarning)
       else
-        OnPrintMessage(Self, 'Done', mtInformation);
+        OnPrintMessage(Self, 'Done', mtConfirmation);
 
     Plot.DigitCurve.ValidPoints := not CancelAction;
 
@@ -904,7 +904,7 @@ begin
     if CancelAction then
       OnPrintMessage(Self, 'Action cancelled by user', mtWarning)
     else
-      OnPrintMessage(Self, 'Done', mtInformation);
+      OnPrintMessage(Self, 'Done', mtConfirmation);
 
   SortCurve;
 
@@ -1011,7 +1011,7 @@ begin
       if CancelAction then
         OnPrintMessage(Self, 'Action cancelled by user', mtWarning)
       else
-        OnPrintMessage(Self, 'Done', mtInformation);
+        OnPrintMessage(Self, 'Done', mtConfirmation);
 
     SortCurve;
     //Curve.Interpolate(Curve.Count, itpBSpline);
@@ -1189,7 +1189,7 @@ begin
         if CancelAction then
           OnPrintMessage(Self, 'Action cancelled by user', mtWarning)
         else
-          OnPrintMessage(Self, 'Done', mtInformation);
+          OnPrintMessage(Self, 'Done', mtConfirmation);
     finally
       NewPoints.Free;
       Island.Free;
@@ -1266,7 +1266,7 @@ begin
         if CancelAction then
           OnPrintMessage(Self, 'Action cancelled by user', mtWarning)
         else
-          OnPrintMessage(Self, 'Done', mtInformation);
+          OnPrintMessage(Self, 'Done', mtConfirmation);
     finally
       NewPoints.Free;
       Island.Free;
