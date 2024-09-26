@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Graphics, BGRABitmap, BGRABitmapTypes, BGRAreadTiff,
-  DOM, Base64, Math, uutils, ucoordinates, upolygons, ucurves;
+  DOM, Base64, Math, System.UITypes, uutils, ucoordinates, upolygons, ucurves;
 
 type
   TBoxArray = Array of TPlotQuad;
@@ -25,6 +25,10 @@ type
 
     FIsValid: Boolean;
     FIsActive: Boolean;
+
+    FOnPrintMessage: TPrintMessageEvent;
+    FOnShowProgress: TShowProgressEvent;
+    FOnHideProgress: THideProgressEvent;
 
     FOnChange: TNotifyEvent;
   private
@@ -66,6 +70,9 @@ type
     property IsActive: Boolean read FIsActive write SetIsActive;
   published
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    property OnPrintMessage: TPrintMessageEvent read FOnPrintMessage write FOnPrintMessage;
+    property OnShowProgress: TShowProgressEvent read FOnShowProgress write FOnShowProgress;
+    property OnHideProgress: THideProgressEvent read FOnHideProgress write FOnHideProgress;
   end;
 
 implementation
@@ -261,6 +268,14 @@ var
   max_count_vert: Integer;
 begin
   try
+    // Notify the parent that it must show the progress bar
+    if assigned(OnShowProgress) then
+      OnShowProgress(Self, 0, 'Removing Cartesian grid...');
+
+    // Update the log
+    if assigned(OnPrintMessage) then
+      OnPrintMessage(Self, 'Removing Cartesian grid...', mtInformation);
+
     C1 := ColorToRGB(MajorGridColor);
     C2 := ColorToRGB(MinorGridColor);
 
@@ -291,6 +306,10 @@ begin
       end;
     end;
 
+    // Notify the parent that it must update the progress bar
+    if assigned(OnShowProgress) then
+      OnShowProgress(Self, 10, 'Removing Cartesian grid...');
+
     // Cache some reusable values
     num_thetas := 1 + Round(180/angle_step);
     SetLength(sin_theta, num_thetas);
@@ -303,6 +322,10 @@ begin
       cos_theta[t_idx] := cos(theta*PI/180.0);
       theta_count[t_idx] := 0;
     end;
+
+    // Notify the parent that it must update the progress bar
+    if assigned(OnShowProgress) then
+      OnShowProgress(Self, 20, 'Removing Cartesian grid...');
 
     // Hough accumulator array of theta vs rho
     SetLength(accumulator, 2*diag_len, num_thetas);
@@ -336,6 +359,10 @@ begin
             end;
           end;
 
+    // Notify the parent that it must update the progress bar
+    if assigned(OnShowProgress) then
+      OnShowProgress(Self, 40, 'Removing Cartesian grid...');
+
     // Histogram of angles
     for i := Low(accumulator) to High(accumulator) do
       for t_idx := Low(accumulator[Low(accumulator)]) to High(accumulator[Low(accumulator)]) do
@@ -351,6 +378,10 @@ begin
           if (accumulator[i, t_idx] > Threshold*max_count_vert) then
             inc(theta_count[t_idx]);
         end;
+
+    // Notify the parent that it must update the progress bar
+    if assigned(OnShowProgress) then
+      OnShowProgress(Self, 55, 'Removing Cartesian grid...');
 
     // Determine angle for horizontal and vertical grid lines
     hori_count := 0;
@@ -383,6 +414,10 @@ begin
             end;
           end;
         end;
+
+    // Notify the parent that it must update the progress bar
+    if assigned(OnShowProgress) then
+      OnShowProgress(Self, 70, 'Removing Cartesian grid...');
 
     //Draw all the points in the mask
     try
@@ -426,6 +461,10 @@ begin
           end;
         end;
 
+        // Notify the parent that it must update the progress bar
+        if assigned(OnShowProgress) then
+          OnShowProgress(Self, 85, 'Removing Cartesian grid...');
+
         // Draw vertical lines
         if (accumulator[i, vert_index] > Threshold*max_count_vert) then
         begin
@@ -451,6 +490,10 @@ begin
             end;
           end;
         end;
+
+        // Notify the parent that it must update the progress bar
+        if assigned(OnShowProgress) then
+          OnShowProgress(Self, 100, 'Removing Cartesian grid...');
       end;
     finally
       Mask.InvalidateBitmap;
@@ -459,6 +502,14 @@ begin
       IsActive := True;
     end;
   finally
+    // Notify the parent that it must hide the progress bar
+    if assigned(OnHideProgress) then
+      OnHideProgress(Self);
+
+    // Update the log
+    if assigned(OnPrintMessage) then
+      OnPrintMessage(Self, 'Done', mtConfirmation);
+
     // Release all the dynamic arrays
     SetLength(grid_points, 0);
     SetLength(sin_theta, 0);
@@ -499,6 +550,14 @@ var
   radius_max_count: Integer;
 begin
   try
+    // Notify the parent that it must show the progress bar
+    if assigned(OnShowProgress) then
+      OnShowProgress(Self, 0, 'Removing polar grid...');
+
+    // Update the log
+    if assigned(OnPrintMessage) then
+      OnPrintMessage(Self, 'Removing polar grid...', mtInformation);
+
     C1 := ColorToRGB(MajorGridColor);
     C2 := ColorToRGB(MinorGridColor);
 
@@ -530,6 +589,10 @@ begin
       end;
     end;
 
+    // Notify the parent that it must update the progress bar
+    if assigned(OnShowProgress) then
+      OnShowProgress(Self, 10, 'Removing polar grid...');
+
     // Cache some reusable values
     num_thetas := 1 + Round(180/angle_step);
     SetLength(sin_theta, num_thetas);
@@ -540,6 +603,10 @@ begin
       sin_theta[t_idx] := sin(theta*PI/180.0);
       cos_theta[t_idx] := cos(theta*PI/180.0);
     end;
+
+    // Notify the parent that it must update the progress bar
+    if assigned(OnShowProgress) then
+      OnShowProgress(Self, 20, 'Removing polar grid...');
 
     // Hough accumulator array of theta vs rho
     SetLength(accumulator, 2*diag_len, num_thetas);
@@ -562,6 +629,10 @@ begin
               max_count := accumulator[rho, t_idx];
           end;
 
+    // Notify the parent that it must update the progress bar
+    if assigned(OnShowProgress) then
+      OnShowProgress(Self, 40, 'Removing polar grid...');
+
     // Find circles (all should be concentric, and centered in the origin)
     SetLength(accum_radius, diag_len);
     max_radius_count := 0;
@@ -580,6 +651,10 @@ begin
             max_radius_count := accum_radius[rho];
           end;
         end;
+
+    // Notify the parent that it must update the progress bar
+    if assigned(OnShowProgress) then
+      OnShowProgress(Self, 60, 'Removing polar grid...');
 
     //Draw all the points in the mask
     try
@@ -655,6 +730,10 @@ begin
           end;
         end;
 
+      // Notify the parent that it must update the progress bar
+      if assigned(OnShowProgress) then
+        OnShowProgress(Self, 80, 'Removing polar grid...');
+
       // Now, draw the circles
       for i := 1 to High(accum_radius) do
       begin
@@ -682,6 +761,10 @@ begin
             end;
           end;
       end;
+
+      // Notify the parent that it must update the progress bar
+      if assigned(OnShowProgress) then
+        OnShowProgress(Self, 100, 'Removing polar grid...');
     finally
       Mask.InvalidateBitmap;
 
@@ -689,6 +772,14 @@ begin
       IsActive := True;
     end;
   finally
+    // Notify the parent that it must hide the progress bar
+    if assigned(OnHideProgress) then
+      OnHideProgress(Self);
+
+    // Update the log
+    if assigned(OnPrintMessage) then
+      OnPrintMessage(Self, 'Done', mtConfirmation);
+
     // Release all the dynamic arrays
     SetLength(grid_points, 0);
     SetLength(sin_theta, 0);
@@ -723,6 +814,14 @@ var
 
 begin
   try
+    // Notify the parent that it must show the progress bar
+    if assigned(OnShowProgress) then
+      OnShowProgress(Self, 0, 'Rebuilding curve...');
+
+    // Update the log
+    if assigned(OnPrintMessage) then
+      OnPrintMessage(Self, 'Rebuilding curve...', mtInformation);
+
     C1 := ColorToRGB(CurveColor);
 
     R1 := Red(C1);
@@ -750,6 +849,7 @@ begin
     right_pixels := TIsland.Create;
 
     for i := 0 to PlotImg.Width - 1 do
+    begin
       for j := 0 to PlotImg.Height - 1 do
       begin
         top_pixels.Clear;
@@ -810,11 +910,6 @@ begin
           for k := 0 to left_pixels.Count - 1 do
             for l := 0 to right_pixels.Count - 1 do
             begin
-              //ShowMessage(IntToStr(k) + ', ' + IntToStr(l) + ', ' + IntToStr(i) + ', ' + IntToStr(j));
-              //ShowMessage(FloatToStr(left_pixels.Point[k].X) + ', ' +
-              //            FloatToStr(left_pixels.Point[k].Y) + ', ' +
-              //            FloatToStr(right_pixels.Point[l].X) + ', ' +
-              //            FloatToStr(right_pixels.Point[l].Y));
               Mask.DrawLine(Round(left_pixels.Point[k].X),
                             Round(left_pixels.Point[k].Y),
                             Round(right_pixels.Point[l].X),
@@ -824,7 +919,21 @@ begin
             end;
         end;
       end;
+
+      // Notify the parent that it must update the progress bar
+      if assigned(OnShowProgress) then
+        OnShowProgress(Self, Round(100*(i + 1)/PlotImg.Width),
+                                   'Rebuilding curve...');
+    end;
   finally
+    // Notify the parent that it must hide the progress bar
+    if assigned(OnHideProgress) then
+      OnHideProgress(Self);
+
+    // Update the log
+    if assigned(OnPrintMessage) then
+      OnPrintMessage(Self, 'Done', mtConfirmation);
+
     SetLength(curve_points, 0);
 
     top_pixels.Free;

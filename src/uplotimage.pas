@@ -43,9 +43,6 @@ type
 
   TMarkerList = specialize TFPGObjectList<TMarker>;
 
-  TPrintMessageEvent = procedure(Sender: TObject; Msg: String; MsgType: TMsgDlgType) of Object;
-  TShowProgressEvent = procedure(Sender: TObject; Progress: Cardinal; Msg: String) of Object;
-  THideProgressEvent = procedure(Sender: TObject) of Object;
   TSelectRegionEvent = procedure(Sender: TObject; RegionRect: TRect) of Object;
   TStateChangeEvent = procedure(Sender: TObject; NewState: TPlotImageState) of Object;
   TMarkerDraggedEvent = procedure(Sender: TObject; Marker: TMarker; Zoom: Boolean) of Object;

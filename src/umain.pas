@@ -1511,6 +1511,10 @@ begin
     OnActiveCurveChanging := @PlotImageActiveCurveChanging;
     OnActiveCurveChanged := @PlotImageActiveCurveChanged;
 
+    GridMask.OnPrintMessage := @PlotImagePrintMessage;
+    GridMask.OnShowProgress := @PlotImageShowProgress;
+    GridMask.OnHideProgress := @PlotImageHideProgress;
+
     Options.LoadFromFile(GetIniName);
   end;
 

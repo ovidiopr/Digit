@@ -6,7 +6,8 @@ unit uutils;
 interface
 
 uses
-  Classes, SysUtils, Graphics, IniFiles, typ, ipf, spe, Math, inv, ucoordinates;
+  Classes, SysUtils, Graphics, IniFiles, typ, ipf, spe, Math, inv,
+  System.UITypes, ucoordinates;
 
 type
   THough1DMap = Array of LongWord;
@@ -16,6 +17,10 @@ type
 
   TInterpolation = (itpBSpline, itpSpline, itpLinear, itpPoly);
   TDigitization = (digLine, digColor, digMarkers);
+
+  TPrintMessageEvent = procedure(Sender: TObject; Msg: String; MsgType: TMsgDlgType) of Object;
+  TShowProgressEvent = procedure(Sender: TObject; Progress: Cardinal; Msg: String) of Object;
+  THideProgressEvent = procedure(Sender: TObject) of Object;
 
   TPlotOptions = record
     BgndColor: TColor;
@@ -62,26 +67,6 @@ begin
   //Check for the trivial case first
   Result := (C1 = C2) or AreSimilar(Red(C1), Green(C1), Blue(C1),
                                     Red(C2), Green(C2), Blue(C2), Tolerance);
-end;
-
-function WeightedAverage(X1, X2, Coeff: Double): Double;
-begin
-  Result := X1*(1 - Coeff) + X2*Coeff;
-end;
-
-function NextNumberSeq(const Points: Array of TCurvePoint; var StartIdx, EndIdx: Integer): Boolean;
-begin
-  StartIdx := EndIdx + 2;
-  while (StartIdx <= High(Points)) and
-        (IsNan(Points[StartIdx].X) or
-         IsNan(Points[StartIdx].Y)) do
-    inc(StartIdx);
-  EndIdx := StartIdx;
-  while (EndIdx + 1 <= High(Points)) and
-    not (IsNan(Points[EndIdx + 1].X) or
-         IsNan(Points[EndIdx + 1].y)) do
-    inc(EndIdx);
-  Result := StartIdx <= High(Points);
 end;
 
 function Polynomial(Points: Array of TCurvePoint; Degree: Integer; Xval: FloatArray): FloatArray;
@@ -188,6 +173,26 @@ begin
       SetLength(d2s, 0);
     end;
   end;
+end;
+
+function WeightedAverage(X1, X2, Coeff: Double): Double;
+begin
+  Result := X1*(1 - Coeff) + X2*Coeff;
+end;
+
+function NextNumberSeq(const Points: Array of TCurvePoint; var StartIdx, EndIdx: Integer): Boolean;
+begin
+  StartIdx := EndIdx + 2;
+  while (StartIdx <= High(Points)) and
+        (IsNan(Points[StartIdx].X) or
+         IsNan(Points[StartIdx].Y)) do
+    inc(StartIdx);
+  EndIdx := StartIdx;
+  while (EndIdx + 1 <= High(Points)) and
+    not (IsNan(Points[EndIdx + 1].X) or
+         IsNan(Points[EndIdx + 1].y)) do
+    inc(EndIdx);
+  Result := StartIdx <= High(Points);
 end;
 
 // This function has been adapted from the function 'TBSplineSeries.Calculate'
