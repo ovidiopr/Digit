@@ -25,6 +25,8 @@ type
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
+    LogClear: TAction;
+    LogSave: TAction;
     GridMergeMask: TAction;
     EditZoomResize: TAction;
     EditZoomResizeItem: TMenuItem;
@@ -34,12 +36,16 @@ type
     PlotNameItem: TMenuItem;
     PlotDeleteItem: TMenuItem;
     PlotAddItem: TMenuItem;
+    SaveLogDlg: TSaveDialog;
     ScrollBox: TScrollBox;
     Separator2: TMenuItem;
     btnCancel: TToolButton;
     sep08: TToolButton;
     btnResize: TToolButton;
     btnMergeMask: TToolButton;
+    sep10: TToolButton;
+    btnClearLog: TToolButton;
+    btnSaveLog: TToolButton;
     ToolPlotDelete: TAction;
     ToolPlotName: TAction;
     ToolPlotAdd: TAction;
@@ -428,6 +434,8 @@ type
       var CanSelect: Boolean);
     procedure leDataValidateEntry(Sender: TObject; aCol, aRow: Integer;
       const OldValue: string; var NewValue: String);
+    procedure LogClearExecute(Sender: TObject);
+    procedure LogSaveExecute(Sender: TObject);
     procedure MainPlotMouseLeave(Sender: TObject);
     procedure ModeBackgroundColorExecute(Sender: TObject);
     procedure ModeMajorGridColorExecute(Sender: TObject);
@@ -1730,6 +1738,17 @@ begin
   end;
 end;
 
+procedure TDigitMainForm.LogClearExecute(Sender: TObject);
+begin
+  msgArea.Clear;
+end;
+
+procedure TDigitMainForm.LogSaveExecute(Sender: TObject);
+begin
+  if SaveLogDlg.Execute then
+    msgArea.Items.SaveToFile(SaveLogDlg.FileName);
+end;
+
 procedure TDigitMainForm.MainPlotMouseLeave(Sender: TObject);
 begin
   StatusBar.Panels[2].Text := '';
@@ -1905,19 +1924,21 @@ end;
 
 procedure TDigitMainForm.PrintUserMessage(Msg: String; MsgType: TMsgDlgType = mtInformation);
 begin
-  case MsgType of
-    mtWarning:
-      msgArea.Items.InsertObject(0, TimeToStr(Time) + ': ' + Msg,
-                                 TObject(PtrUInt($B6FCFF)));
-    mtError:
-      msgArea.Items.InsertObject(0, TimeToStr(Time) + ': ' + Msg,
-                                 TObject(PtrUInt($9E8FFF)));
-    else
-      msgArea.Items.InsertObject(0, TimeToStr(Time) + ': ' + Msg,
-                                 TObject(PtrUInt(msgArea.Color)));
+  with msgArea.Items do
+  begin
+    case MsgType of
+      mtWarning: // Amarillo $07FCFD
+        AddObject(TimeToStr(Time) + ': ' + Msg, TObject(PtrUInt($07FCFD)));
+      mtError:  // Rojo $5B53FF
+        AddObject(TimeToStr(Time) + ': ' + Msg, TObject(PtrUInt($5B53FF)));
+      mtConfirmation:  // Verde $51D450
+        AddObject(TimeToStr(Time) + ': ' + Msg, TObject(PtrUInt($51D450)));
+      else
+        AddObject(TimeToStr(Time) + ': ' + Msg, TObject(PtrUInt(msgArea.Color)));
+    end;
   end;
 
-  msgArea.ItemIndex := 0;
+  msgArea.ItemIndex := msgArea.Items.Count - 1;
 end;
 
 
