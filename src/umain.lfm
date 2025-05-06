@@ -1231,7 +1231,7 @@ object DigitMainForm: TDigitMainForm
   OnDropFiles = FormDropFiles
   OnShow = FormShow
   Position = poDefault
-  LCLVersion = '3.4.0.0'
+  LCLVersion = '3.8.0.0'
   object tbMain: TToolBar
     Left = 0
     Height = 40
@@ -1929,7 +1929,7 @@ object DigitMainForm: TDigitMainForm
         )
         ColWidths = (
           64
-          89
+          87
         )
       end
     end
@@ -1998,11 +1998,11 @@ object DigitMainForm: TDigitMainForm
           Height = 163
           Top = 0
           Width = 214
-          HorzScrollBar.Page = 166
+          HorzScrollBar.Page = 168
           VertScrollBar.Page = 161
           Align = alClient
           ClientHeight = 161
-          ClientWidth = 212
+          ClientWidth = 197
           ParentBackground = False
           TabOrder = 0
           object lblColor: TLabel
@@ -2030,7 +2030,7 @@ object DigitMainForm: TDigitMainForm
             Left = 44
             Height = 25
             Top = 2
-            Width = 163
+            Width = 148
             Anchors = [akTop, akLeft, akRight]
             BorderSpacing.Left = 5
             BorderSpacing.Top = 2
@@ -2053,7 +2053,7 @@ object DigitMainForm: TDigitMainForm
             Left = 5
             Height = 56
             Top = 29
-            Width = 202
+            Width = 187
             Anchors = [akTop, akLeft, akRight]
             AutoFill = True
             BorderSpacing.Left = 5
@@ -2068,7 +2068,7 @@ object DigitMainForm: TDigitMainForm
             ChildSizing.Layout = cclLeftToRightThenTopToBottom
             ChildSizing.ControlsPerLine = 1
             ClientHeight = 29
-            ClientWidth = 192
+            ClientWidth = 177
             Font.Color = clBlack
             Font.Height = -11
             Font.Name = 'Default'
@@ -2111,7 +2111,7 @@ object DigitMainForm: TDigitMainForm
             Left = 40
             Height = 22
             Top = 90
-            Width = 167
+            Width = 152
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -2215,7 +2215,7 @@ object DigitMainForm: TDigitMainForm
             Left = 57
             Height = 22
             Top = 113
-            Width = 150
+            Width = 135
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -2319,7 +2319,7 @@ object DigitMainForm: TDigitMainForm
             Left = 69
             Height = 22
             Top = 136
-            Width = 138
+            Width = 123
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -2422,7 +2422,7 @@ object DigitMainForm: TDigitMainForm
             Left = 79
             Height = 22
             Top = 159
-            Width = 128
+            Width = 113
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -4935,7 +4935,7 @@ object DigitMainForm: TDigitMainForm
       Tabs = <>
       DoubleBuffered = True
       TabIndex = -1
-      ColorBg = clDefault
+      ColorBg = clBtnFace
       ColorSeparator = clDefault
       ColorTabActive = 16250871
       ColorTabPassive = clBtnFace
@@ -4958,7 +4958,7 @@ object DigitMainForm: TDigitMainForm
       OptHintForUser2 = '2'
       OptHintForUser3 = '3'
       OptHintForUser4 = '4'
-      OnTabChanged = tcPlotsTabChanged
+      OnTabClick = tcPlotsTabChanged
       OnTabPlusClick = tcPlotsTabPlusClick
       OnTabClose = tcPlotsTabClose
       OnTabMove = tcPlotsTabMove
@@ -5105,7 +5105,7 @@ object DigitMainForm: TDigitMainForm
       Tabs = <>
       DoubleBuffered = True
       TabIndex = -1
-      ColorBg = clDefault
+      ColorBg = clBtnFace
       ColorSeparator = clDefault
       ColorTabActive = 16250871
       ColorTabPassive = clBtnFace
@@ -5129,7 +5129,7 @@ object DigitMainForm: TDigitMainForm
       OptHintForUser2 = '2'
       OptHintForUser3 = '3'
       OptHintForUser4 = '4'
-      OnTabChanged = tcCurvesTabChanged
+      OnTabClick = tcCurvesTabChanged
       OnTabPlusClick = tcCurvesTabPlusClick
       OnTabClose = tcCurvesTabClose
       OnTabMove = tcCurvesTabMove
