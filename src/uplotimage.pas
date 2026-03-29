@@ -565,8 +565,9 @@ procedure TPlotImage.DigitizeSpectrum(Pi: TCurvePoint; FillCurvePoints: Boolean 
 var
   Ctx: TDigitizerContext;
   TmpCurve, Seeds: TCurve;
-  i, best: Integer;
+  i, best, nSteps: Integer;
   d, dmin: Double;
+  X0, X1: Double;
 begin
   RunningAction := True;
   CancelAction := False;
@@ -586,6 +587,15 @@ begin
         Seeds.AddPoint(Markers[i].Position/Zoom)
     else
       Seeds.AddPoint(Pi);
+
+    if (Seeds.Count > 2) and (Abs(Ctx.Step) > 0) then
+    begin
+      X0 := Seeds.Point[0].X;
+      X1 := Seeds.Point[Seeds.Count - 1].X;
+      nSteps := 1 + Abs(Round((X1 - X0)/Abs(Ctx.Step)));
+      if nSteps > Seeds.Count then
+        Seeds.Interpolate(nSteps, 3);
+    end;
 
     if not DigitizeCurve(Seeds, FPlotImg, Ctx, TmpCurve) then
     begin
@@ -736,6 +746,7 @@ begin
   Ctx.LineSpread := Plot.DigitCurve.Spread;
   Ctx.MaxGap := Plot.DigitCurve.Interval;
   Ctx.Mode := dmLineTrace;
+  Ctx.Step := Plot.DigitCurve.Step;
   if (Plot.DigitCurve.Step > 0) then
     Ctx.ScanDirection := sdForward
   else
@@ -1847,7 +1858,10 @@ begin
   begin
     Marker := Markers[i];
     if Marker.HitTest(MouseMovePos) then
+    begin
       HitMarker := Marker;
+      Break;
+    end;
   end;
   MarkerUnderCursor := HitMarker;
 

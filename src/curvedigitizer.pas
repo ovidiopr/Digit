@@ -47,6 +47,7 @@ type
     Tolerance: Integer;
     LineSpread: Integer;   // half-width for sub-pixel centroiding (Spread)
     MaxGap: Integer;       // max gap to bridge/scan interval (Interval)
+    Step: Integer;
     // Grid-mask overlay – when active, non-transparent mask pixels replace
     // the corresponding source pixels during every colour comparison.
     GridMask: TBGRABitmap;
@@ -499,15 +500,16 @@ begin
       // Follow the guide markers
       Inc(i);
       if Step > 0 then
-        PNew := Ctx.Plot.Scale.FromPlotToImg(ML.Point[i])
+        PNew := ML.Point[i]
       else
-        PNew := Ctx.Plot.Scale.FromPlotToImg(ML.Point[ML.Count - 1 - i]);
+        PNew := ML.Point[ML.Count - 1 - i];
     end;
 
-    if not FindNextPoint(PNew) then Break;
-
-    Pi := PNew;
-    Curve.AddPoint(Pi);
+    if FindNextPoint(PNew) then
+    begin
+      Pi := PNew;
+      Curve.AddPoint(Pi);
+    end;
 
     if not Ctx.Plot.Box.Contains(Pi) then Break;
     if (Ctx.Plot.Scale.CoordSystem = csPolar) and (Abs(Delta) > 360) then Break;
@@ -902,6 +904,7 @@ var
   Region: TVisitedMap;
   Src: IPixelSource;
   FirstSeed: TCurvePoint;
+  Step: Integer;
 begin
   Result := False;
   if (Image = nil) or (Curve = nil) or
@@ -923,7 +926,11 @@ begin
         ExtractOrderedCurve(Region, Curve, Ctx);
       end;
     dmSpectrumTrace:
-      FollowSpectrum(Src, Seeds, FirstSeed, Ctx, 1, Ctx.MaxGap, Curve);
+      begin
+        Step := Ctx.Step;
+        if (Step < 1) then Step := 1;
+        FollowSpectrum(Src, Seeds, FirstSeed, Ctx, Step, Ctx.MaxGap, Curve);
+      end;
     dmColorTrace:
       ClusterByColor(Src, Ctx, Curve);
   end;
