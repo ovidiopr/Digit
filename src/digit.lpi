@@ -127,7 +127,7 @@
         <PackageName Value="LCL"/>
       </Item6>
     </RequiredPackages>
-    <Units Count="13">
+    <Units Count="15">
       <Unit0>
         <Filename Value="digit.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -192,6 +192,15 @@
         <Filename Value="upolygons.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit12>
+      <Unit13>
+        <Filename Value="curvedigitizer.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="CurveDigitizer"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="umarker.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit14>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

@@ -2,10 +2,10 @@ unit umain;
 
 {$mode objfpc}{$H+}
 {$IFDEF DARWIN}
-  {$DEFINE TIFF_CLIPBOARD_FORMAT}
+{$DEFINE TIFF_CLIPBOARD_FORMAT}
 {$ELSE}
-  {$DEFINE BMP_CLIPBOARD_FORMAT}
-  {$DEFINE PNG_CLIPBOARD_FORMAT}
+{$DEFINE BMP_CLIPBOARD_FORMAT}
+{$DEFINE PNG_CLIPBOARD_FORMAT}
 {$ENDIF}
 
 interface
@@ -15,13 +15,13 @@ uses
   StdCtrls, Dialogs, Buttons, ExtCtrls, ComCtrls, TATypes, TASeries, TAGraph,
   TAChartAxis, TATransformations, TACustomSource, TAChartUtils, ClipBrd,
   ActnList, ValEdit, Spin, ExtDlgs, MaskEdit, BCTrackbarUpdown, FileUtil,
-  IniFiles, BGRABitmapTypes, GraphType, attabs, Grids, Math,
-  urestore, uchartscale, uutils, ucoordinates, ucurves, uplotimage, Types;
+  IniFiles, BGRABitmapTypes, GraphType, attabs, Grids, Math, Types,
+  urestore, uchartscale, uutils, ucoordinates, ucurves, umarker, uplotimage;
 
 type
   TMouseMode = (mdCursor, mdMarkers, mdColor, mdSteps, mdSegments,
-                mdGroup, mdDelete, mdMajorGridColor, mdMinorGridColor,
-                mdBackgroundColor);
+    mdGroup, mdDelete, mdMajorGridColor, mdMinorGridColor,
+    mdBackgroundColor);
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
@@ -390,30 +390,30 @@ type
     procedure chbRebuildCurveChange(Sender: TObject);
     procedure DigitizeFromHereItemClick(Sender: TObject);
     procedure EditCopyCurveExecute(Sender: TObject);
-    procedure EditIX1Change(Sender: TObject; AByUser: boolean);
-    procedure EditIY1Change(Sender: TObject; AByUser: boolean);
+    procedure EditIX1Change(Sender: TObject; AByUser: Boolean);
+    procedure EditIY1Change(Sender: TObject; AByUser: Boolean);
     procedure EditPasteImageExecute(Sender: TObject);
     procedure EditPX1EditingDone(Sender: TObject);
     procedure EditPY1EditingDone(Sender: TObject);
-    procedure EditVX1Change(Sender: TObject; AByUser: boolean);
-    procedure EditVY1Change(Sender: TObject; AByUser: boolean);
+    procedure EditVX1Change(Sender: TObject; AByUser: Boolean);
+    procedure EditVY1Change(Sender: TObject; AByUser: Boolean);
     procedure EditZoomFitExecute(Sender: TObject);
     procedure EditZoomInExecute(Sender: TObject);
     procedure EditZoomOriginalExecute(Sender: TObject);
     procedure EditZoomOutExecute(Sender: TObject);
     procedure EditZoomResizeExecute(Sender: TObject);
-    procedure edtGridMaskChange(Sender: TObject; AByUser: boolean);
-    procedure edtGridThresholdChange(Sender: TObject; AByUser: boolean);
-    procedure edtGridToleranceChange(Sender: TObject; AByUser: boolean);
-    procedure edtIntervalChange(Sender: TObject; AByUser: boolean);
-    procedure edtSpreadChange(Sender: TObject; AByUser: boolean);
-    procedure edtStepChange(Sender: TObject; AByUser: boolean);
-    procedure edtToleranceChange(Sender: TObject; AByUser: boolean);
+    procedure edtGridMaskChange(Sender: TObject; AByUser: Boolean);
+    procedure edtGridThresholdChange(Sender: TObject; AByUser: Boolean);
+    procedure edtGridToleranceChange(Sender: TObject; AByUser: Boolean);
+    procedure edtIntervalChange(Sender: TObject; AByUser: Boolean);
+    procedure edtSpreadChange(Sender: TObject; AByUser: Boolean);
+    procedure edtStepChange(Sender: TObject; AByUser: Boolean);
+    procedure edtToleranceChange(Sender: TObject; AByUser: Boolean);
     procedure edtXEditingDone(Sender: TObject);
     procedure edtYEditingDone(Sender: TObject);
     procedure FileImportDigitExecute(Sender: TObject);
     procedure FormActivate(Sender: TObject);
-    procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormDropFiles(Sender: TObject; const FileNames: array of String);
     procedure FormShow(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -430,26 +430,24 @@ type
     procedure GridShowHideExecute(Sender: TObject);
     procedure HelpAboutExecute(Sender: TObject);
     procedure FileExitExecute(Sender: TObject);
-    procedure leDataSelectCell(Sender: TObject; aCol, aRow: Integer;
-      var CanSelect: Boolean);
+    procedure leDataSelectCell(Sender: TObject; aCol, aRow: Integer; var CanSelect: Boolean);
     procedure leDataValidateEntry(Sender: TObject; aCol, aRow: Integer;
-      const OldValue: string; var NewValue: String);
+      const OldValue: String; var NewValue: String);
     procedure LogClearExecute(Sender: TObject);
     procedure LogSaveExecute(Sender: TObject);
     procedure MainPlotMouseLeave(Sender: TObject);
     procedure ModeBackgroundColorExecute(Sender: TObject);
     procedure ModeMajorGridColorExecute(Sender: TObject);
     procedure ModeMinorGridColorExecute(Sender: TObject);
-    procedure msgAreaDrawItem(Control: TWinControl; Index: Integer;
-      ARect: TRect; State: TOwnerDrawState);
+    procedure msgAreaDrawItem(Control: TWinControl; Index: Integer; ARect: TRect;
+      State: TOwnerDrawState);
     procedure pcInputChange(Sender: TObject);
-    procedure PlotImageMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure PlotImageMouseLeave(Sender: TObject);
-    procedure PlotImageMouseMove(Sender: TObject; Shift: TShiftState;
+    procedure PlotImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer);
-    procedure PlotImageMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
+    procedure PlotImageMouseLeave(Sender: TObject);
+    procedure PlotImageMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure PlotImageMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState;
+      X, Y: Integer);
     procedure PlotImageResize(Sender: TObject);
     procedure PlotImageChange(Sender: TObject);
     procedure PlotImagePrintMessage(Sender: TObject; Msg: String; MsgType: TMsgDlgType);
@@ -464,8 +462,7 @@ type
     procedure PlotImageActiveCurveChanging(Sender: TObject; OldIndex, NewIndex: Integer);
     procedure PlotImageActiveCurveChanged(Sender: TObject; OldIndex, NewIndex: Integer);
     procedure InputPanelResize(Sender: TObject);
-    procedure MainPlotMouseMove(Sender: TObject; Shift: TShiftState; X,
-      Y: Integer);
+    procedure MainPlotMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure MarkersDeleteExecute(Sender: TObject);
     procedure MarkersMoveDownExecute(Sender: TObject);
     procedure MarkersMoveLeftExecute(Sender: TObject);
@@ -481,18 +478,18 @@ type
     procedure PlotExportExecute(Sender: TObject);
     procedure PlotScaleExecute(Sender: TObject);
     procedure rgDirectionSelectionChanged(Sender: TObject);
-    procedure tbZoomChange(Sender: TObject; AByUser: boolean);
+    procedure tbZoomChange(Sender: TObject; AByUser: Boolean);
     procedure tcCurvesTabChanged(Sender: TObject);
-    procedure tcCurvesTabClose(Sender: TObject; ATabIndex: integer;
-      var ACanClose, ACanContinue: boolean);
-    procedure tcCurvesTabDblClick(Sender: TObject; AIndex: integer);
-    procedure tcCurvesTabMove(Sender: TObject; AIndexFrom, AIndexTo: integer);
+    procedure tcCurvesTabClose(Sender: TObject; ATabIndex: Integer;
+      var ACanClose, ACanContinue: Boolean);
+    procedure tcCurvesTabDblClick(Sender: TObject; AIndex: Integer);
+    procedure tcCurvesTabMove(Sender: TObject; AIndexFrom, AIndexTo: Integer);
     procedure tcCurvesTabPlusClick(Sender: TObject);
     procedure tcPlotsTabChanged(Sender: TObject);
-    procedure tcPlotsTabClose(Sender: TObject; ATabIndex: integer;
-      var ACanClose, ACanContinue: boolean);
-    procedure tcPlotsTabDblClick(Sender: TObject; AIndex: integer);
-    procedure tcPlotsTabMove(Sender: TObject; AIndexFrom, AIndexTo: integer);
+    procedure tcPlotsTabClose(Sender: TObject; ATabIndex: Integer;
+      var ACanClose, ACanContinue: Boolean);
+    procedure tcPlotsTabDblClick(Sender: TObject; AIndex: Integer);
+    procedure tcPlotsTabMove(Sender: TObject; AIndexFrom, AIndexTo: Integer);
     procedure tcPlotsTabPlusClick(Sender: TObject);
     procedure ToolAdjustCurveExecute(Sender: TObject);
     procedure ToolAdjustNoiseExecute(Sender: TObject);
@@ -584,9 +581,6 @@ type
     procedure SetImagePoint(Index: Integer; const Value: TCurvePoint);
     procedure SetPlotPoint(Index: Integer; const Value: TCurvePoint);
 
-    procedure SavePreferences;
-    procedure RestorePreferences;
-
     procedure UpdateZoomImage(X, Y: Integer); overload;
     procedure UpdateZoomImage(P: TPoint); overload;
     procedure ClearZoomImage;
@@ -641,7 +635,7 @@ var
   DigitMainForm: TDigitMainForm;
   MustOpen: Boolean;
   {$IFDEF TIFF_CLIPBOARD_FORMAT}
-  tiffClipboardFormat: TClipboardFormat;
+tiffClipboardFormat: TClipboardFormat;
   {$ENDIF}
   {$IFDEF PNG_CLIPBOARD_FORMAT}
   pngClipboardFormat: TClipboardFormat;
@@ -653,10 +647,10 @@ implementation
 
 uses uabout, uoptions;
 
-//Beginning of general functions
+  //Beginning of general functions
 
 
-function ColorDelta(C1, C2: LongInt): Real;
+function ColorDelta(C1, C2: Longint): Real;
 begin
   Result := Abs(C1 - C2);
 end;
@@ -664,9 +658,8 @@ end;
 function TDigitMainForm.XLine(Y, Shift: Integer): Integer;
 begin
   with PlotImage.Plot.Scale do
-    Result := Round(ImagePoint[2].X + Shift + (Y - ImagePoint[2].Y)*
-                   (ImagePoint[1].X - ImagePoint[2].X)/
-                   (ImagePoint[1].Y - ImagePoint[2].Y));
+    Result := Round(ImagePoint[2].X + Shift + (Y - ImagePoint[2].Y) *
+      (ImagePoint[1].X - ImagePoint[2].X) / (ImagePoint[1].Y - ImagePoint[2].Y));
 end;
 
 procedure TDigitMainForm.UpdateControls;
@@ -679,7 +672,7 @@ begin
     tsBox.Enabled := ImageIsLoaded;
     tsGrid.Enabled := ImageIsLoaded;
 
-    FileSave.Enabled :=  ImageIsLoaded and (not IsSaved);
+    FileSave.Enabled := ImageIsLoaded and (not IsSaved);
     FileSaveAs.Enabled := ImageIsLoaded;
 
     FileExport.Enabled := HasPoints;
@@ -702,7 +695,7 @@ begin
     ToolBSplines.Enabled := (State = piSetCurve) and HasPoints;
     ToolSplines.Enabled := (State = piSetCurve) and HasPoints;
     ToolLinear.Enabled := (State = piSetCurve) and HasPoints;
-    Toolpolynomial.Enabled := (State = piSetCurve) and HasPoints;
+    ToolPolynomial.Enabled := (State = piSetCurve) and HasPoints;
     ToolSmooth.Enabled := (State = piSetCurve) and HasPoints;
     ToolConvertToSymbols.Enabled := (State = piSetCurve) and HasPoints;
     ToolCurveUp.Enabled := (State = piSetCurve) and HasPoints;
@@ -712,7 +705,8 @@ begin
     ToolClear.Enabled := (State = piSetCurve) and HasPoints;
 
     ToolCurveAdd.Enabled := ImageIsLoaded and (State = piSetCurve);
-    ToolCurveDelete.Enabled := ImageIsLoaded and (State = piSetCurve) and (CurveCount > 1);
+    ToolCurveDelete.Enabled :=
+      ImageIsLoaded and (State = piSetCurve) and (CurveCount > 1);
     ToolCurveName.Enabled := ImageIsLoaded and (State = piSetCurve) and (CurveCount > 0);
 
     ToolPlotAdd.Enabled := ImageIsLoaded and (State = piSetCurve);
@@ -723,14 +717,18 @@ begin
     MarkersMoveDown.Enabled := ImageIsLoaded and assigned(ActiveMarker);
     MarkersMoveLeft.Enabled := ImageIsLoaded and assigned(ActiveMarker);
     MarkersMoveRight.Enabled := ImageIsLoaded and assigned(ActiveMarker);
-    MarkersDelete.Enabled := ImageIsLoaded and assigned(ActiveMarker) and not ActiveMarker.IsPersistent;
+    MarkersDelete.Enabled := ImageIsLoaded and assigned(ActiveMarker) and
+      not ActiveMarker.IsPersistent;
 
-    ToolCorrectDistortion.Enabled := ImageIsLoaded and (State = piSetPlotBox) and PlotImage.Plot.Box.IsConvex;
+    ToolCorrectDistortion.Enabled :=
+      ImageIsLoaded and (State = piSetPlotBox) and PlotImage.Plot.Box.IsConvex;
     ToolResetBox.Enabled := ImageIsLoaded and (State = piSetPlotBox);
 
-    GridRemoval.Enabled := ImageIsLoaded and (State = piSetGrid) and not (GridMask.IsValid and GridMask.IsActive);
+    GridRemoval.Enabled := ImageIsLoaded and (State = piSetGrid) and
+      not (GridMask.IsValid and GridMask.IsActive);
     GridShowHide.Enabled := ImageIsLoaded and (State = piSetGrid) and GridMask.IsValid;
-    GridMergeMask.Enabled := ImageIsLoaded and (State = piSetGrid) and GridMask.IsValid and GridMask.IsActive;
+    GridMergeMask.Enabled := ImageIsLoaded and (State = piSetGrid) and
+      GridMask.IsValid and GridMask.IsActive;
 
     PlotExport.Enabled := (State = piSetCurve) and HasPoints;
     PlotScale.Enabled := (State = piSetCurve) and HasPoints;
@@ -804,8 +802,8 @@ begin
 
   try
     // Avoid loops
-    leData.OnValidateEntry := Nil;
-    leData.OnSelectCell := Nil;
+    leData.OnValidateEntry := nil;
+    leData.OnSelectCell := nil;
     leData.EditorMode := False;
 
     // Copy the values to the table
@@ -820,7 +818,7 @@ begin
 
         for i := 0 to min(100, NumPoints - 1) do
           leData.InsertRow(Format('%.5g', [Point[i].X]),
-                           Format('%.5g', [Point[i].Y]), True);
+            Format('%.5g', [Point[i].Y]), True);
       end;
 
     leData.Row := 0;
@@ -836,7 +834,8 @@ end;
 procedure TDigitMainForm.SavePlot(FName: TFileName; FType: Integer);
 begin
   case FType of
-    1: MainPlot.SaveToFile(TPortableNetworkGraphic, ChangeFileExt(FName, '.png')); // PNG - our default
+    1: MainPlot.SaveToFile(TPortableNetworkGraphic, ChangeFileExt(FName, '.png'));
+    // PNG - our default
     2: MainPlot.SaveToFile(TJPEGImage, ChangeFileExt(FName, '.jpg')); // JPEG
     3: MainPlot.SaveToFile(TPixmap, ChangeFileExt(FName, '.xpm')); // XPM
     4: MainPlot.SaveToFile(TPortableAnyMapGraphic, ChangeFileExt(FName, '.ppm')); // PPM
@@ -899,14 +898,14 @@ var
   Co: TColor;
   i: Integer;
   ImageName: TFileName;
-  ImageLoaded,
-  SavedPoints: Boolean;
+  ImageLoaded, SavedPoints: Boolean;
   X, Y: Double;
 begin
   //Check that the file exists
   if not FileExists(FileName) then
   begin
-    MessageDlg('The file ' + ExtractFileName(FileName) + ' does not exists.', mtError, [mbOk], 0);
+    MessageDlg('The file ' + ExtractFileName(FileName) + ' does not exists.',
+      mtError, [mbOK], 0);
     Exit;
   end;
 
@@ -937,17 +936,23 @@ begin
   SavedPoints := C = '1';
   with PlotImage.Plot do
   begin
-    Read(F, X);  Read(F, Y);
+    Read(F, X);
+    Read(F, Y);
     Scale.ImagePoint[1] := TCurvePoint.Create(X, Y);
-    Read(F, X);  Read(F, Y);
+    Read(F, X);
+    Read(F, Y);
     Scale.ImagePoint[2] := TCurvePoint.Create(X, Y);
-    Read(F, X);  Readln(F, Y);
+    Read(F, X);
+    Readln(F, Y);
     Scale.ImagePoint[3] := TCurvePoint.Create(X, Y);
-    Read(F, X);  Read(F, Y);
+    Read(F, X);
+    Read(F, Y);
     Scale.PlotPoint[1] := TCurvePoint.Create(X, Y);
-    Read(F, X);  Read(F, Y);
+    Read(F, X);
+    Read(F, Y);
     Scale.PlotPoint[2] := TCurvePoint.Create(X, Y);
-    Read(F, X);  Readln(F, Y);
+    Read(F, X);
+    Readln(F, Y);
     Scale.PlotPoint[3] := TCurvePoint.Create(X, Y);
     Readln(F, Co);
     btnColor.ButtonColor := Co;
@@ -973,16 +978,16 @@ begin
       PlotImage.ImageName := ImageName;
     end
     else
-      if FileExists(ExtractFilePath(FileName) + ExtractFileName(ImageName)) then
-      begin
-        PlotImage.ImageName := ExtractFilePath(FileName) + ExtractFileName(ImageName);
-      end
-      else
-      begin
-        OpenPictureDlg.InitialDir := ExtractFilePath(FileName);
-        if OpenPictureDlg.Execute then
-          PlotImage.ImageName := OpenPictureDlg.FileName;
-      end;
+    if FileExists(ExtractFilePath(FileName) + ExtractFileName(ImageName)) then
+    begin
+      PlotImage.ImageName := ExtractFilePath(FileName) + ExtractFileName(ImageName);
+    end
+    else
+    begin
+      OpenPictureDlg.InitialDir := ExtractFilePath(FileName);
+      if OpenPictureDlg.Execute then
+        PlotImage.ImageName := OpenPictureDlg.FileName;
+    end;
   end;
 
   if PlotImage.ImageIsLoaded then
@@ -1076,7 +1081,7 @@ begin
   InputPanelResize(Self);
 end;
 
-procedure TDigitMainForm.FormCloseQuery(Sender: TObject; var CanClose: boolean);
+procedure TDigitMainForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   //Verify that the file has been saved before closing
   CanClose := CheckSaveStatus and not PlotImage.RunningAction;
@@ -1158,12 +1163,12 @@ end;
 
 procedure TDigitMainForm.atInverseAxisToGraph(AX: Double; out AT: Double);
 begin
-  AT := 1/AX;
+  AT := 1 / AX;
 end;
 
 procedure TDigitMainForm.atInverseGraphToAxis(AX: Double; out AT: Double);
 begin
-  AT := 1/AX;
+  AT := 1 / AX;
 end;
 
 procedure TDigitMainForm.btnMinorGridColorChanged(Sender: TObject);
@@ -1201,14 +1206,14 @@ begin
   leData.CopyToClipboard(False);
 end;
 
-procedure TDigitMainForm.EditIX1Change(Sender: TObject; AByUser: boolean);
+procedure TDigitMainForm.EditIX1Change(Sender: TObject; AByUser: Boolean);
 begin
   if AByUser then
     with TBCTrackbarUpdown(Sender) do
       PlotImage.AxesPoint[Tag] := ImagePoint[Tag];
 end;
 
-procedure TDigitMainForm.EditIY1Change(Sender: TObject; AByUser: boolean);
+procedure TDigitMainForm.EditIY1Change(Sender: TObject; AByUser: Boolean);
 begin
   if AByUser then
     with TBCTrackbarUpdown(Sender) do
@@ -1217,7 +1222,7 @@ end;
 
 procedure TDigitMainForm.EditPasteImageExecute(Sender: TObject);
 var
-  i: integer;
+  i: Integer;
   ResetPoints: Boolean;
 
   function GetImgFromClipboard: Boolean;
@@ -1236,10 +1241,10 @@ var
 
       with PlotImage do
       begin
-        if ImageIsLoaded and
-           (MessageDlg('You are about to replace the current plot image.' +
-                       ' This action cannot be undone. Continue?',
-                      mtWarning, [mbYes, mbNo], 0) = mrNo) then Exit;
+        if ImageIsLoaded and (MessageDlg(
+          'You are about to replace the current plot image.' +
+          ' This action cannot be undone. Continue?', mtWarning, [mbYes, mbNo], 0) = mrNo)
+        then Exit;
 
         PasteImage(Stream);
         SetPlotPointMarkers(ResetPoints);
@@ -1254,8 +1259,8 @@ var
 begin
   {$IFDEF TIFF_CLIPBOARD_FORMAT}
   for i := 0 to Clipboard.FormatCount - 1 do
-    if Clipboard.Formats[i] = tiffClipboardFormat then
-      if GetImgFromClipboard then Exit;
+  if Clipboard.Formats[i] = tiffClipboardFormat then
+  if GetImgFromClipboard then Exit;
   {$ENDIF}
 
   {$IFDEF PNG_CLIPBOARD_FORMAT}
@@ -1276,7 +1281,7 @@ begin
   with TEdit(Sender) do
   begin
     if TryStrToFloat(Text, Value) and
-       (Value <> PlotImage.Plot.Scale.PlotPoint[Tag].X) then
+      (Value <> PlotImage.Plot.Scale.PlotPoint[Tag].X) then
     begin
       PlotImage.Plot.Scale.PlotPoint[Tag] := PlotPoint[Tag];
     end
@@ -1292,7 +1297,7 @@ begin
   with TEdit(Sender) do
   begin
     if TryStrToFloat(Text, Value) and
-       (Value <> PlotImage.Plot.Scale.PlotPoint[Tag].Y) then
+      (Value <> PlotImage.Plot.Scale.PlotPoint[Tag].Y) then
     begin
       PlotImage.Plot.Scale.PlotPoint[Tag] := PlotPoint[Tag];
     end
@@ -1301,18 +1306,20 @@ begin
   end;
 end;
 
-procedure TDigitMainForm.EditVX1Change(Sender: TObject; AByUser: boolean);
+procedure TDigitMainForm.EditVX1Change(Sender: TObject; AByUser: Boolean);
 begin
   if AByUser then
     with TBCTrackbarUpdown(Sender) do
-      PlotImage.BoxVertex[Tag] := TCurvePoint.Create(Value/PlotImage.Zoom, PlotImage.BoxVertex[Tag].Y);
+      PlotImage.BoxVertex[Tag] := TCurvePoint.Create(Value / PlotImage.Zoom,
+        PlotImage.BoxVertex[Tag].Y);
 end;
 
-procedure TDigitMainForm.EditVY1Change(Sender: TObject; AByUser: boolean);
+procedure TDigitMainForm.EditVY1Change(Sender: TObject; AByUser: Boolean);
 begin
   if AByUser then
     with TBCTrackbarUpdown(Sender) do
-      PlotImage.BoxVertex[Tag] := TCurvePoint.Create(PlotImage.BoxVertex[Tag].X, Value/PlotImage.Zoom);
+      PlotImage.BoxVertex[Tag] := TCurvePoint.Create(PlotImage.BoxVertex[Tag].X,
+        Value / PlotImage.Zoom);
 end;
 
 procedure TDigitMainForm.EditZoomFitExecute(Sender: TObject);
@@ -1338,54 +1345,51 @@ end;
 procedure TDigitMainForm.EditZoomResizeExecute(Sender: TObject);
 begin
   if (MessageDlg('You are about to resize the current plot image.' +
-                 ' This action cannot be undone. Continue?',
-                 mtWarning, [mbYes, mbNo], 0) = mrYes) then
+    ' This action cannot be undone. Continue?', mtWarning, [mbYes, mbNo], 0) = mrYes) then
     PlotImage.ResizeToZoom;
 end;
 
-procedure TDigitMainForm.edtGridMaskChange(Sender: TObject; AByUser: boolean);
+procedure TDigitMainForm.edtGridMaskChange(Sender: TObject; AByUser: Boolean);
 begin
   if AByUser and (PlotImage.GridMask.MaskSize <> edtGridMask.Value) then
     PlotImage.GridMask.MaskSize := edtGridMask.Value;
 end;
 
-procedure TDigitMainForm.edtGridThresholdChange(Sender: TObject;
-  AByUser: boolean);
+procedure TDigitMainForm.edtGridThresholdChange(Sender: TObject; AByUser: Boolean);
 begin
-  if AByUser and (PlotImage.GridMask.Threshold <> edtGridThreshold.Value/100) then
-    PlotImage.GridMask.Threshold := edtGridThreshold.Value/100;
+  if AByUser and (PlotImage.GridMask.Threshold <> edtGridThreshold.Value / 100) then
+    PlotImage.GridMask.Threshold := edtGridThreshold.Value / 100;
 end;
 
-procedure TDigitMainForm.edtGridToleranceChange(Sender: TObject;
-  AByUser: boolean);
+procedure TDigitMainForm.edtGridToleranceChange(Sender: TObject; AByUser: Boolean);
 begin
   if AByUser and (PlotImage.GridMask.Tolerance <> edtGridTolerance.Value) then
     PlotImage.GridMask.Tolerance := edtGridTolerance.Value;
 end;
 
-procedure TDigitMainForm.edtIntervalChange(Sender: TObject; AByUser: boolean);
+procedure TDigitMainForm.edtIntervalChange(Sender: TObject; AByUser: Boolean);
 begin
   if AByUser and (PlotImage.Plot.DigitCurve.Interval <> edtInterval.Value) then
     PlotImage.Plot.DigitCurve.Interval := edtInterval.Value;
 end;
 
-procedure TDigitMainForm.edtSpreadChange(Sender: TObject; AByUser: boolean);
+procedure TDigitMainForm.edtSpreadChange(Sender: TObject; AByUser: Boolean);
 begin
   if AByUser and (PlotImage.Plot.DigitCurve.Spread <> edtSpread.Value) then
     PlotImage.Plot.DigitCurve.Spread := edtSpread.Value;
 end;
 
-procedure TDigitMainForm.edtStepChange(Sender: TObject; AByUser: boolean);
+procedure TDigitMainForm.edtStepChange(Sender: TObject; AByUser: Boolean);
 begin
   if (rgDirection.ItemIndex = 0) then
     if AByUser and (PlotImage.Plot.DigitCurve.Step <> edtStep.Value) then
       PlotImage.Plot.DigitCurve.Step := edtStep.Value
-  else
+    else
     if AByUser and (PlotImage.Plot.DigitCurve.Step <> -edtStep.Value) then
       PlotImage.Plot.DigitCurve.Step := -edtStep.Value;
 end;
 
-procedure TDigitMainForm.edtToleranceChange(Sender: TObject; AByUser: boolean);
+procedure TDigitMainForm.edtToleranceChange(Sender: TObject; AByUser: Boolean);
 begin
   if AByUser and (PlotImage.Plot.DigitCurve.Tolerance <> edtTolerance.Value) then
     PlotImage.Plot.DigitCurve.Tolerance := edtTolerance.Value;
@@ -1428,8 +1432,7 @@ begin
   end;
 end;
 
-procedure TDigitMainForm.FormDropFiles(Sender: TObject;
-  const FileNames: array of String);
+procedure TDigitMainForm.FormDropFiles(Sender: TObject; const FileNames: array of String);
 begin
   //Open dragged files (only the first one)
   if (Length(FileNames) > 0) then
@@ -1465,13 +1468,14 @@ begin
       S := S + ParamStr(i);
       if UpperCase(Copy(ParamStr(i), Length(ParamStr(i)) - 3, 1)) = '.' then
       begin
-        if FileExists(S)then
+        if FileExists(S) then
         begin
           OpenProject(S);
           S := '';
         end;
       end
-      else S := S + ' ';
+      else
+        S := S + ' ';
     end;
     MustOpen := False;
   end;
@@ -1481,8 +1485,7 @@ end;
 procedure TDigitMainForm.FormCreate(Sender: TObject);
 begin
   GlobalWinRestorer := TWinRestorer.Create(GetIniName, WHATSAVE_ALL);
-  GlobalWinRestorer.RestoreWin(Self, [svSize, svLocation, svState]);
-  RestorePreferences;
+  GlobalWinRestorer.RestoreWin(Self, [svSize, svLocation, svState, svPanels]);
 
   UpdatingTable := False;
   UpdatingPlot := False;
@@ -1542,15 +1545,13 @@ begin
   {$ENDIF}
 end;
 
-procedure TDigitMainForm.FormClose(Sender: TObject;
-  var AAction: TCloseAction);
+procedure TDigitMainForm.FormClose(Sender: TObject; var AAction: TCloseAction);
 begin
-  GlobalWinRestorer.SaveWin(Self, [svSize, svLocation, svState]);
+  GlobalWinRestorer.SaveWin(Self, [svSize, svLocation, svState, svPanels]);
   GlobalWinRestorer.Free;
-  SavePreferences;
 
   // To avoid errors after the PlotImage has been destroyed
-  MainPlot.OnMouseMove := Nil;
+  MainPlot.OnMouseMove := nil;
 
   PlotImage.Options.SaveToFile(GetIniName);
   PlotImage.Free;
@@ -1605,13 +1606,14 @@ var
   PtCv: TCurve;
 begin
   //Export digitization to a .csv file
-  SaveDataDlg.FileName := ExtractFilePath(DigitFileName) + PlotImage.Plot.DigitCurve.Name + '.csv';
+  SaveDataDlg.FileName := ExtractFilePath(DigitFileName) +
+    PlotImage.Plot.DigitCurve.Name + '.csv';
   if SaveDataDlg.Execute then
   begin
     AssignFile(F, SaveDataDlg.FileName);
     Rewrite(F);
-    Writeln(F, '"' + PlotImage.Plot.Scale.XLabel +
-               '","' + PlotImage.Plot.Scale.YLabel + '"');
+    Writeln(F, '"' + PlotImage.Plot.Scale.XLabel + '","' +
+      PlotImage.Plot.Scale.YLabel + '"');
     try
       PtCv := PlotImage.Plot.PlotCurve;
       for i := 0 to PtCv.Count - 1 do
@@ -1625,24 +1627,23 @@ end;
 
 procedure TDigitMainForm.gbResampleResize(Sender: TObject);
 begin
-  SeXo.Width := (SeXo.Width + SeXf.Width) div 2;
+  seXo.Width := (seXo.Width + seXf.Width) div 2;
   leData.ColWidths[0] := leData.Width div 2;
 end;
 
 procedure TDigitMainForm.GridMergeMaskExecute(Sender: TObject);
 begin
   if (MessageDlg('You are about to merge the grid mask with the plot image.' +
-                 ' This action cannot be undone. Continue?',
-                 mtWarning, [mbYes, mbNo], 0) = mrYes) then
+    ' This action cannot be undone. Continue?', mtWarning, [mbYes, mbNo], 0) = mrYes) then
     PlotImage.MergeGridMask;
 end;
 
 procedure TDigitMainForm.GridRemovalExecute(Sender: TObject);
 begin
   PlotImage.RemoveGrid(btnMajorGrid.ButtonColor, btnMinorGrid.ButtonColor,
-                       btnBackground.ButtonColor,
-                       edtGridTolerance.Value, edtGridThreshold.Value/100.0,
-                       chbRebuildCurve.Checked, edtGridMask.Value);
+    btnBackground.ButtonColor,
+    edtGridTolerance.Value, edtGridThreshold.Value / 100.0,
+    chbRebuildCurve.Checked, edtGridMask.Value);
   CurveToGUI;
 end;
 
@@ -1674,8 +1675,8 @@ var
   i, n, r: Integer;
 begin
   // We are approaching the end, and there are hidden values
-  if (aRow >= (leData.RowCount - 50)) and
-     (PlotImage.NumPoints > (leData.RowCount - 1))then
+  if (aRow >= (leData.RowCount - 50)) and (PlotImage.NumPoints >
+    (leData.RowCount - 1)) then
   begin
     // Make sure that there are no previous events in the stack
     if UpdatingTable then Exit;
@@ -1685,8 +1686,8 @@ begin
 
     try
       // Avoid loops
-      leData.OnValidateEntry := Nil;
-      leData.OnSelectCell := Nil;
+      leData.OnValidateEntry := nil;
+      leData.OnSelectCell := nil;
       leData.EditorMode := False;
 
       with PlotImage do
@@ -1699,7 +1700,7 @@ begin
 
           for i := n to min(n + 100, NumPoints - 1) do
             leData.InsertRow(Format('%.5g', [Point[i].X]),
-                             Format('%.5g', [Point[i].Y]), True);
+              Format('%.5g', [Point[i].Y]), True);
         end;
       leData.Row := r;
     finally
@@ -1712,8 +1713,8 @@ begin
   end;
 end;
 
-procedure TDigitMainForm.leDataValidateEntry(Sender: TObject; aCol,
-  aRow: Integer; const OldValue: string; var NewValue: String);
+procedure TDigitMainForm.leDataValidateEntry(Sender: TObject;
+  aCol, aRow: Integer; const OldValue: String; var NewValue: String);
 var
   X, Y: Double;
 begin
@@ -1776,8 +1777,8 @@ begin
   TAction(Sender).Checked := True;
 end;
 
-procedure TDigitMainForm.msgAreaDrawItem(Control: TWinControl; Index: Integer;
-  ARect: TRect; State: TOwnerDrawState);
+procedure TDigitMainForm.msgAreaDrawItem(Control: TWinControl;
+  Index: Integer; ARect: TRect; State: TOwnerDrawState);
 var
   lb: TListBox absolute Control;
   ts: TTextStyle;
@@ -1789,7 +1790,7 @@ begin
   ts.Alignment := taLeftJustify;
   ts.Layout := tlCenter;
   lb.Canvas.Pen.Color := clBlack;
-  lb.Canvas.TextRect(ARect, ARect.Left+2, ARect.Top, lb.Items[Index], ts);
+  lb.Canvas.TextRect(ARect, ARect.Left + 2, ARect.Top, lb.Items[Index], ts);
 end;
 
 procedure TDigitMainForm.pcInputChange(Sender: TObject);
@@ -1804,8 +1805,8 @@ begin
 
   if (not IsSaved) then
     case MessageDlg('The file ' + ExtractFileName(DigitFileName) +
-                    ' was modified. Do you want to save it?',
-                    mtInformation, [mbYes, mbNo, mbCancel], 0) of
+        ' was modified. Do you want to save it?', mtInformation,
+        [mbYes, mbNo, mbCancel], 0) of
 
       mrYes: FileSaveExecute(DigitMainForm);
       mrCancel: Result := False;
@@ -1830,7 +1831,7 @@ end;
 function TDigitMainForm.GetManualZoom: Boolean;
 begin
   Result := MainPlot.Extent.UseXMin or MainPlot.Extent.UseXMax or
-            MainPlot.Extent.UseYMin or MainPlot.Extent.UseYMax;
+    MainPlot.Extent.UseYMin or MainPlot.Extent.UseYMax;
 end;
 
 function TDigitMainForm.GetZoomXmin: Double;
@@ -1855,7 +1856,7 @@ end;
 
 function TDigitMainForm.GetIniName: TFileName;
 var
-  Path : TFileName;
+  Path: TFileName;
 begin
   Result := AppFullName + '.ini';
 
@@ -1909,24 +1910,24 @@ begin
     1: Result := TCurvePoint.Create(EditIX1.Value, EditIY1.Value);
     2: Result := TCurvePoint.Create(EditIX2.Value, EditIY2.Value);
     3: Result := TCurvePoint.Create(EditIX3.Value, EditIY3.Value);
-    else Result := TCurvePoint.Create(0, 0);
+    else
+      Result := TCurvePoint.Create(0, 0);
   end;
 end;
 
 function TDigitMainForm.GetPlotPoint(Index: Integer): TCurvePoint;
 begin
   case Index of
-    1: Result := TCurvePoint.Create(StrToFloat(EditPX1.Text),
-                                    StrToFloat(EditPY1.Text));
-    2: Result := TCurvePoint.Create(StrToFloat(EditPX2.Text),
-                                    StrToFloat(EditPY2.Text));
-    3: Result := TCurvePoint.Create(StrToFloat(EditPX3.Text),
-                                    StrToFloat(EditPY3.Text));
-    else Result := TCurvePoint.Create(0, 0);
+    1: Result := TCurvePoint.Create(StrToFloat(EditPX1.Text), StrToFloat(EditPY1.Text));
+    2: Result := TCurvePoint.Create(StrToFloat(EditPX2.Text), StrToFloat(EditPY2.Text));
+    3: Result := TCurvePoint.Create(StrToFloat(EditPX3.Text), StrToFloat(EditPY3.Text));
+    else
+      Result := TCurvePoint.Create(0, 0);
   end;
 end;
 
-procedure TDigitMainForm.PrintUserMessage(Msg: String; MsgType: TMsgDlgType = mtInformation);
+procedure TDigitMainForm.PrintUserMessage(Msg: String;
+  MsgType: TMsgDlgType = mtInformation);
 begin
   with msgArea.Items do
   begin
@@ -1953,7 +1954,7 @@ begin
     stLn: LogAxis(MainPlot, 1, True, 2.71828182845905);
     stInverse: InverseAxis(MainPlot, 1, True);
     else
-      MainPlot.AxisList[1].Transformations := Nil;
+      MainPlot.AxisList[1].Transformations := nil;
   end;
 end;
 
@@ -1964,11 +1965,12 @@ begin
     stLn: LogAxis(MainPlot, 0, True, 2.71828182845905);
     stInverse: InverseAxis(MainPlot, 0, True);
     else
-      MainPlot.AxisList[0].Transformations := Nil;
+      MainPlot.AxisList[0].Transformations := nil;
   end;
 end;
 
-procedure TDigitMainForm.LogAxis(AChart: TChart; AxisIndex: Integer; Enable: Boolean; Base: Double);
+procedure TDigitMainForm.LogAxis(AChart: TChart; AxisIndex: Integer;
+  Enable: Boolean; Base: Double);
 var
   axis: TChartAxis;
   transf: TLogarithmAxisTransform;
@@ -1987,7 +1989,8 @@ begin
   transf.Enabled := Enable;
 
   // Find "nice" axis labels
-  if Enable then begin
+  if Enable then
+  begin
     axis.Intervals.Options := axis.Intervals.Options + [aipGraphCoords];
     axis.Intervals.Tolerance := 100;
   end
@@ -1998,7 +2001,8 @@ begin
   end;
 end;
 
-procedure TDigitMainForm.InverseAxis(AChart: TChart; AxisIndex: Integer; Enable: Boolean);
+procedure TDigitMainForm.InverseAxis(AChart: TChart; AxisIndex: Integer;
+  Enable: Boolean);
 var
   axis: TChartAxis;
   transf: TUserDefinedAxisTransform;
@@ -2016,7 +2020,8 @@ begin
   transf.Enabled := Enable;
 
   // Find "nice" axis labels
-  if Enable then begin
+  if Enable then
+  begin
     axis.Intervals.Options := axis.Intervals.Options + [aipGraphCoords];
     axis.Intervals.Tolerance := 100;
   end
@@ -2105,7 +2110,7 @@ end;
 
 procedure TDigitMainForm.SetIsSaved(Value: Boolean);
 begin
-  SetIsSaved(Value, True)
+  SetIsSaved(Value, True);
 end;
 
 procedure TDigitMainForm.SetIsSaved(Value, UpdateTable: Boolean);
@@ -2154,7 +2159,7 @@ var
   d: TATTabData;
 begin
   assert(Value = PlotImage.PlotCount,
-         'Error: The number of scales is incorrect.');
+    'Error: The number of scales is incorrect.');
 
   // Create or delete the required tabs
   if (tcPlots.TabCount > Value) then
@@ -2187,7 +2192,7 @@ var
   TmpSeries: TLineSeries;
 begin
   assert(Value = PlotImage.CurveCount,
-         'Error: The number of curves is incorrect.');
+    'Error: The number of curves is incorrect.');
 
   // Create or delete the required series
   if (MainPlot.Series.Count > Value) then
@@ -2310,16 +2315,16 @@ procedure TDigitMainForm.SetImagePoint(Index: Integer; const Value: TCurvePoint)
 begin
   case Index of
     1: begin
-      EditIX1.Value := Round(PlotImage.Zoom*Value.X);
-      EditIY1.Value := Round(PlotImage.Zoom*Value.Y);
+      EditIX1.Value := Round(PlotImage.Zoom * Value.X);
+      EditIY1.Value := Round(PlotImage.Zoom * Value.Y);
     end;
     2: begin
-      EditIX2.Value := Round(PlotImage.Zoom*Value.X);
-      EditIY2.Value := Round(PlotImage.Zoom*Value.Y);
+      EditIX2.Value := Round(PlotImage.Zoom * Value.X);
+      EditIY2.Value := Round(PlotImage.Zoom * Value.Y);
     end;
     3: begin
-      EditIX3.Value := Round(PlotImage.Zoom*Value.X);
-      EditIY3.Value := Round(PlotImage.Zoom*Value.Y);
+      EditIX3.Value := Round(PlotImage.Zoom * Value.X);
+      EditIY3.Value := Round(PlotImage.Zoom * Value.Y);
     end;
   end;
 end;
@@ -2342,33 +2347,6 @@ begin
   end;
 end;
 
-procedure TDigitMainForm.SavePreferences;
-var Ini: TIniFile;
-begin
-  Ini := TIniFile.Create(GetIniName);
-  try
-    //Save panel widths
-    Ini.WriteInteger('Panels', 'InputPanel', InputPanel.Width);
-    Ini.WriteInteger('Panels', 'DataPanel', pnlData.Width);
-  finally
-    Ini.Free;
-  end;
-end;
-
-procedure TDigitMainForm.RestorePreferences;
-var Ini: TIniFile;
-begin
-  Ini := TIniFile.Create(GetIniName);
-  try
-    //Restore panel widths
-    InputPanel.Width := Ini.ReadInteger('Panels', 'InputPanel', InputPanel.Width);
-    pnlData.Width := Ini.ReadInteger('Panels', 'DataPanel', pnlData.Width);
-  finally
-    Ini.Free;
-    InputPanelResize(Self);
-  end;
-end;
-
 procedure TDigitMainForm.UpdateZoomImage(X, Y: Integer);
 const
   span = 20;
@@ -2380,15 +2358,15 @@ begin
   // Make sure that the image is updated
   Application.ProcessMessages;
 
-  if (X < Span) then
+  if (X < span) then
   begin
     Xo := 0;
-    Xf := 2*span + 1;
+    Xf := 2 * span + 1;
   end
   else if (X > (PlotImage.Width - span - 1)) then
   begin
     Xf := PlotImage.Width;
-    Xo := Xf - 2*span - 1;
+    Xo := Xf - 2 * span - 1;
   end
   else
   begin
@@ -2396,15 +2374,15 @@ begin
     Xf := X + span + 1;
   end;
 
-  if (Y < Span) then
+  if (Y < span) then
   begin
     Yo := 0;
-    Yf := 2*span + 1;
+    Yf := 2 * span + 1;
   end
   else if (Y > (PlotImage.Height - span - 1)) then
   begin
     Yf := PlotImage.Height;
-    Yo := Yf - 2*span - 1;
+    Yo := Yf - 2 * span - 1;
   end
   else
   begin
@@ -2418,8 +2396,8 @@ begin
     TempBmp := PlotImage.GetZoomImage(ZoomImage.Width, ZoomImage.Height, ImgRect);
     with TempBmp do
     begin
-      Xc := Width*(X - Xo) div (2*span);
-      Yc := Height*(Y - Yo) div (2*span);
+      Xc := Width * (X - Xo) div (2 * span);
+      Yc := Height * (Y - Yo) div (2 * span);
 
       Canvas.Pen.Mode := pmNot;
       Canvas.Line(Xc - 10, Yc, Xc + 11, Yc);
@@ -2441,7 +2419,7 @@ procedure TDigitMainForm.ClearZoomImage;
 begin
   with ZoomImage.Canvas do
   begin
-    Brush.Color:= clBtnFace;
+    Brush.Color := clBtnFace;
     Pen.Mode := pmCopy;
     Pen.Color := clBtnFace;
     Pen.Style := psSolid;
@@ -2474,14 +2452,14 @@ begin
     piSetPlotBox: begin
       with PlotImage.Plot.Box do
       begin
-        EditVX1.Value := Round(PlotImage.Zoom*Vertex[0].X);
-        EditVY1.Value := Round(PlotImage.Zoom*Vertex[0].Y);
-        EditVX2.Value := Round(PlotImage.Zoom*Vertex[1].X);
-        EditVY2.Value := Round(PlotImage.Zoom*Vertex[1].Y);
-        EditVX3.Value := Round(PlotImage.Zoom*Vertex[2].X);
-        EditVY3.Value := Round(PlotImage.Zoom*Vertex[2].Y);
-        EditVX4.Value := Round(PlotImage.Zoom*Vertex[3].X);
-        EditVY4.Value := Round(PlotImage.Zoom*Vertex[3].Y);
+        EditVX1.Value := Round(PlotImage.Zoom * Vertex[0].X);
+        EditVY1.Value := Round(PlotImage.Zoom * Vertex[0].Y);
+        EditVX2.Value := Round(PlotImage.Zoom * Vertex[1].X);
+        EditVY2.Value := Round(PlotImage.Zoom * Vertex[1].Y);
+        EditVX3.Value := Round(PlotImage.Zoom * Vertex[2].X);
+        EditVY3.Value := Round(PlotImage.Zoom * Vertex[2].Y);
+        EditVX4.Value := Round(PlotImage.Zoom * Vertex[3].X);
+        EditVY4.Value := Round(PlotImage.Zoom * Vertex[3].Y);
       end;
     end;
     piSetGrid: begin
@@ -2491,7 +2469,7 @@ begin
         btnMinorGrid.ButtonColor := MinorGridColor;
         btnBackground.ButtonColor := BckgndColor;
         edtGridTolerance.Value := Tolerance;
-        edtGridThreshold.Value := Round(100*Threshold);
+        edtGridThreshold.Value := Round(100 * Threshold);
         chbRebuildCurve.Checked := FixCurve;
         edtGridMask.Value := MaskSize;
       end;
@@ -2547,8 +2525,8 @@ begin
     GridShowHide.ImageIndex := 39;
 end;
 
-procedure TDigitMainForm.PlotImageMouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
+procedure TDigitMainForm.PlotImageMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   case Button of
     mbLeft: begin
@@ -2588,8 +2566,8 @@ begin
     end;
     mbRight: begin
       DigitizeFromHereItem.Enabled := PlotImage.Plot.Scale.IsValid and PlotImage.ColorIsSet;
-      TmpPoint.X := X/PlotImage.Zoom;
-      TmpPoint.Y := Y/PlotImage.Zoom;
+      TmpPoint.X := X / PlotImage.Zoom;
+      TmpPoint.Y := Y / PlotImage.Zoom;
     end;
   end;
 end;
@@ -2602,8 +2580,8 @@ begin
   StatusBar.Panels[2].Text := '';
 end;
 
-procedure TDigitMainForm.PlotImageMouseMove(Sender: TObject; Shift: TShiftState;
-  X, Y: Integer);
+procedure TDigitMainForm.PlotImageMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
 var
   Pt: TCurvePoint;
 begin
@@ -2614,8 +2592,7 @@ begin
     if (Zoom = 1) then
       StatusBar.Panels[1].Text := Format('%d, %d', [X, Y])
     else
-      StatusBar.Panels[1].Text := Format('%d, %d (%.1f, %.1f)',
-                                         [X, Y, X/Zoom, Y/Zoom]);
+      StatusBar.Panels[1].Text := Format('%d, %d (%.1f, %.1f)', [X, Y, X / Zoom, Y / Zoom]);
     if Plot.Scale.IsValid then
     begin
       Pt := ConvertCoords(X, Y);
@@ -2626,8 +2603,8 @@ begin
   end;
 end;
 
-procedure TDigitMainForm.PlotImageMouseUp(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure TDigitMainForm.PlotImageMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
 begin
   UpdateZoomImage(X, Y);
 end;
@@ -2661,12 +2638,14 @@ begin
   SetIsSaved(False, PlotImage.State in [piSetCurve, piSetScale]);
 end;
 
-procedure TDigitMainForm.PlotImagePrintMessage(Sender: TObject; Msg: String; MsgType: TMsgDlgType);
+procedure TDigitMainForm.PlotImagePrintMessage(Sender: TObject;
+  Msg: String; MsgType: TMsgDlgType);
 begin
   PrintUserMessage(Msg, MsgType);
 end;
 
-procedure TDigitMainForm.PlotImageShowProgress(Sender: TObject; Progress: Cardinal; Msg: String);
+procedure TDigitMainForm.PlotImageShowProgress(Sender: TObject;
+  Progress: Cardinal; Msg: String);
 begin
   ToolCancelAction.Enabled := True;
   sep08.Visible := True;
@@ -2695,7 +2674,8 @@ begin
   end;
 end;
 
-procedure TDigitMainForm.PlotImageStateChanged(Sender: TObject; NewState: TPlotImageState);
+procedure TDigitMainForm.PlotImageStateChanged(Sender: TObject;
+  NewState: TPlotImageState);
 begin
   if (pcInput.ActivePageIndex <> Integer(NewState)) then
     pcInput.ActivePageIndex := Integer(NewState);
@@ -2706,22 +2686,23 @@ begin
   UpdateGUI;
 end;
 
-procedure TDigitMainForm.PlotImageMarkerDragged(Sender: TObject; Marker: TMarker; Zoom: Boolean);
+procedure TDigitMainForm.PlotImageMarkerDragged(Sender: TObject;
+  Marker: TMarker; Zoom: Boolean);
 
-  // Avoid an update loop, values come from PlotImage
+// Avoid an update loop, values come from PlotImage
   procedure UpdateEditors(Point: TCurvePoint; EditX, EditY: TBCTrackbarUpdown);
   var
-    Ex, Ey: TTrackbarUpDownChangeEvent;
+    ex, Ey: TTrackbarUpDownChangeEvent;
   begin
-    Ex := EditX.OnChange;
+    ex := EditX.OnChange;
     Ey := EditY.OnChange;
-    EditX.OnChange := Nil;
-    EditY.OnChange := Nil;
+    EditX.OnChange := nil;
+    EditY.OnChange := nil;
 
     EditX.Value := Round(Point.X);
     EditY.Value := Round(Point.Y);
 
-    EditX.OnChange := Ex;
+    EditX.OnChange := ex;
     EditY.OnChange := Ey;
   end;
 
@@ -2759,18 +2740,20 @@ end;
 
 procedure TDigitMainForm.PlotImageZoomChanged(Sender: TObject; Zoom: Double);
 begin
-  tbZoom.Value := Round(Zoom*100);
+  tbZoom.Value := Round(Zoom * 100);
 
   UpdateGUI;
   UpdateControls;
 end;
 
-procedure TDigitMainForm.PlotImageActivePlotChanging(Sender: TObject; OldIndex, NewIndex: Integer);
+procedure TDigitMainForm.PlotImageActivePlotChanging(Sender: TObject;
+  OldIndex, NewIndex: Integer);
 begin
   // Nothing (for now)
 end;
 
-procedure TDigitMainForm.PlotImageActivePlotChanged(Sender: TObject; OldIndex, NewIndex: Integer);
+procedure TDigitMainForm.PlotImageActivePlotChanged(Sender: TObject;
+  OldIndex, NewIndex: Integer);
 begin
   //Change active tab
   if (tcPlots.TabIndex <> NewIndex) then
@@ -2791,12 +2774,14 @@ begin
   UpdateView;
 end;
 
-procedure TDigitMainForm.PlotImageActiveCurveChanging(Sender: TObject; OldIndex, NewIndex: Integer);
+procedure TDigitMainForm.PlotImageActiveCurveChanging(Sender: TObject;
+  OldIndex, NewIndex: Integer);
 begin
   // Nothing (for now)
 end;
 
-procedure TDigitMainForm.PlotImageActiveCurveChanged(Sender: TObject; OldIndex, NewIndex: Integer);
+procedure TDigitMainForm.PlotImageActiveCurveChanged(Sender: TObject;
+  OldIndex, NewIndex: Integer);
 begin
   // Change active tab
   if (tcCurves.TabIndex <> NewIndex) then
@@ -2842,8 +2827,8 @@ begin
   {$endif}
 end;
 
-procedure TDigitMainForm.MainPlotMouseMove(Sender: TObject; Shift: TShiftState;
-  X, Y: Integer);
+procedure TDigitMainForm.MainPlotMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
 var
   Pt: TDoublePoint;
 begin
@@ -2856,13 +2841,13 @@ begin
     case PlotImage.Plot.Scale.XScale of
       stLog: Pt.X := Power(10, Pt.X);
       stLn: Pt.X := Exp(Pt.X);
-      stInverse: Pt.X := 1/Pt.X;
+      stInverse: Pt.X := 1 / Pt.X;
     end;
     // Calculate the correct value for the Y axis
     case PlotImage.Plot.Scale.YScale of
       stLog: Pt.Y := Power(10, Pt.Y);
       stLn: Pt.Y := Exp(Pt.Y);
-      stInverse: Pt.Y := 1/Pt.Y;
+      stInverse: Pt.Y := 1 / Pt.Y;
     end;
   end;
 
@@ -2980,10 +2965,10 @@ begin
     begin
       ManualZoom := Zoom.ManualZoom;
 
-      ZoomXmin := Zoom.Xmin;
-      ZoomXmax := Zoom.Xmax;
-      ZoomYmin := Zoom.Ymin;
-      ZoomYmax := Zoom.Ymax;
+      ZoomXmin := Zoom.XMin;
+      ZoomXmax := Zoom.XMax;
+      ZoomYmin := Zoom.YMin;
+      ZoomYmax := Zoom.YMax;
     end;
   end;
 end;
@@ -2993,11 +2978,11 @@ begin
   edtStepChange(Sender, True);
 end;
 
-procedure TDigitMainForm.tbZoomChange(Sender: TObject; AByUser: boolean);
+procedure TDigitMainForm.tbZoomChange(Sender: TObject; AByUser: Boolean);
 begin
   if AByUser then
     with TBCTrackbarUpdown(Sender) do
-      PlotImage.Zoom := Value/100;
+      PlotImage.Zoom := Value / 100;
 end;
 
 procedure TDigitMainForm.tcCurvesTabChanged(Sender: TObject);
@@ -3006,8 +2991,8 @@ begin
   PlotImage.CurveIndex := tcCurves.TabIndex;
 end;
 
-procedure TDigitMainForm.tcCurvesTabClose(Sender: TObject; ATabIndex: integer;
-  var ACanClose, ACanContinue: boolean);
+procedure TDigitMainForm.tcCurvesTabClose(Sender: TObject; ATabIndex: Integer;
+  var ACanClose, ACanContinue: Boolean);
 begin
   ACanClose := False;
 
@@ -3020,14 +3005,13 @@ begin
     end;
 end;
 
-procedure TDigitMainForm.tcCurvesTabDblClick(Sender: TObject; AIndex: integer);
+procedure TDigitMainForm.tcCurvesTabDblClick(Sender: TObject; AIndex: Integer);
 begin
   if ToolCurveName.Enabled then
     RenameCurve(AIndex);
 end;
 
-procedure TDigitMainForm.tcCurvesTabMove(Sender: TObject; AIndexFrom,
-  AIndexTo: integer);
+procedure TDigitMainForm.tcCurvesTabMove(Sender: TObject; AIndexFrom, AIndexTo: Integer);
 begin
   if PlotImage.MoveCurve(AIndexFrom, AIndexTo) then
   begin
@@ -3048,8 +3032,8 @@ begin
   PlotImage.PlotIndex := tcPlots.TabIndex;
 end;
 
-procedure TDigitMainForm.tcPlotsTabClose(Sender: TObject; ATabIndex: integer;
-  var ACanClose, ACanContinue: boolean);
+procedure TDigitMainForm.tcPlotsTabClose(Sender: TObject; ATabIndex: Integer;
+  var ACanClose, ACanContinue: Boolean);
 begin
   ACanClose := False;
 
@@ -3062,14 +3046,13 @@ begin
     end;
 end;
 
-procedure TDigitMainForm.tcPlotsTabDblClick(Sender: TObject; AIndex: integer);
+procedure TDigitMainForm.tcPlotsTabDblClick(Sender: TObject; AIndex: Integer);
 begin
   if ToolPlotName.Enabled then
     RenamePlot(AIndex);
 end;
 
-procedure TDigitMainForm.tcPlotsTabMove(Sender: TObject; AIndexFrom,
-  AIndexTo: integer);
+procedure TDigitMainForm.tcPlotsTabMove(Sender: TObject; AIndexFrom, AIndexTo: Integer);
 begin
   if PlotImage.MovePlot(AIndexFrom, AIndexTo) then
   begin
@@ -3114,9 +3097,8 @@ procedure TDigitMainForm.ToolCorrectDistortionExecute(Sender: TObject);
 begin
   // Almost ready, but not yet
   if (MessageDlg('You are about to crop the current plot image.' +
-                 ' This action cannot be undone and will reset the' +
-                 ' digitization. Continue?',
-                 mtWarning, [mbYes, mbNo], 0) = mrYes) then
+    ' This action cannot be undone and will reset the' + ' digitization. Continue?',
+    mtWarning, [mbYes, mbNo], 0) = mrYes) then
     PlotImage.UndistortImage;
 end;
 
@@ -3201,10 +3183,7 @@ var
   TmpOpt: TPlotOptions;
 begin
   //Replace the curve by interpolated values
-  PlotImage.Interpolate(seXo.Value, seXf.Value,
-                        seInterpPoints.Value,
-                        seInterpDegree.Value,
-                        False, itpBSpline);
+  PlotImage.Interpolate(seXo.Value, seXf.Value, seInterpPoints.Value, seInterpDegree.Value, False, itpBSpline);
   CurveToGUI;
 
   TmpOpt := PlotImage.Options;
@@ -3218,10 +3197,7 @@ var
   TmpOpt: TPlotOptions;
 begin
   //Replace the curve by interpolated values
-  PlotImage.Interpolate(seXo.Value, seXf.Value,
-                        seInterpPoints.Value,
-                        seInterpDegree.Value,
-                        False, itpLinear);
+  PlotImage.Interpolate(seXo.Value, seXf.Value, seInterpPoints.Value, seInterpDegree.Value, False, itpLinear);
   CurveToGUI;
 
   TmpOpt := PlotImage.Options;
@@ -3267,9 +3243,9 @@ var
 begin
   //Replace the curve by interpolated values
   PlotImage.Interpolate(seXo.Value, seXf.Value,
-                        seInterpPoints.Value,
-                        seInterpDegree.Value,
-                        False, itpPoly);
+    seInterpPoints.Value,
+    seInterpDegree.Value,
+    False, itpPoly);
   CurveToGUI;
 
   TmpOpt := PlotImage.Options;
@@ -3284,14 +3260,14 @@ begin
 
   with PlotImage.Plot.Box do
   begin
-    EditVX1.Value := Round(PlotImage.Zoom*Vertex[0].X);
-    EditVY1.Value := Round(PlotImage.Zoom*Vertex[0].Y);
-    EditVX2.Value := Round(PlotImage.Zoom*Vertex[1].X);
-    EditVY2.Value := Round(PlotImage.Zoom*Vertex[1].Y);
-    EditVX3.Value := Round(PlotImage.Zoom*Vertex[2].X);
-    EditVY3.Value := Round(PlotImage.Zoom*Vertex[2].Y);
-    EditVX4.Value := Round(PlotImage.Zoom*Vertex[3].X);
-    EditVY4.Value := Round(PlotImage.Zoom*Vertex[3].Y);
+    EditVX1.Value := Round(PlotImage.Zoom * Vertex[0].X);
+    EditVY1.Value := Round(PlotImage.Zoom * Vertex[0].Y);
+    EditVX2.Value := Round(PlotImage.Zoom * Vertex[1].X);
+    EditVY2.Value := Round(PlotImage.Zoom * Vertex[1].Y);
+    EditVX3.Value := Round(PlotImage.Zoom * Vertex[2].X);
+    EditVY3.Value := Round(PlotImage.Zoom * Vertex[2].Y);
+    EditVX4.Value := Round(PlotImage.Zoom * Vertex[3].X);
+    EditVY4.Value := Round(PlotImage.Zoom * Vertex[3].Y);
   end;
 end;
 
@@ -3304,14 +3280,16 @@ begin
     case PlotImage.Options.DefaultDig of
       digColor: btnDigitize.Action := ToolDigitColor;
       digMarkers: btnDigitize.Action := ToolDigitMarkers;
-      else btnDigitize.Action := ToolDigitLine;
+      else
+        btnDigitize.Action := ToolDigitLine;
     end;
 
     case PlotImage.Options.DefaultItp of
       itpSpline: btnResample.Action := ToolSplines;
       itpLinear: btnResample.Action := ToolLinear;
-      itpPoly: btnResample.Action := Toolpolynomial;
-      else btnResample.Action := ToolBSplines;
+      itpPoly: btnResample.Action := ToolPolynomial;
+      else
+        btnResample.Action := ToolBSplines;
     end;
   end;
 end;
@@ -3363,9 +3341,9 @@ var
 begin
   //Replace the curve by interpolated values
   PlotImage.Interpolate(seXo.Value, seXf.Value,
-                        seInterpPoints.Value,
-                        seInterpDegree.Value,
-                        False, itpSpline);
+    seInterpPoints.Value,
+    seInterpDegree.Value,
+    False, itpSpline);
   CurveToGUI;
 
   TmpOpt := PlotImage.Options;
@@ -3378,11 +3356,21 @@ end;
 
 initialization
 
-{$IFDEF TIFF_CLIPBOARD_FORMAT}
-  tiffClipboardFormat := RegisterClipboardFormat({$IFDEF DARWIN}'public.tiff'{$ELSE}'image/tiff'{$ENDIF});
-{$ENDIF}
-{$IFDEF PNG_CLIPBOARD_FORMAT}
-  pngClipboardFormat := RegisterClipboardFormat({$IFDEF DARWIN}'public.png'{$ELSE}{$IFDEF WINDOWS}'PNG'{$ELSE}'image/png'{$ENDIF}{$ENDIF});
-{$ENDIF}
+  {$IFDEF TIFF_CLIPBOARD_FORMAT}
+tiffClipboardFormat := RegisterClipboardFormat({$IFDEF DARWIN}'public.tiff'{$ELSE}'image/tiff'{$ENDIF});
+  {$ENDIF}
+  {$IFDEF PNG_CLIPBOARD_FORMAT}
+  pngClipboardFormat := RegisterClipboardFormat(
+    {$IFDEF DARWIN}
+'public.png'
+    {$ELSE}
+    {$IFDEF WINDOWS}
+'PNG'
+    {$ELSE}
+    'image/png'
+    {$ENDIF}
+    {$ENDIF}
+    );
+  {$ENDIF}
 
 end.

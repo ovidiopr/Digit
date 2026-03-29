@@ -4,130 +4,274 @@ unit urestore;
 
 interface
 
-uses SysUtils, Forms, LCLIntf, LCLType;
+uses
+  SysUtils, Classes, Forms, Controls, ExtCtrls, Types, Math, IniFiles,
+  LCLIntf, LCLType, LCLProc;
 
 type
   EWinRestorer = class(Exception);
-  TWhatSave = (svDefault, svSize, svLocation, svState);
+
+  TWhatSave = (svDefault, svSize, svLocation, svState, svPanels);
   STWhatSave = set of TWhatSave;
+
   TWinRestorer = class(TObject)
-    protected
-      mIniFile: TFilename;
-      mIniSect: String[80];
-      mIsInitialized: Boolean;
-      mDefaultWhat: STWhatSave;
-    public
-     constructor Create(IniName: TFileName; DefaultWhatSave: STWhatSave);
-     procedure SaveWin(TheForm: TForm; What: STWhatSave);
-     procedure RestoreWin(TheForm: TForm; What: STWhatSave);
-     property IniFileName: String read mIniFile;
-   end;
+  private
+    mIniFile: TFileName;
+    mIniSect: string;
+    mDefaultWhat: STWhatSave;
+
+    procedure EnsureFormVisible(F: TForm);
+    function ScaleValue(Value, FromDPI, ToDPI: Integer): Integer;
+    procedure SavePanels(Form: TForm; Ini: TCustomIniFile; const Section, FormName: string);
+    procedure RestorePanels(Form: TForm; Ini: TCustomIniFile; const Section, FormName: string);
+  public
+    constructor Create(const IniName: TFileName; DefaultWhatSave: STWhatSave);
+    procedure SaveWin(TheForm: TForm; What: STWhatSave = [svDefault]);
+    procedure RestoreWin(TheForm: TForm; What: STWhatSave = [svDefault]);
+    property IniFileName: TFileName read mIniFile;
+  end;
 
 const
-  WhatSave_All = [svSize, svLocation, svState];
+  WhatSave_All = [svSize, svLocation, svState, svPanels];
 
 var
-  GlobalWinRestorer: TWinRestorer;
+  GlobalWinRestorer: TWinRestorer = nil;
 
 implementation
 
-uses IniFiles;
+{ --------------------------------------------------------------------------- }
 
-constructor TWinRestorer.Create(IniName: TFileName; DefaultWhatSave: STWhatSave);
+constructor TWinRestorer.Create(const IniName: TFileName; DefaultWhatSave: STWhatSave);
 begin
   inherited Create;
+
   if svDefault in DefaultWhatSave then
-    raise EWinRestorer.Create('Attempt to initialize default window position' +
-                              ' paramaters with set containing [default]' +
-                              ' item. Default params may contain only members' +
-                              ' of [size, location, state].')
-  else
-    mDefaultWhat := DefaultWhatSave;
+    raise EWinRestorer.Create('DefaultWhatSave must not include svDefault.');
 
   mIniFile := IniName;
   mIniSect := 'WindowsRestorer';
+  mDefaultWhat := DefaultWhatSave;
 end;
 
-procedure TWinRestorer.RestoreWin(TheForm: TForm; What: STWhatSave);
-var
-  FormNm, SectionNm: String[80];
-  Ini: TIniFile;
-  n, l, t, w, h: Integer;
+function TWinRestorer.ScaleValue(Value, FromDPI, ToDPI: Integer): Integer;
 begin
-  Ini := TIniFile.Create(mIniFile);
-  try
-    SectionNm := mIniSect;
-    FormNm := TheForm.ClassName;
-    if svDefault in What then What := mDefaultWhat;
-    n := 1;
-    if svState in What then
-      n := Ini.ReadInteger(SectionNm, FormNm + '_WindowState', 0);
-      case n of
-        1: begin
-          TheForm.WindowState := wsMinimized;
-        end;
-        2: begin
-          TheForm.WindowState := wsNormal;
-          with TheForm do
-          begin
-            l := Left;
-            t := Top;
-            h := Height;
-            w := Width;
-          end;
-          if svSize in What then
-          begin
-            w := Ini.ReadInteger(SectionNm, FormNm + '_Width', w);
-            h := Ini.ReadInteger(SectionNm, FormNm + '_Height', h);
-          end;
-          if svLocation in What then
-          begin
-            t := Ini.ReadInteger(SectionNm, FormNm + '_Top', t);
-            l := Ini.ReadInteger(SectionNm, FormNm + '_Left', l);
-          end;
-          TheForm.SetBounds(l,t,w,h);
-        end;
-        3: begin
-          TheForm.WindowState := wsMaximized;
-        end;
+  if (FromDPI <= 0) or (ToDPI <= 0) then Exit(Value);
+  Result := Round((Int64(Value) * ToDPI) div FromDPI);
+end;
+
+procedure TWinRestorer.EnsureFormVisible(F: TForm);
+var
+  R: TRect;
+  M: TMonitor;
+  L, T: Integer;
+begin
+  R := Rect(F.Left, F.Top, F.Left + F.Width, F.Top + F.Height);
+  M := Screen.MonitorFromRect(R, mdNearest);
+  if M = nil then M := Screen.PrimaryMonitor;
+
+  L := F.Left;
+  T := F.Top;
+
+  if L + F.Width < M.Left then L := M.Left;
+  if T + F.Height < M.Top then T := M.Top;
+
+  if L > M.Left + M.Width - 50 then L := M.Left + Max(0, M.Width - F.Width);
+  if T > M.Top + M.Height - 50 then T := M.Top + Max(0, M.Height - F.Height);
+
+  if F.Width > M.Width then F.Width := M.Width;
+  if F.Height > M.Height then F.Height := M.Height;
+
+  F.Left := L;
+  F.Top := T;
+end;
+
+{ --------------------------------------------------------------------------- }
+{ PANEL SAVE/RESTORE                                                          }
+{ --------------------------------------------------------------------------- }
+
+procedure TWinRestorer.SavePanels(Form: TForm; Ini: TCustomIniFile;
+  const Section, FormName: string);
+var
+  i: Integer;
+  P: TPanel;
+  Key: string;
+begin
+  for i := 0 to Form.ComponentCount - 1 do
+  begin
+    if Form.Components[i] is TPanel then
+    begin
+      P := TPanel(Form.Components[i]);
+
+      if P.Align in [alLeft, alRight] then
+      begin
+        Key := FormName + '_Panel_' + P.Name + '_Width';
+        Ini.WriteInteger(Section, Key, P.Width);
+      end
+      else if P.Align in [alTop, alBottom] then
+      begin
+        Key := FormName + '_Panel_' + P.Name + '_Height';
+        Ini.WriteInteger(Section, Key, P.Height);
       end;
-  finally
-    Ini.Free;
+    end;
   end;
 end;
+
+procedure TWinRestorer.RestorePanels(Form: TForm; Ini: TCustomIniFile;
+  const Section, FormName: string);
+var
+  i: Integer;
+  P: TPanel;
+  SavedSize: Integer;
+  Key: string;
+begin
+  for i := 0 to Form.ComponentCount - 1 do
+  begin
+    if Form.Components[i] is TPanel then
+    begin
+      P := TPanel(Form.Components[i]);
+
+      if P.Align in [alLeft, alRight] then
+      begin
+        Key := FormName + '_Panel_' + P.Name + '_Width';
+        SavedSize := Ini.ReadInteger(Section, Key, P.Width);
+        P.Width := SavedSize;
+      end
+      else if P.Align in [alTop, alBottom] then
+      begin
+        Key := FormName + '_Panel_' + P.Name + '_Height';
+        SavedSize := Ini.ReadInteger(Section, Key, P.Height);
+        P.Height := SavedSize;
+      end;
+    end;
+  end;
+end;
+
+{ --------------------------------------------------------------------------- }
+{ MAIN SAVE }
+{ --------------------------------------------------------------------------- }
 
 procedure TWinRestorer.SaveWin(TheForm: TForm; What: STWhatSave);
 var
-  FormNm, SectionNm: String[80];
-  w : STWhatsave;
   Ini: TIniFile;
+  Section, FormName: string;
+  UseSet: STWhatSave;
 begin
+  if not Assigned(TheForm) then Exit;
+
+  if svDefault in What then
+    UseSet := mDefaultWhat
+  else
+    UseSet := What;
+
   Ini := TIniFile.Create(mIniFile);
   try
-    SectionNm := mIniSect;
-    FormNm := TheForm.ClassName;
-    if svDefault in What then w := mDefaultWhat else w := mDefaultWhat;
-    if svSize in w then
+    Section := mIniSect;
+    FormName := TheForm.ClassName;
+
+    Ini.WriteInteger(Section, FormName + '_DPI', TheForm.PixelsPerInch);
+
+    if svSize in UseSet then
     begin
-      Ini.WriteInteger(SectionNm, FormNm + '_Width', TheForm.Width);
-      Ini.WriteInteger(SectionNm, FormNm + '_Height', TheForm.Height);
+      Ini.WriteInteger(Section, FormName + '_Width',  TheForm.Width);
+      Ini.WriteInteger(Section, FormName + '_Height', TheForm.Height);
     end;
-    if svLocation in w then
+
+    if svLocation in UseSet then
     begin
-      Ini.WriteInteger(SectionNm, FormNm + '_Top', TheForm.Top);
-      Ini.WriteInteger(SectionNm, FormNm + '_Left', TheForm.Left);
+      Ini.WriteInteger(Section, FormName + '_Left', TheForm.Left);
+      Ini.WriteInteger(Section, FormName + '_Top',  TheForm.Top);
     end;
-    if svState in w then
+
+    if svState in UseSet then
+    begin
       case TheForm.WindowState of
-        wsMinimized: Ini.WriteInteger(SectionNm, FormNm + '_WindowState', 1);
-        wsNormal: Ini.WriteInteger(SectionNm, FormNm + '_WindowState', 2);
-        wsMaximized: Ini.WriteInteger(SectionNm, FormNm + '_WindowState', 3);
+        wsMinimized: Ini.WriteInteger(Section, FormName + '_WindowState', 1);
+        wsNormal:    Ini.WriteInteger(Section, FormName + '_WindowState', 2);
+        wsMaximized: Ini.WriteInteger(Section, FormName + '_WindowState', 3);
       end;
+    end;
+
+    if svPanels in UseSet then
+      SavePanels(TheForm, Ini, Section, FormName);
+
   finally
     Ini.Free;
   end;
 end;
 
-initialization
+{ --------------------------------------------------------------------------- }
+{ MAIN RESTORE }
+{ --------------------------------------------------------------------------- }
+
+procedure TWinRestorer.RestoreWin(TheForm: TForm; What: STWhatSave);
+var
+  Ini: TIniFile;
+  Section, FormName: string;
+  UseSet: STWhatSave;
+  SavedDPI, CurDPI: Integer;
+  l, t, w, h, stateCode: Integer;
+begin
+  if not Assigned(TheForm) then Exit;
+
+  if svDefault in What then
+    UseSet := mDefaultWhat
+  else
+    UseSet := What;
+
+  Ini := TIniFile.Create(mIniFile);
+  try
+    Section := mIniSect;
+    FormName := TheForm.ClassName;
+
+    CurDPI   := TheForm.PixelsPerInch;
+    SavedDPI := Ini.ReadInteger(Section, FormName + '_DPI', CurDPI);
+
+    l := TheForm.Left;
+    t := TheForm.Top;
+    w := TheForm.Width;
+    h := TheForm.Height;
+
+    if svSize in UseSet then
+    begin
+      w := Ini.ReadInteger(Section, FormName + '_Width', w);
+      h := Ini.ReadInteger(Section, FormName + '_Height', h);
+    end;
+
+    if svLocation in UseSet then
+    begin
+      l := Ini.ReadInteger(Section, FormName + '_Left', l);
+      t := Ini.ReadInteger(Section, FormName + '_Top', t);
+    end;
+
+    if (SavedDPI <> CurDPI) then
+    begin
+      l := ScaleValue(l, SavedDPI, CurDPI);
+      t := ScaleValue(t, SavedDPI, CurDPI);
+      w := ScaleValue(w, SavedDPI, CurDPI);
+      h := ScaleValue(h, SavedDPI, CurDPI);
+    end;
+
+    TheForm.SetBounds(l, t, w, h);
+
+    if svPanels in UseSet then
+      RestorePanels(TheForm, Ini, Section, FormName);
+
+    EnsureFormVisible(TheForm);
+
+    if svState in UseSet then
+    begin
+      stateCode := Ini.ReadInteger(Section, FormName + '_WindowState', 2);
+      case stateCode of
+        1: TheForm.WindowState := wsMinimized;
+        2: TheForm.WindowState := wsNormal;
+        3: TheForm.WindowState := wsMaximized;
+      end;
+    end;
+
+  finally
+    Ini.Free;
+  end;
+end;
+
 end.
 

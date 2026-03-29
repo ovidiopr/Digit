@@ -1,7 +1,7 @@
 object DigitMainForm: TDigitMainForm
   Left = 279
   Height = 517
-  Top = 209
+  Top = 157
   Width = 1191
   AllowDropFiles = True
   Caption = 'Digitizer'
@@ -1224,14 +1224,14 @@ object DigitMainForm: TDigitMainForm
     00E1FF0000E5FF0000EFFF0000FBFF0000FFFF0000FFFF
   }
   Menu = MainMenu
+  Position = poDefault
+  LCLVersion = '4.0.0.4'
   OnActivate = FormActivate
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDropFiles = FormDropFiles
   OnShow = FormShow
-  Position = poDefault
-  LCLVersion = '3.8.0.0'
   object tbMain: TToolBar
     Left = 0
     Height = 40
@@ -1914,7 +1914,6 @@ object DigitMainForm: TDigitMainForm
         Width = 153
         Align = alClient
         AutoEdit = False
-        FixedCols = 0
         RowCount = 2
         TabOrder = 0
         OnSelectCell = leDataSelectCell
@@ -1978,13 +1977,13 @@ object DigitMainForm: TDigitMainForm
       BorderSpacing.Top = 5
       Images = LargeImageList
       MultiLine = True
+      Options = [nboMultiLine]
       ParentShowHint = False
       ShowHint = True
       Style = tsButtons
       TabIndex = 0
       TabOrder = 0
       OnChange = pcInputChange
-      Options = [nboMultiLine]
       object tsCurve: TTabSheet
         Hint = 'Curve options|Options to configure the digitization of the current curve'
         Caption = 'Curve'
@@ -2078,10 +2077,10 @@ object DigitMainForm: TDigitMainForm
               'Left to Right (CCW)'
               'Right to Left (CW)'
             )
-            OnSelectionChanged = rgDirectionSelectionChanged
             ParentBackground = False
             ParentFont = False
             TabOrder = 0
+            OnSelectionChanged = rgDirectionSelectionChanged
           end
           object lblStep: TLabel
             AnchorSideLeft.Control = sbCurve
@@ -2768,7 +2767,7 @@ object DigitMainForm: TDigitMainForm
               Left = 0
               Height = 13
               Top = 0
-              Width = 14
+              Width = 13
               Font.Color = clBlack
               Font.Height = -11
               Font.Name = 'Default'
@@ -2777,31 +2776,31 @@ object DigitMainForm: TDigitMainForm
               ParentFont = False
             end
             object lblImg1: TLabel
-              Left = 16
+              Left = 15
               Height = 13
               Top = 0
               Width = 82
               Caption = 'Image'
             end
             object lblPlt1: TLabel
-              Left = 100
+              Left = 99
               Height = 13
               Top = 0
-              Width = 87
+              Width = 88
               Caption = 'Plot'
             end
             object lblX1: TLabel
               Left = 0
               Height = 22
               Top = 15
-              Width = 14
+              Width = 13
               Alignment = taRightJustify
               Caption = 'X:'
               Layout = tlCenter
             end
             object EditIX1: TBCTrackbarUpdown
               Tag = 1
-              Left = 16
+              Left = 15
               Height = 22
               Top = 15
               Width = 82
@@ -2880,10 +2879,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditPX1: TEdit
               Tag = 1
-              Left = 100
+              Left = 99
               Height = 22
               Top = 15
-              Width = 87
+              Width = 88
               Color = clBtnFace
               Font.Color = clWindowText
               Font.Height = -13
@@ -2896,14 +2895,14 @@ object DigitMainForm: TDigitMainForm
               Left = 0
               Height = 22
               Top = 39
-              Width = 14
+              Width = 13
               Alignment = taRightJustify
               Caption = 'Y:'
               Layout = tlCenter
             end
             object EditIY1: TBCTrackbarUpdown
               Tag = 1
-              Left = 16
+              Left = 15
               Height = 22
               Top = 39
               Width = 82
@@ -2982,10 +2981,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditPY1: TEdit
               Tag = 1
-              Left = 100
+              Left = 99
               Height = 22
               Top = 39
-              Width = 87
+              Width = 88
               Font.Color = clWindowText
               Font.Height = -13
               Font.Name = 'Default'
@@ -3020,7 +3019,7 @@ object DigitMainForm: TDigitMainForm
               Left = 0
               Height = 13
               Top = 0
-              Width = 14
+              Width = 13
               Font.Color = clBlack
               Font.Height = -11
               Font.Name = 'Default'
@@ -3029,31 +3028,31 @@ object DigitMainForm: TDigitMainForm
               ParentFont = False
             end
             object lblImg2: TLabel
-              Left = 16
+              Left = 15
               Height = 13
               Top = 0
               Width = 82
               Caption = 'Image'
             end
             object lblPlt2: TLabel
-              Left = 100
+              Left = 99
               Height = 13
               Top = 0
-              Width = 87
+              Width = 88
               Caption = 'Plot'
             end
             object lblX2: TLabel
               Left = 0
               Height = 22
               Top = 15
-              Width = 14
+              Width = 13
               Alignment = taRightJustify
               Caption = 'X:'
               Layout = tlCenter
             end
             object EditIX2: TBCTrackbarUpdown
               Tag = 2
-              Left = 16
+              Left = 15
               Height = 22
               Top = 15
               Width = 82
@@ -3132,10 +3131,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditPX2: TEdit
               Tag = 2
-              Left = 100
+              Left = 99
               Height = 22
               Top = 15
-              Width = 87
+              Width = 88
               Font.Color = clWindowText
               Font.Height = -13
               Font.Name = 'Default'
@@ -3147,14 +3146,14 @@ object DigitMainForm: TDigitMainForm
               Left = 0
               Height = 22
               Top = 39
-              Width = 14
+              Width = 13
               Alignment = taRightJustify
               Caption = 'Y:'
               Layout = tlCenter
             end
             object EditIY2: TBCTrackbarUpdown
               Tag = 2
-              Left = 16
+              Left = 15
               Height = 22
               Top = 39
               Width = 82
@@ -3233,10 +3232,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditPY2: TEdit
               Tag = 2
-              Left = 100
+              Left = 99
               Height = 22
               Top = 39
-              Width = 87
+              Width = 88
               Font.Color = clWindowText
               Font.Height = -13
               Font.Name = 'Default'
@@ -3271,7 +3270,7 @@ object DigitMainForm: TDigitMainForm
               Left = 0
               Height = 13
               Top = 0
-              Width = 14
+              Width = 13
               Font.Color = clBlack
               Font.Height = -11
               Font.Name = 'Default'
@@ -3280,7 +3279,7 @@ object DigitMainForm: TDigitMainForm
               ParentFont = False
             end
             object lblImg3: TLabel
-              Left = 16
+              Left = 15
               Height = 13
               Top = 0
               Width = 82
@@ -3293,10 +3292,10 @@ object DigitMainForm: TDigitMainForm
               ParentFont = False
             end
             object lblPlt3: TLabel
-              Left = 100
+              Left = 99
               Height = 13
               Top = 0
-              Width = 87
+              Width = 88
               Caption = 'Plot'
               ParentColor = False
             end
@@ -3304,7 +3303,7 @@ object DigitMainForm: TDigitMainForm
               Left = 0
               Height = 22
               Top = 15
-              Width = 14
+              Width = 13
               Alignment = taRightJustify
               Caption = 'X:'
               Font.Color = clBlack
@@ -3317,7 +3316,7 @@ object DigitMainForm: TDigitMainForm
             end
             object EditIX3: TBCTrackbarUpdown
               Tag = 3
-              Left = 16
+              Left = 15
               Height = 22
               Top = 15
               Width = 82
@@ -3396,10 +3395,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditPX3: TEdit
               Tag = 3
-              Left = 100
+              Left = 99
               Height = 22
               Top = 15
-              Width = 87
+              Width = 88
               Font.Color = clWindowText
               Font.Height = -13
               Font.Name = 'Default'
@@ -3411,7 +3410,7 @@ object DigitMainForm: TDigitMainForm
               Left = 0
               Height = 22
               Top = 39
-              Width = 14
+              Width = 13
               Alignment = taRightJustify
               Caption = 'Y:'
               Layout = tlCenter
@@ -3419,7 +3418,7 @@ object DigitMainForm: TDigitMainForm
             end
             object EditIY3: TBCTrackbarUpdown
               Tag = 3
-              Left = 16
+              Left = 15
               Height = 22
               Top = 39
               Width = 82
@@ -3498,10 +3497,10 @@ object DigitMainForm: TDigitMainForm
             end
             object EditPY3: TEdit
               Tag = 3
-              Left = 100
+              Left = 99
               Height = 22
               Top = 39
-              Width = 87
+              Width = 88
               Font.Color = clWindowText
               Font.Height = -13
               Font.Name = 'Default'
@@ -5501,43 +5500,43 @@ object DigitMainForm: TDigitMainForm
       Caption = '&New'
       Hint = 'New|Create new project'
       ImageIndex = 0
-      OnExecute = FileNewExecute
       ShortCut = 16462
+      OnExecute = FileNewExecute
     end
     object FileOpen: TAction
       Category = 'File'
       Caption = '&Open'
       Hint = 'Open|Open project'
       ImageIndex = 1
-      OnExecute = FileOpenExecute
       ShortCut = 16463
+      OnExecute = FileOpenExecute
     end
     object HelpAbout: TAction
       Category = 'Help'
       Caption = '&About...'
       Hint = 'About...|Shows information about the application'
       ImageIndex = 28
-      OnExecute = HelpAboutExecute
       ShortCut = 112
+      OnExecute = HelpAboutExecute
     end
     object EditUndo: TAction
       Category = 'Edit'
       Caption = '&Undo'
       Hint = 'Undo|Undo the last change'
       ImageIndex = 8
-      OnExecute = EditUndoExecute
       SecondaryShortCuts.Strings = (
         'Cmd+Z'
       )
       ShortCut = 16474
+      OnExecute = EditUndoExecute
     end
     object EditRedo: TAction
       Category = 'Edit'
       Caption = '&Redo'
       Hint = 'Redo|Redo the last change'
       ImageIndex = 9
-      OnExecute = EditRedoExecute
       ShortCut = 16466
+      OnExecute = EditRedoExecute
     end
     object ModeCursor: TAction
       Tag = 1
@@ -5604,16 +5603,16 @@ object DigitMainForm: TDigitMainForm
       Caption = '&Copy curve'
       Hint = 'Copy curve|Copy curve data to clipboard'
       ImageIndex = 10
-      OnExecute = EditCopyCurveExecute
       ShortCut = 16451
+      OnExecute = EditCopyCurveExecute
     end
     object FileSave: TAction
       Category = 'File'
       Caption = '&Save'
       Hint = 'Save|Save project'
       ImageIndex = 2
-      OnExecute = FileSaveExecute
       ShortCut = 16467
+      OnExecute = FileSaveExecute
     end
     object FileSaveAs: TAction
       Category = 'File'
@@ -5634,64 +5633,64 @@ object DigitMainForm: TDigitMainForm
       Caption = '&Load image'
       Hint = 'Load image|Load a new image'
       ImageIndex = 5
-      OnExecute = FileImageExecute
       ShortCut = 16457
+      OnExecute = FileImageExecute
     end
     object FileExport: TAction
       Category = 'File'
       Caption = '&Export'
       Hint = 'Export|Export data'
       ImageIndex = 6
-      OnExecute = FileExportExecute
       ShortCut = 16453
+      OnExecute = FileExportExecute
     end
     object FileExit: TAction
       Category = 'File'
       Caption = 'E&xit'
       Hint = 'Exit|Exit application'
       ImageIndex = 7
-      OnExecute = FileExitExecute
       ShortCut = 49240
+      OnExecute = FileExitExecute
     end
     object MarkersMoveUp: TAction
       Category = 'Markers'
       Caption = '&Up'
       Hint = 'Move up|Move marker up'
       ImageIndex = 23
-      OnExecute = MarkersMoveUpExecute
       ShortCut = 8230
+      OnExecute = MarkersMoveUpExecute
     end
     object MarkersMoveDown: TAction
       Category = 'Markers'
       Caption = '&Down'
       Hint = 'Move down|Move marker down'
       ImageIndex = 24
-      OnExecute = MarkersMoveDownExecute
       ShortCut = 8232
+      OnExecute = MarkersMoveDownExecute
     end
     object MarkersMoveLeft: TAction
       Category = 'Markers'
       Caption = '&Left'
       Hint = 'Move left|Move marker left'
       ImageIndex = 30
-      OnExecute = MarkersMoveLeftExecute
       ShortCut = 8229
+      OnExecute = MarkersMoveLeftExecute
     end
     object MarkersMoveRight: TAction
       Category = 'Markers'
       Caption = '&Right'
       Hint = 'Move right|Move marker right'
       ImageIndex = 31
-      OnExecute = MarkersMoveRightExecute
       ShortCut = 8231
+      OnExecute = MarkersMoveRightExecute
     end
     object MarkersDelete: TAction
       Category = 'Markers'
       Caption = 'Delete'
       Hint = 'Delete|Delete marker'
       ImageIndex = 22
-      OnExecute = MarkersDeleteExecute
       ShortCut = 8200
+      OnExecute = MarkersDeleteExecute
     end
     object ModeGroupPoints: TAction
       Tag = 6
@@ -5751,99 +5750,99 @@ object DigitMainForm: TDigitMainForm
       Caption = '&Paste image'
       Hint = 'Paste image|Paste plot image from clipboard'
       ImageIndex = 45
-      OnExecute = EditPasteImageExecute
       ShortCut = 16470
+      OnExecute = EditPasteImageExecute
     end
     object ToolDigitLine: TAction
       Category = 'Tools'
       Caption = 'Digitize &line'
       Hint = 'Digitize line|Digitize the current plot by following a line'
       ImageIndex = 17
-      OnExecute = ToolDigitLineExecute
       ShortCut = 113
+      OnExecute = ToolDigitLineExecute
     end
     object ToolDigitColor: TAction
       Category = 'Tools'
       Caption = 'Digitize &color'
       Hint = 'Digitize color|Digitize the current plot by color'
       ImageIndex = 14
-      OnExecute = ToolDigitColorExecute
       ShortCut = 114
+      OnExecute = ToolDigitColorExecute
     end
     object ToolDigitMarkers: TAction
       Category = 'Tools'
       Caption = 'Digitize &markers'
       Hint = 'Digitize markers|Generate curve from markers in the current plot'
       ImageIndex = 19
-      OnExecute = ToolDigitMarkersExecute
       ShortCut = 115
+      OnExecute = ToolDigitMarkersExecute
     end
     object ToolAdjustCurve: TAction
       Category = 'Tools'
       Caption = '&Adjust curve'
       Hint = 'Adjust curve|Adjust curve to the current plot'
       ImageIndex = 18
-      OnExecute = ToolAdjustCurveExecute
       ShortCut = 116
+      OnExecute = ToolAdjustCurveExecute
     end
     object ToolAdjustNoise: TAction
       Category = 'Tools'
       Caption = '&Adjust noisy curve'
       Hint = 'Adjust noisy curve|Adjust noisy curve to the current plot'
       ImageIndex = 53
-      OnExecute = ToolAdjustNoiseExecute
       ShortCut = 117
+      OnExecute = ToolAdjustNoiseExecute
     end
     object ToolBSplines: TAction
       Category = 'Tools'
       Caption = '&B-Splines'
       Hint = 'B-Splines|Resample digitization using B-Splines'
       ImageIndex = 48
-      OnExecute = ToolBSplinesExecute
       ShortCut = 118
+      OnExecute = ToolBSplinesExecute
     end
     object EditZoomOriginal: TAction
       Category = 'Edit'
       Caption = 'Original zoom'
       Hint = 'Original zoom|Restore the original image size'
       ImageIndex = 54
-      OnExecute = EditZoomOriginalExecute
       ShortCut = 32817
+      OnExecute = EditZoomOriginalExecute
     end
     object EditZoomIn: TAction
       Category = 'Edit'
       Caption = 'Zoom in'
       Hint = 'Zoom in|Increase the image zoom'
       ImageIndex = 55
-      OnExecute = EditZoomInExecute
       SecondaryShortCuts.Strings = (
         'Alt+NumPLus'
       )
       ShortCut = 32875
+      OnExecute = EditZoomInExecute
     end
     object EditZoomOut: TAction
       Category = 'Edit'
       Caption = 'Zoom out'
       Hint = 'Zoom out|Decrease the image zoom'
       ImageIndex = 56
-      OnExecute = EditZoomOutExecute
       ShortCut = 32877
+      OnExecute = EditZoomOutExecute
     end
     object EditZoomFit: TAction
       Category = 'Edit'
       Caption = 'Fit best zoom'
       Hint = 'Fit best zoom|Set the optimal image zoom to fit in the screen'
       ImageIndex = 57
-      OnExecute = EditZoomFitExecute
       ShortCut = 32838
+      OnExecute = EditZoomFitExecute
     end
     object ToolSplines: TAction
       Category = 'Tools'
       Caption = '&Splines'
       Hint = 'B-Splines|Resample digitization using Splines'
       ImageIndex = 49
-      OnExecute = ToolSplinesExecute
       ShortCut = 119
+      OnExecute = ToolSplinesExecute
     end
     object ToolLinear: TAction
       Category = 'Tools'
@@ -5864,72 +5863,72 @@ object DigitMainForm: TDigitMainForm
       Caption = '&Smooth'
       Hint = 'Smooth|Smooth digitization'
       ImageIndex = 20
-      OnExecute = ToolSmoothExecute
       ShortCut = 120
+      OnExecute = ToolSmoothExecute
     end
     object ToolConvertToSymbols: TAction
       Category = 'Tools'
       Caption = 'Convert to &symbols'
       Hint = 'Convert to symbols|Convert digitization to symbols'
       ImageIndex = 21
-      OnExecute = ToolConvertToSymbolsExecute
       ShortCut = 121
+      OnExecute = ToolConvertToSymbolsExecute
     end
     object ToolClear: TAction
       Category = 'Tools'
       Caption = '&Clear'
       Hint = 'Clear|Clear digitization'
       ImageIndex = 22
-      OnExecute = ToolClearExecute
       ShortCut = 32776
+      OnExecute = ToolClearExecute
     end
     object ToolCurveUp: TAction
       Category = 'Tools'
       Caption = '&Up'
       Hint = 'Move up|Move digitization one pixel up'
       ImageIndex = 23
-      OnExecute = ToolCurveUpExecute
       ShortCut = 32806
+      OnExecute = ToolCurveUpExecute
     end
     object ToolCurveDown: TAction
       Category = 'Tools'
       Caption = 'D&own'
       Hint = 'Move down|Move digitization one pixel down'
       ImageIndex = 24
-      OnExecute = ToolCurveDownExecute
       ShortCut = 32808
+      OnExecute = ToolCurveDownExecute
     end
     object ToolCurveLeft: TAction
       Category = 'Tools'
       Caption = '&Left'
       Hint = 'Move left|Move digitization one pixel left'
       ImageIndex = 30
-      OnExecute = ToolCurveLeftExecute
       ShortCut = 32805
+      OnExecute = ToolCurveLeftExecute
     end
     object ToolCurveRight: TAction
       Category = 'Tools'
       Caption = '&Right'
       Hint = 'Move right|Move digitization one pixel right'
       ImageIndex = 31
-      OnExecute = ToolCurveRightExecute
       ShortCut = 32807
+      OnExecute = ToolCurveRightExecute
     end
     object ToolCurveAdd: TAction
       Category = 'Tools'
       Caption = '&Add curve'
       Hint = 'Add curve|Add a new curve to the digitization'
       ImageIndex = 25
-      OnExecute = ToolCurveAddExecute
       ShortCut = 16468
+      OnExecute = ToolCurveAddExecute
     end
     object ToolCurveDelete: TAction
       Category = 'Tools'
       Caption = '&Delete curve'
       Hint = 'Delete curve|Delete the active curve from the digitization'
       ImageIndex = 26
-      OnExecute = ToolCurveDeleteExecute
       ShortCut = 16471
+      OnExecute = ToolCurveDeleteExecute
     end
     object ToolCurveName: TAction
       Category = 'Tools'
@@ -5943,16 +5942,16 @@ object DigitMainForm: TDigitMainForm
       Caption = '&Add plot'
       Hint = 'Add plot|Add a new plot to the digitization'
       ImageIndex = 25
-      OnExecute = ToolPlotAddExecute
       ShortCut = 16464
+      OnExecute = ToolPlotAddExecute
     end
     object ToolPlotDelete: TAction
       Category = 'Tools'
       Caption = '&Delete plot'
       Hint = 'Delete plot|Delete the active plot from the digitization'
       ImageIndex = 26
-      OnExecute = ToolPlotDeleteExecute
       ShortCut = 16452
+      OnExecute = ToolPlotDeleteExecute
     end
     object ToolPlotName: TAction
       Category = 'Tools'
@@ -5988,8 +5987,8 @@ object DigitMainForm: TDigitMainForm
       Enabled = False
       Hint = 'Cancel action|Cancel the current action'
       ImageIndex = 40
-      OnExecute = ToolCancelActionExecute
       ShortCut = 27
+      OnExecute = ToolCancelActionExecute
     end
     object EditZoomResize: TAction
       Category = 'Edit'

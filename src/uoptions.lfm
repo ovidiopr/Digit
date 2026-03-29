@@ -1,7 +1,7 @@
 object OptionsDlg: TOptionsDlg
   Left = 571
   Height = 305
-  Top = 312
+  Top = 188
   Width = 305
   AutoSize = True
   BorderStyle = bsDialog
@@ -9,7 +9,7 @@ object OptionsDlg: TOptionsDlg
   ClientHeight = 305
   ClientWidth = 305
   Position = poMainFormCenter
-  LCLVersion = '3.4.0.0'
+  LCLVersion = '4.0.0.4'
   object pnButtons: TPanel
     AnchorSideLeft.Control = pcScale
     AnchorSideTop.Control = pcScale
@@ -32,10 +32,10 @@ object OptionsDlg: TOptionsDlg
       AnchorSideRight.Side = asrBottom
       AnchorSideBottom.Control = pnButtons
       AnchorSideBottom.Side = asrBottom
-      Left = 225
+      Left = 219
       Height = 27
       Top = 6
-      Width = 78
+      Width = 84
       Anchors = [akTop, akRight, akBottom]
       AutoSize = True
       BorderSpacing.Left = 5
@@ -55,10 +55,10 @@ object OptionsDlg: TOptionsDlg
       AnchorSideRight.Control = btnAccept
       AnchorSideBottom.Control = pnButtons
       AnchorSideBottom.Side = asrBottom
-      Left = 143
+      Left = 131
       Height = 27
       Top = 6
-      Width = 77
+      Width = 83
       Anchors = [akTop, akRight, akBottom]
       AutoSize = True
       BorderSpacing.Left = 5
@@ -80,7 +80,7 @@ object OptionsDlg: TOptionsDlg
       Left = 6
       Height = 27
       Top = 6
-      Width = 85
+      Width = 91
       Anchors = [akTop, akLeft, akBottom]
       AutoSize = True
       BorderSpacing.Left = 5
@@ -88,8 +88,8 @@ object OptionsDlg: TOptionsDlg
       BorderSpacing.Bottom = 5
       Caption = '&Defaults'
       Kind = bkRetry
-      OnClick = btnDefaultsClick
       TabOrder = 2
+      OnClick = btnDefaultsClick
     end
   end
   object pcScale: TPageControl

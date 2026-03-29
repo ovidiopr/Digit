@@ -13,7 +13,8 @@ uses
   uabout {AboutBox},
   ucurves,
   urestore,
-  uchartscale, uoptions, uutils, uplotimage, ugrid, uscale, upolygons;
+  uchartscale, uoptions, uutils, uplotimage, ugrid, uscale, upolygons,
+CurveDigitizer, umarker;
 
 {$R *.res}
 
