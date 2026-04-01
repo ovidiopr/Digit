@@ -1,7 +1,7 @@
 object OptionsDlg: TOptionsDlg
   Left = 571
   Height = 305
-  Top = 188
+  Top = 64
   Width = 305
   AutoSize = True
   BorderStyle = bsDialog
@@ -146,7 +146,9 @@ object OptionsDlg: TOptionsDlg
         ItemIndex = 0
         Items.Strings = (
           'Following line'
-          'Selecting color'
+          'Tracing line'
+          'Tracing symbols'
+          'Tracing color'
           'Converting markers'
         )
         ParentFont = False

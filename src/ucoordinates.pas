@@ -21,8 +21,8 @@ type
     class operator + (a, b: TCurvePoint): TCurvePoint;
     class operator - (a, b: TCurvePoint): TCurvePoint; overload;
     class operator - (a: TCurvePoint): TCurvePoint; overload;
-    class operator*(a: Double; b: TCurvePoint): TCurvePoint;
-    class operator/(a: TCurvePoint; b: Double): TCurvePoint;
+    class operator * (a: Double; b: TCurvePoint): TCurvePoint;
+    class operator / (a: TCurvePoint; b: Double): TCurvePoint;
     class operator := (a: TPoint) b: TCurvePoint;
     class operator := (a: TCurvePoint) b: TPoint;
 

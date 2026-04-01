@@ -16,7 +16,7 @@ type
   FloatArray = Array of Double;
 
   TInterpolation = (itpBSpline, itpSpline, itpLinear, itpPoly);
-  TDigitization = (digLine, digColor, digMarkers);
+  TDigitization = (digLineFollowing, digLineTracing, digSymbolTracing, digColorTracing, digMarkers);
 
   TPrintMessageEvent = procedure(Sender: TObject; Msg: String; MsgType: TMsgDlgType) of Object;
   TShowProgressEvent = procedure(Sender: TObject; Progress: Cardinal; Msg: String) of Object;
@@ -426,7 +426,7 @@ class operator TPlotOptions.Initialize(var po: TPlotOptions);
 begin
   po.BgndColor := clWhite;
 
-  po.DefaultDig := digLine;
+  po.DefaultDig := digLineFollowing;
   po.DefaultItp := itpBSpline;
 
   po.ShowXAxis := True;

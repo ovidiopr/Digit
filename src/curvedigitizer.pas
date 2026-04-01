@@ -13,7 +13,7 @@ unit CurveDigitizer;
   Public surface
   ──────────────
   ScanCurvePoints          – collect every matching pixel (respects grid mask)
-  DigitizeCurve            – main entry: dispatch by TDigitizerMode
+  DigitizeCurve            – main entry: dispatch by TDigitization
   AdjustDigitizedCurve     – snap each curve point to its island centroid
   ConvertCurveToSymbolPoints – condense a line curve into discrete blob centres
   PixelMatchesCurve        – single-pixel predicate (useful for callers that
@@ -36,11 +36,13 @@ uses
 
 type
   TScanDirection = (sdForward, sdBackward);
-  TDigitizerMode = (dmLineTrace, dmSymbolTrace, dmSpectrumTrace, dmColorTrace);
+
+  TScanProgressEvent = procedure(Percent: Integer) of object;
+  TScanCheckTerminated = function: Boolean of object;
 
   // All parameters that drive the digitization process
   TDigitizerContext = record
-    Mode: TDigitizerMode;
+    Mode: TDigitization;
     Plot: TPlot;
     Color: TColor;
     ScanDirection: TScanDirection;
@@ -52,10 +54,39 @@ type
     // the corresponding source pixels during every colour comparison.
     GridMask: TBGRABitmap;
     GridMaskActive: Boolean;
+
+    OnProgress: TScanProgressEvent;
+    CheckTerminated: TScanCheckTerminated;
   end;
 
   { 2-D boolean array indexed as [Y][X].  True = pixel already processed. }
   TVisitedMap = array of array of Boolean;
+
+  TDigitizerThread = class(TThread)
+    private
+      FImage: TBGRABitmap;
+      FContext: TDigitizerContext;
+      FSeeds: TCurve;
+      FResultCurve: TCurve;
+
+      // Thread-safe progress handling
+      FOnProgress: TScanProgressEvent;
+      FCurrentProgress: Integer;
+      procedure SyncProgress;
+      procedure DoProgress(Percent: Integer);
+      function DoCheckTerminated: Boolean;
+    protected
+      procedure Execute; override;
+    public
+      constructor Create(AImage: TBGRABitmap; const ACtx: TDigitizerContext; ASeeds: TCurve; ACallback: TNotifyEvent);
+      destructor Destroy; override;
+
+      function TakeResultCurve: TCurve;
+
+      property ResultCurve: TCurve read FResultCurve;
+      property IsTerminated: Boolean read DoCheckTerminated;
+      property OnProgress: TScanProgressEvent read FOnProgress write FOnProgress;
+    end;
 
   { Thin abstraction over the image so algorithms stay testable without a
     real TBGRABitmap. }
@@ -72,11 +103,11 @@ type
   TBGRABitmapSource = class(TInterfacedObject, IPixelSource)
   private
     FImg: TBGRABitmap;
-    FMask: TBGRABitmap;
-    FMaskActive: Boolean;
+    FMaskedImg: TBGRABitmap; // Holds the pre-composited image to speed up scans
     FQuad: TPlotQuad;
   public
     constructor Create(AImg: TBGRABitmap; const AQuad: TPlotQuad; AMask: TBGRABitmap  = nil; AMaskActive: Boolean = False);
+    destructor Destroy; override;
     function Pixel(X, Y: Integer): TBGRAPixel;
     function Width: Integer;
     function Height: Integer;
@@ -84,7 +115,7 @@ type
   end;
 
 { --------------------------------------------------------------------------- }
-{ Public API                                                                   }
+{ Public API                                                                  }
 { --------------------------------------------------------------------------- }
 
 { Returns True when the image pixel at (X, Y) matches Ctx.Color.
@@ -138,33 +169,120 @@ begin
   Result := ColorsAreSimilar(C2, C1, Tol);
 end;
 
+
+{ =========================================================================== }
+{ TDigitizerThread                                                            }
+{ =========================================================================== }
+
+constructor TDigitizerThread.Create(AImage: TBGRABitmap; const ACtx: TDigitizerContext; ASeeds: TCurve; ACallback: TNotifyEvent);
+var
+  i: Integer;
+begin
+  inherited Create(True); // Create suspended
+  FreeOnTerminate := True;
+  FImage := AImage; // Thread safely reads from the bitmap
+  FContext := ACtx;
+  OnTerminate := ACallback;
+  FResultCurve := TCurve.Create;
+
+  FSeeds := TCurve.Create;
+  if Assigned(ASeeds) then
+  begin
+    for i := 0 to ASeeds.Count - 1 do
+      FSeeds.AddPoint(ASeeds.Point[i]);
+  end;
+end;
+
+destructor TDigitizerThread.Destroy;
+begin
+  FSeeds.Free;
+  if assigned(FResultCurve) then
+    FResultCurve.Free;
+  inherited Destroy;
+end;
+
+function TDigitizerThread.TakeResultCurve: TCurve;
+begin
+  Result := FResultCurve;
+  FResultCurve := nil;
+end;
+
+procedure TDigitizerThread.SyncProgress;
+begin
+  if Assigned(FOnProgress) then FOnProgress(FCurrentProgress);
+end;
+
+procedure TDigitizerThread.DoProgress(Percent: Integer);
+begin
+  FCurrentProgress := Percent;
+  Synchronize(@SyncProgress);
+end;
+
+function TDigitizerThread.DoCheckTerminated: Boolean;
+begin
+  Result := Terminated;
+end;
+
+procedure TDigitizerThread.Execute;
+begin
+  // Hook up thread-safe callbacks directly to the context
+  FContext.OnProgress := @DoProgress;
+  FContext.CheckTerminated := @DoCheckTerminated;
+  FResultCurve.Clear;
+  DigitizeCurve(FSeeds, FImage, FContext, FResultCurve);
+end;
+
 { =========================================================================== }
 { TBGRABitmapSource                                                           }
 { =========================================================================== }
 
 constructor TBGRABitmapSource.Create(AImg: TBGRABitmap; const AQuad: TPlotQuad; AMask: TBGRABitmap; AMaskActive: Boolean);
+var
+  x, y: Integer;
+  pImg, pMask: PBGRAPixel;
 begin
-  FImg := AImg;
-  FMask := AMask;
-  FMaskActive := AMaskActive and Assigned(AMask);
   FQuad := AQuad;
+
+  // PRE-COMPOSITE OPTIMIZATION:
+  // Instead of checking the mask in the Pixel() function millions of times,
+  // we generate a single image with the grid removed upfront.
+  if AMaskActive and Assigned(AMask) and (AMask.Width = AImg.Width) and (AMask.Height = AImg.Height) then
+  begin
+    FMaskedImg := AImg.Duplicate as TBGRABitmap;
+    for y := 0 to FMaskedImg.Height - 1 do
+    begin
+      pImg := FMaskedImg.Scanline[y];
+      pMask := AMask.Scanline[y];
+      for x := 0 to FMaskedImg.Width - 1 do
+      begin
+        if pMask^.alpha > 0 then
+          pImg^ := pMask^;
+        Inc(pImg);
+        Inc(pMask);
+      end;
+    end;
+    FImg := FMaskedImg;
+  end
+  else
+  begin
+    FMaskedImg := nil;
+    FImg := AImg;
+  end;
+end;
+
+destructor TBGRABitmapSource.Destroy;
+begin
+  if Assigned(FMaskedImg) then
+    FMaskedImg.Free;
+  inherited Destroy;
 end;
 
 function TBGRABitmapSource.Pixel(X, Y: Integer): TBGRAPixel;
-var
-  MaskP: TBGRAPixel;
 begin
   if (X < 0) or (Y < 0) or (X >= FImg.Width) or (Y >= FImg.Height) then
     Exit(BGRAPixelTransparent);
 
-  // Mask overlay: non-transparent mask pixels replace the source image pixel
-  if FMaskActive then
-  begin
-    MaskP := FMask.Scanline[Y][X];
-    if MaskP.alpha > 0 then
-      Exit(MaskP);
-  end;
-
+  // No alpha checks needed here anymore since the mask is pre-composited
   Result := FImg.Scanline[Y][X];
 end;
 
@@ -184,20 +302,23 @@ begin
 end;
 
 { =========================================================================== }
-{ Pixel acceptance predicates                                                  }
+{ Pixel acceptance predicates                                                 }
 { =========================================================================== }
 
-{ Internal: pixel is inside the image bounds, inside the plot box, and colour-
-  matches the target with the given tolerance. }
+// Pixel is inside the image bounds, inside the plot box, and colour-
+// matches the target with the given tolerance
 function PixelBelongsToCurve(Src: IPixelSource; X, Y: Integer; const Ctx: TDigitizerContext): Boolean;
 begin
   if (X < 0) or (Y < 0) or (X >= Src.Width) or (Y >= Src.Height) then
     Exit(False);
-  Result := Src.Contains(TCurvePoint.Create(X, Y)) and
-            ColorsAreSimilar(Src.Pixel(X, Y), Ctx.Color, Ctx.Tolerance);
+
+  if not ColorsAreSimilar(Src.Pixel(X, Y), Ctx.Color, Ctx.Tolerance) then
+    Exit(False);
+
+  Result := Src.Contains(TCurvePoint.Create(X, Y));
 end;
 
-{ Public: same check, works directly on the raw TBGRABitmap + mask. }
+// Same check, works directly on the raw TBGRABitmap + mask
 function PixelMatchesCurve(Image: TBGRABitmap; const Ctx: TDigitizerContext; X, Y: Integer): Boolean;
 var
   Src: IPixelSource;
@@ -207,20 +328,44 @@ begin
 end;
 
 { =========================================================================== }
-{ ScanCurvePoints                                                              }
+{ ScanCurvePoints                                                             }
 { =========================================================================== }
 
 procedure ScanCurvePoints(Image: TBGRABitmap; const Ctx: TDigitizerContext; AllPoints: TCurve);
 var
   Src: IPixelSource;
-  i, j: Integer;
+  x, y, TotalH, LastProgress, CurrentProgress: Integer;
+  BBox: TRect;
 begin
-  Src := TBGRABitmapSource.Create(Image, Ctx.Plot.Box,
-                                  Ctx.GridMask, Ctx.GridMaskActive);
-  for j := 0 to Src.Height - 1 do
-    for i := 0 to Src.Width - 1 do
-      if PixelBelongsToCurve(Src, i, j, Ctx) then
-        AllPoints.AddPoint(TCurvePoint.Create(i, j));
+  AllPoints.Clear;
+  if (Image = nil) or (Ctx.Plot.Box = nil) then Exit;
+
+  BBox := Ctx.Plot.Box.Rect[1.0];
+  Src := TBGRABitmapSource.Create(Image, Ctx.Plot.Box, Ctx.GridMask, Ctx.GridMaskActive);
+
+  TotalH := Max(1, BBox.Bottom - BBox.Top);
+  LastProgress := -1;
+
+  for y := BBox.Top to BBox.Bottom do
+  begin
+    // Check for Cancel
+    if Assigned(Ctx.CheckTerminated) and Ctx.CheckTerminated() then Exit;
+
+    // Report Progress
+    if Assigned(Ctx.OnProgress) then
+    begin
+      CurrentProgress := Round(((y - BBox.Top) / TotalH) * 100);
+      if CurrentProgress <> LastProgress then
+      begin
+        Ctx.OnProgress(CurrentProgress);
+        LastProgress := CurrentProgress;
+      end;
+    end;
+
+    for x := BBox.Left to BBox.Right do
+      if PixelBelongsToCurve(Src, x, y, Ctx) then
+        AllPoints.AddPoint(TCurvePoint.Create(x, y));
+  end;
 end;
 
 { =========================================================================== }
@@ -260,6 +405,8 @@ begin
 
   while Top >= 0 do
   begin
+    if Assigned(Ctx.CheckTerminated) and Ctx.CheckTerminated() then Exit;
+
     X := StackX[Top]; Y := StackY[Top];
     nx := LastDX[Top]; ny := LastDY[Top];
     Dec(Top);
@@ -348,6 +495,8 @@ begin
 
   while Top >= 0 do
   begin
+    if Assigned(Ctx.CheckTerminated) and Ctx.CheckTerminated() then Exit;
+
     X := StackX[Top]; Y := StackY[Top];
     Dec(Top);
 
@@ -410,15 +559,15 @@ begin
 end;
 
 { =========================================================================== }
-{ ALGORITHM 3 – Spectrum following (column-by-column centroid scan)           }
+{ ALGORITHM 3 – Line following (column-by-column centroid scan)               }
 { =========================================================================== }
-procedure FollowSpectrum(Src: IPixelSource; Seeds: TCurve; Pi: TCurvePoint; const Ctx: TDigitizerContext;
-                         Step: Integer; Interval: Integer; Curve: TCurve);
+procedure FollowLine(Src: IPixelSource; Seeds: TCurve; Pi: TCurvePoint;
+                     const Ctx: TDigitizerContext; Curve: TCurve);
 var
   PNew: TCurvePoint;
   Delta: Double;
   ML: TCurve;
-  i: Integer;
+  i, Step, Interval: Integer;
   Pp: TCurvePoint;
 
   // Search vertically around P for a band of matching pixels.
@@ -477,7 +626,12 @@ begin
   ML := Seeds;
   i := 0;
 
+  Step := Ctx.Step;
+  Interval := Ctx.MaxGap;
+
   repeat
+    if Assigned(Ctx.CheckTerminated) and Ctx.CheckTerminated() then Exit;
+
     if ML.Count <= 2 then
     begin
       // No guide markers: step by one pixel in the scan direction
@@ -487,7 +641,7 @@ begin
         if (2*Pp.Y*Pp.Y < Step*Step) then Pp.Y := Step;
         Pp.X := Pp.X - ArcSin(Step/Sqrt(4*Pp.Y*Pp.Y - Step*Step))*90/ArcTan(1);
         Pi := Ctx.Plot.Scale.ImagePoint[2] + PolarToCartesian(Pp);
-        Delta := Delta + Sign(Step) *
+        Delta := Delta + Sign(Step)*
                  ArcSin(Step/Sqrt(4*Pp.Y*Pp.Y - Step*Step))*90/ArcTan(1);
       end
       else
@@ -525,10 +679,10 @@ end;
 { Collect all matching pixels and group them by proximity (distance ≤ half
   the LineSpread value).  Each group is averaged to its centroid.
   This is equivalent to the clustering in the former TPlotImage.DigitizeColor. }
-procedure ClusterByColor(Src: IPixelSource; const Ctx: TDigitizerContext;
-                         Curve: TCurve);
+procedure ClusterByColor(Src: IPixelSource; const Ctx: TDigitizerContext; Curve: TCurve);
 var
-  i, j, k: Integer;
+  x, y, k, TotalH, LastProgress, CurrentProgress: Integer;
+  BBox: TRect;
   N: array of Integer;
   Pi: TCurvePoint;
   Added: Boolean;
@@ -538,18 +692,36 @@ begin
   Spread := Max(1, Ctx.LineSpread);
   SetLength(N, 0);
 
-  for j := 0 to Src.Height - 1 do
-    for i := 0 to Src.Width - 1 do
-      if PixelBelongsToCurve(Src, i, j, Ctx) then
+  BBox := Ctx.Plot.Box.Rect[1.0];
+  TotalH := Max(1, BBox.Bottom - BBox.Top);
+  LastProgress := -1;
+
+  for y := BBox.Top to BBox.Bottom do
+  begin
+    // Check for Cancel
+    if Assigned(Ctx.CheckTerminated) and Ctx.CheckTerminated() then Exit;
+
+    // Report Progress
+    if Assigned(Ctx.OnProgress) then
+    begin
+      CurrentProgress := Round(((y - BBox.Top) / TotalH) * 100);
+      if CurrentProgress <> LastProgress then
       begin
-        Pi := TCurvePoint.Create(i, j);
+        Ctx.OnProgress(CurrentProgress);
+        LastProgress := CurrentProgress;
+      end;
+    end;
+
+    for x := BBox.Left to BBox.Right do
+    begin
+      if PixelBelongsToCurve(Src, x, y, Ctx) then
+      begin
+        Pi := TCurvePoint.Create(x, y);
         Added := False;
 
-        // Try to merge into the nearest existing cluster
         for k := 0 to Curve.Count - 1 do
           if 2.0*Pi.DistanceTo(Curve.Point[k]) <= Spread then
           begin
-            // Accumulate sum – we divide by N[k] at the end
             Curve.Point[k] := Curve.Point[k] + Pi;
             Inc(N[k]);
             Added := True;
@@ -563,8 +735,9 @@ begin
           Curve.AddPoint(Pi);
         end;
       end;
+    end;
+  end;
 
-  // Convert accumulated sums into centroids
   for k := 0 to Curve.Count - 1 do
     if N[k] > 1 then
       Curve.Point[k] := Curve.Point[k]/N[k];
@@ -678,6 +851,8 @@ begin
 
   while (Top >= 0) and (Island.Count < MaxPoints) do
   begin
+    if Assigned(Ctx.CheckTerminated) and Ctx.CheckTerminated() then Exit;
+
     cx := StackX[Top];
     cy := StackY[Top];
     Dec(Top);
@@ -904,7 +1079,8 @@ var
   Region: TVisitedMap;
   Src: IPixelSource;
   FirstSeed: TCurvePoint;
-  Step: Integer;
+  TempSeeds: TCurve;
+  i: Integer;
 begin
   Result := False;
   if (Image = nil) or (Curve = nil) or
@@ -912,27 +1088,38 @@ begin
 
   // Every algorithm gets a source that transparently composites the grid mask
   Src := TBGRABitmapSource.Create(Image, Ctx.Plot.Box, Ctx.GridMask, Ctx.GridMaskActive);
-  FirstSeed := Seeds[0];
 
-  case Ctx.Mode of
-    dmLineTrace:
-      begin
-        GrowCurveRegion(Src, Seeds, Ctx, Region);
-        ExtractOrderedCurve(Region, Curve, Ctx);
-      end;
-    dmSymbolTrace:
-      begin
-        GrowSymbolRegion(Src, Seeds, Ctx, Region);
-        ExtractOrderedCurve(Region, Curve, Ctx);
-      end;
-    dmSpectrumTrace:
-      begin
-        Step := Ctx.Step;
-        if (Step < 1) then Step := 1;
-        FollowSpectrum(Src, Seeds, FirstSeed, Ctx, Step, Ctx.MaxGap, Curve);
-      end;
-    dmColorTrace:
-      ClusterByColor(Src, Ctx, Curve);
+  // Ensure we select the correct left-most or right-most marker as the start
+  TempSeeds := TCurve.Create;
+  try
+    for i := 0 to Seeds.Count - 1 do
+      TempSeeds.AddPoint(Seeds.Point[i]);
+
+    TempSeeds.SortCurve; // Sort ascending by X
+
+    if Ctx.ScanDirection = sdForward then
+      FirstSeed := TempSeeds.Point[0]
+    else
+      FirstSeed := TempSeeds.Point[TempSeeds.Count - 1];
+
+    case Ctx.Mode of
+      digLineFollowing:
+        FollowLine(Src, TempSeeds, FirstSeed, Ctx, Curve);
+      digLineTracing:
+        begin
+          GrowCurveRegion(Src, TempSeeds, Ctx, Region);
+          ExtractOrderedCurve(Region, Curve, Ctx);
+        end;
+      digSymbolTracing:
+        begin
+          GrowSymbolRegion(Src, TempSeeds, Ctx, Region);
+          ExtractOrderedCurve(Region, Curve, Ctx);
+        end;
+      digColorTracing:
+        ClusterByColor(Src, Ctx, Curve);
+    end;
+  finally
+    TempSeeds.Free;
   end;
 
   Result := Curve.Count > 0;

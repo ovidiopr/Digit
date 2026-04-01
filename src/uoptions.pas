@@ -63,7 +63,7 @@ begin
   case cbbDigitType.ItemIndex of
     0..2: Result.DefaultDig := TDigitization(cbbDigitType.ItemIndex);
     else
-      Result.DefaultDig := digLine;
+      Result.DefaultDig := digLineFollowing;
   end;
 
   case cbbInterpType.ItemIndex of
@@ -83,22 +83,15 @@ procedure TOptionsDlg.SetOptions(Value: TPlotOptions);
 begin
   btnBgndColor.ButtonColor := Value.BgndColor;
 
-  case Value.DefaultDig of
-    digLine,
-    digColor,
-    digMarkers: cbbDigitType.ItemIndex := Integer(Value.DefaultDig);
-    else
-      cbbDigitType.ItemIndex := -1;
-  end;
+  if Value.DefaultDig in [digLineFollowing..digMarkers] then
+    cbbDigitType.ItemIndex := Integer(Value.DefaultDig)
+  else
+    cbbDigitType.ItemIndex := -1;
 
-  case Value.DefaultItp of
-    itpBSpline,
-    itpSpline,
-    itpLinear,
-    itpPoly: cbbInterpType.ItemIndex := Integer(Value.DefaultItp);
-    else
-      cbbInterpType.ItemIndex := -1;
-  end;
+  if Value.DefaultItp in [itpBSpline..itpPoly] then
+    cbbInterpType.ItemIndex := Integer(Value.DefaultItp)
+  else
+    cbbInterpType.ItemIndex := -1;
 
   chbShowXAxis.Checked := Value.ShowXAxis;
   chbShowYAxis.Checked := Value.ShowYAxis;

@@ -15,7 +15,7 @@ uses
   StdCtrls, Dialogs, Buttons, ExtCtrls, ComCtrls, TATypes, TASeries, TAGraph,
   TAChartAxis, TATransformations, TACustomSource, TAChartUtils, ClipBrd,
   ActnList, ValEdit, Spin, ExtDlgs, MaskEdit, BCTrackbarUpdown, FileUtil,
-  IniFiles, BGRABitmapTypes, GraphType, attabs, Grids, Math, Types,
+  BGRABitmapTypes, GraphType, attabs, Grids, Math, Types,
   urestore, uchartscale, uutils, ucoordinates, ucurves, umarker, uplotimage;
 
 type
@@ -25,6 +25,12 @@ type
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
+    DigitLineTraceItem: TMenuItem;
+    DigitSymbolTraceItem: TMenuItem;
+    ToolDigitSymbolTraceItem: TMenuItem;
+    ToolDigitLineTraceItem: TMenuItem;
+    ToolDigitLineTracing: TAction;
+    ToolDigitSymbolTracing: TAction;
     LogClear: TAction;
     LogSave: TAction;
     GridMergeMask: TAction;
@@ -198,7 +204,7 @@ type
     EditZoomOut: TAction;
     EditZoomIn: TAction;
     EditZoomOriginal: TAction;
-    DigitizeColorItem: TMenuItem;
+    DigitColorItem: TMenuItem;
     EditZoomOriginalItem: TMenuItem;
     EditZoomInItem: TMenuItem;
     EditZoomOutItem: TMenuItem;
@@ -211,7 +217,7 @@ type
     btnZoomFit: TToolButton;
     ToolDigitizeItem: TMenuItem;
     ToolDigitColorItem: TMenuItem;
-    ToolDigitColor: TAction;
+    ToolDigitColorTracing: TAction;
     ToolResetBox: TAction;
     ToolCorrectDistortion: TAction;
     ToolAdjustNoise: TAction;
@@ -221,8 +227,8 @@ type
     ResampleMenu: TPopupMenu;
     SplinesItem: TMenuItem;
     ToolSplines: TAction;
-    DigitizeLineItem: TMenuItem;
-    DigitizeMarkersItem: TMenuItem;
+    DigitLineFollowItem: TMenuItem;
+    DigitMarkersItem: TMenuItem;
     DigitMainItem: TMenuItem;
     ToolDigitMarkersItem: TMenuItem;
     ToolDigitMarkers: TAction;
@@ -346,8 +352,8 @@ type
     ImageList: TImageList;
     EditUndo: TAction;
     DigitMenu: TMenuItem;
-    ToolDigitLine: TAction;
-    ToolDigitLineItem: TMenuItem;
+    ToolDigitLineFollowing: TAction;
+    ToolDigitLineFollowItem: TMenuItem;
     ToolSmooth: TAction;
     sep04: TToolButton;
     BtnImage: TToolButton;
@@ -501,10 +507,12 @@ type
     procedure ToolCurveLeftExecute(Sender: TObject);
     procedure ToolCurveNameExecute(Sender: TObject);
     procedure ToolCurveRightExecute(Sender: TObject);
-    procedure ToolDigitColorExecute(Sender: TObject);
-    procedure ToolDigitLineExecute(Sender: TObject);
+    procedure ToolDigitColorTracingExecute(Sender: TObject);
+    procedure ToolDigitLineFollowingExecute(Sender: TObject);
+    procedure ToolDigitLineTracingExecute(Sender: TObject);
     procedure ToolDigitMarkersExecute(Sender: TObject);
     procedure ToolBSplinesExecute(Sender: TObject);
+    procedure ToolDigitSymbolTracingExecute(Sender: TObject);
     procedure ToolLinearExecute(Sender: TObject);
     procedure ToolPlotAddExecute(Sender: TObject);
     procedure ToolPlotDeleteExecute(Sender: TObject);
@@ -587,6 +595,8 @@ type
 
     procedure UpdateGUI;
     procedure CurveToGUI;
+
+    procedure DigitizeCurve(Mode: TDigitization; AnAction: TAction);
   public
     { Public declarations }
     TmpPoint: TCurvePoint;
@@ -687,9 +697,9 @@ begin
     ModeMinorGridColor.Enabled := ImageIsLoaded and (State = piSetGrid);
     ModeBackgroundColor.Enabled := ImageIsLoaded and (State = piSetGrid);
 
-    ToolDigitLine.Enabled := Plot.Scale.IsValid and ColorIsSet and (State = piSetCurve);
-    ToolDigitColor.Enabled := Plot.Scale.IsValid and ColorIsSet and (State = piSetCurve);
-    ToolDigitMarkers.Enabled := ToolDigitLine.Enabled and (Markers.Count > 0);
+    ToolDigitLineFollowing.Enabled := Plot.Scale.IsValid and ColorIsSet and (State = piSetCurve);
+    ToolDigitColorTracing.Enabled := Plot.Scale.IsValid and ColorIsSet and (State = piSetCurve);
+    ToolDigitMarkers.Enabled := ToolDigitLineFollowing.Enabled and (Markers.Count > 0);
     ToolAdjustCurve.Enabled := (State = piSetCurve) and HasPoints;
     ToolAdjustNoise.Enabled := (State = piSetCurve) and HasPoints;
     ToolBSplines.Enabled := (State = piSetCurve) and HasPoints;
@@ -1061,12 +1071,12 @@ begin
   end;
 
   case PlotImage.Options.DefaultDig of
-    digColor:
-      btnDigitize.Action := ToolDigitColor;
+    digColorTracing:
+      btnDigitize.Action := ToolDigitColorTracing;
     digMarkers:
       btnDigitize.Action := ToolDigitMarkers;
     else
-      btnDigitize.Action := ToolDigitLine;
+      btnDigitize.Action := ToolDigitLineFollowing;
   end;
 end;
 //End of general functions
@@ -1091,7 +1101,7 @@ procedure TDigitMainForm.DigitizeFromHereItemClick(Sender: TObject);
 begin
   if PlotImage.Plot.Scale.IsValid then
   begin
-    PlotImage.DigitizeSpectrum(TmpPoint);
+    PlotImage.Digitize(TmpPoint, PlotImage.Options.DefaultDig);
 
     CurveToGUI;
   end;
@@ -1554,7 +1564,7 @@ begin
   MainPlot.OnMouseMove := nil;
 
   PlotImage.Options.SaveToFile(GetIniName);
-  PlotImage.Free;
+  //PlotImage.Free;
 end;
 //End of form functions
 
@@ -2525,6 +2535,20 @@ begin
     GridShowHide.ImageIndex := 39;
 end;
 
+procedure TDigitMainForm.DigitizeCurve(Mode: TDigitization; AnAction: TAction);
+var
+  TmpOpt: TPlotOptions;
+begin
+  //Digitize curve
+  PlotImage.Digitize(Mode, False);
+  CurveToGUI;
+
+  TmpOpt := PlotImage.Options;
+  TmpOpt.DefaultDig := Mode;
+  PlotImage.Options := TmpOpt;
+  btnDigitize.Action := AnAction;
+end;
+
 procedure TDigitMainForm.PlotImageMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
@@ -3136,32 +3160,19 @@ begin
   PlotImage.MoveCurveRight;
 end;
 
-procedure TDigitMainForm.ToolDigitColorExecute(Sender: TObject);
-var
-  TmpOpt: TPlotOptions;
+procedure TDigitMainForm.ToolDigitColorTracingExecute(Sender: TObject);
 begin
-  //Digitize curve
-  PlotImage.DigitizeColor;
-  CurveToGUI;
-
-  TmpOpt := PlotImage.Options;
-  TmpOpt.DefaultDig := digColor;
-  PlotImage.Options := TmpOpt;
-  btnDigitize.Action := ToolDigitColor;
+  DigitizeCurve(digColorTracing, TAction(Sender));
 end;
 
-procedure TDigitMainForm.ToolDigitLineExecute(Sender: TObject);
-var
-  TmpOpt: TPlotOptions;
+procedure TDigitMainForm.ToolDigitLineFollowingExecute(Sender: TObject);
 begin
-  //Digitize curve
-  PlotImage.DigitizeSpectrum;
-  CurveToGUI;
+  DigitizeCurve(digLineFollowing, TAction(Sender));
+end;
 
-  TmpOpt := PlotImage.Options;
-  TmpOpt.DefaultDig := digLine;
-  PlotImage.Options := TmpOpt;
-  btnDigitize.Action := TAction(Sender);
+procedure TDigitMainForm.ToolDigitLineTracingExecute(Sender: TObject);
+begin
+  DigitizeCurve(digLineTracing, TAction(Sender));
 end;
 
 procedure TDigitMainForm.ToolDigitMarkersExecute(Sender: TObject);
@@ -3190,6 +3201,11 @@ begin
   TmpOpt.DefaultItp := itpBSpline;
   PlotImage.Options := TmpOpt;
   btnResample.Action := TAction(Sender);
+end;
+
+procedure TDigitMainForm.ToolDigitSymbolTracingExecute(Sender: TObject);
+begin
+  DigitizeCurve(digSymbolTracing, TAction(Sender));
 end;
 
 procedure TDigitMainForm.ToolLinearExecute(Sender: TObject);
@@ -3278,10 +3294,10 @@ begin
     PlotImage.Options := OptionsDlg.Options;
 
     case PlotImage.Options.DefaultDig of
-      digColor: btnDigitize.Action := ToolDigitColor;
+      digColorTracing: btnDigitize.Action := ToolDigitColorTracing;
       digMarkers: btnDigitize.Action := ToolDigitMarkers;
       else
-        btnDigitize.Action := ToolDigitLine;
+        btnDigitize.Action := ToolDigitLineFollowing;
     end;
 
     case PlotImage.Options.DefaultItp of

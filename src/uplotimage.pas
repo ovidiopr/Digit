@@ -83,6 +83,16 @@ type
     FOnActiveCurveChanging: TItemChangeEvent;
     FOnActiveCurveChanged: TItemChangeEvent;
 
+    FDigitThread: TDigitizerThread;
+    FStartPi: TCurvePoint;
+    FCurrentDigitMode: TDigitization;
+
+    procedure SetCancelAction(Value: Boolean);
+    function CheckCancelStatus: Boolean;
+    procedure OnDigitizeProgress(Percent: Integer);
+    procedure OnDigitizeFinished(Sender: TObject);
+    procedure ProcessDigitizedCurve(ACurve: TCurve);
+
     procedure Paint; override;
     procedure Resize; override;
 
@@ -171,10 +181,8 @@ type
     procedure FindCurvePoints;
 
     function FindNextPoint(var Pv: TCurvePoint; Interval: Integer; ScanX: Boolean = False): Boolean;
-    procedure DigitizeSpectrum(Pi: TCurvePoint; FillCurvePoints: Boolean = True); overload;
-    procedure DigitizeSpectrum; overload;
-
-    procedure DigitizeColor;
+    procedure Digitize(DigitMode: TDigitization = digLineFollowing; UseThread: Boolean = True); overload;
+    procedure Digitize(Pi: TCurvePoint; DigitMode: TDigitization; UseThread: Boolean = True); overload;
     procedure DigitizeMarkers;
 
     procedure BuildDigitizerContext(out Ctx: TDigitizerContext);
@@ -289,7 +297,7 @@ type
     property SelectingRegion: Boolean read FSelectingRegion write SetSelectingRegion;
     property SelectionRect: TRect read FSelectionRect;
     property RunningAction: Boolean read FRunningAction write FRunningAction;
-    property CancelAction: Boolean read FCancelAction write FCancelAction;
+    property CancelAction: Boolean read FCancelAction write SetCancelAction;
 
     {Return the number of plots}
     property PlotCount: Integer read GetPlotCount;
@@ -489,19 +497,25 @@ begin
   CancelAction := False;
 
   BuildDigitizerContext(Ctx);
+
+  Ctx.OnProgress := @OnDigitizeProgress;
+  Ctx.CheckTerminated := @CheckCancelStatus;
+
   Plot.DigitCurve.AllPoints.Clear;
   ScanCurvePoints(FPlotImg, Ctx, Plot.DigitCurve.AllPoints);
 
   if Assigned(OnHideProgress) then OnHideProgress(Self);
   if Assigned(OnPrintMessage) then
-    OnPrintMessage(Self, 'Done', mtConfirmation);
+    if CancelAction then
+      OnPrintMessage(Self, 'Action cancelled by user', mtWarning)
+    else
+      OnPrintMessage(Self, 'Done', mtConfirmation);
 
-  Plot.DigitCurve.ValidPoints := True;
+  Plot.DigitCurve.ValidPoints := not CancelAction;
   RunningAction := False;
 end;
 
-function TPlotImage.FindNextPoint(var Pv: TCurvePoint; Interval: Integer;
-  ScanX: Boolean = False): Boolean;
+function TPlotImage.FindNextPoint(var Pv: TCurvePoint; Interval: Integer; ScanX: Boolean = False): Boolean;
 var
   // Number of pixels that the line is expected to spread
   Spread: Integer;
@@ -561,89 +575,103 @@ begin
   end;
 end;
 
-procedure TPlotImage.DigitizeSpectrum(Pi: TCurvePoint; FillCurvePoints: Boolean = True);
+procedure TPlotImage.Digitize(Pi: TCurvePoint; DigitMode: TDigitization; UseThread: Boolean);
 var
   Ctx: TDigitizerContext;
-  TmpCurve, Seeds: TCurve;
-  i, best, nSteps: Integer;
-  d, dmin: Double;
+  Seeds, SyncResultCurve: TCurve;
+  i, nSteps: Integer;
   X0, X1: Double;
 begin
+  if Assigned(FDigitThread) then Exit; // Prevent multiple threads running
+
   RunningAction := True;
   CancelAction := False;
-  Plot.Curve.Clear;
+  FStartPi := Pi;
+  FCurrentDigitMode := DigitMode;
 
   if Assigned(OnShowProgress) then
     OnShowProgress(Self, 0, 'Digitizing curve...');
 
   BuildDigitizerContext(Ctx);
-  Ctx.Mode := dmSpectrumTrace;
+  Ctx.Mode := DigitMode;
 
-  TmpCurve := TCurve.Create;
   Seeds := TCurve.Create;
   try
-    if Markers.Count > 0 then
-      for i := 0 to Markers.Count - 1 do
-        Seeds.AddPoint(Markers[i].Position/Zoom)
+    if DigitMode = digColorTracing then
+    begin
+      Seeds.AddPoint(TCurvePoint.Create(0, 0)); // Dummy seed for color scan
+    end
     else
-      Seeds.AddPoint(Pi);
-
-    if (Seeds.Count > 2) and (Abs(Ctx.Step) > 0) then
     begin
-      X0 := Seeds.Point[0].X;
-      X1 := Seeds.Point[Seeds.Count - 1].X;
-      nSteps := 1 + Abs(Round((X1 - X0)/Abs(Ctx.Step)));
-      if nSteps > Seeds.Count then
-        Seeds.Interpolate(nSteps, 3);
-    end;
+      // Seed generation for spectrum/line algorithms
+      if Markers.Count > 0 then
+        for i := 0 to Markers.Count - 1 do
+          Seeds.AddPoint(Markers[i].Position/Zoom)
+      else
+        Seeds.AddPoint(Pi);
 
-    if not DigitizeCurve(Seeds, FPlotImg, Ctx, TmpCurve) then
-    begin
-      if Assigned(OnPrintMessage) then
-        OnPrintMessage(Self, 'No curve detected.', mtWarning);
-      Exit;
-    end;
-
-    // Orient the result so it starts closest to Pi
-    dmin := MaxDouble;
-    best := 0;
-    for i := 0 to TmpCurve.Count - 1 do
-    begin
-      d := Sqr(TmpCurve.X[i] - Pi.X) + Sqr(TmpCurve.Y[i] - Pi.Y);
-      if d < dmin then
+      if (Seeds.Count > 2) and (Abs(Ctx.Step) > 0) then
       begin
-        dmin := d;
-        best := i;
+        X0 := Seeds.Point[0].X;
+        X1 := Seeds.Point[Seeds.Count - 1].X;
+        nSteps := 1 + Abs(Round((X1 - X0)/Abs(Ctx.Step)));
+        if nSteps > Seeds.Count then
+          Seeds.Interpolate(nSteps, 3);
       end;
     end;
-    for i := best to TmpCurve.Count - 1 do
-      Plot.Curve.AddPoint(TmpCurve.Point[i]);
-    for i := 0 to best - 1 do
-      Plot.Curve.AddPoint(TmpCurve.Point[i]);
 
-    Plot.Curve.SortCurve;
+    if UseThread then
+    begin
+      // --- ASYNCHRONOUS (BACKGROUND THREAD) ---
+      FDigitThread := TDigitizerThread.Create(FPlotImg, Ctx, Seeds, @OnDigitizeFinished);
+      FDigitThread.OnProgress := @OnDigitizeProgress;
+      FDigitThread.Start;
+    end
+    else
+    begin
+      // --- SYNCHRONOUS (MAIN THREAD) ---
+      SyncResultCurve := TCurve.Create;
+      try
+        // Attach callbacks for UI responsiveness during sync loop
+        Ctx.OnProgress := @OnDigitizeProgress;
+        Ctx.CheckTerminated := @CheckCancelStatus;
 
-    if Assigned(OnShowProgress) then
-      OnShowProgress(Self, 100, 'Digitizing curve...');
+        // Call the core unit directly
+        CurveDigitizer.DigitizeCurve(Seeds, FPlotImg, Ctx, SyncResultCurve);
+
+        if CancelAction then
+        begin
+          if Assigned(OnPrintMessage) then
+            OnPrintMessage(Self, 'Action cancelled by user', mtWarning);
+        end
+        else
+        begin
+          ProcessDigitizedCurve(SyncResultCurve);
+        end;
+      finally
+        SyncResultCurve.Free;
+        RunningAction := False;
+        if Assigned(OnHideProgress) then OnHideProgress(Self);
+        Invalidate;
+      end;
+    end;
+
   finally
-    TmpCurve.Free;
-    Seeds.Free;
-    if Assigned(OnHideProgress) then OnHideProgress(Self);
-    if Assigned(OnPrintMessage) then
-      if CancelAction then
-        OnPrintMessage(Self, 'Action cancelled by user', mtWarning)
-      else
-        OnPrintMessage(Self, 'Done', mtConfirmation);
-    SortCurve;
-    IsChanged := True;
-    RunningAction := False;
+    Seeds.Free; // Cleanup
   end;
 end;
 
-procedure TPlotImage.DigitizeSpectrum;
+procedure TPlotImage.Digitize(DigitMode: TDigitization = digLineFollowing; UseThread: Boolean = True);
 var
   Pi: TCurvePoint;
 begin
+  if DigitMode = digColorTracing then
+  begin
+    // Color trace doesn't rely on finding an initial geometric start point
+    Digitize(TCurvePoint.Create(0, 0), DigitMode, UseThread);
+    Exit;
+  end;
+
   FindCurvePoints;
 
   // Estimate the first point
@@ -661,8 +689,7 @@ begin
       if (Plot.DigitCurve.Step > 0) then
         Pi := (Plot.Scale.ImagePoint[1] + Plot.Scale.ImagePoint[2])/2
       else
-        Pi := Plot.Scale.ImagePoint[3] + (Plot.Scale.ImagePoint[1] -
-          Plot.Scale.ImagePoint[2])/2;
+        Pi := Plot.Scale.ImagePoint[3] + (Plot.Scale.ImagePoint[1] - Plot.Scale.ImagePoint[2])/2;
     end
     else
       Pi := (Plot.Scale.ImagePoint[3] + Plot.Scale.ImagePoint[2])/2;
@@ -671,53 +698,7 @@ begin
       Pi := Pi + Sign(Plot.DigitCurve.Step)*Plot.Scale.Nx(Pi);
   end;
 
-
-  DigitizeSpectrum(Pi, False);
-end;
-
-procedure TPlotImage.DigitizeColor;
-var
-  Ctx: TDigitizerContext;
-  TmpCurve, Seeds: TCurve;
-  i: Integer;
-begin
-  RunningAction := True;
-  CancelAction := False;
-
-  if Assigned(OnShowProgress) then
-    OnShowProgress(Self, 0, 'Digitizing by color...');
-  if Assigned(OnPrintMessage) then
-    OnPrintMessage(Self, 'Digitizing by color...', mtInformation);
-
-  BuildDigitizerContext(Ctx);
-  Ctx.Mode := dmColorTrace;
-
-  TmpCurve := TCurve.Create;
-  Seeds := TCurve.Create;
-  try
-    { dmColorTrace ignores Seeds; supply a dummy so the nil-check passes }
-    Seeds.AddPoint(TCurvePoint.Create(0, 0));
-
-    if DigitizeCurve(Seeds, FPlotImg, Ctx, TmpCurve) then
-    begin
-      Plot.DigitCurve.NextCurve(False);
-      for i := 0 to TmpCurve.Count - 1 do
-        Plot.Curve.AddPoint(TmpCurve.Point[i]);
-
-      SortCurve;
-      IsChanged := True;
-    end;
-  finally
-    TmpCurve.Free;
-    Seeds.Free;
-    if Assigned(OnHideProgress) then OnHideProgress(Self);
-    if Assigned(OnPrintMessage) then
-      if CancelAction then
-        OnPrintMessage(Self, 'Action cancelled by user', mtWarning)
-      else
-        OnPrintMessage(Self, 'Done', mtConfirmation);
-    RunningAction := False;
-  end;
+  Digitize(Pi, DigitMode, UseThread);
 end;
 
 procedure TPlotImage.DigitizeMarkers;
@@ -745,7 +726,7 @@ begin
   Ctx.Tolerance := Plot.DigitCurve.Tolerance;
   Ctx.LineSpread := Plot.DigitCurve.Spread;
   Ctx.MaxGap := Plot.DigitCurve.Interval;
-  Ctx.Mode := dmLineTrace;
+  Ctx.Mode := digLineFollowing;
   Ctx.Step := Plot.DigitCurve.Step;
   if (Plot.DigitCurve.Step > 0) then
     Ctx.ScanDirection := sdForward
@@ -1473,6 +1454,113 @@ procedure TPlotImage.RedrawMarkers;
 begin
   UpdateMarkersInCurve;
   UpdateMarkersInImage;
+end;
+
+procedure TPlotImage.SetCancelAction(Value: Boolean);
+begin
+  FCancelAction := Value;
+  // If the user hits cancel, forcefully flag the thread to terminate
+  if FCancelAction and Assigned(FDigitThread) then
+    FDigitThread.Terminate;
+end;
+
+function TPlotImage.CheckCancelStatus: Boolean;
+begin
+  Application.ProcessMessages;
+  Result := FCancelAction;
+end;
+
+procedure TPlotImage.OnDigitizeProgress(Percent: Integer);
+begin
+  if Assigned(OnShowProgress) then
+    OnShowProgress(Self, Percent, 'Processing...');
+end;
+
+procedure TPlotImage.ProcessDigitizedCurve(ACurve: TCurve);
+var
+  i, best: Integer;
+  d, dmin: Double;
+begin
+  if (ACurve = nil) or (ACurve.Count = 0) then
+  begin
+    if Assigned(OnPrintMessage) then
+      OnPrintMessage(Self, 'No curve detected.', mtWarning);
+    Exit;
+  end;
+
+  if FCurrentDigitMode = digColorTracing then
+  begin
+    // --- Color Tracing Result Logic ---
+    Plot.DigitCurve.NextCurve(False); // Start a new curve segment
+    for i := 0 to ACurve.Count - 1 do
+      Plot.Curve.AddPoint(ACurve.Point[i]);
+  end
+  else
+  begin
+    // --- Spectrum/Line Tracing Result Logic ---
+    Plot.Curve.Clear;
+    dmin := MaxDouble;
+    best := 0;
+
+    // Find the point closest to the starting selection
+    for i := 0 to ACurve.Count - 1 do
+    begin
+      d := Sqr(ACurve.X[i] - FStartPi.X) + Sqr(ACurve.Y[i] - FStartPi.Y);
+      if d < dmin then
+      begin
+        dmin := d;
+        best := i;
+      end;
+    end;
+
+    // Reorder points based on the best match found
+    for i := best to ACurve.Count - 1 do
+      Plot.Curve.AddPoint(ACurve.Point[i]);
+    for i := 0 to best - 1 do
+      Plot.Curve.AddPoint(ACurve.Point[i]);
+
+    Plot.Curve.SortCurve;
+  end;
+
+  SortCurve;
+  IsChanged := True;
+
+  if Assigned(OnPrintMessage) then
+    OnPrintMessage(Self, 'Done', mtConfirmation);
+end;
+
+procedure TPlotImage.OnDigitizeFinished(Sender: TObject);
+var
+  TmpCurve: TCurve;
+  LThread: TDigitizerThread;
+begin
+  if not (Sender is TDigitizerThread) then Exit;
+  LThread := TDigitizerThread(Sender);
+
+  try
+    TmpCurve := LThread.TakeResultCurve;
+
+    if CancelAction or LThread.IsTerminated then
+    begin
+      if Assigned(OnPrintMessage) then
+        OnPrintMessage(Self, 'Action cancelled by user', mtWarning);
+    end
+    else
+    begin
+      ProcessDigitizedCurve(TmpCurve);
+    end;
+  finally
+    if Assigned(TmpCurve) then
+      TmpCurve.Free;
+
+    if FDigitThread = LThread then
+      FDigitThread := nil;
+
+    if Assigned(OnHideProgress) then OnHideProgress(Self);
+    RunningAction := False;
+
+    Invalidate;
+  end;
 end;
 
 procedure TPlotImage.Paint;
