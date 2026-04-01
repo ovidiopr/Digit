@@ -596,7 +596,7 @@ type
     procedure UpdateGUI;
     procedure CurveToGUI;
 
-    procedure DigitizeCurve(Mode: TDigitization; AnAction: TAction);
+    procedure DigitizeCurve(AMode: TDigitization; AnAction: TAction);
   public
     { Public declarations }
     TmpPoint: TCurvePoint;
@@ -2535,16 +2535,19 @@ begin
     GridShowHide.ImageIndex := 39;
 end;
 
-procedure TDigitMainForm.DigitizeCurve(Mode: TDigitization; AnAction: TAction);
+procedure TDigitMainForm.DigitizeCurve(AMode: TDigitization; AnAction: TAction);
 var
   TmpOpt: TPlotOptions;
 begin
   //Digitize curve
-  PlotImage.Digitize(Mode, False);
+  if (AMode = digMarkers) then
+    PlotImage.DigitizeMarkers
+  else
+    PlotImage.Digitize(AMode, False);
   CurveToGUI;
 
   TmpOpt := PlotImage.Options;
-  TmpOpt.DefaultDig := Mode;
+  TmpOpt.DefaultDig := AMode;
   PlotImage.Options := TmpOpt;
   btnDigitize.Action := AnAction;
 end;
@@ -3176,17 +3179,8 @@ begin
 end;
 
 procedure TDigitMainForm.ToolDigitMarkersExecute(Sender: TObject);
-var
-  TmpOpt: TPlotOptions;
 begin
-  //Fill curve from markers
-  PlotImage.DigitizeMarkers;
-  CurveToGUI;
-
-  TmpOpt := PlotImage.Options;
-  TmpOpt.DefaultDig := digMarkers;
-  PlotImage.Options := TmpOpt;
-  btnDigitize.Action := TAction(Sender);
+  DigitizeCurve(digMarkers, TAction(Sender));
 end;
 
 procedure TDigitMainForm.ToolBSplinesExecute(Sender: TObject);
