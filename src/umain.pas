@@ -669,7 +669,7 @@ function TDigitMainForm.XLine(Y, Shift: Integer): Integer;
 begin
   with PlotImage.Plot.Scale do
     Result := Round(ImagePoint[2].X + Shift + (Y - ImagePoint[2].Y) *
-      (ImagePoint[1].X - ImagePoint[2].X) / (ImagePoint[1].Y - ImagePoint[2].Y));
+      (ImagePoint[1].X - ImagePoint[2].X)/(ImagePoint[1].Y - ImagePoint[2].Y));
 end;
 
 procedure TDigitMainForm.UpdateControls;
@@ -1173,12 +1173,12 @@ end;
 
 procedure TDigitMainForm.atInverseAxisToGraph(AX: Double; out AT: Double);
 begin
-  AT := 1 / AX;
+  AT := 1/AX;
 end;
 
 procedure TDigitMainForm.atInverseGraphToAxis(AX: Double; out AT: Double);
 begin
-  AT := 1 / AX;
+  AT := 1/AX;
 end;
 
 procedure TDigitMainForm.btnMinorGridColorChanged(Sender: TObject);
@@ -1320,7 +1320,7 @@ procedure TDigitMainForm.EditVX1Change(Sender: TObject; AByUser: Boolean);
 begin
   if AByUser then
     with TBCTrackbarUpdown(Sender) do
-      PlotImage.BoxVertex[Tag] := TCurvePoint.Create(Value / PlotImage.Zoom,
+      PlotImage.BoxVertex[Tag] := TCurvePoint.Create(Value/PlotImage.Zoom,
         PlotImage.BoxVertex[Tag].Y);
 end;
 
@@ -1329,7 +1329,7 @@ begin
   if AByUser then
     with TBCTrackbarUpdown(Sender) do
       PlotImage.BoxVertex[Tag] := TCurvePoint.Create(PlotImage.BoxVertex[Tag].X,
-        Value / PlotImage.Zoom);
+        Value/PlotImage.Zoom);
 end;
 
 procedure TDigitMainForm.EditZoomFitExecute(Sender: TObject);
@@ -1367,8 +1367,8 @@ end;
 
 procedure TDigitMainForm.edtGridThresholdChange(Sender: TObject; AByUser: Boolean);
 begin
-  if AByUser and (PlotImage.GridMask.Threshold <> edtGridThreshold.Value / 100) then
-    PlotImage.GridMask.Threshold := edtGridThreshold.Value / 100;
+  if AByUser and (PlotImage.GridMask.Threshold <> edtGridThreshold.Value/100) then
+    PlotImage.GridMask.Threshold := edtGridThreshold.Value/100;
 end;
 
 procedure TDigitMainForm.edtGridToleranceChange(Sender: TObject; AByUser: Boolean);
@@ -1652,7 +1652,7 @@ procedure TDigitMainForm.GridRemovalExecute(Sender: TObject);
 begin
   PlotImage.RemoveGrid(btnMajorGrid.ButtonColor, btnMinorGrid.ButtonColor,
     btnBackground.ButtonColor,
-    edtGridTolerance.Value, edtGridThreshold.Value / 100.0,
+    edtGridTolerance.Value, edtGridThreshold.Value/100.0,
     chbRebuildCurve.Checked, edtGridMask.Value);
   CurveToGUI;
 end;
@@ -2325,16 +2325,16 @@ procedure TDigitMainForm.SetImagePoint(Index: Integer; const Value: TCurvePoint)
 begin
   case Index of
     1: begin
-      EditIX1.Value := Round(PlotImage.Zoom * Value.X);
-      EditIY1.Value := Round(PlotImage.Zoom * Value.Y);
+      EditIX1.Value := Round(PlotImage.Zoom*Value.X);
+      EditIY1.Value := Round(PlotImage.Zoom*Value.Y);
     end;
     2: begin
-      EditIX2.Value := Round(PlotImage.Zoom * Value.X);
-      EditIY2.Value := Round(PlotImage.Zoom * Value.Y);
+      EditIX2.Value := Round(PlotImage.Zoom*Value.X);
+      EditIY2.Value := Round(PlotImage.Zoom*Value.Y);
     end;
     3: begin
-      EditIX3.Value := Round(PlotImage.Zoom * Value.X);
-      EditIY3.Value := Round(PlotImage.Zoom * Value.Y);
+      EditIX3.Value := Round(PlotImage.Zoom*Value.X);
+      EditIY3.Value := Round(PlotImage.Zoom*Value.Y);
     end;
   end;
 end;
@@ -2371,12 +2371,12 @@ begin
   if (X < span) then
   begin
     Xo := 0;
-    Xf := 2 * span + 1;
+    Xf := 2*span + 1;
   end
   else if (X > (PlotImage.Width - span - 1)) then
   begin
     Xf := PlotImage.Width;
-    Xo := Xf - 2 * span - 1;
+    Xo := Xf - 2*span - 1;
   end
   else
   begin
@@ -2387,12 +2387,12 @@ begin
   if (Y < span) then
   begin
     Yo := 0;
-    Yf := 2 * span + 1;
+    Yf := 2*span + 1;
   end
   else if (Y > (PlotImage.Height - span - 1)) then
   begin
     Yf := PlotImage.Height;
-    Yo := Yf - 2 * span - 1;
+    Yo := Yf - 2*span - 1;
   end
   else
   begin
@@ -2406,8 +2406,8 @@ begin
     TempBmp := PlotImage.GetZoomImage(ZoomImage.Width, ZoomImage.Height, ImgRect);
     with TempBmp do
     begin
-      Xc := Width * (X - Xo) div (2 * span);
-      Yc := Height * (Y - Yo) div (2 * span);
+      Xc := Width*(X - Xo) div (2*span);
+      Yc := Height*(Y - Yo) div (2*span);
 
       Canvas.Pen.Mode := pmNot;
       Canvas.Line(Xc - 10, Yc, Xc + 11, Yc);
@@ -2462,14 +2462,14 @@ begin
     piSetPlotBox: begin
       with PlotImage.Plot.Box do
       begin
-        EditVX1.Value := Round(PlotImage.Zoom * Vertex[0].X);
-        EditVY1.Value := Round(PlotImage.Zoom * Vertex[0].Y);
-        EditVX2.Value := Round(PlotImage.Zoom * Vertex[1].X);
-        EditVY2.Value := Round(PlotImage.Zoom * Vertex[1].Y);
-        EditVX3.Value := Round(PlotImage.Zoom * Vertex[2].X);
-        EditVY3.Value := Round(PlotImage.Zoom * Vertex[2].Y);
-        EditVX4.Value := Round(PlotImage.Zoom * Vertex[3].X);
-        EditVY4.Value := Round(PlotImage.Zoom * Vertex[3].Y);
+        EditVX1.Value := Round(PlotImage.Zoom*Vertex[0].X);
+        EditVY1.Value := Round(PlotImage.Zoom*Vertex[0].Y);
+        EditVX2.Value := Round(PlotImage.Zoom*Vertex[1].X);
+        EditVY2.Value := Round(PlotImage.Zoom*Vertex[1].Y);
+        EditVX3.Value := Round(PlotImage.Zoom*Vertex[2].X);
+        EditVY3.Value := Round(PlotImage.Zoom*Vertex[2].Y);
+        EditVX4.Value := Round(PlotImage.Zoom*Vertex[3].X);
+        EditVY4.Value := Round(PlotImage.Zoom*Vertex[3].Y);
       end;
     end;
     piSetGrid: begin
@@ -2479,7 +2479,7 @@ begin
         btnMinorGrid.ButtonColor := MinorGridColor;
         btnBackground.ButtonColor := BckgndColor;
         edtGridTolerance.Value := Tolerance;
-        edtGridThreshold.Value := Round(100 * Threshold);
+        edtGridThreshold.Value := Round(100*Threshold);
         chbRebuildCurve.Checked := FixCurve;
         edtGridMask.Value := MaskSize;
       end;
@@ -2543,7 +2543,7 @@ begin
   if (AMode = digMarkers) then
     PlotImage.DigitizeMarkers
   else
-    PlotImage.Digitize(AMode, False);
+    PlotImage.Digitize(AMode, True);
   CurveToGUI;
 
   TmpOpt := PlotImage.Options;
@@ -2593,8 +2593,8 @@ begin
     end;
     mbRight: begin
       DigitizeFromHereItem.Enabled := PlotImage.Plot.Scale.IsValid and PlotImage.ColorIsSet;
-      TmpPoint.X := X / PlotImage.Zoom;
-      TmpPoint.Y := Y / PlotImage.Zoom;
+      TmpPoint.X := X/PlotImage.Zoom;
+      TmpPoint.Y := Y/PlotImage.Zoom;
     end;
   end;
 end;
@@ -2619,7 +2619,7 @@ begin
     if (Zoom = 1) then
       StatusBar.Panels[1].Text := Format('%d, %d', [X, Y])
     else
-      StatusBar.Panels[1].Text := Format('%d, %d (%.1f, %.1f)', [X, Y, X / Zoom, Y / Zoom]);
+      StatusBar.Panels[1].Text := Format('%d, %d (%.1f, %.1f)', [X, Y, X/Zoom, Y/Zoom]);
     if Plot.Scale.IsValid then
     begin
       Pt := ConvertCoords(X, Y);
@@ -2680,6 +2680,7 @@ begin
   ProgressBar.Visible := True;
   ProgressBar.Position := Progress;
   StatusBar.Panels[4].Text := Format('%s (Esc to cancel)', [Msg]);
+  Application.ProcessMessages;
 end;
 
 procedure TDigitMainForm.PlotImageHideProgress(Sender: TObject);
@@ -2767,7 +2768,7 @@ end;
 
 procedure TDigitMainForm.PlotImageZoomChanged(Sender: TObject; Zoom: Double);
 begin
-  tbZoom.Value := Round(Zoom * 100);
+  tbZoom.Value := Round(Zoom*100);
 
   UpdateGUI;
   UpdateControls;
@@ -2868,13 +2869,13 @@ begin
     case PlotImage.Plot.Scale.XScale of
       stLog: Pt.X := Power(10, Pt.X);
       stLn: Pt.X := Exp(Pt.X);
-      stInverse: Pt.X := 1 / Pt.X;
+      stInverse: Pt.X := 1/Pt.X;
     end;
     // Calculate the correct value for the Y axis
     case PlotImage.Plot.Scale.YScale of
       stLog: Pt.Y := Power(10, Pt.Y);
       stLn: Pt.Y := Exp(Pt.Y);
-      stInverse: Pt.Y := 1 / Pt.Y;
+      stInverse: Pt.Y := 1/Pt.Y;
     end;
   end;
 
@@ -3009,7 +3010,7 @@ procedure TDigitMainForm.tbZoomChange(Sender: TObject; AByUser: Boolean);
 begin
   if AByUser then
     with TBCTrackbarUpdown(Sender) do
-      PlotImage.Zoom := Value / 100;
+      PlotImage.Zoom := Value/100;
 end;
 
 procedure TDigitMainForm.tcCurvesTabChanged(Sender: TObject);
@@ -3270,14 +3271,14 @@ begin
 
   with PlotImage.Plot.Box do
   begin
-    EditVX1.Value := Round(PlotImage.Zoom * Vertex[0].X);
-    EditVY1.Value := Round(PlotImage.Zoom * Vertex[0].Y);
-    EditVX2.Value := Round(PlotImage.Zoom * Vertex[1].X);
-    EditVY2.Value := Round(PlotImage.Zoom * Vertex[1].Y);
-    EditVX3.Value := Round(PlotImage.Zoom * Vertex[2].X);
-    EditVY3.Value := Round(PlotImage.Zoom * Vertex[2].Y);
-    EditVX4.Value := Round(PlotImage.Zoom * Vertex[3].X);
-    EditVY4.Value := Round(PlotImage.Zoom * Vertex[3].Y);
+    EditVX1.Value := Round(PlotImage.Zoom*Vertex[0].X);
+    EditVY1.Value := Round(PlotImage.Zoom*Vertex[0].Y);
+    EditVX2.Value := Round(PlotImage.Zoom*Vertex[1].X);
+    EditVY2.Value := Round(PlotImage.Zoom*Vertex[1].Y);
+    EditVX3.Value := Round(PlotImage.Zoom*Vertex[2].X);
+    EditVY3.Value := Round(PlotImage.Zoom*Vertex[2].Y);
+    EditVX4.Value := Round(PlotImage.Zoom*Vertex[3].X);
+    EditVY4.Value := Round(PlotImage.Zoom*Vertex[3].Y);
   end;
 end;
 

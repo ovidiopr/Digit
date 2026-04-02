@@ -92,6 +92,7 @@ type
     procedure OnDigitizeProgress(Percent: Integer);
     procedure OnDigitizeFinished(Sender: TObject);
     procedure ProcessDigitizedCurve(ACurve: TCurve);
+    procedure DeferredFreeThread(Data: PtrInt);
 
     procedure Paint; override;
     procedure Resize; override;
@@ -379,6 +380,14 @@ end;
 
 destructor TPlotImage.Destroy;
 begin
+  if Assigned(FDigitThread) then
+  begin
+    FDigitThread.Terminate;
+    FDigitThread.WaitFor;
+    FDigitThread.Free;
+    FDigitThread := nil;
+  end;
+
   FGridMask.Free;
   FWhiteBoard.Free;
   FZoomImg.Free;
@@ -664,13 +673,20 @@ end;
 procedure TPlotImage.Digitize(DigitMode: TDigitization = digLineFollowing; UseThread: Boolean = True);
 var
   Pi: TCurvePoint;
+  i: Integer;
+  BestX: Double;
+  Candidate: TCurvePoint;
 begin
   if DigitMode = digColorTracing then
   begin
-    // Color trace doesn't rely on finding an initial geometric start point
+    if Assigned(OnShowProgress) then
+      OnShowProgress(Self, 0, 'Digitizing curve...');
     Digitize(TCurvePoint.Create(0, 0), DigitMode, UseThread);
     Exit;
   end;
+
+  if Assigned(OnShowProgress) then
+    OnShowProgress(Self, 0, 'Finding initial point...');
 
   FindCurvePoints;
 
@@ -684,18 +700,43 @@ begin
   end
   else
   begin
-    if (Plot.Scale.CoordSystem = csCartesian) then
+    if Plot.DigitCurve.AllPoints.Count > 0 then
     begin
-      if (Plot.DigitCurve.Step > 0) then
-        Pi := (Plot.Scale.ImagePoint[1] + Plot.Scale.ImagePoint[2])/2
+      if Plot.DigitCurve.Step > 0 then
+        BestX := MaxDouble   // looking for minimum X
       else
-        Pi := Plot.Scale.ImagePoint[3] + (Plot.Scale.ImagePoint[1] - Plot.Scale.ImagePoint[2])/2;
+        BestX := -MaxDouble; // looking for maximum X
+
+      Pi := Plot.DigitCurve.AllPoints.Point[0];
+
+      for i := 0 to Plot.DigitCurve.AllPoints.Count - 1 do
+      begin
+        Candidate := Plot.DigitCurve.AllPoints.Point[i];
+        if (Plot.DigitCurve.Step > 0) and (Candidate.X < BestX) then
+        begin
+          BestX := Candidate.X;
+          Pi := Candidate;
+        end
+        else if (Plot.DigitCurve.Step < 0) and (Candidate.X > BestX) then
+        begin
+          BestX := Candidate.X;
+          Pi := Candidate;
+        end;
+      end;
     end
     else
-      Pi := (Plot.Scale.ImagePoint[3] + Plot.Scale.ImagePoint[2])/2;
-
-    while (not FindNextPoint(Pi, Round(Modulus(Pi)), True)) and (Plot.Box.Contains(Pi)) do
-      Pi := Pi + Sign(Plot.DigitCurve.Step)*Plot.Scale.Nx(Pi);
+    begin
+      // No matching pixels found at all — fall back to the plot boundary
+      if Plot.Scale.CoordSystem = csCartesian then
+      begin
+        if Plot.DigitCurve.Step > 0 then
+          Pi := (Plot.Scale.ImagePoint[1] + Plot.Scale.ImagePoint[2])/2
+        else
+          Pi := Plot.Scale.ImagePoint[3] + (Plot.Scale.ImagePoint[1] - Plot.Scale.ImagePoint[2])/2;
+      end
+      else
+        Pi := (Plot.Scale.ImagePoint[3] + Plot.Scale.ImagePoint[2])/2;
+    end;
   end;
 
   Digitize(Pi, DigitMode, UseThread);
@@ -1529,6 +1570,11 @@ begin
     OnPrintMessage(Self, 'Done', mtConfirmation);
 end;
 
+procedure TPlotImage.DeferredFreeThread(Data: PtrInt);
+begin
+  TDigitizerThread(Data).Free;
+end;
+
 procedure TPlotImage.OnDigitizeFinished(Sender: TObject);
 var
   TmpCurve: TCurve;
@@ -1536,29 +1582,22 @@ var
 begin
   if not (Sender is TDigitizerThread) then Exit;
   LThread := TDigitizerThread(Sender);
-
+  TmpCurve := nil;
   try
     TmpCurve := LThread.TakeResultCurve;
-
     if CancelAction or LThread.IsTerminated then
     begin
       if Assigned(OnPrintMessage) then
         OnPrintMessage(Self, 'Action cancelled by user', mtWarning);
     end
     else
-    begin
       ProcessDigitizedCurve(TmpCurve);
-    end;
   finally
-    if Assigned(TmpCurve) then
-      TmpCurve.Free;
-
-    if FDigitThread = LThread then
-      FDigitThread := nil;
-
+    TmpCurve.Free;
+    Application.QueueAsyncCall(@DeferredFreeThread, PtrInt(LThread));
+    FDigitThread := nil;
     if Assigned(OnHideProgress) then OnHideProgress(Self);
     RunningAction := False;
-
     Invalidate;
   end;
 end;

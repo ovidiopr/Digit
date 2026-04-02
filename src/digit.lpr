@@ -3,10 +3,10 @@ program digit;
 {$mode objfpc}{$H+}
 
 uses
-  {$IFDEF UNIX}{$IFDEF UseCThreads}
+  {$IFDEF UNIX}
   cthreads,
-  {$ENDIF}{$ENDIF}
-  Interfaces, // this includes the LCL widgetset
+  {$ENDIF}
+  Interfaces,
   Forms, tachartlazaruspkg, lazcontrols,
   ucoordinates,
   umain {DigitMainForm},

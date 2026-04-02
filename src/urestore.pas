@@ -56,7 +56,7 @@ end;
 function TWinRestorer.ScaleValue(Value, FromDPI, ToDPI: Integer): Integer;
 begin
   if (FromDPI <= 0) or (ToDPI <= 0) then Exit(Value);
-  Result := Round((Int64(Value) * ToDPI) div FromDPI);
+  Result := Round((Int64(Value)*ToDPI) div FromDPI);
 end;
 
 procedure TWinRestorer.EnsureFormVisible(F: TForm);

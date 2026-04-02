@@ -65,9 +65,14 @@ type
   TDigitizerThread = class(TThread)
     private
       FImage: TBGRABitmap;
+      FOwnsImage: Boolean;
+      FGridMaskCopy: TBGRABitmap;
       FContext: TDigitizerContext;
       FSeeds: TCurve;
       FResultCurve: TCurve;
+
+      FatalThreadException: Exception;
+      FatalThreadMessage: String;
 
       // Thread-safe progress handling
       FOnProgress: TScanProgressEvent;
@@ -75,6 +80,7 @@ type
       procedure SyncProgress;
       procedure DoProgress(Percent: Integer);
       function DoCheckTerminated: Boolean;
+      procedure SyncFatalError;
     protected
       procedure Execute; override;
     public
@@ -178,19 +184,27 @@ constructor TDigitizerThread.Create(AImage: TBGRABitmap; const ACtx: TDigitizerC
 var
   i: Integer;
 begin
-  inherited Create(True); // Create suspended
-  FreeOnTerminate := True;
-  FImage := AImage; // Thread safely reads from the bitmap
+  inherited Create(True);
+  FreeOnTerminate := False;
+  FImage := AImage.Duplicate as TBGRABitmap;
+  FOwnsImage := True;
   FContext := ACtx;
+  if ACtx.GridMaskActive and Assigned(ACtx.GridMask) then
+  begin
+    FGridMaskCopy := ACtx.GridMask.Duplicate as TBGRABitmap;
+    FContext.GridMask := FGridMaskCopy;
+  end
+  else
+  begin
+    FGridMaskCopy := nil;
+    FContext.GridMask := nil;
+  end;
   OnTerminate := ACallback;
   FResultCurve := TCurve.Create;
-
   FSeeds := TCurve.Create;
   if Assigned(ASeeds) then
-  begin
     for i := 0 to ASeeds.Count - 1 do
       FSeeds.AddPoint(ASeeds.Point[i]);
-  end;
 end;
 
 destructor TDigitizerThread.Destroy;
@@ -198,6 +212,11 @@ begin
   FSeeds.Free;
   if assigned(FResultCurve) then
     FResultCurve.Free;
+    if FOwnsImage then
+
+  FImage.Free;
+  FGridMaskCopy.Free;
+
   inherited Destroy;
 end;
 
@@ -215,7 +234,7 @@ end;
 procedure TDigitizerThread.DoProgress(Percent: Integer);
 begin
   FCurrentProgress := Percent;
-  Synchronize(@SyncProgress);
+  TThread.Queue(Self, @SyncProgress);
 end;
 
 function TDigitizerThread.DoCheckTerminated: Boolean;
@@ -223,9 +242,14 @@ begin
   Result := Terminated;
 end;
 
+procedure TDigitizerThread.SyncFatalError;
+begin
+  raise EThread.CreateFmt('Digitizer thread error (%s): %s',
+        [FatalThreadException.ClassName, FatalThreadMessage]);
+end;
+
 procedure TDigitizerThread.Execute;
 begin
-  // Hook up thread-safe callbacks directly to the context
   FContext.OnProgress := @DoProgress;
   FContext.CheckTerminated := @DoCheckTerminated;
   FResultCurve.Clear;
@@ -354,7 +378,7 @@ begin
     // Report Progress
     if Assigned(Ctx.OnProgress) then
     begin
-      CurrentProgress := Round(((y - BBox.Top) / TotalH) * 100);
+      CurrentProgress := Round(((y - BBox.Top)/TotalH)*100);
       if CurrentProgress <> LastProgress then
       begin
         Ctx.OnProgress(CurrentProgress);
@@ -381,6 +405,7 @@ var
   Top, i, s, X, Y, nx, ny,
   px, py, dist, w, j, tx, ty: Integer;
   FoundNext: Boolean;
+  TotalPixels, Processed, LastProgress, CurrentProgress: Integer;
 begin
   SetLength(Region,  Src.Height, Src.Width);
   SetLength(StackX,  Src.Width*Src.Height);
@@ -388,6 +413,10 @@ begin
   SetLength(LastDX,  Length(StackX));
   SetLength(LastDY,  Length(StackX));
   Top := -1;
+
+  TotalPixels := Max(1, Src.Width*Src.Height);
+  Processed := 0;
+  LastProgress := -1;
 
   for s := 0 to Seeds.Count - 1 do
   begin
@@ -411,6 +440,17 @@ begin
     nx := LastDX[Top]; ny := LastDY[Top];
     Dec(Top);
     FoundNext := False;
+
+    Inc(Processed);
+    if Assigned(Ctx.OnProgress) then
+    begin
+      CurrentProgress := Min(99, Processed*100 div TotalPixels);
+      if CurrentProgress <> LastProgress then
+      begin
+        Ctx.OnProgress(CurrentProgress);
+        LastProgress := CurrentProgress;
+      end;
+    end;
 
     for i := 0 to 7 do
     begin
@@ -469,11 +509,16 @@ var
   BestX, BestY, BestDX, BestDY,
   deltaX, deltaY: Integer;
   Found: Boolean;
+  TotalPixels, Processed, LastProgress, CurrentProgress: Integer;
 begin
   SetLength(Region, Src.Height, Src.Width);
   SetLength(StackX, Src.Width*Src.Height);
   SetLength(StackY, Length(StackX));
   Top := -1;
+
+  TotalPixels := Max(1, Src.Width*Src.Height);
+  Processed := 0;
+  LastProgress := -1;
 
   for Y := 0 to Src.Height - 1 do
     for X := 0 to Src.Width - 1 do
@@ -499,6 +544,17 @@ begin
 
     X := StackX[Top]; Y := StackY[Top];
     Dec(Top);
+
+    Inc(Processed);
+    if Assigned(Ctx.OnProgress) then
+    begin
+      CurrentProgress := Min(99, Processed*100 div TotalPixels);
+      if CurrentProgress <> LastProgress then
+      begin
+        Ctx.OnProgress(CurrentProgress);
+        LastProgress := CurrentProgress;
+      end;
+    end;
 
     // Flood-fill this blob
     SumX := 0; SumY := 0; Count := 0;
@@ -569,6 +625,8 @@ var
   ML: TCurve;
   i, Step, Interval: Integer;
   Pp: TCurvePoint;
+  BBox: TRect;
+  TotalSteps, LastProgress, CurrentProgress: Integer;
 
   // Search vertically around P for a band of matching pixels.
   // Returns the sub-pixel centroid via P, or False if nothing found.
@@ -629,8 +687,30 @@ begin
   Step := Ctx.Step;
   Interval := Ctx.MaxGap;
 
+  BBox := Ctx.Plot.Box.Rect[1.0];
+  if ML.Count > 2 then
+    TotalSteps := Max(1, ML.Count - 1)
+  else
+    TotalSteps := Max(1, Abs(Round(BBox.Right - BBox.Left)));
+  LastProgress := -1;
+
   repeat
     if Assigned(Ctx.CheckTerminated) and Ctx.CheckTerminated() then Exit;
+
+    if Assigned(Ctx.OnProgress) then
+    begin
+      if ML.Count > 2 then
+        CurrentProgress := Min(99, i*100 div TotalSteps)
+      else if Ctx.Plot.Scale.CoordSystem = csPolar then
+        CurrentProgress := Min(99, Abs(Round(Delta))*100 div 360)
+      else
+        CurrentProgress := Min(99, Abs(Round(Pi.X - BBox.Left))*100 div TotalSteps);
+      if CurrentProgress <> LastProgress then
+      begin
+        Ctx.OnProgress(CurrentProgress);
+        LastProgress := CurrentProgress;
+      end;
+    end;
 
     if ML.Count <= 2 then
     begin
@@ -704,7 +784,7 @@ begin
     // Report Progress
     if Assigned(Ctx.OnProgress) then
     begin
-      CurrentProgress := Round(((y - BBox.Top) / TotalH) * 100);
+      CurrentProgress := Round(((y - BBox.Top)/TotalH)*100);
       if CurrentProgress <> LastProgress then
       begin
         Ctx.OnProgress(CurrentProgress);
@@ -754,17 +834,33 @@ var
   SumX, SumY: Double;
   Count: Integer;
   WorkMap: TVisitedMap;
+  TotalY, LastProgress, CurrentProgress: Integer;
 begin
   Curve.Clear;
   if Length(Region) = 0 then Exit;
+
+  TotalY := Max(1, High(Region));
+  LastProgress := -1;
 
   if Ctx.LineSpread <= 0 then
   begin
     // No averaging: emit every set pixel
     for Y := 0 to High(Region) do
+    begin
+      if Assigned(Ctx.OnProgress) then
+      begin
+        CurrentProgress := Y*100 div TotalY;
+        if CurrentProgress <> LastProgress then
+        begin
+          Ctx.OnProgress(CurrentProgress);
+          LastProgress := CurrentProgress;
+        end;
+      end;
+
       for X := 0 to High(Region[Y]) do
         if Region[Y][X] then
           Curve.AddPoint(TCurvePoint.Create(X, Y));
+    end;
   end
   else
   begin
@@ -775,6 +871,17 @@ begin
       WorkMap[Y] := Copy(Region[Y]);
 
     for Y := 0 to High(WorkMap) do
+    begin
+      if Assigned(Ctx.OnProgress) then
+      begin
+        CurrentProgress := Y*100 div TotalY;
+        if CurrentProgress <> LastProgress then
+        begin
+          Ctx.OnProgress(CurrentProgress);
+          LastProgress := CurrentProgress;
+        end;
+      end;
+
       for X := 0 to High(WorkMap[Y]) do
         if WorkMap[Y][X] then
         begin
@@ -795,6 +902,7 @@ begin
           if Count > 0 then
             Curve.AddPoint(TCurvePoint.Create(SumX/Count, SumY/Count));
         end;
+    end;
   end;
 
   Curve.SortCurve;
@@ -907,6 +1015,7 @@ var
   SumX,
   SumY: Double;
   h: Integer;
+  LastProgress, CurrentProgress: Integer;
 begin
   if Curve.Count = 0 then Exit;
 
@@ -922,11 +1031,24 @@ begin
     FillChar(Visited[i][0], Src.Width, 0);
   end;
 
+  LastProgress := -1;
+  CurrentProgress := -1;
+
   NewCurve := TCurve.Create;
   Island := TCurve.Create;
   try
     for i := 0 to Curve.Count - 1 do
     begin
+      if Assigned(Ctx.OnProgress) then
+      begin
+        CurrentProgress := i*100 div Max(1, Curve.Count - 1);
+        if CurrentProgress <> LastProgress then
+        begin
+          Ctx.OnProgress(CurrentProgress);
+          LastProgress := CurrentProgress;
+        end;
+      end;
+
       Pi := Curve.Point[i];
 
       // Skip if already claimed by a previous island
@@ -1019,6 +1141,7 @@ var
   i, j, h: Integer;
   Pi: TCurvePoint;
   SumX, SumY: Double;
+  LastProgress, CurrentProgress: Integer;
 begin
   if Curve.Count = 0 then Exit;
 
@@ -1032,11 +1155,24 @@ begin
     FillChar(Visited[i][0], Src.Width, 0);
   end;
 
+  LastProgress := -1;
+  CurrentProgress := -1;
+
   NewCurve := TCurve.Create;
   Island := TCurve.Create;
   try
     for i := 0 to Curve.Count - 1 do
     begin
+      if Assigned(Ctx.OnProgress) then
+      begin
+        CurrentProgress := i*100 div Max(1, Curve.Count - 1);
+        if CurrentProgress <> LastProgress then
+        begin
+          Ctx.OnProgress(CurrentProgress);
+          LastProgress := CurrentProgress;
+        end;
+      end;
+
       Pi := Curve.Point[i];
 
       if (Round(Pi.Y) >= 0) and (Round(Pi.Y) < Src.Height) and
