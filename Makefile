@@ -35,6 +35,9 @@ DMG_STAGING    := $(BUILD)/dmg-staging
 DMG_VOLNAME    := $(APP) $(VERSION)
 APP_BUNDLE_SRC := $(BUILDDIR)/$(APP).app
 DMG_OUT        := $(APP)_$(VERSION)_$(TARGETCPU).dmg
+ICNS_NAME      := Digit.icns
+ICNS_SRC       := icons/$(ICNS_NAME)
+PLIST_SRC      := macos/Info.plist
 
 # ----------------------------
 # Targets
@@ -89,15 +92,23 @@ build_dmg: clean build
 	@echo "Building macOS DMG for $(TARGETCPU)"
 	@test -d "$(APP_BUNDLE_SRC)" || \
 		{ echo "ERROR: .app bundle not found at $(APP_BUNDLE_SRC)"; exit 1; }
+	@test -f "$(ICNS_SRC)" || \
+		{ echo "ERROR: icon not found at $(ICNS_SRC)"; exit 1; }
+	@test -f "$(PLIST_SRC)" || \
+		{ echo "ERROR: Info.plist not found at $(PLIST_SRC)"; exit 1; }
 	rm -rf "$(DMG_STAGING)"
 	mkdir -p "$(DMG_STAGING)"
-	# Copy the .app into the staging dir, resolving every symlink to its real
-	# file so the bundle is fully self-contained (-R recursive, -L dereference).
+	# Copy bundle, resolving all symlinks
 	cp -RL "$(APP_BUNDLE_SRC)" "$(DMG_STAGING)/"
-	# Verify the main executable is a plain file (not a dangling link)
 	@test -f "$(DMG_STAGING)/$(APP).app/Contents/MacOS/$(APP)" || \
-		{ echo "ERROR: executable missing or still a symlink after copy"; exit 1; }
-	# Build a compressed, internet-ready DMG
+		{ echo "ERROR: executable missing after copy"; exit 1; }
+	# Inject modified Info.plist, overwriting what lazbuild generated
+	cp "$(PLIST_SRC)" \
+		"$(DMG_STAGING)/$(APP).app/Contents/Info.plist"
+	# Inject the icon into Resources
+	mkdir -p "$(DMG_STAGING)/$(APP).app/Contents/Resources"
+	cp "$(ICNS_SRC)" \
+		"$(DMG_STAGING)/$(APP).app/Contents/Resources/$(ICNS_NAME)"
 	hdiutil create \
 		-volname "$(DMG_VOLNAME)" \
 		-srcfolder "$(DMG_STAGING)" \
