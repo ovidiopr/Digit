@@ -181,7 +181,6 @@ type
 
     procedure FindCurvePoints;
 
-    function FindNextPoint(var Pv: TCurvePoint; Interval: Integer; ScanX: Boolean = False): Boolean;
     procedure Digitize(DigitMode: TDigitization = digLineFollowing; UseThread: Boolean = True); overload;
     procedure Digitize(Pi: TCurvePoint; DigitMode: TDigitization; UseThread: Boolean = True); overload;
     procedure DigitizeMarkers;
@@ -522,66 +521,6 @@ begin
 
   Plot.DigitCurve.ValidPoints := not CancelAction;
   RunningAction := False;
-end;
-
-function TPlotImage.FindNextPoint(var Pv: TCurvePoint; Interval: Integer; ScanX: Boolean = False): Boolean;
-var
-  // Number of pixels that the line is expected to spread
-  Spread: Integer;
-
-  P: TCurvePoint;
-  dX, dY: Integer;
-  NoPnts: Integer;
-  FoundUp, FoundDown: Boolean;
-
-  function CheckPlotPoint(const Pi: TCurvePoint; var P: TCurvePoint;
-  var nP: Integer): Boolean;
-  begin
-    Result := Plot.DigitCurve.AllPoints.Contains(Pi);
-    if Result then
-    begin
-      Inc(nP);
-      P := P + Pi;
-    end;
-  end;
-
-begin
-  Spread := Max(2, Plot.DigitCurve.Spread);
-
-  P := TCurvePoint.Create(0, 0);
-  NoPnts := 0;
-  dY := 0;
-  Result := False;
-  // We scan, starting from Yv, until we find enough points
-  repeat
-    // We check Yv twice, to give it more weight
-    FoundUp := CheckPlotPoint(Pv - dY*Plot.Scale.Ny(Pv), P, NoPnts);
-    FoundDown := CheckPlotPoint(Pv + dY*Plot.Scale.Ny(Pv), P, NoPnts);
-
-    dX := 1;
-    while ScanX and (dX < Spread) do
-    begin
-      FoundUp := FoundUp or CheckPlotPoint(Pv - dX*Plot.Scale.Nx(Pv) -
-        dY*Plot.Scale.Ny(Pv), P, NoPnts);
-      FoundUp := FoundUp or CheckPlotPoint(Pv + dX*Plot.Scale.Nx(Pv) -
-        dY*Plot.Scale.Ny(Pv), P, NoPnts);
-      FoundDown := FoundDown or CheckPlotPoint(Pv - dX*Plot.Scale.Nx(Pv) +
-        dY*Plot.Scale.Ny(Pv), P, NoPnts);
-      FoundDown := FoundDown or CheckPlotPoint(Pv + dX*Plot.Scale.Nx(Pv) +
-        dY*Plot.Scale.Ny(Pv), P, NoPnts);
-
-      Inc(dX);
-    end;
-
-    Inc(dY);
-  until (NoPnts >= 1 + 2*Spread) or (dY >= Interval) or
-    ((NoPnts > 0) and (not FoundUp) and (not FoundDown));
-
-  if (NoPnts > 0) then
-  begin
-    Result := True;
-    Pv := P/NoPnts;
-  end;
 end;
 
 procedure TPlotImage.Digitize(Pi: TCurvePoint; DigitMode: TDigitization; UseThread: Boolean);
@@ -1540,14 +1479,14 @@ begin
 
   if FCurrentDigitMode = digColorTracing then
   begin
-    // --- Color Tracing Result Logic ---
+    // Color Tracing Result Logic
     Plot.DigitCurve.NextCurve(False); // Start a new curve segment
     for i := 0 to ACurve.Count - 1 do
       Plot.Curve.AddPoint(ACurve.Point[i]);
   end
   else
   begin
-    // --- Spectrum/Line Tracing Result Logic ---
+    // Spectrum/Line Tracing Result Logic
     Plot.Curve.Clear;
     dmin := MaxDouble;
     best := 0;
@@ -1902,10 +1841,10 @@ begin
               Rotate(i - 1, NewPos/Zoom);
 
               // Check that no marker moves out of the image
-              if not ClientRect.Contains(Zoom*Vertex[0]) or not
-                ClientRect.Contains(Zoom*Vertex[1]) or not
-                ClientRect.Contains(Zoom*Vertex[2]) or not
-                ClientRect.Contains(Zoom*Vertex[3]) then
+              if not ClientRect.Contains(Zoom*Vertex[0]) or
+                 not ClientRect.Contains(Zoom*Vertex[1]) or
+                 not ClientRect.Contains(Zoom*Vertex[2]) or
+                 not ClientRect.Contains(Zoom*Vertex[3]) then
               begin
                 CancelRotation;
               end;
@@ -1939,10 +1878,8 @@ begin
                   BoxMarkers[NextVertIdx(i - 1) + 1].Move(P1);
                   BoxMarkers[i].Move(P2);
 
-                  EdgeMarkers[NextVertIdx(i - 1) + 1].Move(
-                    Zoom*Edge[NextVertIdx(i - 1)]);
-                  EdgeMarkers[PrevVertIdx(i - 1) + 1].Move(
-                    Zoom*Edge[PrevVertIdx(i - 1)]);
+                  EdgeMarkers[NextVertIdx(i - 1) + 1].Move(Zoom*Edge[NextVertIdx(i - 1)]);
+                  EdgeMarkers[PrevVertIdx(i - 1) + 1].Move(Zoom*Edge[PrevVertIdx(i - 1)]);
                 end
                 else
                   MoveEdge(i - 1, OldPos);
@@ -2370,14 +2307,11 @@ begin
     piSetScale: begin
 
       FAxesMarkers[1] := TMarker.Create(CreateMarker(TPoint.Create(13, 13), '+',
-        Options.YAxisColor, 3), Zoom *
-        Plot.Scale.ImagePoint[1], True);
+                   Options.YAxisColor, 3), Zoom*Plot.Scale.ImagePoint[1], True);
       FAxesMarkers[2] := TMarker.Create(CreateMarker(TPoint.Create(13, 13), '+',
-        Options.OriginColor, 3), Zoom *
-        Plot.Scale.ImagePoint[2], True);
+                   Options.OriginColor, 3), Zoom*Plot.Scale.ImagePoint[2], True);
       FAxesMarkers[3] := TMarker.Create(CreateMarker(TPoint.Create(13, 13), '+',
-        Options.XAxisColor, 3), Zoom *
-        Plot.Scale.ImagePoint[3], True);
+                   Options.XAxisColor, 3), Zoom*Plot.Scale.ImagePoint[3], True);
 
       AddMarker(FAxesMarkers[1], False);
       AddMarker(FAxesMarkers[2], False);
@@ -2388,14 +2322,11 @@ begin
         for i := 1 to 4 do
         begin
           FBoxMarkers[i] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),
-            '1', clBlack, 3),
-            Zoom*Vertex[i - 1], True);
+                                           '1', clBlack, 3), Zoom*Vertex[i - 1], True);
           AddMarker(FBoxMarkers[i], False);
 
-          FEdgeMarkers[i] :=
-            TMarker.Create(CreateMarker(TPoint.Create(13, 13),
-            '0', clBlack, 3),
-            Zoom*Edge[i - 1], True);
+          FEdgeMarkers[i] := TMarker.Create(CreateMarker(TPoint.Create(13, 13),
+                                            '0', clBlack, 3), Zoom*Edge[i - 1], True);
           AddMarker(FEdgeMarkers[i], False);
         end;
     end;
