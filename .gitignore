@@ -32,5 +32,10 @@ Installer/
 
 # Application bundle for Mac OS
 *.app/
+*.dmg
 .DS_Store
 Digit
+
+# Linux packages
+*.deb
+*.rpm

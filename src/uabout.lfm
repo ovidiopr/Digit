@@ -10,10 +10,10 @@ object AboutBox: TAboutBox
   ClientWidth = 460
   Color = clBtnFace
   Font.Color = clWindowText
-  OnCreate = FormCreate
   Position = poMainFormCenter
   ShowHint = True
-  LCLVersion = '3.4.0.0'
+  LCLVersion = '4.0.0.4'
+  OnCreate = FormCreate
   object AboutImage: TImage
     AnchorSideLeft.Control = Owner
     AnchorSideTop.Control = Owner
@@ -176,7 +176,7 @@ object AboutBox: TAboutBox
     Top = 64
     Width = 244
     BorderSpacing.Top = 8
-    Caption = '(c) Ovidio Y. Peña Rodríguez 2001-2024'
+    Caption = '(c) Ovidio Y. Peña Rodríguez 2001-2026'
     ParentColor = False
   end
   object Bevel1: TBevel
