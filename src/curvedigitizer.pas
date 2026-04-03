@@ -37,7 +37,7 @@ uses
 type
   TScanDirection = (sdForward, sdBackward);
 
-  TScanProgressEvent = procedure(Percent: Integer) of object;
+  TScanProgressEvent = procedure(Percent: Integer; Messg: String) of object;
   TScanCheckTerminated = function: Boolean of object;
 
   // All parameters that drive the digitization process
@@ -47,8 +47,8 @@ type
     Color: TColor;
     ScanDirection: TScanDirection;
     Tolerance: Integer;
-    LineSpread: Integer;   // half-width for sub-pixel centroiding (Spread)
-    MaxGap: Integer;       // max gap to bridge/scan interval (Interval)
+    LineSpread: Integer;  // Half-width for sub-pixel centroiding (Spread)
+    MaxGap: Integer;      // Max gap to bridge/scan interval (Interval)
     Step: Integer;
     // Grid-mask overlay – when active, non-transparent mask pixels replace
     // the corresponding source pixels during every colour comparison.
@@ -59,7 +59,7 @@ type
     CheckTerminated: TScanCheckTerminated;
   end;
 
-  { 2-D boolean array indexed as [Y][X].  True = pixel already processed. }
+  // 2-D boolean array indexed as [Y][X]: True = pixel already processed
   TVisitedMap = array of array of Boolean;
 
   TDigitizerThread = class(TThread)
@@ -77,8 +77,9 @@ type
       // Thread-safe progress handling
       FOnProgress: TScanProgressEvent;
       FCurrentProgress: Integer;
+      FCurrentMessage: String;
       procedure SyncProgress;
-      procedure DoProgress(Percent: Integer);
+      procedure DoProgress(Percent: Integer; Messg: String);
       function DoCheckTerminated: Boolean;
       procedure SyncFatalError;
     protected
@@ -94,8 +95,8 @@ type
       property OnProgress: TScanProgressEvent read FOnProgress write FOnProgress;
     end;
 
-  { Thin abstraction over the image so algorithms stay testable without a
-    real TBGRABitmap. }
+  // Thin abstraction over the image so algorithms stay testable without a
+  // real TBGRABitmap
   IPixelSource = interface
     function Pixel(X, Y: Integer): TBGRAPixel;
     function Width: Integer;
@@ -103,16 +104,16 @@ type
     function Contains(P: TCurvePoint): Boolean;
   end;
 
-  { Wraps a TBGRABitmap plus optional grid-mask as an IPixelSource.
-    When a mask pixel has alpha > 0 it replaces the corresponding source
-    pixel in every Pixel() call. }
+  // Wraps a TBGRABitmap plus optional grid-mask as an IPixelSource.
+  // When a mask pixel has alpha > 0 it replaces the corresponding source
+  // pixel in every Pixel() call.
   TBGRABitmapSource = class(TInterfacedObject, IPixelSource)
   private
     FImg: TBGRABitmap;
     FMaskedImg: TBGRABitmap; // Holds the pre-composited image to speed up scans
     FQuad: TPlotQuad;
   public
-    constructor Create(AImg: TBGRABitmap; const AQuad: TPlotQuad; AMask: TBGRABitmap  = nil; AMaskActive: Boolean = False);
+    constructor Create(AImg: TBGRABitmap; const ACtx: TDigitizerContext);
     destructor Destroy; override;
     function Pixel(X, Y: Integer): TBGRAPixel;
     function Width: Integer;
@@ -228,12 +229,14 @@ end;
 
 procedure TDigitizerThread.SyncProgress;
 begin
-  if Assigned(FOnProgress) then FOnProgress(FCurrentProgress);
+  if Assigned(FOnProgress) then
+    FOnProgress(FCurrentProgress, FCurrentMessage);
 end;
 
-procedure TDigitizerThread.DoProgress(Percent: Integer);
+procedure TDigitizerThread.DoProgress(Percent: Integer; Messg: String);
 begin
   FCurrentProgress := Percent;
+  FCurrentMessage := Messg;
   TThread.Queue(Self, @SyncProgress);
 end;
 
@@ -260,14 +263,17 @@ end;
 { TBGRABitmapSource                                                           }
 { =========================================================================== }
 
-constructor TBGRABitmapSource.Create(AImg: TBGRABitmap; const AQuad: TPlotQuad; AMask: TBGRABitmap; AMaskActive: Boolean);
+constructor TBGRABitmapSource.Create(AImg: TBGRABitmap; const ACtx: TDigitizerContext);
 var
   x, y: Integer;
   pImg, pMask: PBGRAPixel;
+  AMask: TBGRABitmap;
+  AMaskActive: Boolean;
 begin
-  FQuad := AQuad;
+  FQuad := ACtx.Plot.Box;
+  AMask := ACtx.GridMask;
+  AMaskActive := ACtx.GridMaskActive;
 
-  // PRE-COMPOSITE OPTIMIZATION:
   // Instead of checking the mask in the Pixel() function millions of times,
   // we generate a single image with the grid removed upfront.
   if AMaskActive and Assigned(AMask) and (AMask.Width = AImg.Width) and (AMask.Height = AImg.Height) then
@@ -347,7 +353,7 @@ function PixelMatchesCurve(Image: TBGRABitmap; const Ctx: TDigitizerContext; X, 
 var
   Src: IPixelSource;
 begin
-  Src := TBGRABitmapSource.Create(Image, Ctx.Plot.Box, Ctx.GridMask, Ctx.GridMaskActive);
+  Src := TBGRABitmapSource.Create(Image, Ctx);
   Result := PixelBelongsToCurve(Src, X, Y, Ctx);
 end;
 
@@ -365,7 +371,7 @@ begin
   if (Image = nil) or (Ctx.Plot.Box = nil) then Exit;
 
   BBox := Ctx.Plot.Box.Rect[1.0];
-  Src := TBGRABitmapSource.Create(Image, Ctx.Plot.Box, Ctx.GridMask, Ctx.GridMaskActive);
+  Src := TBGRABitmapSource.Create(Image, Ctx);
 
   TotalH := Max(1, BBox.Bottom - BBox.Top);
   LastProgress := -1;
@@ -381,7 +387,7 @@ begin
       CurrentProgress := Round(((y - BBox.Top)/TotalH)*100);
       if CurrentProgress <> LastProgress then
       begin
-        Ctx.OnProgress(CurrentProgress);
+        Ctx.OnProgress(CurrentProgress, 'Scanning curve points...');
         LastProgress := CurrentProgress;
       end;
     end;
@@ -447,7 +453,7 @@ begin
       CurrentProgress := Min(99, Processed*100 div TotalPixels);
       if CurrentProgress <> LastProgress then
       begin
-        Ctx.OnProgress(CurrentProgress);
+        Ctx.OnProgress(CurrentProgress, 'Growing curve region...');
         LastProgress := CurrentProgress;
       end;
     end;
@@ -551,7 +557,7 @@ begin
       CurrentProgress := Min(99, Processed*100 div TotalPixels);
       if CurrentProgress <> LastProgress then
       begin
-        Ctx.OnProgress(CurrentProgress);
+        Ctx.OnProgress(CurrentProgress, 'Growing symbol region');
         LastProgress := CurrentProgress;
       end;
     end;
@@ -707,7 +713,7 @@ begin
         CurrentProgress := Min(99, Abs(Round(Pi.X - BBox.Left))*100 div TotalSteps);
       if CurrentProgress <> LastProgress then
       begin
-        Ctx.OnProgress(CurrentProgress);
+        Ctx.OnProgress(CurrentProgress, 'Detecting curve...');
         LastProgress := CurrentProgress;
       end;
     end;
@@ -756,9 +762,8 @@ end;
 { ALGORITHM 4 – Color trace (scan + greedy nearest-neighbour clustering)      }
 { =========================================================================== }
 
-{ Collect all matching pixels and group them by proximity (distance ≤ half
-  the LineSpread value).  Each group is averaged to its centroid.
-  This is equivalent to the clustering in the former TPlotImage.DigitizeColor. }
+// Collect all matching pixels and group them by proximity (distance <= half
+// the LineSpread value).  Each group is averaged to its centroid.
 procedure ClusterByColor(Src: IPixelSource; const Ctx: TDigitizerContext; Curve: TCurve);
 var
   x, y, k, TotalH, LastProgress, CurrentProgress: Integer;
@@ -787,7 +792,7 @@ begin
       CurrentProgress := Round(((y - BBox.Top)/TotalH)*100);
       if CurrentProgress <> LastProgress then
       begin
-        Ctx.OnProgress(CurrentProgress);
+        Ctx.OnProgress(CurrentProgress, 'Detecting curve...');
         LastProgress := CurrentProgress;
       end;
     end;
@@ -852,7 +857,7 @@ begin
         CurrentProgress := Y*100 div TotalY;
         if CurrentProgress <> LastProgress then
         begin
-          Ctx.OnProgress(CurrentProgress);
+          Ctx.OnProgress(CurrentProgress, 'Extracting curve...');
           LastProgress := CurrentProgress;
         end;
       end;
@@ -877,7 +882,7 @@ begin
         CurrentProgress := Y*100 div TotalY;
         if CurrentProgress <> LastProgress then
         begin
-          Ctx.OnProgress(CurrentProgress);
+          Ctx.OnProgress(CurrentProgress, 'Extracting curve...');
           LastProgress := CurrentProgress;
         end;
       end;
@@ -1019,8 +1024,7 @@ var
 begin
   if Curve.Count = 0 then Exit;
 
-  Src := TBGRABitmapSource.Create(Image, Ctx.Plot.Box,
-                                  Ctx.GridMask, Ctx.GridMaskActive);
+  Src := TBGRABitmapSource.Create(Image, Ctx);
 
   // Allocate and zero the visited map
   h := Src.Height;
@@ -1044,7 +1048,7 @@ begin
         CurrentProgress := i*100 div Max(1, Curve.Count - 1);
         if CurrentProgress <> LastProgress then
         begin
-          Ctx.OnProgress(CurrentProgress);
+          Ctx.OnProgress(CurrentProgress, 'Adjusting curve...');
           LastProgress := CurrentProgress;
         end;
       end;
@@ -1145,7 +1149,7 @@ var
 begin
   if Curve.Count = 0 then Exit;
 
-  Src := TBGRABitmapSource.Create(Image, Ctx.Plot.Box, Ctx.GridMask, Ctx.GridMaskActive);
+  Src := TBGRABitmapSource.Create(Image, Ctx);
 
   h := Src.Height;
   SetLength(Visited, h);
@@ -1168,7 +1172,7 @@ begin
         CurrentProgress := i*100 div Max(1, Curve.Count - 1);
         if CurrentProgress <> LastProgress then
         begin
-          Ctx.OnProgress(CurrentProgress);
+          Ctx.OnProgress(CurrentProgress, 'Converting curve to symbols...');
           LastProgress := CurrentProgress;
         end;
       end;
@@ -1223,7 +1227,7 @@ begin
      (Seeds = nil) or (Seeds.Count = 0) then Exit;
 
   // Every algorithm gets a source that transparently composites the grid mask
-  Src := TBGRABitmapSource.Create(Image, Ctx.Plot.Box, Ctx.GridMask, Ctx.GridMaskActive);
+  Src := TBGRABitmapSource.Create(Image, Ctx);
 
   // Ensure we select the correct left-most or right-most marker as the start
   TempSeeds := TCurve.Create;

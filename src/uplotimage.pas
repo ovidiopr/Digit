@@ -89,7 +89,7 @@ type
 
     procedure SetCancelAction(Value: Boolean);
     function CheckCancelStatus: Boolean;
-    procedure OnDigitizeProgress(Percent: Integer);
+    procedure OnDigitizeProgress(Percent: Integer; Messg: String = '');
     procedure OnDigitizeFinished(Sender: TObject);
     procedure ProcessDigitizedCurve(ACurve: TCurve);
     procedure DeferredFreeThread(Data: PtrInt);
@@ -631,14 +631,14 @@ begin
 
     if UseThread then
     begin
-      // --- ASYNCHRONOUS (BACKGROUND THREAD) ---
+      // Asynchronous (background thread)
       FDigitThread := TDigitizerThread.Create(FPlotImg, Ctx, Seeds, @OnDigitizeFinished);
       FDigitThread.OnProgress := @OnDigitizeProgress;
       FDigitThread.Start;
     end
     else
     begin
-      // --- SYNCHRONOUS (MAIN THREAD) ---
+      // Synchronous (main thread)
       SyncResultCurve := TCurve.Create;
       try
         // Attach callbacks for UI responsiveness during sync loop
@@ -794,18 +794,21 @@ begin
     OnPrintMessage(Self, 'Adjusting curve...', mtInformation);
 
   BuildDigitizerContext(Ctx);
+  // Attach callbacks for UI responsiveness during sync loop
+  Ctx.OnProgress := @OnDigitizeProgress;
+  Ctx.CheckTerminated := @CheckCancelStatus;
 
-  { Work on a copy so we can save the undo state cleanly }
+  // Work on a copy so we can save the undo state cleanly
   TmpCurve := TCurve.Create;
   try
     for i := 0 to Plot.Curve.Count - 1 do
       TmpCurve.AddPoint(Plot.Curve.Point[i]);
 
-    { Algorithm: each point is replaced by the centroid of the connected
-      same-colour island around it.  The grid mask is applied via Ctx. }
+    // Each point is replaced by the centroid of the connected
+    // same-colour island around it
     AdjustDigitizedCurve(FPlotImg, Ctx, TmpCurve, Noisy);
 
-    { Store result as a new undo step }
+    // Store result as a new undo step
     Plot.DigitCurve.NextCurve(False);
     for i := 0 to TmpCurve.Count - 1 do
       Plot.Curve.AddPoint(TmpCurve.Point[i]);
@@ -840,13 +843,16 @@ begin
     OnPrintMessage(Self, 'Converting curve to symbols...', mtInformation);
 
   BuildDigitizerContext(Ctx);
+  // Attach callbacks for UI responsiveness during sync loop
+  Ctx.OnProgress := @OnDigitizeProgress;
+  Ctx.CheckTerminated := @CheckCancelStatus;
 
   TmpCurve := TCurve.Create;
   try
     for i := 0 to Plot.Curve.Count - 1 do
       TmpCurve.AddPoint(Plot.Curve.Point[i]);
 
-    { Each contiguous blob touched by the curve becomes one symbol point }
+    // Each contiguous blob touched by the curve becomes one symbol point
     ConvertCurveToSymbolPoints(FPlotImg, Ctx, TmpCurve);
 
     Plot.DigitCurve.NextCurve(False);
@@ -1511,9 +1517,12 @@ begin
   Result := FCancelAction;
 end;
 
-procedure TPlotImage.OnDigitizeProgress(Percent: Integer);
+procedure TPlotImage.OnDigitizeProgress(Percent: Integer; Messg: String);
 begin
   if Assigned(OnShowProgress) then
+  if (Messg <> '') then
+    OnShowProgress(Self, Percent, Messg)
+  else
     OnShowProgress(Self, Percent, 'Processing...');
 end;
 
