@@ -1,4 +1,4 @@
-unit urestore;
+unit uRestore;
 
 {$mode objfpc}{$H+}
 

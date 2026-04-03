@@ -1,4 +1,4 @@
-unit ucoordinates;
+unit uCoordinates;
 
 {$mode objfpc}{$H+}
 {$modeswitch advancedrecords}

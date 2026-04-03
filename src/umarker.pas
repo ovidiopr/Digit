@@ -1,4 +1,4 @@
-unit umarker;
+unit uMarker;
 
 {$mode objfpc}{$H+}
 
@@ -18,7 +18,7 @@ unit umarker;
 interface
 
 uses
-  Classes, Fgl, Graphics, Types, BGRABitmap, BGRABitmapTypes, ucoordinates;
+  Classes, Fgl, Graphics, Types, BGRABitmap, BGRABitmapTypes, uCoordinates;
 
 type
   { ------------------------------------------------------------------ }

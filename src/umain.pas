@@ -1,4 +1,4 @@
-unit umain;
+unit uMain;
 
 {$mode objfpc}{$H+}
 {$IFDEF DARWIN}
@@ -16,7 +16,7 @@ uses
   TAChartAxis, TATransformations, TACustomSource, TAChartUtils, ClipBrd,
   ActnList, ValEdit, Spin, ExtDlgs, MaskEdit, BCTrackbarUpdown, FileUtil,
   BGRABitmapTypes, GraphType, attabs, Grids, Math, Types,
-  urestore, uchartscale, uutils, ucoordinates, ucurves, umarker, uplotimage;
+  uRestore, uChartScale, uUtils, uCoordinates, uCurves, uMarker, uPlotImage;
 
 type
   TMouseMode = (mdCursor, mdMarkers, mdColor, mdSteps, mdSegments,

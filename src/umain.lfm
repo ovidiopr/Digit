@@ -1,7 +1,7 @@
 object DigitMainForm: TDigitMainForm
   Left = 0
   Height = 517
-  Top = 150
+  Top = 157
   Width = 1191
   AllowDropFiles = True
   Caption = 'Digitizer'

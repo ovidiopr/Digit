@@ -1,4 +1,4 @@
-unit CurveDigitizer;
+unit uCurveDigitizer;
 
 {$mode objfpc}{$H+}
 
@@ -32,7 +32,7 @@ interface
 
 uses
   Classes, SysUtils, Math, Graphics, BGRABitmap, BGRABitmapTypes,
-  uutils, uscale, ucurves, ucoordinates, upolygons;
+  uUtils, uScale, uCurves, uCoordinates, uPolygons;
 
 type
   TScanDirection = (sdForward, sdBackward);
@@ -213,9 +213,8 @@ begin
   FSeeds.Free;
   if assigned(FResultCurve) then
     FResultCurve.Free;
-    if FOwnsImage then
-
-  FImage.Free;
+  if FOwnsImage then
+    FImage.Free;
   FGridMaskCopy.Free;
 
   inherited Destroy;

@@ -1,11 +1,11 @@
-unit uscale;
+unit uScale;
 
 {$mode ObjFPC}{$H+}
 
 interface
 
 uses
-  Classes, SysUtils, Fgl, DOM, Math, ucoordinates, upolygons, ucurves;
+  Classes, SysUtils, Fgl, DOM, Math, uCoordinates, uPolygons, uCurves;
 
 type
   TScale = class(TObject)

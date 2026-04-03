@@ -135,6 +135,7 @@
       <Unit1>
         <Filename Value="ucoordinates.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="uCoordinates"/>
       </Unit1>
       <Unit2>
         <Filename Value="umain.pas"/>
@@ -142,6 +143,7 @@
         <ComponentName Value="DigitMainForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
+        <UnitName Value="uMain"/>
       </Unit2>
       <Unit3>
         <Filename Value="uabout.pas"/>
@@ -153,14 +155,17 @@
       <Unit4>
         <Filename Value="ucurves.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="uCurves"/>
       </Unit4>
       <Unit5>
         <Filename Value="urestore.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="uRestore"/>
       </Unit5>
       <Unit6>
         <Filename Value="uutils.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="uUtils"/>
       </Unit6>
       <Unit7>
         <Filename Value="uchartscale.pas"/>
@@ -168,6 +173,7 @@
         <ComponentName Value="ChartScaleDlg"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
+        <UnitName Value="uChartScale"/>
       </Unit7>
       <Unit8>
         <Filename Value="uoptions.pas"/>
@@ -179,10 +185,12 @@
       <Unit9>
         <Filename Value="uplotimage.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="uPlotImage"/>
       </Unit9>
       <Unit10>
         <Filename Value="ugrid.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="uGrid"/>
       </Unit10>
       <Unit11>
         <Filename Value="uscale.pas"/>
@@ -193,9 +201,9 @@
         <IsPartOfProject Value="True"/>
       </Unit12>
       <Unit13>
-        <Filename Value="curvedigitizer.pas"/>
+        <Filename Value="ucurvedigitizer.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="CurveDigitizer"/>
+        <UnitName Value="uCurveDigitizer"/>
       </Unit13>
       <Unit14>
         <Filename Value="umarker.pas"/>

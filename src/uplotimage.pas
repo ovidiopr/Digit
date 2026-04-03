@@ -1,4 +1,4 @@
-unit uplotimage;
+unit uPlotImage;
 
 {$mode objfpc}{$H+}
 
@@ -7,7 +7,7 @@ interface
 uses {$ifdef windows}Windows,{$endif} Forms, Classes, Controls, Graphics,
   ExtDlgs, Fgl, ComCtrls, SysUtils, DOM, XMLWrite, XMLRead, Dialogs, Types,
   Base64, BGRABitmap, BGRABitmapTypes, BGRAreadTiff, Math,
-  uutils, ucurves, ucoordinates, uscale, umarker, ugrid, CurveDigitizer;
+  uUtils, uCurves, uCoordinates, uScale, uMarker, uGrid, uCurveDigitizer;
 
 const
   ZoomLevels: array [1..17] of Double = (1/10, 1/8, 1/6, 1/5, 1/4, 1/3, 1/2,
@@ -19,8 +19,7 @@ type
 
   TSelectRegionEvent = procedure(Sender: TObject; RegionRect: TRect) of object;
   TStateChangeEvent = procedure(Sender: TObject; NewState: TPlotImageState) of object;
-  TMarkerDraggedEvent = procedure(Sender: TObject; Marker: TMarker;
-    Zoom: Boolean) of object;
+  TMarkerDraggedEvent = procedure(Sender: TObject; Marker: TMarker; Zoom: Boolean) of object;
   TZoomChangeEvent = procedure(Sender: TObject; Zoom: Double) of object;
   TScaleChangeEvent = procedure(Sender: TObject; Index: Integer) of object;
   TItemChangeEvent = procedure(Sender: TObject; OldIndex, NewIndex: Integer) of object;
@@ -585,7 +584,7 @@ begin
         Ctx.CheckTerminated := @CheckCancelStatus;
 
         // Call the core unit directly
-        CurveDigitizer.DigitizeCurve(Seeds, FPlotImg, Ctx, SyncResultCurve);
+        uCurveDigitizer.DigitizeCurve(Seeds, FPlotImg, Ctx, SyncResultCurve);
 
         if CancelAction then
         begin

@@ -1,4 +1,4 @@
-unit uchartscale;
+unit uChartScale;
 
 {$mode objfpc}{$H+}
 

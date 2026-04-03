@@ -1,4 +1,4 @@
-unit uutils;
+unit uUtils;
 
 {$mode objfpc}{$H+}
 {$modeswitch advancedrecords}
@@ -7,7 +7,7 @@ interface
 
 uses
   Classes, SysUtils, Graphics, IniFiles, typ, ipf, spe, Math, inv,
-  System.UITypes, ucoordinates;
+  System.UITypes, uCoordinates;
 
 type
   THough1DMap = Array of LongWord;

@@ -8,13 +8,11 @@ uses
   {$ENDIF}
   Interfaces,
   Forms, tachartlazaruspkg, lazcontrols,
-  ucoordinates,
-  umain {DigitMainForm},
-  uabout {AboutBox},
-  ucurves,
-  urestore,
-  uchartscale, uoptions, uutils, uplotimage, ugrid, uscale, upolygons,
-CurveDigitizer, umarker;
+  uCoordinates,
+  uMain {DigitMainForm},
+  uAbout {AboutBox},
+  uCurves, uRestore, uChartScale, uOptions, uUtils, uPlotImage,
+  uGrid, uScale, uPolygons, uCurveDigitizer, uMarker;
 
 {$R *.res}
 

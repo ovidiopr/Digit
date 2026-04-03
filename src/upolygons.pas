@@ -1,11 +1,11 @@
-unit upolygons;
+unit uPolygons;
 
 {$mode ObjFPC}{$H+}
 
 interface
 
 uses
-  Classes, SysUtils, Math, DOM, Types, ucoordinates;
+  Classes, SysUtils, Math, DOM, Types, uCoordinates;
 
 type
   ArrayOfTPointF = Array of TPointF;

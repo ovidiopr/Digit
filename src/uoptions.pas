@@ -1,4 +1,4 @@
-unit uoptions;
+unit uOptions;
 
 {$mode objfpc}{$H+}
 
@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
-  ExtCtrls, Buttons, ComCtrls, uutils;
+  ExtCtrls, Buttons, ComCtrls, uUtils;
 
 type
   { TOptionsDlg }

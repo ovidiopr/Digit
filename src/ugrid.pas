@@ -1,4 +1,4 @@
-unit ugrid;
+unit uGrid;
 
 {$mode ObjFPC}{$H+}
 
@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Graphics, BGRABitmap, BGRABitmapTypes, BGRAreadTiff,
-  DOM, Base64, Math, System.UITypes, uutils, ucoordinates, upolygons, ucurves;
+  DOM, Base64, Math, System.UITypes, uUtils, uCoordinates, uPolygons, uCurves;
 
 type
   TBoxArray = Array of TPlotQuad;
