@@ -1,0 +1,11 @@
+Package: digit
+Version: 4.0
+Section: utils
+Priority: optional
+Architecture: @ARCH@
+Depends: libc6
+Maintainer: Ovidio <ovidio@bytesfall.com>
+Description: Digit application
+ Digit allows you to digitize scanned documents.
+ Curve color can be selected and paper rotations
+ are automatically corrected.

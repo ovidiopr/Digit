@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Digit
+Exec=/usr/bin/digit
+Icon=digit
+Type=Application
+Categories=Utility;Science;
+Terminal=false
