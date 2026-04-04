@@ -437,7 +437,12 @@ end;
 
 function TCurve.GetPoint(Index: Integer): TCurvePoint;
 begin
-  Result := FPoints[Index];
+  if (Index >= 0) and (Index < FPoints.Count) then        // Regular index
+    Result := FPoints[Index]
+  else if (Index < 0) and (Index >= -FPoints.Count) then  // Python-style
+    Result := FPoints[FPoints.Count + Index]
+  else
+    Result := TCurvePoint.Create(0, 0);
 end;
 
 function TCurve.GetMinX: Double;

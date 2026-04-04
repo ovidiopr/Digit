@@ -878,7 +878,7 @@ begin
     end;
 
     tcPlots.TabIndex := PlotImage.PlotIndex;
-    tcCurves.TabIndex := PlotImage.PlotIndex;
+    tcCurves.TabIndex := PlotImage.CurveIndex;
 
     UpdatePlotXScale;
     UpdatePlotYScale;
@@ -1242,28 +1242,31 @@ var
     Result := False;
 
     Stream := TMemoryStream.Create;
-    Clipboard.GetFormat(Clipboard.Formats[i], Stream);
-    Stream.Position := 0;
     try
-      Result := True;
+      Clipboard.GetFormat(Clipboard.Formats[i], Stream);
+      Stream.Position := 0;
+      try
+        Result := True;
 
-      ResetPoints := not PlotImage.ImageIsLoaded;
+        ResetPoints := not PlotImage.ImageIsLoaded;
 
-      with PlotImage do
-      begin
-        if ImageIsLoaded and (MessageDlg(
-          'You are about to replace the current plot image.' +
-          ' This action cannot be undone. Continue?', mtWarning, [mbYes, mbNo], 0) = mrNo)
-        then Exit;
+        with PlotImage do
+        begin
+          if ImageIsLoaded and (MessageDlg(
+            'You are about to replace the current plot image.' +
+            ' This action cannot be undone. Continue?', mtWarning, [mbYes, mbNo], 0) = mrNo)
+          then Exit;
 
-        PasteImage(Stream);
-        SetPlotPointMarkers(ResetPoints);
+          PasteImage(Stream);
+          SetPlotPointMarkers(ResetPoints);
+        end;
+      except
+        on ex: Exception do
+          Result := False;
       end;
-    except
-      on ex: Exception do
-        Result := False;
+    finally
+      Stream.Free;
     end;
-    Stream.Free;
   end;
 
 begin
@@ -1392,11 +1395,15 @@ end;
 procedure TDigitMainForm.edtStepChange(Sender: TObject; AByUser: Boolean);
 begin
   if (rgDirection.ItemIndex = 0) then
+  begin
     if AByUser and (PlotImage.Plot.DigitCurve.Step <> edtStep.Value) then
-      PlotImage.Plot.DigitCurve.Step := edtStep.Value
-    else
+      PlotImage.Plot.DigitCurve.Step := edtStep.Value;
+  end
+  else
+  begin
     if AByUser and (PlotImage.Plot.DigitCurve.Step <> -edtStep.Value) then
       PlotImage.Plot.DigitCurve.Step := -edtStep.Value;
+  end;
 end;
 
 procedure TDigitMainForm.edtToleranceChange(Sender: TObject; AByUser: Boolean);
@@ -1622,16 +1629,16 @@ begin
   begin
     AssignFile(F, SaveDataDlg.FileName);
     Rewrite(F);
-    Writeln(F, '"' + PlotImage.Plot.Scale.XLabel + '","' +
-      PlotImage.Plot.Scale.YLabel + '"');
     try
+      Writeln(F, '"' + PlotImage.Plot.Scale.XLabel + '","' +
+      PlotImage.Plot.Scale.YLabel + '"');
       PtCv := PlotImage.Plot.PlotCurve;
       for i := 0 to PtCv.Count - 1 do
         Writeln(F, PtCv.Point[i].ToStr('%.5g'));
     finally
       PtCv.Free;
+      CloseFile(F);
     end;
-    CloseFile(F);
   end;
 end;
 
@@ -2720,9 +2727,9 @@ procedure TDigitMainForm.PlotImageMarkerDragged(Sender: TObject;
 // Avoid an update loop, values come from PlotImage
   procedure UpdateEditors(Point: TCurvePoint; EditX, EditY: TBCTrackbarUpdown);
   var
-    ex, Ey: TTrackbarUpDownChangeEvent;
+    Ex, Ey: TTrackbarUpDownChangeEvent;
   begin
-    ex := EditX.OnChange;
+    Ex := EditX.OnChange;
     Ey := EditY.OnChange;
     EditX.OnChange := nil;
     EditY.OnChange := nil;
@@ -2730,34 +2737,22 @@ procedure TDigitMainForm.PlotImageMarkerDragged(Sender: TObject;
     EditX.Value := Round(Point.X);
     EditY.Value := Round(Point.Y);
 
-    EditX.OnChange := ex;
+    EditX.OnChange := Ex;
     EditY.OnChange := Ey;
   end;
 
 begin
   case PlotImage.State of
     piSetScale: begin
-      if (Marker = PlotImage.AxesMarkers[1]) then
-        UpdateEditors(PlotImage.Plot.Scale.ImagePoint[1], EditIX1, EditIY1);
-
-      if (Marker = PlotImage.AxesMarkers[2]) then
-        UpdateEditors(PlotImage.Plot.Scale.ImagePoint[2], EditIX2, EditIY2);
-
-      if (Marker = PlotImage.AxesMarkers[3]) then
-        UpdateEditors(PlotImage.Plot.Scale.ImagePoint[3], EditIX3, EditIY3);
+      UpdateEditors(PlotImage.Plot.Scale.ImagePoint[1], EditIX1, EditIY1);
+      UpdateEditors(PlotImage.Plot.Scale.ImagePoint[2], EditIX2, EditIY2);
+      UpdateEditors(PlotImage.Plot.Scale.ImagePoint[3], EditIX3, EditIY3);
     end;
     piSetPlotBox: begin
-      if (Marker = PlotImage.BoxMarkers[1]) then
-        UpdateEditors(PlotImage.BoxVertex[1], EditVX1, EditVY1);
-
-      if (Marker = PlotImage.BoxMarkers[2]) then
-        UpdateEditors(PlotImage.BoxVertex[2], EditVX2, EditVY2);
-
-      if (Marker = PlotImage.BoxMarkers[3]) then
-        UpdateEditors(PlotImage.BoxVertex[3], EditVX3, EditVY3);
-
-      if (Marker = PlotImage.BoxMarkers[4]) then
-        UpdateEditors(PlotImage.BoxVertex[4], EditVX4, EditVY4);
+      UpdateEditors(PlotImage.BoxVertex[1], EditVX1, EditVY1);
+      UpdateEditors(PlotImage.BoxVertex[2], EditVX2, EditVY2);
+      UpdateEditors(PlotImage.BoxVertex[3], EditVX3, EditVY3);
+      UpdateEditors(PlotImage.BoxVertex[4], EditVX4, EditVY4);
     end;
   end;
 
