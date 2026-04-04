@@ -597,6 +597,7 @@ type
     procedure CurveToGUI;
 
     procedure DigitizeCurve(AMode: TDigitization; AnAction: TAction);
+    procedure InterpolateCurve(AMode: TInterpolation; AnAction: TAction);
   public
     { Public declarations }
     TmpPoint: TCurvePoint;
@@ -2559,6 +2560,20 @@ begin
   btnDigitize.Action := AnAction;
 end;
 
+procedure TDigitMainForm.InterpolateCurve(AMode: TInterpolation; AnAction: TAction);
+var
+  TmpOpt: TPlotOptions;
+begin
+  //Replace the curve by interpolated values
+  PlotImage.Interpolate(seXo.Value, seXf.Value, seInterpPoints.Value, seInterpDegree.Value, False, AMode);
+  CurveToGUI;
+
+  TmpOpt := PlotImage.Options;
+  TmpOpt.DefaultItp := AMode;
+  PlotImage.Options := TmpOpt;
+  btnResample.Action := AnAction;
+end;
+
 procedure TDigitMainForm.PlotImageMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
@@ -3180,17 +3195,8 @@ begin
 end;
 
 procedure TDigitMainForm.ToolBSplinesExecute(Sender: TObject);
-var
-  TmpOpt: TPlotOptions;
 begin
-  //Replace the curve by interpolated values
-  PlotImage.Interpolate(seXo.Value, seXf.Value, seInterpPoints.Value, seInterpDegree.Value, False, itpBSpline);
-  CurveToGUI;
-
-  TmpOpt := PlotImage.Options;
-  TmpOpt.DefaultItp := itpBSpline;
-  PlotImage.Options := TmpOpt;
-  btnResample.Action := TAction(Sender);
+  InterpolateCurve(itpBSpline, TAction(Sender));
 end;
 
 procedure TDigitMainForm.ToolDigitSymbolTracingExecute(Sender: TObject);
@@ -3199,17 +3205,8 @@ begin
 end;
 
 procedure TDigitMainForm.ToolLinearExecute(Sender: TObject);
-var
-  TmpOpt: TPlotOptions;
 begin
-  //Replace the curve by interpolated values
-  PlotImage.Interpolate(seXo.Value, seXf.Value, seInterpPoints.Value, seInterpDegree.Value, False, itpLinear);
-  CurveToGUI;
-
-  TmpOpt := PlotImage.Options;
-  TmpOpt.DefaultItp := itpLinear;
-  PlotImage.Options := TmpOpt;
-  btnResample.Action := TAction(Sender);
+  InterpolateCurve(itpLinear, TAction(Sender));
 end;
 
 procedure TDigitMainForm.ToolPlotAddExecute(Sender: TObject);
@@ -3244,20 +3241,8 @@ begin
 end;
 
 procedure TDigitMainForm.ToolPolynomialExecute(Sender: TObject);
-var
-  TmpOpt: TPlotOptions;
 begin
-  //Replace the curve by interpolated values
-  PlotImage.Interpolate(seXo.Value, seXf.Value,
-    seInterpPoints.Value,
-    seInterpDegree.Value,
-    False, itpPoly);
-  CurveToGUI;
-
-  TmpOpt := PlotImage.Options;
-  TmpOpt.DefaultItp := itpPoly;
-  PlotImage.Options := TmpOpt;
-  btnResample.Action := TAction(Sender);
+  InterpolateCurve(itpPoly, TAction(Sender));
 end;
 
 procedure TDigitMainForm.ToolResetBoxExecute(Sender: TObject);
@@ -3342,20 +3327,8 @@ begin
 end;
 
 procedure TDigitMainForm.ToolSplinesExecute(Sender: TObject);
-var
-  TmpOpt: TPlotOptions;
 begin
-  //Replace the curve by interpolated values
-  PlotImage.Interpolate(seXo.Value, seXf.Value,
-    seInterpPoints.Value,
-    seInterpDegree.Value,
-    False, itpSpline);
-  CurveToGUI;
-
-  TmpOpt := PlotImage.Options;
-  TmpOpt.DefaultItp := itpSpline;
-  PlotImage.Options := TmpOpt;
-  btnResample.Action := TAction(Sender);
+  InterpolateCurve(itpSpline, TAction(Sender));
 end;
 
 //End of the action functions
