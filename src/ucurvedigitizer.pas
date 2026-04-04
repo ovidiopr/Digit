@@ -632,45 +632,100 @@ var
   Pp: TCurvePoint;
   BBox: TRect;
   TotalSteps, LastProgress, CurrentProgress: Integer;
+  SqrtArg, ArcArg, StepAngle: Double;
 
-  // Search vertically around P for a band of matching pixels.
-  // Returns the sub-pixel centroid via P, or False if nothing found.
+  // Search for a band of matching pixels perpendicular to the scan direction:
+  //  *Cartesian: scan is horizontal (+/- Y).
+  //  *Polar: scan is angular (in/out from the pole).
+  // Returns the sub-pixel centroid via P, or False if nothing found
   function FindNextPoint(var P: TCurvePoint): Boolean;
   var
     yOffset: Integer;
     AccP: TCurvePoint;
     nP: Integer;
     Pix: TBGRAPixel;
+    Center, RadDir, Probe: TCurvePoint;
+    RadLen: Double;
   begin
     AccP := TCurvePoint.Create(0, 0);
     nP := 0;
     yOffset := 0;
 
-    repeat
-      if (Round(P.Y) - yOffset >= 0) and
-         Src.Contains(TCurvePoint.Create(P.X, P.Y - yOffset)) then
+    if Ctx.Plot.Scale.CoordSystem = csPolar then
+    begin
+      // Compute the unit radial vector from the pole to P.
+      Center := Ctx.Plot.Scale.ImagePoint[2];
+      RadDir := P - Center;
+      RadLen := Sqrt(RadDir.X*RadDir.X + RadDir.Y*RadDir.Y);
+      if RadLen < 1e-9 then
+        RadDir := TCurvePoint.Create(1, 0)
+      else
       begin
-        Pix := Src.Pixel(Round(P.X), Round(P.Y - yOffset));
-        if ColorsAreSimilar(Pix, Ctx.Color, Ctx.Tolerance) then
-        begin
-          AccP := AccP + TCurvePoint.Create(P.X, P.Y - yOffset);
-          Inc(nP);
-        end;
+        RadDir.X := RadDir.X/RadLen;
+        RadDir.Y := RadDir.Y/RadLen;
       end;
 
-      if (Round(P.Y) + yOffset < Src.Height) and
-         Src.Contains(TCurvePoint.Create(P.X, P.Y + yOffset)) then
-      begin
-        Pix := Src.Pixel(Round(P.X), Round(P.Y + yOffset));
-        if ColorsAreSimilar(Pix, Ctx.Color, Ctx.Tolerance) then
+      // Probe outward then inward along the radial direction.
+      repeat
+        // Outward probe (yOffset = 0 samples P itself)
+        Probe := TCurvePoint.Create(P.X + yOffset*RadDir.X, P.Y + yOffset*RadDir.Y);
+        if Src.Contains(Probe) then
         begin
-          AccP := AccP + TCurvePoint.Create(P.X, P.Y + yOffset);
-          Inc(nP);
+          Pix := Src.Pixel(Round(Probe.X), Round(Probe.Y));
+          if ColorsAreSimilar(Pix, Ctx.Color, Ctx.Tolerance) then
+          begin
+            AccP := AccP + Probe;
+            Inc(nP);
+          end;
         end;
-      end;
 
-      Inc(yOffset);
-    until (nP >= 1 + 2*Interval) or (yOffset > Interval);
+        if yOffset > 0 then
+        begin
+          // Inward probe
+          Probe := TCurvePoint.Create(P.X - yOffset*RadDir.X, P.Y - yOffset*RadDir.Y);
+          if Src.Contains(Probe) then
+          begin
+            Pix := Src.Pixel(Round(Probe.X), Round(Probe.Y));
+            if ColorsAreSimilar(Pix, Ctx.Color, Ctx.Tolerance) then
+            begin
+              AccP := AccP + Probe;
+              Inc(nP);
+            end;
+          end;
+        end;
+
+        Inc(yOffset);
+      until (nP >= 1 + 2*Interval) or (yOffset > Interval);
+    end
+    else
+    begin
+      // Cartesian: search vertically at the current column.
+      repeat
+        if (Round(P.Y) - yOffset >= 0) and
+           Src.Contains(TCurvePoint.Create(P.X, P.Y - yOffset)) then
+        begin
+          Pix := Src.Pixel(Round(P.X), Round(P.Y - yOffset));
+          if ColorsAreSimilar(Pix, Ctx.Color, Ctx.Tolerance) then
+          begin
+            AccP := AccP + TCurvePoint.Create(P.X, P.Y - yOffset);
+            Inc(nP);
+          end;
+        end;
+
+        if (Round(P.Y) + yOffset < Src.Height) and
+           Src.Contains(TCurvePoint.Create(P.X, P.Y + yOffset)) then
+        begin
+          Pix := Src.Pixel(Round(P.X), Round(P.Y + yOffset));
+          if ColorsAreSimilar(Pix, Ctx.Color, Ctx.Tolerance) then
+          begin
+            AccP := AccP + TCurvePoint.Create(P.X, P.Y + yOffset);
+            Inc(nP);
+          end;
+        end;
+
+        Inc(yOffset);
+      until (nP >= 1 + 2*Interval) or (yOffset > Interval);
+    end;
 
     if nP > 0 then
     begin
@@ -723,11 +778,13 @@ begin
       if Ctx.Plot.Scale.CoordSystem = csPolar then
       begin
         Pp := CartesianToPolar(Pi - Ctx.Plot.Scale.ImagePoint[2]);
-        if (2*Pp.Y*Pp.Y < Step*Step) then Pp.Y := Step;
-        Pp.X := Pp.X - ArcSin(Step/Sqrt(4*Pp.Y*Pp.Y - Step*Step))*90/ArcTan(1);
+        if (2*Pp.Y*Pp.Y < Step*Step) then Pp.Y := Abs(Step);
+        SqrtArg := Max(0.0, 4*Pp.Y*Pp.Y - Step*Step);
+        ArcArg  := Min(1.0, Max(-1.0, Step/Sqrt(Max(SqrtArg, 1e-12))));
+        StepAngle := ArcSin(ArcArg)*90/ArcTan(1);
+        Pp.X := Pp.X - StepAngle;
         Pi := Ctx.Plot.Scale.ImagePoint[2] + PolarToCartesian(Pp);
-        Delta := Delta + Sign(Step)*
-                 ArcSin(Step/Sqrt(4*Pp.Y*Pp.Y - Step*Step))*90/ArcTan(1);
+        Delta := Delta + Sign(Step)*StepAngle;
       end
       else
         Pi := Pi + Step*Ctx.Plot.Scale.Nx(Pi);
@@ -839,6 +896,10 @@ var
   Count: Integer;
   WorkMap: TVisitedMap;
   TotalY, LastProgress, CurrentProgress: Integer;
+  PolarCenter: TCurvePoint;
+  AngleI, AngleJ: Double;
+  TmpPoint: TCurvePoint;
+  si, sj: Integer;
 begin
   Curve.Clear;
   if Length(Region) = 0 then Exit;
@@ -868,7 +929,7 @@ begin
   end
   else
   begin
-    // Average over a (2·LineSpread + 1)^2 neighbourhood to get sub-pixel
+    // Average over a (2*LineSpread + 1)^2 neighbourhood to get sub-pixel
     // centroids; mark pixels as used to avoid double-counting.
     SetLength(WorkMap, Length(Region));
     for Y := 0 to High(Region) do
@@ -909,7 +970,27 @@ begin
     end;
   end;
 
-  Curve.SortCurve;
+  if Ctx.Plot.Scale.CoordSystem = csPolar then
+  begin
+    // Sort by angle from the pole
+    PolarCenter := Ctx.Plot.Scale.ImagePoint[2];
+    for si := 1 to Curve.Count - 1 do
+    begin
+      TmpPoint := Curve.Point[si];
+      AngleI   := CartesianToPolar(TmpPoint - PolarCenter).X;
+      sj := si - 1;
+      while sj >= 0 do
+      begin
+        AngleJ := CartesianToPolar(Curve.Point[sj] - PolarCenter).X;
+        if AngleJ <= AngleI then Break;
+        Curve.Point[sj + 1] := Curve.Point[sj];
+        Dec(sj);
+      end;
+      Curve.Point[sj + 1] := TmpPoint;
+    end;
+  end
+  else
+    Curve.SortCurve;
 end;
 
 { =========================================================================== }
@@ -1220,6 +1301,9 @@ var
   FirstSeed: TCurvePoint;
   TempSeeds: TCurve;
   i: Integer;
+  TmpSeed: TCurvePoint;
+  AngleI, AngleJ: Double;
+  si, sj: Integer;
 begin
   Result := False;
   if (Image = nil) or (Curve = nil) or
@@ -1234,8 +1318,28 @@ begin
     for i := 0 to Seeds.Count - 1 do
       TempSeeds.AddPoint(Seeds.Point[i]);
 
-    TempSeeds.SortCurve; // Sort ascending by X
+    if Ctx.Plot.Scale.CoordSystem = csPolar then
+    begin
+      // Sort TempSeeds in descending angle order (CW = largest angle first)
+      for si := 1 to TempSeeds.Count - 1 do
+      begin
+        TmpSeed := TempSeeds.Point[si];
+        AngleI  := CartesianToPolar(TmpSeed - Ctx.Plot.Scale.ImagePoint[2]).X;
+        sj := si - 1;
+        while sj >= 0 do
+        begin
+          AngleJ := CartesianToPolar(TempSeeds.Point[sj] - Ctx.Plot.Scale.ImagePoint[2]).X;
+          if AngleJ >= AngleI then Break; // keep descending: larger angles first
+          TempSeeds.Point[sj + 1] := TempSeeds.Point[sj];
+          Dec(sj);
+        end;
+        TempSeeds.Point[sj + 1] := TmpSeed;
+      end;
+    end
+    else
+      TempSeeds.SortCurve; // Sort ascending by X
 
+    // Select starting seed — identical logic for both coordinate systems.
     if Ctx.ScanDirection = sdForward then
       FirstSeed := TempSeeds.Point[0]
     else
