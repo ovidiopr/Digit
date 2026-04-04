@@ -887,6 +887,55 @@ begin
 end;
 
 { =========================================================================== }
+{ High-Performance Angle/X-Axis Sort Helper                                   }
+{ =========================================================================== }
+procedure SortCurvePoints(Curve: TCurve; const Ctx: TDigitizerContext);
+var
+  Center: TCurvePoint;
+
+  procedure QuickSortPolar(L, R: Integer);
+  var
+    i, j: Integer;
+    PivotAngle: Double;
+    Temp: TCurvePoint;
+  begin
+    i := L;
+    j := R;
+    // Calculate pivot angle once per partition
+    PivotAngle := CartesianToPolar(Curve.Point[(L + R) div 2] - Center).X;
+
+    repeat
+      // Sort descending (CW) to match the FollowLine and Seed selection
+      while CartesianToPolar(Curve.Point[i] - Center).X > PivotAngle do Inc(i);
+      while CartesianToPolar(Curve.Point[j] - Center).X < PivotAngle do Dec(j);
+
+      if i <= j then
+      begin
+        Temp := Curve.Point[i];
+        Curve.Point[i] := Curve.Point[j];
+        Curve.Point[j] := Temp;
+        Inc(i);
+        Dec(j);
+      end;
+    until i > j;
+
+    if L < j then QuickSortPolar(L, j);
+    if i < R then QuickSortPolar(i, R);
+  end;
+
+begin
+  if Curve.Count < 2 then Exit;
+
+  if Ctx.Plot.Scale.CoordSystem = csPolar then
+  begin
+    Center := Ctx.Plot.Scale.ImagePoint[2];
+    QuickSortPolar(0, Curve.Count - 1);
+  end
+  else
+    Curve.SortCurve; // Fallback to Cartesian X-sorting
+end;
+
+{ =========================================================================== }
 { Curve extraction from a region bitmap (sub-pixel averaging)                 }
 { =========================================================================== }
 procedure ExtractOrderedCurve(const Region: TVisitedMap; Curve: TCurve; const Ctx: TDigitizerContext);
@@ -896,10 +945,6 @@ var
   Count: Integer;
   WorkMap: TVisitedMap;
   TotalY, LastProgress, CurrentProgress: Integer;
-  PolarCenter: TCurvePoint;
-  AngleI, AngleJ: Double;
-  TmpPoint: TCurvePoint;
-  si, sj: Integer;
 begin
   Curve.Clear;
   if Length(Region) = 0 then Exit;
@@ -970,27 +1015,8 @@ begin
     end;
   end;
 
-  if Ctx.Plot.Scale.CoordSystem = csPolar then
-  begin
-    // Sort by angle from the pole
-    PolarCenter := Ctx.Plot.Scale.ImagePoint[2];
-    for si := 1 to Curve.Count - 1 do
-    begin
-      TmpPoint := Curve.Point[si];
-      AngleI   := CartesianToPolar(TmpPoint - PolarCenter).X;
-      sj := si - 1;
-      while sj >= 0 do
-      begin
-        AngleJ := CartesianToPolar(Curve.Point[sj] - PolarCenter).X;
-        if AngleJ <= AngleI then Break;
-        Curve.Point[sj + 1] := Curve.Point[sj];
-        Dec(sj);
-      end;
-      Curve.Point[sj + 1] := TmpPoint;
-    end;
-  end
-  else
-    Curve.SortCurve;
+  // Sort the final extracted curve
+  SortCurvePoints(Curve, Ctx);
 end;
 
 { =========================================================================== }
@@ -1301,9 +1327,6 @@ var
   FirstSeed: TCurvePoint;
   TempSeeds: TCurve;
   i: Integer;
-  TmpSeed: TCurvePoint;
-  AngleI, AngleJ: Double;
-  si, sj: Integer;
 begin
   Result := False;
   if (Image = nil) or (Curve = nil) or
@@ -1318,26 +1341,8 @@ begin
     for i := 0 to Seeds.Count - 1 do
       TempSeeds.AddPoint(Seeds.Point[i]);
 
-    if Ctx.Plot.Scale.CoordSystem = csPolar then
-    begin
-      // Sort TempSeeds in descending angle order (CW = largest angle first)
-      for si := 1 to TempSeeds.Count - 1 do
-      begin
-        TmpSeed := TempSeeds.Point[si];
-        AngleI  := CartesianToPolar(TmpSeed - Ctx.Plot.Scale.ImagePoint[2]).X;
-        sj := si - 1;
-        while sj >= 0 do
-        begin
-          AngleJ := CartesianToPolar(TempSeeds.Point[sj] - Ctx.Plot.Scale.ImagePoint[2]).X;
-          if AngleJ >= AngleI then Break; // keep descending: larger angles first
-          TempSeeds.Point[sj + 1] := TempSeeds.Point[sj];
-          Dec(sj);
-        end;
-        TempSeeds.Point[sj + 1] := TmpSeed;
-      end;
-    end
-    else
-      TempSeeds.SortCurve; // Sort ascending by X
+    // Unify the sort logic for both Coordinate Systems
+    SortCurvePoints(TempSeeds, Ctx);
 
     // Select starting seed — identical logic for both coordinate systems.
     if Ctx.ScanDirection = sdForward then
