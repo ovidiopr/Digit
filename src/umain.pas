@@ -15,7 +15,7 @@ uses
   StdCtrls, Dialogs, Buttons, ExtCtrls, ComCtrls, TATypes, TASeries, TAGraph,
   TAChartAxis, TATransformations, TACustomSource, TAChartUtils, ClipBrd,
   ActnList, ValEdit, Spin, ExtDlgs, MaskEdit, BCTrackbarUpdown, FileUtil,
-  BGRABitmapTypes, GraphType, attabs, Grids, Math, Types,
+  BGRABitmapTypes, GraphType, Grids, ExtTabCtrl, Math, Types,
   uRestore, uChartScale, uUtils, uCoordinates, uCurves, uMarker, uPlotImage;
 
 type
@@ -27,6 +27,8 @@ type
   TDigitMainForm = class(TForm)
     DigitLineTraceItem: TMenuItem;
     DigitSymbolTraceItem: TMenuItem;
+    tcCurves: TExtTabCtrl;
+    tcPlots: TExtTabCtrl;
     ToolDigitSymbolTraceItem: TMenuItem;
     ToolDigitLineTraceItem: TMenuItem;
     ToolDigitLineTracing: TAction;
@@ -158,8 +160,6 @@ type
     tbRemoveGrid: TToolButton;
     tbResetBox: TToolButton;
     tbShowHideGrid: TToolButton;
-    tcCurves: TATTabs;
-    tcPlots: TATTabs;
     ToolQuadraticItem: TMenuItem;
     ToolLinearItem: TMenuItem;
     QuadraticItem: TMenuItem;
@@ -485,18 +485,16 @@ type
     procedure PlotScaleExecute(Sender: TObject);
     procedure rgDirectionSelectionChanged(Sender: TObject);
     procedure tbZoomChange(Sender: TObject; AByUser: Boolean);
-    procedure tcCurvesTabChanged(Sender: TObject);
-    procedure tcCurvesTabClose(Sender: TObject; ATabIndex: Integer;
-      var ACanClose, ACanContinue: Boolean);
+    procedure tcCurvesAddButtonClick(Sender: TObject);
+    procedure tcCurvesTabChange(Sender: TObject; NewIndex: Integer);
     procedure tcCurvesTabDblClick(Sender: TObject; AIndex: Integer);
-    procedure tcCurvesTabMove(Sender: TObject; AIndexFrom, AIndexTo: Integer);
-    procedure tcCurvesTabPlusClick(Sender: TObject);
-    procedure tcPlotsTabChanged(Sender: TObject);
-    procedure tcPlotsTabClose(Sender: TObject; ATabIndex: Integer;
-      var ACanClose, ACanContinue: Boolean);
+    procedure tcCurvesTabDeleting(Sender: TObject; Index: Integer; var Allow: Boolean);
+    procedure tcCurvesTabReordered(Sender: TObject; OldIndex, NewIndex: Integer);
+    procedure tcPlotsAddButtonClick(Sender: TObject);
+    procedure tcPlotsTabChange(Sender: TObject; NewIndex: Integer);
     procedure tcPlotsTabDblClick(Sender: TObject; AIndex: Integer);
-    procedure tcPlotsTabMove(Sender: TObject; AIndexFrom, AIndexTo: Integer);
-    procedure tcPlotsTabPlusClick(Sender: TObject);
+    procedure tcPlotsTabDeleting(Sender: TObject; Index: Integer; var Allow: Boolean);
+    procedure tcPlotsTabReordered(Sender: TObject; OldIndex, NewIndex: Integer);
     procedure ToolAdjustCurveExecute(Sender: TObject);
     procedure ToolAdjustNoiseExecute(Sender: TObject);
     procedure ToolCancelActionExecute(Sender: TObject);
@@ -1158,16 +1156,13 @@ begin
 end;
 
 procedure TDigitMainForm.btnColorColorChanged(Sender: TObject);
-var
-  d: TATTabData;
 begin
   if (PlotImage.Plot.DigitCurve.Color <> btnColor.ButtonColor) then
     PlotImage.Plot.DigitCurve.Color := btnColor.ButtonColor;
 
-  d := tcCurves.GetTabData(tcCurves.TabIndex);
-  if assigned(d) then
+  if (tcCurves.TabIndex >= 0) and (tcCurves.TabIndex < tcCurves.Tabs.Count) then
   begin
-    d.TabColor := btnColor.ButtonColor;
+    tcCurves.Tabs.Items[tcCurves.TabIndex].Color := btnColor.ButtonColor;
     tcCurves.Invalidate;
   end;
 end;
@@ -2057,7 +2052,6 @@ end;
 
 procedure TDigitMainForm.RenamePlot(Index: Integer);
 var
-  d: TATTabData;
   NewName: String;
 begin
   with PlotImage.Plot do
@@ -2066,10 +2060,10 @@ begin
     if (NewName <> Name) then
     begin
       Name := NewName;
-      d := tcPlots.GetTabData(Index);
-      if assigned(d) then
+
+      if (Index >= 0) and (Index < tcPlots.Tabs.Count) then
       begin
-        d.TabCaption := NewName;
+        tcPlots.Tabs.Items[Index].Caption := NewName;
         tcPlots.Invalidate;
       end;
 
@@ -2085,7 +2079,6 @@ end;
 
 procedure TDigitMainForm.RenameCurve(Index: Integer);
 var
-  d: TATTabData;
   NewName: String;
 begin
   with PlotImage.Plot.DigitCurve do
@@ -2094,10 +2087,10 @@ begin
     if (NewName <> Name) then
     begin
       Name := NewName;
-      d := tcCurves.GetTabData(Index);
-      if assigned(d) then
+
+      if (Index >= 0) and (Index < tcCurves.Tabs.Count) then
       begin
-        d.TabCaption := NewName;
+        tcCurves.Tabs.Items[Index].Caption := NewName;
         tcCurves.Invalidate;
       end;
 
@@ -2174,30 +2167,27 @@ end;
 procedure TDigitMainForm.SetScaleCount(Value: Integer);
 var
   i: Integer;
-  d: TATTabData;
 begin
-  assert(Value = PlotImage.PlotCount,
-    'Error: The number of scales is incorrect.');
+  assert(Value = PlotImage.PlotCount, 'Error: The number of scales is incorrect.');
 
   // Create or delete the required tabs
-  if (tcPlots.TabCount > Value) then
-    for i := tcPlots.TabCount - 1 downto Value do
+  if (tcPlots.Tabs.Count > Value) then
+    for i := tcPlots.Tabs.Count - 1 downto Value do
     begin
       tcPlots.Tabs.Delete(i);
     end
   else
-    for i := tcPlots.TabCount to Value - 1 do
+    for i := tcPlots.Tabs.Count to Value - 1 do
     begin
-      tcPlots.AddTab(tcPlots.TabCount, PlotImage.Plots[i].Name);
+      tcPlots.AddTab(PlotImage.Plots[i].Name);
     end;
 
   // Update tabs
   for i := 0 to PlotImage.PlotCount - 1 do
   begin
-    d := tcPlots.GetTabData(i);
-    if assigned(d) then
+    if (i >= 0) and (i < tcPlots.Tabs.Count) then
     begin
-      d.TabCaption := PlotImage.Plots[i].Name;
+      tcPlots.Tabs.Items[i].Caption := PlotImage.Plots[i].Name;
       tcPlots.Invalidate;
     end;
   end;
@@ -2206,11 +2196,9 @@ end;
 procedure TDigitMainForm.SetCurveCount(Value: Integer);
 var
   i: Integer;
-  d: TATTabData;
   TmpSeries: TLineSeries;
 begin
-  assert(Value = PlotImage.CurveCount,
-    'Error: The number of curves is incorrect.');
+  assert(Value = PlotImage.CurveCount, 'Error: The number of curves is incorrect.');
 
   // Create or delete the required series
   if (MainPlot.Series.Count > Value) then
@@ -2231,7 +2219,7 @@ begin
       TmpSeries.AxisIndexX := MainPlot.BottomAxis.Index;
       TmpSeries.AxisIndexY := MainPlot.LeftAxis.Index;
 
-      tcCurves.AddTab(tcCurves.TabCount, PlotImage.Plot.Curves[i].Name);
+      tcCurves.AddTab(PlotImage.Plot.Curves[i].Name);
     end;
 
   // Update tabs and series
@@ -2243,11 +2231,10 @@ begin
     TmpSeries.LinePen.Width := 2;
     TmpSeries.Clear;
 
-    d := tcCurves.GetTabData(i);
-    if assigned(d) then
+    if (i >= 0) and (i < tcCurves.Tabs.Count) then
     begin
-      d.TabCaption := PlotImage.Plot.Curves[i].Name;
-      d.TabColor := PlotImage.Plot.Curves[i].Color;
+      tcCurves.Tabs.Items[i].Caption := PlotImage.Plot.Curves[i].Name;
+      tcCurves.Tabs.Items[i].Color := PlotImage.Plot.Curves[i].Color;
       tcCurves.Invalidate;
     end;
   end;
@@ -3023,24 +3010,16 @@ begin
       PlotImage.Zoom := Value/100;
 end;
 
-procedure TDigitMainForm.tcCurvesTabChanged(Sender: TObject);
+procedure TDigitMainForm.tcCurvesAddButtonClick(Sender: TObject);
 begin
-  //Change active curve
-  PlotImage.CurveIndex := tcCurves.TabIndex;
+  if ToolCurveAdd.Enabled then
+    ToolCurveAdd.Execute;
 end;
 
-procedure TDigitMainForm.tcCurvesTabClose(Sender: TObject; ATabIndex: Integer;
-  var ACanClose, ACanContinue: Boolean);
+procedure TDigitMainForm.tcCurvesTabChange(Sender: TObject; NewIndex: Integer);
 begin
-  ACanClose := False;
-
-  with PlotImage do
-    if ImageIsLoaded and (State = piSetCurve) and (CurveCount > 1) then
-    begin
-      DeleteCurve(ATabIndex);
-      tcCurves.TabIndex := CurveIndex;
-      CurveToGUI;
-    end;
+  //Change active curve
+  PlotImage.CurveIndex := NewIndex;
 end;
 
 procedure TDigitMainForm.tcCurvesTabDblClick(Sender: TObject; AIndex: Integer);
@@ -3049,39 +3028,39 @@ begin
     RenameCurve(AIndex);
 end;
 
-procedure TDigitMainForm.tcCurvesTabMove(Sender: TObject; AIndexFrom, AIndexTo: Integer);
+procedure TDigitMainForm.tcCurvesTabDeleting(Sender: TObject; Index: Integer;
+  var Allow: Boolean);
 begin
-  if PlotImage.MoveCurve(AIndexFrom, AIndexTo) then
+  Allow := False;
+
+  with PlotImage do
+    if ImageIsLoaded and (State = piSetCurve) and (CurveCount > 1) then
+    begin
+      DeleteCurve(Index);
+      tcCurves.TabIndex := CurveIndex;
+      CurveToGUI;
+    end;
+end;
+
+procedure TDigitMainForm.tcCurvesTabReordered(Sender: TObject; OldIndex, NewIndex: Integer);
+begin
+  if PlotImage.MoveCurve(OldIndex, NewIndex) then
   begin
     CurveToGUI;
-    tcCurves.TabIndex := AIndexTo;
+    tcCurves.TabIndex := NewIndex;
   end;
 end;
 
-procedure TDigitMainForm.tcCurvesTabPlusClick(Sender: TObject);
+procedure TDigitMainForm.tcPlotsAddButtonClick(Sender: TObject);
 begin
-  if ToolCurveAdd.Enabled then
-    ToolCurveAdd.Execute;
+  if ToolPlotAdd.Enabled then
+    ToolPlotAdd.Execute;
 end;
 
-procedure TDigitMainForm.tcPlotsTabChanged(Sender: TObject);
+procedure TDigitMainForm.tcPlotsTabChange(Sender: TObject; NewIndex: Integer);
 begin
   //Change active plot
   PlotImage.PlotIndex := tcPlots.TabIndex;
-end;
-
-procedure TDigitMainForm.tcPlotsTabClose(Sender: TObject; ATabIndex: Integer;
-  var ACanClose, ACanContinue: Boolean);
-begin
-  ACanClose := False;
-
-  with PlotImage do
-    if ImageIsLoaded and (PlotCount > 1) then
-    begin
-      DeletePlot(ATabIndex);
-      tcPlots.TabIndex := PlotIndex;
-      CurveToGUI;
-    end;
 end;
 
 procedure TDigitMainForm.tcPlotsTabDblClick(Sender: TObject; AIndex: Integer);
@@ -3090,19 +3069,26 @@ begin
     RenamePlot(AIndex);
 end;
 
-procedure TDigitMainForm.tcPlotsTabMove(Sender: TObject; AIndexFrom, AIndexTo: Integer);
+procedure TDigitMainForm.tcPlotsTabDeleting(Sender: TObject; Index: Integer; var Allow: Boolean);
 begin
-  if PlotImage.MovePlot(AIndexFrom, AIndexTo) then
-  begin
-    UpdateGUI;
-    tcPlots.TabIndex := AIndexTo;
-  end;
+  Allow := False;
+
+  with PlotImage do
+    if ImageIsLoaded and (PlotCount > 1) then
+    begin
+      DeletePlot(Index);
+      tcPlots.TabIndex := PlotIndex;
+      CurveToGUI;
+    end;
 end;
 
-procedure TDigitMainForm.tcPlotsTabPlusClick(Sender: TObject);
+procedure TDigitMainForm.tcPlotsTabReordered(Sender: TObject; OldIndex, NewIndex: Integer);
 begin
-  if ToolPlotAdd.Enabled then
-    ToolPlotAdd.Execute;
+  if PlotImage.MovePlot(OldIndex, NewIndex) then
+  begin
+    UpdateGUI;
+    tcPlots.TabIndex := NewIndex;
+  end;
 end;
 
 procedure TDigitMainForm.ToolAdjustCurveExecute(Sender: TObject);
@@ -3144,7 +3130,7 @@ procedure TDigitMainForm.ToolCurveAddExecute(Sender: TObject);
 begin
   PlotImage.AddCurve;
   tcCurves.TabIndex := PlotImage.CurveCount - 1;
-  tcCurvesTabChanged(Self);
+  tcCurvesTabChange(Self, PlotImage.CurveCount - 1);
 end;
 
 procedure TDigitMainForm.ToolCurveDeleteExecute(Sender: TObject);
@@ -3222,7 +3208,7 @@ begin
   ScaleCount := PlotImage.PlotCount;
 
   tcPlots.TabIndex := PlotImage.PlotIndex;
-  tcPlotsTabChanged(Self);
+  tcPlotsTabChange(Self, PlotImage.PlotIndex);
 end;
 
 procedure TDigitMainForm.ToolPlotDeleteExecute(Sender: TObject);
