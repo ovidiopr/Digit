@@ -437,23 +437,19 @@ type
     procedure HelpAboutExecute(Sender: TObject);
     procedure FileExitExecute(Sender: TObject);
     procedure leDataSelectCell(Sender: TObject; aCol, aRow: Integer; var CanSelect: Boolean);
-    procedure leDataValidateEntry(Sender: TObject; aCol, aRow: Integer;
-      const OldValue: String; var NewValue: String);
+    procedure leDataValidateEntry(Sender: TObject; aCol, aRow: Integer; const OldValue: String; var NewValue: String);
     procedure LogClearExecute(Sender: TObject);
     procedure LogSaveExecute(Sender: TObject);
     procedure MainPlotMouseLeave(Sender: TObject);
     procedure ModeBackgroundColorExecute(Sender: TObject);
     procedure ModeMajorGridColorExecute(Sender: TObject);
     procedure ModeMinorGridColorExecute(Sender: TObject);
-    procedure msgAreaDrawItem(Control: TWinControl; Index: Integer; ARect: TRect;
-      State: TOwnerDrawState);
+    procedure msgAreaDrawItem(Control: TWinControl; Index: Integer; ARect: TRect; State: TOwnerDrawState);
     procedure pcInputChange(Sender: TObject);
-    procedure PlotImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState;
-      X, Y: Integer);
+    procedure PlotImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure PlotImageMouseLeave(Sender: TObject);
     procedure PlotImageMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
-    procedure PlotImageMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState;
-      X, Y: Integer);
+    procedure PlotImageMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure PlotImageResize(Sender: TObject);
     procedure PlotImageChange(Sender: TObject);
     procedure PlotImagePrintMessage(Sender: TObject; Msg: String; MsgType: TMsgDlgType);
@@ -729,8 +725,7 @@ begin
     MarkersDelete.Enabled := ImageIsLoaded and assigned(ActiveMarker) and
       not ActiveMarker.IsPersistent;
 
-    ToolCorrectDistortion.Enabled :=
-      ImageIsLoaded and (State = piSetPlotBox) and PlotImage.Plot.Box.IsConvex;
+    ToolCorrectDistortion.Enabled := ImageIsLoaded and (State = piSetPlotBox) and PlotImage.Plot.Box.IsConvex;
     ToolResetBox.Enabled := ImageIsLoaded and (State = piSetPlotBox);
 
     GridRemoval.Enabled := ImageIsLoaded and (State = piSetGrid) and
@@ -826,8 +821,7 @@ begin
         seXf.Value := Point[NumPoints - 1].X;
 
         for i := 0 to min(100, NumPoints - 1) do
-          leData.InsertRow(Format('%.5g', [Point[i].X]),
-            Format('%.5g', [Point[i].Y]), True);
+          leData.InsertRow(Format('%.5g', [Point[i].X]), Format('%.5g', [Point[i].Y]), True);
       end;
 
     leData.Row := 0;
@@ -2771,14 +2765,12 @@ begin
   UpdateControls;
 end;
 
-procedure TDigitMainForm.PlotImageActivePlotChanging(Sender: TObject;
-  OldIndex, NewIndex: Integer);
+procedure TDigitMainForm.PlotImageActivePlotChanging(Sender: TObject; OldIndex, NewIndex: Integer);
 begin
   // Nothing (for now)
 end;
 
-procedure TDigitMainForm.PlotImageActivePlotChanged(Sender: TObject;
-  OldIndex, NewIndex: Integer);
+procedure TDigitMainForm.PlotImageActivePlotChanged(Sender: TObject; OldIndex, NewIndex: Integer);
 begin
   //Change active tab
   if (tcPlots.TabIndex <> NewIndex) then
@@ -2799,14 +2791,12 @@ begin
   UpdateView;
 end;
 
-procedure TDigitMainForm.PlotImageActiveCurveChanging(Sender: TObject;
-  OldIndex, NewIndex: Integer);
+procedure TDigitMainForm.PlotImageActiveCurveChanging(Sender: TObject; OldIndex, NewIndex: Integer);
 begin
   // Nothing (for now)
 end;
 
-procedure TDigitMainForm.PlotImageActiveCurveChanged(Sender: TObject;
-  OldIndex, NewIndex: Integer);
+procedure TDigitMainForm.PlotImageActiveCurveChanged(Sender: TObject; OldIndex, NewIndex: Integer);
 begin
   // Change active tab
   if (tcCurves.TabIndex <> NewIndex) then
@@ -2852,8 +2842,7 @@ begin
   {$endif}
 end;
 
-procedure TDigitMainForm.MainPlotMouseMove(Sender: TObject;
-  Shift: TShiftState; X, Y: Integer);
+procedure TDigitMainForm.MainPlotMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 var
   Pt: TDoublePoint;
 begin
@@ -3060,7 +3049,7 @@ end;
 procedure TDigitMainForm.tcPlotsTabChange(Sender: TObject; NewIndex: Integer);
 begin
   //Change active plot
-  PlotImage.PlotIndex := tcPlots.TabIndex;
+  PlotImage.PlotIndex := NewIndex;
 end;
 
 procedure TDigitMainForm.tcPlotsTabDblClick(Sender: TObject; AIndex: Integer);

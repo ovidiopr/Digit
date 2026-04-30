@@ -326,27 +326,17 @@ type
     property CanRedo: Boolean read GetCanRedo;
   published
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
-    property OnPrintMessage: TPrintMessageEvent
-      read FOnPrintMessage write FOnPrintMessage;
-    property OnShowProgress: TShowProgressEvent
-      read FOnShowProgress write FOnShowProgress;
-    property OnHideProgress: THideProgressEvent
-      read FOnHideProgress write FOnHideProgress;
-    property OnRegionSelected: TSelectRegionEvent
-      read FOnRegionSelected write FOnRegionSelected;
-    property OnStateChanged: TStateChangeEvent
-      read FOnStateChanged write FOnStateChanged;
-    property OnMarkerDragged: TMarkerDraggedEvent
-      read FOnMarkerDragged write FOnMarkerDragged;
+    property OnPrintMessage: TPrintMessageEvent read FOnPrintMessage write FOnPrintMessage;
+    property OnShowProgress: TShowProgressEvent read FOnShowProgress write FOnShowProgress;
+    property OnHideProgress: THideProgressEvent read FOnHideProgress write FOnHideProgress;
+    property OnRegionSelected: TSelectRegionEvent read FOnRegionSelected write FOnRegionSelected;
+    property OnStateChanged: TStateChangeEvent read FOnStateChanged write FOnStateChanged;
+    property OnMarkerDragged: TMarkerDraggedEvent read FOnMarkerDragged write FOnMarkerDragged;
     property OnZoomChanged: TZoomChangeEvent read FOnZoomChanged write FOnZoomChanged;
-    property OnActivePlotChanging: TItemChangeEvent
-      read FOnActivePlotChanging write FOnActivePlotChanging;
-    property OnActivePlotChanged: TItemChangeEvent
-      read FOnActivePlotChanged write FOnActivePlotChanged;
-    property OnActiveCurveChanging: TItemChangeEvent
-      read FOnActiveCurveChanging write FOnActiveCurveChanging;
-    property OnActiveCurveChanged: TItemChangeEvent
-      read FOnActiveCurveChanged write FOnActiveCurveChanged;
+    property OnActivePlotChanging: TItemChangeEvent read FOnActivePlotChanging write FOnActivePlotChanging;
+    property OnActivePlotChanged: TItemChangeEvent read FOnActivePlotChanged write FOnActivePlotChanged;
+    property OnActiveCurveChanging: TItemChangeEvent read FOnActiveCurveChanging write FOnActiveCurveChanging;
+    property OnActiveCurveChanged: TItemChangeEvent read FOnActiveCurveChanged write FOnActiveCurveChanged;
   end;
 
 implementation
@@ -2569,6 +2559,13 @@ begin
   if Result then
   begin
     FPlots.Move(FromIdx, ToIdx);
+
+    if (FPlotIndex = FromIdx) then
+      FPlotIndex := ToIdx
+    else if (FPlotIndex < FromIdx) and (FPlotIndex > ToIdx) then
+      inc(FPlotIndex)
+    else if (FPlotIndex > FromIdx) and (FPlotIndex < ToIdx) then
+      dec(FPlotIndex);
 
     UpdateMarkersInImage;
 
