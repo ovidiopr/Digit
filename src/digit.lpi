@@ -181,6 +181,7 @@
         <ComponentName Value="OptionsDlg"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
+        <UnitName Value="uOptions"/>
       </Unit8>
       <Unit9>
         <Filename Value="uplotimage.pas"/>

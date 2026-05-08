@@ -110,9 +110,11 @@ type
         @param(d: Degree of the polynomial, >= 2.)
         @param(XScale: Type of scale in X axis.)
         @param(IntType: Type of interpolation.)
+        @param(IntBehavior: Behavior of interpolation.)
     }
     procedure Interpolate(n, d: Integer; XScale: TScaleType = stLinear;
-                          IntType: TInterpolation = itpBSpline); overload;
+                          IntType: TInterpolation = itpBSpline;
+                          IntBehavior: TInterpBehavior = ibPlotLinear); overload;
     {Interpolates new points using B-Splines:
         @param(Xo: Lower limit.)
         @param(Xf: Upper limit.)
@@ -120,10 +122,12 @@ type
         @param(d: Degree of the polynomial, >= 2.)
         @param(XScale: Type of scale in X axis.)
         @param(IntType: Type of interpolation.)
+        @param(IntBehavior: Behavior of interpolation.)
     }
     procedure Interpolate(Xo, Xf: Double; n, d: Integer;
                           XScale: TScaleType = stLinear;
-                          IntType: TInterpolation = itpBSpline); overload;
+                          IntType: TInterpolation = itpBSpline;
+                          IntBehavior: TInterpBehavior = ibPlotLinear); overload;
 
     {Number of points in the curve}
     property Count: Integer read GetCount;
@@ -642,15 +646,17 @@ begin
 end;
 
 procedure TCurve.Interpolate(n, d: Integer; XScale: TScaleType = stLinear;
-                             IntType: TInterpolation = itpBSpline);
+                             IntType: TInterpolation = itpBSpline;
+                             IntBehavior: TInterpBehavior = ibPlotLinear);
 begin
   if (n > 2) then
-    Interpolate(GetMinX, GetMaxX, n, d, XScale, IntType)
+    Interpolate(GetMinX, GetMaxX, n, d, XScale, IntType, IntBehavior)
 end;
 
 procedure TCurve.Interpolate(Xo, Xf: Double; n, d: Integer;
                              XScale: TScaleType = stLinear;
-                             IntType: TInterpolation = itpBSpline);
+                             IntType: TInterpolation = itpBSpline;
+                             IntBehavior: TInterpBehavior = ibPlotLinear);
 var
  i: Integer;
  dx: Double;
@@ -675,35 +681,47 @@ begin
 
       Clear;
 
-      // Make sure that X points are linear in its scale
-      case XScale of
-        stLog: begin
-          Xo := log10(Xo);
-          Xf := log10(Xf);
-        end;
-        stLn: begin
-          Xo := ln(Xo);
-          Xf := ln(Xf);
-        end;
-        stInverse: begin
-          Xo := 1/Xo;
-          Xf := 1/Xf;
-        end;
-      end;
-
-      dx := (Xf - Xo)/(n - 1);
-
-      SetLength(Xint, n);
-      for i := 0 to n - 1 do
+      // Interpolated points are linear in the plot
+      if (IntBehavior = ibPlotLinear) then
       begin
-        Xint[i] := Xo + i*dx;
-
-        // Make sure that X points are in the right scale
+        // Make sure that X points are linear in its scale
         case XScale of
-          stLog: Xint[i] := Power(10, Xint[i]);
-          stLn: Xint[i] := Exp(Xint[i]);
-          stInverse: Xint[i] := 1.0/Xint[i];
+          stLog: begin
+            Xo := log10(Xo);
+            Xf := log10(Xf);
+          end;
+          stLn: begin
+            Xo := ln(Xo);
+            Xf := ln(Xf);
+          end;
+          stInverse: begin
+            Xo := 1/Xo;
+            Xf := 1/Xf;
+          end;
         end;
+
+        dx := (Xf - Xo)/(n - 1);
+
+        SetLength(Xint, n);
+        for i := 0 to n - 1 do
+        begin
+          Xint[i] := Xo + i*dx;
+
+          // Make sure that X points are in the right scale
+          case XScale of
+            stLog: Xint[i] := Power(10, Xint[i]);
+            stLn: Xint[i] := Exp(Xint[i]);
+            stInverse: Xint[i] := 1.0/Xint[i];
+          end;
+        end;
+      end
+      else // Interpolated points are linear in the scale
+      begin
+        dx := (Xf - Xo)/(n - 1);
+
+        SetLength(Xint, n);
+        for i := 0 to n - 1 do
+          Xint[i] := Xo + i*dx;
       end;
 
       case IntType of

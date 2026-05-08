@@ -16,6 +16,7 @@ type
   FloatArray = Array of Double;
 
   TInterpolation = (itpBSpline, itpSpline, itpLinear, itpPoly);
+  TInterpBehavior = (ibPlotLinear, ibScaleLinear);
   TDigitization = (digLineFollowing, digLineTracing, digSymbolTracing, digColorTracing, digMarkers);
 
   TPrintMessageEvent = procedure(Sender: TObject; Msg: String; MsgType: TMsgDlgType) of Object;
@@ -27,6 +28,7 @@ type
 
     DefaultDig: TDigitization;
     DefaultItp: TInterpolation;
+    ItpBehavior: TInterpBehavior;
 
     ShowXAxis: Boolean;
     ShowYAxis: Boolean;
@@ -44,6 +46,7 @@ type
 function AreSimilar(R1, G1, B1, R2, G2, B2, Tolerance: Byte): Boolean; overload;
 function AreSimilar(R1, G1, B1: Byte; C2: LongWord; Tolerance: Byte): Boolean; overload;
 function AreSimilar(C1, C2: LongWord; Tolerance: Byte): Boolean; overload;
+function CorrectRectangle(ARect: TRect): TRect;
 function Polynomial(Points: Array of TCurvePoint; Degree: Integer; Xval: FloatArray): FloatArray;
 function Spline(Points: Array of TCurvePoint; Degree: Integer; Xval: FloatArray): FloatArray;
 function BSpline(Points: Array of TCurvePoint; Degree: Integer; Xval: Double): Double;
@@ -67,6 +70,26 @@ begin
   //Check for the trivial case first
   Result := (C1 = C2) or AreSimilar(Red(C1), Green(C1), Blue(C1),
                                     Red(C2), Green(C2), Blue(C2), Tolerance);
+end;
+
+function CorrectRectangle(ARect: TRect): TRect;
+var
+  k: Integer;
+begin
+  Result := ARect;
+  // Ensure that the rectangle is correct
+  if (Result.Left > Result.Right) then
+  begin
+    k := Result.Left;
+    Result.Left := Result.Right;
+    Result.Right := k;
+  end;
+  if (Result.Top > Result.Bottom) then
+  begin
+    k := Result.Top;
+    Result.Top := Result.Bottom;
+    Result.Bottom := k;
+  end;
 end;
 
 function Polynomial(Points: Array of TCurvePoint; Degree: Integer; Xval: FloatArray): FloatArray;
@@ -446,6 +469,7 @@ begin
 
     DefaultDig := TDigitization(IniFile.ReadInteger('Plot', 'DefaultDig', Integer(DefaultDig)));
     DefaultItp := TInterpolation(IniFile.ReadInteger('Plot', 'DefaultItp', Integer(DefaultItp)));
+    ItpBehavior := TInterpBehavior(IniFile.ReadInteger('Plot', 'ItpBehavior', Integer(ItpBehavior)));
 
     ShowXAxis := IniFile.ReadBool('Plot', 'ShowXAxis', ShowXAxis);
     ShowYAxis := IniFile.ReadBool('Plot', 'ShowYAxis', ShowYAxis);
@@ -467,6 +491,7 @@ begin
 
     IniFile.WriteInteger('Plot', 'DefaultDig', Integer(DefaultDig));
     IniFile.WriteInteger('Plot', 'DefaultItp', Integer(DefaultItp));
+    IniFile.WriteInteger('Plot', 'ItpBehavior', Integer(ItpBehavior));
 
     IniFile.WriteBool('Plot', 'ShowXAxis', ShowXAxis);
     IniFile.WriteBool('Plot', 'ShowYAxis', ShowYAxis);

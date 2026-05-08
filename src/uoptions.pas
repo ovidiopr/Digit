@@ -21,6 +21,7 @@ type
     btnBgndColor: TColorButton;
     cbbDigitType: TComboBox;
     cbbInterpType: TComboBox;
+    cbbInterpBehavior: TComboBox;
     chbShowXAxis: TCheckBox;
     chbShowYAxis: TCheckBox;
     gbX: TGroupBox;
@@ -28,6 +29,7 @@ type
     gbY: TGroupBox;
     lblInterpType: TLabel;
     lblDigitType: TLabel;
+    lblInterpBehavior: TLabel;
     lblXAxis: TLabel;
     lblBgndColor: TLabel;
     lblOrigin: TLabel;
@@ -61,7 +63,7 @@ begin
   Result.BgndColor := btnBgndColor.ButtonColor;
 
   case cbbDigitType.ItemIndex of
-    0..2: Result.DefaultDig := TDigitization(cbbDigitType.ItemIndex);
+    0..4: Result.DefaultDig := TDigitization(cbbDigitType.ItemIndex);
     else
       Result.DefaultDig := digLineFollowing;
   end;
@@ -70,6 +72,12 @@ begin
     0..3: Result.DefaultItp := TInterpolation(cbbInterpType.ItemIndex);
     else
       Result.DefaultItp := itpBSpline;
+  end;
+
+  case cbbInterpBehavior.ItemIndex of
+    0..1: Result.ItpBehavior := TInterpBehavior(cbbInterpBehavior.ItemIndex);
+    else
+      Result.ItpBehavior := ibPlotLinear;
   end;
 
   Result.ShowXAxis := chbShowXAxis.Checked;
@@ -92,6 +100,11 @@ begin
     cbbInterpType.ItemIndex := Integer(Value.DefaultItp)
   else
     cbbInterpType.ItemIndex := -1;
+
+  if Value.ItpBehavior in [ibPlotLinear..ibScaleLinear] then
+    cbbInterpBehavior.ItemIndex := Integer(Value.ItpBehavior)
+  else
+    cbbInterpBehavior.ItemIndex := -1;
 
   chbShowXAxis.Checked := Value.ShowXAxis;
   chbShowYAxis.Checked := Value.ShowYAxis;

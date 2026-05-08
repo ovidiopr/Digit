@@ -3269,6 +3269,8 @@ begin
     PlotImage.Options := OptionsDlg.Options;
 
     case PlotImage.Options.DefaultDig of
+      digLineTracing: btnDigitize.Action := ToolDigitLineTracing;
+      digSymbolTracing: btnDigitize.Action := ToolDigitSymbolTracing;
       digColorTracing: btnDigitize.Action := ToolDigitColorTracing;
       digMarkers: btnDigitize.Action := ToolDigitMarkers;
       else

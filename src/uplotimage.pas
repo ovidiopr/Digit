@@ -85,6 +85,7 @@ type
     FDigitThread: TDigitizerThread;
     FStartPi: TCurvePoint;
     FCurrentDigitMode: TDigitization;
+    FLastProcessMessages: QWord;
 
     procedure SetCancelAction(Value: Boolean);
     function CheckCancelStatus: Boolean;
@@ -158,6 +159,8 @@ type
 
     procedure RepaintRegion(UpdateArea: TRect);
     procedure RepaintAll;
+
+    procedure ScaleAllCurvePoints(Factor: Double);
 
     procedure RectIntersection(Po, Pf: TCurvePoint; var Pini, Pend: TCurvePoint);
     procedure XAxisCoords(var Pini, Pend: TCurvePoint);
@@ -505,9 +508,6 @@ begin
 
   BuildDigitizerContext(Ctx);
 
-  Ctx.OnProgress := @OnDigitizeProgress;
-  Ctx.CheckTerminated := @CheckCancelStatus;
-
   Plot.DigitCurve.AllPoints.Clear;
   ScanCurvePoints(FPlotImg, Ctx, Plot.DigitCurve.AllPoints);
 
@@ -579,10 +579,6 @@ begin
       // Synchronous (main thread)
       SyncResultCurve := TCurve.Create;
       try
-        // Attach callbacks for UI responsiveness during sync loop
-        Ctx.OnProgress := @OnDigitizeProgress;
-        Ctx.CheckTerminated := @CheckCancelStatus;
-
         // Call the core unit directly
         uCurveDigitizer.DigitizeCurve(Seeds, FPlotImg, Ctx, SyncResultCurve);
 
@@ -713,6 +709,10 @@ begin
     Ctx.ScanDirection := sdBackward;
   Ctx.GridMask := GridMask.Mask;
   Ctx.GridMaskActive := GridMask.IsValid and GridMask.IsActive;
+
+  // Attach callbacks for UI responsiveness during sync loop
+  Ctx.OnProgress := @OnDigitizeProgress;
+  Ctx.CheckTerminated := @CheckCancelStatus;
 end;
 
 procedure TPlotImage.AdjustCurve(Noisy: Boolean = False);
@@ -732,9 +732,6 @@ begin
     OnPrintMessage(Self, 'Adjusting curve...', mtInformation);
 
   BuildDigitizerContext(Ctx);
-  // Attach callbacks for UI responsiveness during sync loop
-  Ctx.OnProgress := @OnDigitizeProgress;
-  Ctx.CheckTerminated := @CheckCancelStatus;
 
   // Work on a copy so we can save the undo state cleanly
   TmpCurve := TCurve.Create;
@@ -781,9 +778,6 @@ begin
     OnPrintMessage(Self, 'Converting curve to symbols...', mtInformation);
 
   BuildDigitizerContext(Ctx);
-  // Attach callbacks for UI responsiveness during sync loop
-  Ctx.OnProgress := @OnDigitizeProgress;
-  Ctx.CheckTerminated := @CheckCancelStatus;
 
   TmpCurve := TCurve.Create;
   try
@@ -1001,7 +995,7 @@ var
   X: Double;
 begin
   Result := nil;
-  if (State = piSetCurve) then
+  if (State = piSetCurve) and (Markers.Count > 0) then
   begin
     X := Markers[0].Position.X;
     Result := Markers[0];
@@ -1020,7 +1014,7 @@ var
   X: Double;
 begin
   Result := nil;
-  if (State = piSetCurve) then
+  if (State = piSetCurve) and (Markers.Count > 0) then
   begin
     X := Markers[0].Position.X;
     Result := Markers[0];
@@ -1039,7 +1033,7 @@ var
   Y: Double;
 begin
   Result := nil;
-  if (State = piSetCurve) then
+  if (State = piSetCurve) and (Markers.Count > 0) then
   begin
     Y := Markers[0].Position.Y;
     Result := Markers[0];
@@ -1058,7 +1052,7 @@ var
   Y: Double;
 begin
   Result := nil;
-  if (State = piSetCurve) then
+  if (State = piSetCurve) and (Markers.Count > 0) then
   begin
     Y := Markers[0].Position.Y;
     Result := Markers[0];
@@ -1178,6 +1172,8 @@ var
   TmpBmp: TBGRABitmap;
   NewStream: TMemoryStream;
 begin
+  TmpBmp := nil;
+  NewStream := nil;
   try
     TmpBmp := TBGRABitmap.Create(Stream);
     NewStream := TMemoryStream.Create;
@@ -1237,15 +1233,31 @@ end;
 
 procedure TPlotImage.ZoomFitBest;
 begin
+  // Guard against no parent or an image that has not been loaded yet
+  if not Assigned(Parent) then Exit;
+  if (PlotImg.Width = 0) or (PlotImg.Height = 0) then Exit;
+
   if ((PlotImg.Width/PlotImg.Height) > (Parent.ClientWidth/Parent.ClientHeight)) then
     Zoom := Parent.ClientWidth/PlotImg.Width
   else
     Zoom := Parent.ClientHeight/PlotImg.Height;
 end;
 
-procedure TPlotImage.ResizeToZoom;
+procedure TPlotImage.ScaleAllCurvePoints(Factor: Double);
 var
   i, j, k, l: Integer;
+begin
+  for i := 0 to PlotCount - 1 do
+    for j := 0 to Plots[i].CurveCount - 1 do
+      for k := 0 to Plots[i].Curves[j].ValidCurves - 1 do
+        with Plots[i].Curves[j].Curves[k] do
+          for l := 0 to Count - 1 do
+            Point[l] := Factor*Point[l];
+end;
+
+procedure TPlotImage.ResizeToZoom;
+var
+  i, j: Integer;
 begin
   if (Zoom <> 1) then
   begin
@@ -1260,14 +1272,10 @@ begin
       with Plots[i].Box do
         for j := 0 to NumVertices - 1 do
           Vertex[j] := Zoom*Vertex[j];
-
-      // Update the curves
-      for j := 0 to Plots[i].CurveCount - 1 do
-        for k := 0 to Plots[i].Curves[j].ValidCurves - 1 do
-          with Plots[i].Curves[j].Curves[k] do
-            for l := 0 to Count - 1 do
-              Point[l] := Zoom*Point[l];
     end;
+
+    // Update all curve points across every plot
+    ScaleAllCurvePoints(Zoom);
 
     PlotImg.ResampleFilter := rfSpline;
     BGRAReplace(FPlotImg, PlotImg.Resample(Width, Height, rmFineResample));
@@ -1451,7 +1459,12 @@ end;
 
 function TPlotImage.CheckCancelStatus: Boolean;
 begin
-  Application.ProcessMessages;
+  // Only pump the message queue every 100 ms to keep the UI responsive
+  if (GetTickCount64 - FLastProcessMessages) > 100 then
+  begin
+    Application.ProcessMessages;
+    FLastProcessMessages := GetTickCount64;
+  end;
   Result := FCancelAction;
 end;
 
@@ -1506,8 +1519,6 @@ begin
       Plot.Curve.AddPoint(ACurve.Point[i]);
     for i := 0 to best - 1 do
       Plot.Curve.AddPoint(ACurve.Point[i]);
-
-    Plot.Curve.SortCurve;
   end;
 
   SortCurve;
@@ -1756,188 +1767,186 @@ begin
   // Make sure that there are no previous events in the stack
   if InMouseMove then Exit;
   InMouseMove := True;
-  // Empty message stack
-  Application.ProcessMessages;
+  try
+    // Empty message stack
+    Application.ProcessMessages;
 
-  inherited MouseMove(Shift, MouseMovePos.X, MouseMovePos.Y);
+    inherited MouseMove(Shift, MouseMovePos.X, MouseMovePos.Y);
 
-  if Assigned(FClickedMarker) then
-  begin
-    if not Dragging then
-      if (Abs(MouseMovePos.X - FClickedPoint.X) > 5) or
-        (Abs(MouseMovePos.Y - FClickedPoint.Y) > 5) then
-        Dragging := True;
-
-    if Dragging then
+    if Assigned(FClickedMarker) then
     begin
-      RepaintMarker(FClickedMarker);
+      if not Dragging then
+        if (Abs(MouseMovePos.X - FClickedPoint.X) > 5) or
+          (Abs(MouseMovePos.Y - FClickedPoint.Y) > 5) then
+          Dragging := True;
 
-      if (State = piSetScale) then
+      if Dragging then
       begin
-        RepaintRegion(XAxisRect);
-        RepaintRegion(YAxisRect);
-      end;
+        RepaintMarker(FClickedMarker);
 
-      if ClientRect.Contains(MouseMovePos) then
-        NewPos := FClickedCoord + MouseMovePos - FClickedPoint
-      else
-        NewPos := FClickedCoord;  //The mouse moves out of the image
-
-      FClickedMarker.Move(NewPos);
-
-      if (State = piSetScale) then
-      begin
-        RepaintRegion(XAxisRect);
-        RepaintRegion(YAxisRect);
-      end;
-
-      if (State = piSetPlotBox) then
-        with Plot.Box do
+        if (State = piSetScale) then
         begin
-          // Rectangle containing all the modified region
-          TmpRect := Rect[Zoom];
-          for i := 1 to NumVertices do
-            TmpRect.Union(BoxMarkers[i].Rect);
-          for i := 1 to NumEdges do
-            TmpRect.Union(EdgeMarkers[i].Rect);
-
-          for i := 1 to NumVertices do
-            if (FClickedMarker = BoxMarkers[i]) then
-              Break;
-
-          case FDragAction of
-            daVertex, daAngle: begin
-              // Move vertex
-              OldPos := Vertex[i - 1];
-              if (FDragAction = daAngle) and IsConvex then
-              begin
-                MoveVertex(i - 1, NewPos/Zoom);
-                P1 := Zoom*Vertex[NextVertIdx(i - 1)];
-                P2 := Zoom*Vertex[PrevVertIdx(i - 1)];
-
-                // Check that no marker moves out of the image
-                if ClientRect.Contains(P1) and ClientRect.Contains(P2) then
-                begin
-                  BoxMarkers[NextVertIdx(i - 1) + 1].Move(P1);
-                  BoxMarkers[PrevVertIdx(i - 1) + 1].Move(P2);
-                end
-                else
-                begin
-                  MoveVertex(i - 1, OldPos);
-                  NewPos := OldPos;
-                end;
-              end;
-
-              // Update vertex
-              Vertex[i - 1] := NewPos/Zoom;
-
-              // Move edges
-              for j := 1 to NumEdges do
-                EdgeMarkers[j].Move(Zoom*Edge[j - 1]);
-            end;
-            daRotate: begin
-              // Rotate
-              Rotate(i - 1, NewPos/Zoom);
-
-              // Check that no marker moves out of the image
-              if not ClientRect.Contains(Zoom*Vertex[0]) or
-                 not ClientRect.Contains(Zoom*Vertex[1]) or
-                 not ClientRect.Contains(Zoom*Vertex[2]) or
-                 not ClientRect.Contains(Zoom*Vertex[3]) then
-              begin
-                CancelRotation;
-              end;
-
-              for j := 1 to NumVertices do
-                if (i <> j) then
-                  BoxMarkers[j].Move(Zoom*Vertex[j - 1]);
-
-              for j := 1 to NumEdges do
-                EdgeMarkers[j].Move(Zoom*Edge[j - 1]);
-
-              NewPos := Zoom*Vertex[i - 1];
-              FClickedMarker.Move(NewPos);
-            end;
-            daEdge: begin
-              for i := 1 to NumEdges do
-                if (FClickedMarker = EdgeMarkers[i]) then
-                  Break;
-
-              if IsConvex then
-              begin
-                OldPos := Edge[i - 1];
-                MoveEdge(i - 1, NewPos/Zoom);
-                P1 := Zoom*Vertex[NextVertIdx(i - 1)];
-                P2 := Zoom*Vertex[i - 1];
-
-                // Check that no marker moves out of the image
-                if ClientRect.Contains(P1) and ClientRect.Contains(P2) and
-                  IsConvex then
-                begin
-                  BoxMarkers[NextVertIdx(i - 1) + 1].Move(P1);
-                  BoxMarkers[i].Move(P2);
-
-                  EdgeMarkers[NextVertIdx(i - 1) + 1].Move(Zoom*Edge[NextVertIdx(i - 1)]);
-                  EdgeMarkers[PrevVertIdx(i - 1) + 1].Move(Zoom*Edge[PrevVertIdx(i - 1)]);
-                end
-                else
-                  MoveEdge(i - 1, OldPos);
-              end;
-
-              NewPos := Zoom*Edge[i - 1];
-              FClickedMarker.Move(NewPos);
-            end;
-          end;
-
-          // Include the new positions in the modified rectangle
-          TmpRect.Union(Rect[Zoom]);
-          for i := 1 to NumVertices do
-            TmpRect.Union(BoxMarkers[i].Rect);
-          for i := 1 to NumEdges do
-            TmpRect.Union(EdgeMarkers[i].Rect);
-
-          RepaintRegion(TmpRect);
+          RepaintRegion(XAxisRect);
+          RepaintRegion(YAxisRect);
         end;
 
-      RepaintMarker(FClickedMarker);
-      MarkerUnderCursor := FClickedMarker;
+        if ClientRect.Contains(MouseMovePos) then
+          NewPos := FClickedCoord + MouseMovePos - FClickedPoint
+        else
+          NewPos := FClickedCoord;  //The mouse moves out of the image
 
-      InMouseMove := False;
+        FClickedMarker.Move(NewPos);
 
-      Exit;
-    end;
-  end
-  else
-  begin
-    if SelectingRegion and (State = piSetCurve) then
+        if (State = piSetScale) then
+        begin
+          RepaintRegion(XAxisRect);
+          RepaintRegion(YAxisRect);
+        end;
+
+        if (State = piSetPlotBox) then
+          with Plot.Box do
+          begin
+            // Rectangle containing all the modified region
+            TmpRect := Rect[Zoom];
+            for i := 1 to NumVertices do
+              TmpRect.Union(BoxMarkers[i].Rect);
+            for i := 1 to NumEdges do
+              TmpRect.Union(EdgeMarkers[i].Rect);
+
+            for i := 1 to NumVertices do
+              if (FClickedMarker = BoxMarkers[i]) then
+                Break;
+
+            case FDragAction of
+              daVertex, daAngle: begin
+                // Move vertex
+                OldPos := Vertex[i - 1];
+                if (FDragAction = daAngle) and IsConvex then
+                begin
+                  MoveVertex(i - 1, NewPos/Zoom);
+                  P1 := Zoom*Vertex[NextVertIdx(i - 1)];
+                  P2 := Zoom*Vertex[PrevVertIdx(i - 1)];
+
+                  // Check that no marker moves out of the image
+                  if ClientRect.Contains(P1) and ClientRect.Contains(P2) then
+                  begin
+                    BoxMarkers[NextVertIdx(i - 1) + 1].Move(P1);
+                    BoxMarkers[PrevVertIdx(i - 1) + 1].Move(P2);
+                  end
+                  else
+                  begin
+                    MoveVertex(i - 1, OldPos);
+                    NewPos := OldPos;
+                  end;
+                end;
+
+                // Update vertex
+                Vertex[i - 1] := NewPos/Zoom;
+
+                // Move edges
+                for j := 1 to NumEdges do
+                  EdgeMarkers[j].Move(Zoom*Edge[j - 1]);
+              end;
+              daRotate: begin
+                // Rotate
+                Rotate(i - 1, NewPos/Zoom);
+
+                // Check that no marker moves out of the image
+                if not ClientRect.Contains(Zoom*Vertex[0]) or
+                   not ClientRect.Contains(Zoom*Vertex[1]) or
+                   not ClientRect.Contains(Zoom*Vertex[2]) or
+                   not ClientRect.Contains(Zoom*Vertex[3]) then
+                begin
+                  CancelRotation;
+                end;
+
+                for j := 1 to NumVertices do
+                  if (i <> j) then
+                    BoxMarkers[j].Move(Zoom*Vertex[j - 1]);
+
+                for j := 1 to NumEdges do
+                  EdgeMarkers[j].Move(Zoom*Edge[j - 1]);
+
+                NewPos := Zoom*Vertex[i - 1];
+                FClickedMarker.Move(NewPos);
+              end;
+              daEdge: begin
+                for i := 1 to NumEdges do
+                  if (FClickedMarker = EdgeMarkers[i]) then
+                    Break;
+
+                if IsConvex then
+                begin
+                  OldPos := Edge[i - 1];
+                  MoveEdge(i - 1, NewPos/Zoom);
+                  P1 := Zoom*Vertex[NextVertIdx(i - 1)];
+                  P2 := Zoom*Vertex[i - 1];
+
+                  // Check that no marker moves out of the image
+                  if ClientRect.Contains(P1) and ClientRect.Contains(P2) and
+                    IsConvex then
+                  begin
+                    BoxMarkers[NextVertIdx(i - 1) + 1].Move(P1);
+                    BoxMarkers[i].Move(P2);
+
+                    EdgeMarkers[NextVertIdx(i - 1) + 1].Move(Zoom*Edge[NextVertIdx(i - 1)]);
+                    EdgeMarkers[PrevVertIdx(i - 1) + 1].Move(Zoom*Edge[PrevVertIdx(i - 1)]);
+                  end
+                  else
+                    MoveEdge(i - 1, OldPos);
+                end;
+
+                NewPos := Zoom*Edge[i - 1];
+                FClickedMarker.Move(NewPos);
+              end;
+            end;
+
+            // Include the new positions in the modified rectangle
+            TmpRect.Union(Rect[Zoom]);
+            for i := 1 to NumVertices do
+              TmpRect.Union(BoxMarkers[i].Rect);
+            for i := 1 to NumEdges do
+              TmpRect.Union(EdgeMarkers[i].Rect);
+
+            RepaintRegion(TmpRect);
+          end;
+
+        RepaintMarker(FClickedMarker);
+        MarkerUnderCursor := FClickedMarker;
+
+        Exit;
+      end;
+    end
+    else
     begin
-      TmpRect := FSelectionRect;
-      FSelectionRect.Width := MouseMovePos.X - FSelectionRect.Left;
-      FSelectionRect.Height := MouseMovePos.Y - FSelectionRect.Top;
+      if SelectingRegion and (State = piSetCurve) then
+      begin
+        TmpRect := FSelectionRect;
+        FSelectionRect.Width := MouseMovePos.X - FSelectionRect.Left;
+        FSelectionRect.Height := MouseMovePos.Y - FSelectionRect.Top;
 
-      //Refresh the rectangle containing the old and new selection
-      TmpRect.Union(FSelectionRect);
-      RepaintRegion(TmpRect);
+        //Refresh the rectangle containing the old and new selection
+        TmpRect.Union(FSelectionRect);
+        RepaintRegion(TmpRect);
 
-      InMouseMove := False;
-
-      Exit;
+        Exit;
+      end;
     end;
-  end;
 
-  HitMarker := nil;
-  for i := 0 to Markers.Count - 1 do
-  begin
-    Marker := Markers[i];
-    if Marker.HitTest(MouseMovePos) then
+    HitMarker := nil;
+    for i := 0 to Markers.Count - 1 do
     begin
-      HitMarker := Marker;
-      Break;
+      Marker := Markers[i];
+      if Marker.HitTest(MouseMovePos) then
+      begin
+        HitMarker := Marker;
+        Break;
+      end;
     end;
+    MarkerUnderCursor := HitMarker;
+  finally
+    InMouseMove := False;
   end;
-  MarkerUnderCursor := HitMarker;
-
-  InMouseMove := False;
 end;
 
 procedure TPlotImage.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -1947,105 +1956,109 @@ var
 begin
   // Make sure that there are no previous events in the stack
   InMouseMove := True;
-  // Empty message stack
-  Application.ProcessMessages;
+  try
+    // Empty message stack
+    Application.ProcessMessages;
 
-  WasDragging := Dragging;
+    WasDragging := Dragging;
 
-  if Button = mbLeft then
-  begin
-    if Dragging then
+    if Button = mbLeft then
     begin
-      Dragging := False;
-
-      if (State = piSetScale) and Assigned(FClickedMarker) then
-        for i := 1 to 3 do
-          if (FClickedMarker = AxesMarkers[i]) then
-            Plot.Scale.ImagePoint[i] := FClickedMarker.Position/Zoom;
-
-      if Assigned(OnMarkerDragged) and Assigned(FClickedMarker) then
+      if Dragging then
       begin
-        // Notify that neighboring markers have moved
-        if (State = piSetPlotBox) then
-          with Plot.Box do
-          begin
-            for i := 1 to NumVertices do
-              if (FClickedMarker = BoxMarkers[i]) then
-                Break;
+        Dragging := False;
 
-            case FDragAction of
-              daAngle: begin
-                OnMarkerDragged(Self, BoxMarkers[NextVertIdx(i - 1) + 1], False);
-                OnMarkerDragged(Self, BoxMarkers[PrevVertIdx(i - 1) + 1], False);
-              end;
-              daRotate: begin
-                for i := 1 to NumVertices do
-                begin
-                  BoxMarkers[i].Move(Zoom*Vertex[i - 1]);
+        if (State = piSetScale) and Assigned(FClickedMarker) then
+          for i := 1 to 3 do
+            if (FClickedMarker = AxesMarkers[i]) then
+              Plot.Scale.ImagePoint[i] := FClickedMarker.Position/Zoom;
 
-                  if (BoxMarkers[i] <> FClickedMarker) then
-                    OnMarkerDragged(Self, BoxMarkers[i], False);
+        if Assigned(OnMarkerDragged) and Assigned(FClickedMarker) then
+        begin
+          // Notify that neighboring markers have moved
+          if (State = piSetPlotBox) then
+            with Plot.Box do
+            begin
+              for i := 1 to NumVertices do
+                if (FClickedMarker = BoxMarkers[i]) then
+                  Break;
+
+              case FDragAction of
+                daAngle: begin
+                  OnMarkerDragged(Self, BoxMarkers[NextVertIdx(i - 1) + 1], False);
+                  OnMarkerDragged(Self, BoxMarkers[PrevVertIdx(i - 1) + 1], False);
+                end;
+                daRotate: begin
+                  for i := 1 to NumVertices do
+                  begin
+                    BoxMarkers[i].Move(Zoom*Vertex[i - 1]);
+
+                    if (BoxMarkers[i] <> FClickedMarker) then
+                      OnMarkerDragged(Self, BoxMarkers[i], False);
+                  end;
+                end;
+                daEdge: begin
+                  for i := 1 to NumEdges do
+                    if (FClickedMarker = EdgeMarkers[i]) then
+                      Break;
+
+                  OnMarkerDragged(Self, BoxMarkers[NextVertIdx(i - 1) + 1], False);
+                  OnMarkerDragged(Self, BoxMarkers[i], False);
                 end;
               end;
-              daEdge: begin
-                for i := 1 to NumEdges do
-                  if (FClickedMarker = EdgeMarkers[i]) then
-                    Break;
-
-                OnMarkerDragged(Self, BoxMarkers[NextVertIdx(i - 1) + 1], False);
-                OnMarkerDragged(Self, BoxMarkers[i], False);
-              end;
             end;
-          end;
 
-        // Notify that the marker has been dragged
-        OnMarkerDragged(Self, FClickedMarker, True);
-      end;
+          // Notify that the marker has been dragged
+          OnMarkerDragged(Self, FClickedMarker, True);
+        end;
 
-      if Plot.Box.Rotated then
-        Plot.Box.ApplyRotation;
+        if Plot.Box.Rotated then
+          Plot.Box.ApplyRotation;
 
-      FDragAction := daNone;
+        FDragAction := daNone;
 
-      IsChanged := True;
-    end
-    else
-    begin
-      if SelectingRegion and (State = piSetCurve) then
+        IsChanged := True;
+      end
+      else
       begin
-        FSelectionRect.Width := X - FSelectionRect.Left;
-        FSelectionRect.Height := Y - FSelectionRect.Top;
-        if (Zoom <> 1) then
-          with FSelectionRect do
-          begin
-            Left := Round(Left/Zoom);
-            Top := Round(Top/Zoom);
-            Right := Round(Right/Zoom);
-            Bottom := Round(Bottom/Zoom);
-          end;
+        if SelectingRegion and (State = piSetCurve) then
+        begin
+          FSelectionRect.Width := X - FSelectionRect.Left;
+          FSelectionRect.Height := Y - FSelectionRect.Top;
+          if (Zoom <> 1) then
+            with FSelectionRect do
+            begin
+              Left := Round(Left/Zoom);
+              Top := Round(Top/Zoom);
+              Right := Round(Right/Zoom);
+              Bottom := Round(Bottom/Zoom);
+            end;
+          // Ensure that the region is correct
+          FSelectionRect := CorrectRectangle(FSelectionRect);
 
-        // Notify the parent that the user has selected a region
-        if Assigned(OnRegionSelected) then
-          OnRegionSelected(Self, FSelectionRect);
+          // Notify the parent that the user has selected a region
+          if Assigned(OnRegionSelected) then
+            OnRegionSelected(Self, FSelectionRect);
 
-        SelectingRegion := False;
-        RepaintRegion(FSelectionRect);
+          SelectingRegion := False;
+          RepaintRegion(FSelectionRect);
+        end;
+
+        if Assigned(FClickedMarker) then
+        begin
+          Markers.Move(Markers.IndexOf(FClickedMarker), 0);
+          RepaintMarker(FClickedMarker);
+        end;
       end;
 
-      if Assigned(FClickedMarker) then
-      begin
-        Markers.Move(Markers.IndexOf(FClickedMarker), 0);
-        RepaintMarker(FClickedMarker);
-      end;
+      FClickedMarker := nil;
     end;
 
-    FClickedMarker := nil;
+    if not WasDragging then
+      inherited MouseUp(Button, Shift, X, Y);
+  finally
+    InMouseMove := False;
   end;
-
-  if not WasDragging then
-    inherited MouseUp(Button, Shift, X, Y);
-
-  InMouseMove := False;
 end;
 
 procedure TPlotImage.SetMarkerUnderCursor(Marker: TMarker);
@@ -2186,26 +2199,27 @@ begin
   begin
     TmpOnChange := OnChange;
     OnChange := nil;
+    try
+      OldValue := Plot.CurveIndex;
+      // Notify the parent that the active curve is about to change
+      if Assigned(OnActiveCurveChanging) then
+        OnActiveCurveChanging(Self, OldValue, Value);
 
-    OldValue := Plot.CurveIndex;
-    // Notify the parent that the active curve is about to change
-    if Assigned(OnActiveCurveChanging) then
-      OnActiveCurveChanging(Self, OldValue, Value);
+      // First, update all the markers in the curve
+      UpdateMarkersInCurve;
 
-    // First, update all the markers in the curve
-    UpdateMarkersInCurve;
+      // Now change the active curve
+      TmpRect := Plot.DigitCurve.CurveRect(Zoom);
+      Plot.CurveIndex := Value;
+      TmpRect.Union(Plot.DigitCurve.CurveRect(Zoom));
+      if (State = piSetCurve) then
+        RepaintRegion(TmpRect);
 
-    // Now change the active curve
-    TmpRect := Plot.DigitCurve.CurveRect(Zoom);
-    Plot.CurveIndex := Value;
-    TmpRect.Union(Plot.DigitCurve.CurveRect(Zoom));
-    if (State = piSetCurve) then
-      RepaintRegion(TmpRect);
-
-    // Finally, update all the new markers in the image
-    UpdateMarkersInImage;
-
-    OnChange := TmpOnChange;
+      // Finally, update all the new markers in the image
+      UpdateMarkersInImage;
+    finally
+      OnChange := TmpOnChange;
+    end;
 
     // Notify the parent that the active curve has changed
     if Assigned(OnActiveCurveChanged) then
@@ -2222,24 +2236,25 @@ begin
   begin
     TmpOnChange := OnChange;
     OnChange := nil;
+    try
+      OldValue := FPlotIndex;
+      // Notify the parent that the active plot is about to change
+      if Assigned(OnActivePlotChanging) then
+        OnActivePlotChanging(Self, OldValue, Value);
 
-    OldValue := FPlotIndex;
-    // Notify the parent that the active plot is about to change
-    if Assigned(OnActivePlotChanging) then
-      OnActivePlotChanging(Self, OldValue, Value);
+      // Update all the markers in the curve
+      UpdateMarkersInCurve;
+      // Change the active Plot
+      FPlotIndex := Value;
+      // Update the active Curve
+      //CurveIndex := Plots[Value].CurveIndex;
+      RepaintAll;
 
-    // Update all the markers in the curve
-    UpdateMarkersInCurve;
-    // Change the active Plot
-    FPlotIndex := Value;
-    // Update the active Curve
-    //CurveIndex := Plots[Value].CurveIndex;
-    RepaintAll;
-
-    // Update all the new markers in the image
-    UpdateMarkersInImage;
-
-    OnChange := TmpOnChange;
+      // Update all the new markers in the image
+      UpdateMarkersInImage;
+    finally
+      OnChange := TmpOnChange;
+    end;
 
     // Notify the parent that the active plot has changed
     if Assigned(OnActivePlotChanged) then
@@ -2485,6 +2500,8 @@ begin
 
   if FileExists(FileName) then
   begin
+    TmpBmp := nil;
+    Stream := nil;
     try
       Stream := TMemoryStream.Create;
 
@@ -2713,6 +2730,7 @@ var
   i: Integer;
   TmpCurve: TCurve;
 begin
+  TmpCurve := nil;
   try
     TmpCurve := Plot.PlotCurves[Index];
     TmpCurve.SortCurve;
@@ -2733,6 +2751,7 @@ var
   TmpRect: TRect;
   TmpCurve: TCurve;
 begin
+  TmpCurve := nil;
   try
     TmpCurve := Plot.PlotCurves[Index];
 
@@ -2776,11 +2795,12 @@ var
   TmpRect: TRect;
   TmpCurve: TCurve;
 begin
+  TmpCurve := nil;
   try
     TmpCurve := Plot.PlotCurves[Index];
 
     TmpCurve.SortCurve;
-    TmpCurve.Interpolate(n, d, Plot.Scale.XScale, IntType);
+    TmpCurve.Interpolate(n, d, Plot.Scale.XScale, IntType, FOptions.ItpBehavior);
 
     if (Index = CurveIndex) and (State = piSetCurve) then
       TmpRect := Plot.DigitCurve.CurveRect(Zoom);
@@ -2821,11 +2841,12 @@ var
   TmpRect: TRect;
   TmpCurve: TCurve;
 begin
+  TmpCurve := nil;
   try
     TmpCurve := Plot.PlotCurves[Index];
 
     TmpCurve.SortCurve;
-    TmpCurve.Interpolate(Xo, Xf, n, d, Plot.Scale.XScale, IntType);
+    TmpCurve.Interpolate(Xo, Xf, n, d, Plot.Scale.XScale, IntType, FOptions.ItpBehavior);
 
     if (Index = CurveIndex) and (State = piSetCurve) then
       TmpRect := Plot.DigitCurve.CurveRect(Zoom);
@@ -3063,6 +3084,8 @@ var
   Stream: TMemoryStream;
   NewImg: TBGRABitmap;
 begin
+  NewImg := nil;
+  Stream := nil;
   try
     with Plot.Box do
     begin
@@ -3103,6 +3126,7 @@ function TPlotImage.GetZoomImage(w, h: Integer; Region: TRect): TBitmap;
 var
   TmpZoomImg: TBGRABitmap;
 begin
+  TmpZoomImg := nil;
   try
     Result := TBitmap.Create;
     Result.SetSize(w, h);
@@ -3135,6 +3159,8 @@ begin
   UpdateMarkersInCurve;
 
   Result := False;
+  XMLDoc := nil;
+  Stream := nil;
   try
     // Create a document
     XMLDoc := TXMLDocument.Create;
@@ -3242,6 +3268,8 @@ begin
   ImageIsLoaded := False;
 
   Result := False;
+  XMLDoc := nil;
+  Stream := nil;
   try
     // Read the XML document
     ReadXMLFile(XMLDoc, FileName);
@@ -3383,10 +3411,10 @@ begin
           PlotChild := PlotChild.NextSibling;
         end;
 
-        assert(SavedPlotCount = RealPlotCount,
-          Format('Error: The number of saved plots (%d)' +
-          ' does not match the expected value (%d).',
-          [RealPlotCount, SavedPlotCount]));
+        if SavedPlotCount <> RealPlotCount then
+          raise Exception.CreateFmt(
+            'Error loading "%s": expected %d plot(s) but found %d.',
+            [FileName, SavedPlotCount, RealPlotCount]);
       end;
 
       // Read curves (only for older versions of the document)
@@ -3415,8 +3443,10 @@ begin
           CurveChild := CurveChild.NextSibling;
         end;
 
-        assert(SavedCurveCount = RealCurveCount, Format('Error: The number of saved curves (%d)' +
-          ' does not match the expected value (%d).', [RealCurveCount, SavedCurveCount]));
+        if SavedCurveCount <> RealCurveCount then
+          raise Exception.CreateFmt(
+            'Error loading "%s": expected %d curve(s) but found %d.',
+            [FileName, SavedCurveCount, RealCurveCount]);
       end;
 
       Child := Child.NextSibling;
