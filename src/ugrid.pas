@@ -103,6 +103,8 @@ begin
   FBckgndColor := clWhite;
   FTolerance := 10;
   FThreshold := 0.5;
+  FFixCurve := False;
+  FMaskSize := 0;
 
   FIsValid := False;
   FIsActive := False;
@@ -246,6 +248,7 @@ var
 
   p: PBGRAPixel;
 
+  TmpPoint: TCurvePoint;
   grid_points: Array of Array of Boolean;
   accumulator: THough2DMap;
 
@@ -293,12 +296,15 @@ begin
 
       // Put the canvas values in an array for faster access
       SetLength(grid_points, Width, Height);
+      TmpPoint := TCurvePoint.Create(0, 0);
       for j := 0 to Height - 1 do
       begin
         p := Scanline[j];
         for i := 0 to Width - 1 do
         begin
-          grid_points[i, j] := BoxesContain(Boxes, TCurvePoint.Create(i, j)) and
+          TmpPoint.X := i;
+          TmpPoint.Y := j;
+          grid_points[i, j] := BoxesContain(Boxes, TmpPoint) and
                               (AreSimilar(p^.red, p^.green, p^.blue, R1, G1, B1, Tolerance) or
                                AreSimilar(p^.red, p^.green, p^.blue, R2, G2, B2, Tolerance));
           inc(p);
@@ -329,9 +335,6 @@ begin
 
     // Hough accumulator array of theta vs rho
     SetLength(accumulator, 2*diag_len, num_thetas);
-    for i := Low(accumulator) to High(accumulator) do
-      for j := Low(accumulator[Low(accumulator)]) to High(accumulator[Low(accumulator)]) do
-        accumulator[i, j] := 0;
 
     max_count_hori := 0;
     max_count_vert := 0;
@@ -461,10 +464,6 @@ begin
           end;
         end;
 
-        // Notify the parent that it must update the progress bar
-        if assigned(OnShowProgress) then
-          OnShowProgress(Self, 85, 'Removing Cartesian grid...');
-
         // Draw vertical lines
         if (accumulator[i, vert_index] > Threshold*max_count_vert) then
         begin
@@ -490,11 +489,15 @@ begin
             end;
           end;
         end;
-
-        // Notify the parent that it must update the progress bar
-        if assigned(OnShowProgress) then
-          OnShowProgress(Self, 100, 'Removing Cartesian grid...');
       end;
+
+      // Notify the parent that it must update the progress bar
+      if assigned(OnShowProgress) then
+        OnShowProgress(Self, 85, 'Removing Cartesian grid...');
+
+      // (vertical lines already drawn above — 100% reached after both passes)
+      if assigned(OnShowProgress) then
+        OnShowProgress(Self, 100, 'Removing Cartesian grid...');
     finally
       Mask.InvalidateBitmap;
 
@@ -530,6 +533,7 @@ var
 
   p: PBGRAPixel;
 
+  TmpPoint: TCurvePoint;
   grid_points: Array of Array of Boolean;
   accumulator: THough2DMap;
 
@@ -575,13 +579,16 @@ begin
 
       // Put the canvas values in an array for faster access
       SetLength(grid_points, Width, Height);
+      TmpPoint := TCurvePoint.Create(0, 0);
       for j := 0 to Height - 1 do
       begin
         p := Scanline[j];
         for i := 0 to Width - 1 do
         begin
           //grid_points[i, j] := p^.red or (p^.green shl 8) or (p^.blue shl 16);
-          grid_points[i, j] := BoxesContain(Boxes, TCurvePoint.Create(i, j)) and
+          TmpPoint.X := i;
+          TmpPoint.Y := j;
+          grid_points[i, j] := BoxesContain(Boxes, TmpPoint) and
                               (AreSimilar(p^.red, p^.green, p^.blue, R1, G1, B1, Tolerance) or
                                AreSimilar(p^.red, p^.green, p^.blue, R2, G2, B2, Tolerance));
           inc(p);
@@ -610,9 +617,6 @@ begin
 
     // Hough accumulator array of theta vs rho
     SetLength(accumulator, 2*diag_len, num_thetas);
-    for i := Low(accumulator) to High(accumulator) do
-      for j := Low(accumulator[Low(accumulator)]) to High(accumulator[Low(accumulator)]) do
-        accumulator[i, j] := 0;
 
     max_count := 0;
     // Vote in the hough accumulator
@@ -634,8 +638,9 @@ begin
       OnShowProgress(Self, 40, 'Removing polar grid...');
 
     // Find circles (all should be concentric, and centered in the origin)
-    SetLength(accum_radius, diag_len);
+    SetLength(accum_radius, diag_len + 1);
     max_radius_count := 0;
+    radius_max_count := 0;   // initialize: index of the circle with most votes
     // Vote in the hough accumulator (for circles)
     for i := Low(grid_points) to High(grid_points) do
       for j := Low(grid_points[Low(grid_points)]) to High(grid_points[Low(grid_points)]) do
@@ -643,12 +648,16 @@ begin
         begin
           // Calculate radius
           rho := Round(Sqrt((i - Pc.X)*(i - Pc.X) + (j - Pc.Y)*(j - Pc.Y)));
-          inc(accum_radius[rho]);
-
-          if (accum_radius[rho] > max_radius_count) then
+          // Guard against a rounded value hitting the extra slot boundary
+          if (rho <= diag_len) then
           begin
-            radius_max_count := rho;
-            max_radius_count := accum_radius[rho];
+            inc(accum_radius[rho]);
+
+            if (accum_radius[rho] > max_radius_count) then
+            begin
+              radius_max_count := rho;
+              max_radius_count := accum_radius[rho];
+            end;
           end;
         end;
 
@@ -737,12 +746,13 @@ begin
       // Now, draw the circles
       for i := 1 to High(accum_radius) do
       begin
-        // Draw circles
-        if ((radius_max_count*accum_radius[i] div i) >= Threshold*max_radius_count) then
+        // Draw circles whose vote density (votes/circumference) is at least
+        // Threshold * the density of the best circle
+        if (accum_radius[i] * radius_max_count >= Round(Threshold * max_radius_count * i)) then
           for j := 0 to Round(2*PI*i) do
           begin
             x := Pc.X + i*cos(j/i);
-            y := Pc.Y + i*sin(j/i);;
+            y := Pc.Y + i*sin(j/i);
 
             if (x >= 0) and (Round(x) < Mask.Width) and
                (y >= 0) and (Round(y) < Mask.Height) and
@@ -795,6 +805,7 @@ var
   i, j, k, l: Integer;
   p: PBGRAPixel;
 
+  TmpPoint: TCurvePoint;
   curve_points: Array of Array of Boolean;
 
   C1: LongInt;
@@ -813,6 +824,10 @@ var
   end;
 
 begin
+  top_pixels := nil;
+  bottom_pixels := nil;
+  left_pixels := nil;
+  right_pixels := nil;
   try
     // Notify the parent that it must show the progress bar
     if assigned(OnShowProgress) then
@@ -830,12 +845,15 @@ begin
 
     // Put the canvas values in an array for faster access
     SetLength(curve_points, PlotImg.Width, PlotImg.Height);
+    TmpPoint := TCurvePoint.Create(0, 0);
     for j := 0 to PlotImg.Height - 1 do
     begin
       p := PlotImg.Scanline[j];
       for i := 0 to PlotImg.Width - 1 do
       begin
-        curve_points[i, j] := BoxesContain(Boxes, TCurvePoint.Create(i, j)) and
+        TmpPoint.X := i;
+        TmpPoint.Y := j;
+        curve_points[i, j] := BoxesContain(Boxes, TmpPoint) and
                               AreSimilar(p^.red, p^.green, p^.blue,
                                          R1, G1, B1, Tolerance);
 
@@ -952,6 +970,7 @@ var
   Child: TDOMNode;
 begin
   Result := False;
+  Stream := nil;
   try
     IsValid := False;
     IsActive := False;
@@ -1029,6 +1048,7 @@ var
   DataNode,
   CDataNode: TDOMNode;
 begin
+  Stream := nil;
   try
     // Create the stream to save the image
     Stream := TMemoryStream.Create;
