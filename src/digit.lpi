@@ -109,7 +109,7 @@
     </RunParams>
     <RequiredPackages Count="6">
       <Item1>
-        <PackageName Value="atflatcontrols_package"/>
+        <PackageName Value="TExtTabCtrl"/>
       </Item1>
       <Item2>
         <PackageName Value="LazControlDsgn"/>
@@ -196,6 +196,7 @@
       <Unit11>
         <Filename Value="uscale.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="uScale"/>
       </Unit11>
       <Unit12>
         <Filename Value="upolygons.pas"/>

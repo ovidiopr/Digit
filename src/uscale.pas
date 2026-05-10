@@ -830,8 +830,12 @@ begin
   begin
     FCurves.Move(FromIdx, ToIdx);
 
-    //if (CurveIndex = FromIdx) then
-    //  FCurveIndex := ToIdx;
+    if (FCurveIndex = FromIdx) then
+      FCurveIndex := ToIdx
+    else if (FCurveIndex < FromIdx) and (FCurveIndex > ToIdx) then
+      inc(FCurveIndex)
+    else if (FCurveIndex > FromIdx) and (FCurveIndex < ToIdx) then
+      dec(FCurveIndex);
 
     // Notify the parent that the Plot has changed
     if assigned(OnChange) then
