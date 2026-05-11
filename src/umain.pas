@@ -21,7 +21,7 @@ uses
 type
   TMouseMode = (mdCursor, mdMarkers, mdColor, mdSteps, mdSegments,
     mdGroup, mdDelete, mdMajorGridColor, mdMinorGridColor,
-    mdBackgroundColor);
+    mdBackgroundColor, mdDragCurve);
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
@@ -243,6 +243,9 @@ type
     ModeGroupPointsItem: TMenuItem;
     ModeDeletePoints: TAction;
     ModeGroupPoints: TAction;
+    ModeDragCurve: TAction;
+    ModeDragCurveItem: TMenuItem;
+    btnDragCurveMode: TToolButton;
     MarkerUpItem: TMenuItem;
     MarkerDownItem: TMenuItem;
     MarkerLeftItem: TMenuItem;
@@ -477,6 +480,7 @@ type
     procedure ModeStepsExecute(Sender: TObject);
     procedure ModeDeletePointsExecute(Sender: TObject);
     procedure ModeGroupPointsExecute(Sender: TObject);
+    procedure ModeDragCurveExecute(Sender: TObject);
     procedure PlotExportExecute(Sender: TObject);
     procedure PlotScaleExecute(Sender: TObject);
     procedure rgDirectionSelectionChanged(Sender: TObject);
@@ -688,6 +692,7 @@ begin
     ModeSegment.Enabled := (State = piSetCurve) and HasPoints;
     ModeGroupPoints.Enabled := (State = piSetCurve) and HasPoints;
     ModeDeletePoints.Enabled := (State = piSetCurve) and HasPoints;
+    ModeDragCurve.Enabled := (State = piSetCurve) and HasPoints;
     ModeMajorGridColor.Enabled := ImageIsLoaded and (State = piSetGrid);
     ModeMinorGridColor.Enabled := ImageIsLoaded and (State = piSetGrid);
     ModeBackgroundColor.Enabled := ImageIsLoaded and (State = piSetGrid);
@@ -2143,6 +2148,9 @@ end;
 
 procedure TDigitMainForm.SetMouseMode(Value: TMouseMode);
 begin
+  if (FMouseMode = mdDragCurve) and (Value <> mdDragCurve) then
+    PlotImage.DragCurveMode := False;
+
   FMouseMode := Value;
   case Value of
     mdCursor: PlotImage.Cursor := crDefault;
@@ -2155,6 +2163,11 @@ begin
     mdSegments,
     mdGroup,
     mdDelete: PlotImage.Cursor := crCross;
+    mdDragCurve: begin
+      // crSizeAll signals that individual points can be grabbed and moved
+      PlotImage.Cursor := crSizeAll;
+      PlotImage.DragCurveMode := True;
+    end;
   end;
 end;
 
@@ -2941,26 +2954,77 @@ end;
 
 procedure TDigitMainForm.ModeMarkersExecute(Sender: TObject);
 begin
-  MouseMode := mdMarkers;
-  TAction(Sender).Checked := True;
+  if MouseMode = mdMarkers then
+  begin
+    MouseMode := mdCursor;
+    ModeCursor.Checked := True;
+    TAction(Sender).Checked := False;
+  end
+  else
+  begin
+    MouseMode := mdMarkers;
+    TAction(Sender).Checked := True;
+  end;
 end;
 
 procedure TDigitMainForm.ModeStepsExecute(Sender: TObject);
 begin
-  MouseMode := mdSteps;
-  TAction(Sender).Checked := True;
+  if MouseMode = mdSteps then
+  begin
+    MouseMode := mdCursor;
+    ModeCursor.Checked := True;
+    TAction(Sender).Checked := False;
+  end
+  else
+  begin
+    MouseMode := mdSteps;
+    TAction(Sender).Checked := True;
+  end;
 end;
 
 procedure TDigitMainForm.ModeDeletePointsExecute(Sender: TObject);
 begin
-  MouseMode := mdDelete;
-  TAction(Sender).Checked := True;
+  if MouseMode = mdDelete then
+  begin
+    MouseMode := mdCursor;
+    ModeCursor.Checked := True;
+    TAction(Sender).Checked := False;
+  end
+  else
+  begin
+    MouseMode := mdDelete;
+    TAction(Sender).Checked := True;
+  end;
 end;
 
 procedure TDigitMainForm.ModeGroupPointsExecute(Sender: TObject);
 begin
-  MouseMode := mdGroup;
-  TAction(Sender).Checked := True;
+  if MouseMode = mdGroup then
+  begin
+    MouseMode := mdCursor;
+    ModeCursor.Checked := True;
+    TAction(Sender).Checked := False;
+  end
+  else
+  begin
+    MouseMode := mdGroup;
+    TAction(Sender).Checked := True;
+  end;
+end;
+
+procedure TDigitMainForm.ModeDragCurveExecute(Sender: TObject);
+begin
+  if MouseMode = mdDragCurve then
+  begin
+    MouseMode := mdCursor;
+    ModeCursor.Checked := True;
+    TAction(Sender).Checked := False;
+  end
+  else
+  begin
+    MouseMode := mdDragCurve;
+    TAction(Sender).Checked := True;
+  end;
 end;
 
 procedure TDigitMainForm.PlotExportExecute(Sender: TObject);

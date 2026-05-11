@@ -11,7 +11,7 @@ uses {$ifdef windows}Windows,{$endif} Forms, Classes, Controls, Graphics,
 
 const
   ZoomLevels: array [1..17] of Double = (1/10, 1/8, 1/6, 1/5, 1/4, 1/3, 1/2,
-    2/3, 1, 3/2, 2, 3, 4, 5, 6, 8, 10);
+                                         2/3, 1, 3/2, 2, 3, 4, 5, 6, 8, 10);
 
 type
   TPlotImageState = (piSetCurve, piSetScale, piSetPlotBox, piSetGrid);
@@ -87,6 +87,14 @@ type
     FCurrentDigitMode: TDigitization;
     FLastProcessMessages: QWord;
 
+    // Drag-curve-point mode
+    FDragCurveMode: Boolean;
+    FDragCurveActive: Boolean;
+    FDraggedPtIdx: Integer;
+    FDragOrigClickPos: TPoint;
+    FDragOrigPtPos  : array[-2..2] of TCurvePoint;
+    FDragOrigPtValid: array[-2..2] of Boolean;
+
     procedure SetCancelAction(Value: Boolean);
     function CheckCancelStatus: Boolean;
     procedure OnDigitizeProgress(Percent: Integer; Messg: String = '');
@@ -161,6 +169,10 @@ type
     procedure RepaintAll;
 
     procedure ScaleAllCurvePoints(Factor: Double);
+
+    procedure RepaintForMarkerMove(Marker: TMarker);
+    function FindNearestCurvePoint(X, Y: Integer): Integer;
+    procedure DrawMarkersVirtualCurve;
 
     procedure RectIntersection(Po, Pf: TCurvePoint; var Pini, Pend: TCurvePoint);
     procedure XAxisCoords(var Pini, Pend: TCurvePoint);
@@ -327,6 +339,8 @@ type
     property IsChanged: Boolean read GetIsChanged write SetIsChanged;
     property CanUndo: Boolean read GetCanUndo;
     property CanRedo: Boolean read GetCanRedo;
+
+    property DragCurveMode: Boolean read FDragCurveMode write FDragCurveMode;
   published
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnPrintMessage: TPrintMessageEvent read FOnPrintMessage write FOnPrintMessage;
@@ -427,6 +441,10 @@ begin
   FGridMask.IsActive := False;
 
   InMouseMove := False;
+
+  FDragCurveMode   := False;
+  FDragCurveActive := False;
+  FDraggedPtIdx    := -1;
 
   FRunningAction := False;
   FCancelAction := False;
@@ -1245,6 +1263,104 @@ begin
             Point[l] := Factor*Point[l];
 end;
 
+procedure TPlotImage.RepaintForMarkerMove(Marker: TMarker);
+begin
+  if (State = piSetCurve) and (not HasPoints) and (Markers.Count >= 3) then
+    RepaintAll
+  else
+    RepaintMarker(Marker);
+end;
+
+procedure TPlotImage.DrawMarkersVirtualCurve;
+const
+  VCurveAlpha = 140;
+  VCurvePenWidth = 1;
+  DashPoints = 4;
+  GapPoints = 3;
+var
+  i, n, nDeg, phase: Integer;
+  TmpCurve: TCurve;
+  VC: TBGRAPixel;
+  Pts: array of TPointF;
+begin
+  if (State <> piSetCurve) or HasPoints or (Markers.Count < 3) then Exit;
+
+  TmpCurve := nil;
+  try
+    // Collect marker image-coordinates sorted by X
+    TmpCurve := TCurve.Create;
+    for i := 0 to Markers.Count - 1 do
+      TmpCurve.AddPoint(Markers[i].Position/Zoom);
+    TmpCurve.SortCurve;
+
+    // Degree clamped so it never exceeds (nPoints − 1)
+    nDeg := Min(3, TmpCurve.Count - 1);
+    // 20 interpolated points per inter-marker interval, at least 60
+    n := Max(60, (TmpCurve.Count - 1)*20 + 1);
+
+    try
+      // Interpolate in image-pixel space (always linear, never log)
+      TmpCurve.Interpolate(n, nDeg, stLinear, itpBSpline, FOptions.ItpBehavior);
+    except
+      Exit; // gracefully skip the preview if interpolation fails
+    end;
+
+    // Convert to screen-space PointF array
+    SetLength(Pts, TmpCurve.Count);
+    for i := 0 to TmpCurve.Count - 1 do
+    begin
+      Pts[i].X := Single(Zoom*TmpCurve.X[i]);
+      Pts[i].Y := Single(Zoom*TmpCurve.Y[i]);
+    end;
+
+    // Color is same as the digitization color but semi-transparent
+    VC := ColorToBGRA(ColorToRGB(Plot.DigitCurve.Color));
+    VC.alpha := VCurveAlpha;
+
+    // Draw as a dashed polyline: DashPoints segments on, GapPoints segments off
+    phase := 0;
+    for i := 0 to Length(Pts) - 2 do
+    begin
+      if phase < DashPoints then
+        WhiteBoard.DrawLineAntialias(Pts[i].X, Pts[i].Y,
+                                     Pts[i+1].X, Pts[i+1].Y,
+                                     VC, VCurvePenWidth);
+      Inc(phase);
+      if phase >= DashPoints + GapPoints then
+        phase := 0;
+    end;
+  finally
+    TmpCurve.Free;
+  end;
+end;
+
+function TPlotImage.FindNearestCurvePoint(X, Y: Integer): Integer;
+const
+  SnapRadiusPx = 10;
+var
+  i: Integer;
+  d, dMin: Double;
+  P: TCurvePoint;
+begin
+  Result := -1;
+  if not HasPoints then Exit;
+
+  dMin := Sqr(SnapRadiusPx) + 1.0;  // one unit beyond the threshold
+  for i := 0 to Plot.Curve.Count - 1 do
+  begin
+    P := Zoom*Plot.Curve.Point[i];   // to screen pixels
+    d := Sqr(P.X - X) + Sqr(P.Y - Y);
+    if d < dMin then
+    begin
+      dMin   := d;
+      Result := i;
+    end;
+  end;
+
+  if dMin > Sqr(SnapRadiusPx) then
+    Result := -1;
+end;
+
 procedure TPlotImage.ResizeToZoom;
 var
   i, j: Integer;
@@ -1580,7 +1696,9 @@ begin
   case State of
     piSetCurve: begin
       if HasPoints then
-        Plot.DigitCurve.Draw(WhiteBoard.Canvas, Zoom);
+        Plot.DigitCurve.Draw(WhiteBoard.Canvas, Zoom)
+      else // More than 3 markers placed but nothing digitised yet: show a BSpline guide.
+        DrawMarkersVirtualCurve;
     end;
     piSetScale: begin
       if Options.ShowXAxis or Options.ShowYAxis then
@@ -1698,11 +1816,33 @@ procedure TPlotImage.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: I
   end;
 
 var
-  i: Integer;
+  i, k, j: Integer;
   Marker, HitMarker: TMarker;
 begin
   if Button = mbLeft then
   begin
+    // Drag-curve-point mode
+    if FDragCurveMode and (State = piSetCurve) and HasPoints then
+    begin
+      FDraggedPtIdx := FindNearestCurvePoint(X, Y);
+      if FDraggedPtIdx >= 0 then
+      begin
+        FDragCurveActive   := True;
+        FDragOrigClickPos  := TPoint.Create(X, Y);
+        // Save original image-coordinate positions of the dragged point and
+        // up to two neighbours on each side
+        for k := -2 to 2 do
+        begin
+          j := FDraggedPtIdx + k;
+          FDragOrigPtValid[k] := (j >= 0) and (j < Plot.Curve.Count);
+          if FDragOrigPtValid[k] then
+            FDragOrigPtPos[k] := Plot.Curve.Point[j];
+        end;
+        inherited MouseDown(Button, Shift, X, Y);
+        Exit;  // do not fall through to marker/region-select logic
+      end;
+    end;
+
     HitMarker := nil;
     for i := 0 to Markers.Count - 1 do
     begin
@@ -1747,10 +1887,12 @@ end;
 
 procedure TPlotImage.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
-  i, j: Integer;
+  i, j, k: Integer;
   Marker, HitMarker: TMarker;
-  TmpRect: TRect;
+  TmpRect, TmpDragRect: TRect;
   NewPos, OldPos, P1, P2: TCurvePoint;
+  DeltaImg: TCurvePoint;
+  Vkx, Vky, Dot, Weight: Double;
 begin
   MouseMovePos := TPoint.Create(X, Y);
 
@@ -1763,6 +1905,49 @@ begin
 
     inherited MouseMove(Shift, MouseMovePos.X, MouseMovePos.Y);
 
+    if FDragCurveActive then
+    begin
+      DeltaImg := MouseMovePos - FDragOrigClickPos;
+      DeltaImg.X := Round(DeltaImg.X/Zoom);
+      DeltaImg.Y := Round(DeltaImg.Y/Zoom);
+      TmpDragRect := Plot.DigitCurve.CurveRect(Zoom);
+
+      for k := -2 to 2 do
+      begin
+        if not FDragOrigPtValid[k] then Continue;
+        j := FDraggedPtIdx + k;
+
+        if k = 0 then
+        begin
+          // The dragged point itself follows the mouse exactly.
+          Plot.Curve.Point[j] := FDragOrigPtPos[0] + DeltaImg;
+        end
+        else
+        begin
+          Vkx := FDragOrigPtPos[k].X - FDragOrigPtPos[0].X;
+          Vky := FDragOrigPtPos[k].Y - FDragOrigPtPos[0].Y;
+          Dot := Vkx*DeltaImg.X + Vky*DeltaImg.Y;
+
+          if Dot < 0 then
+          begin
+            // Rope is stretched --> pull the neighbour
+            if Abs(k) = 1 then Weight := 0.60
+                           else Weight := 0.30;
+            Plot.Curve.Point[j] := FDragOrigPtPos[k] + Weight*DeltaImg;
+          end
+          else
+            // Rope is slack --> neighbour stays put
+            Plot.Curve.Point[j] := FDragOrigPtPos[k];
+        end;
+      end;
+
+      TmpDragRect.Union(Plot.DigitCurve.CurveRect(Zoom));
+      RepaintRegion(TmpDragRect);
+
+      MarkerUnderCursor := nil;
+      Exit;
+    end;
+
     if Assigned(FClickedMarker) then
     begin
       if not Dragging then
@@ -1772,7 +1957,8 @@ begin
 
       if Dragging then
       begin
-        RepaintMarker(FClickedMarker);
+        // Erase old marker position (expand repaint when virtual curve is shown)
+        RepaintForMarkerMove(FClickedMarker);
 
         if (State = piSetScale) then
         begin
@@ -1901,7 +2087,8 @@ begin
             RepaintRegion(TmpRect);
           end;
 
-        RepaintMarker(FClickedMarker);
+        // Draw marker in new position (expand repaint when virtual curve is shown)
+        RepaintForMarkerMove(FClickedMarker);
         MarkerUnderCursor := FClickedMarker;
 
         Exit;
@@ -1941,14 +2128,49 @@ end;
 
 procedure TPlotImage.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
-  i: Integer;
+  i, fi, k: Integer;
   WasDragging: Boolean;
+  FinalPosCount: Integer;
+  FinalPositions: array of TCurvePoint;
 begin
   // Make sure that there are no previous events in the stack
   InMouseMove := True;
   try
     // Empty message stack
     Application.ProcessMessages;
+
+    // Drag-curve-point: commit the drag as a single undo step
+    if FDragCurveActive and (Button = mbLeft) then
+    begin
+      // Collect the final (post-drag) positions of all curve points
+      FinalPosCount := Plot.Curve.Count;
+      SetLength(FinalPositions, FinalPosCount);
+      for fi := 0 to FinalPosCount - 1 do
+        FinalPositions[fi] := Plot.Curve.Point[fi];
+
+      // Restore the 5 originally saved positions so that NextCurve records
+      // the pre-drag state as the undo snapshot
+      for k := -2 to 2 do
+        if FDragOrigPtValid[k] then
+          Plot.Curve.Point[FDraggedPtIdx + k] := FDragOrigPtPos[k];
+
+      // Push an undo step (saves the pre-drag curve) and open a new slot
+      Plot.DigitCurve.NextCurve(False);
+
+      // Fill the new curve slot with the final (post-drag) positions
+      for fi := 0 to FinalPosCount - 1 do
+        Plot.Curve.AddPoint(FinalPositions[fi]);
+
+      FDragCurveActive := False;
+      FDraggedPtIdx    := -1;
+
+      RepaintRegion(Plot.DigitCurve.CurveRect(Zoom));
+      IsChanged := True;
+
+      // Do not pass through to normal MouseUp logic.
+      inherited MouseUp(Button, Shift, X, Y);
+      Exit;
+    end;
 
     WasDragging := Dragging;
 
