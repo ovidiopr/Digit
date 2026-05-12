@@ -20,8 +20,8 @@ uses
 
 type
   TMouseMode = (mdCursor, mdMarkers, mdColor, mdSteps, mdSegments,
-    mdGroup, mdDelete, mdMajorGridColor, mdMinorGridColor,
-    mdBackgroundColor, mdDragCurve);
+                mdGroup, mdDelete, mdMajorGridColor, mdMinorGridColor,
+                mdBackgroundColor, mdDragPoints);
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
@@ -2151,7 +2151,7 @@ end;
 
 procedure TDigitMainForm.SetMouseMode(Value: TMouseMode);
 begin
-  if (FMouseMode = mdDragCurve) and (Value <> mdDragCurve) then
+  if (FMouseMode = mdDragPoints) and (Value <> mdDragPoints) then
     PlotImage.DragCurveMode := False;
 
   FMouseMode := Value;
@@ -2166,7 +2166,7 @@ begin
     mdSegments,
     mdGroup,
     mdDelete: PlotImage.Cursor := crCross;
-    mdDragCurve: begin
+    mdDragPoints: begin
       // crSizeAll signals that individual points can be grabbed and moved
       PlotImage.Cursor := crSizeAll;
       PlotImage.DragCurveMode := True;
@@ -3017,7 +3017,7 @@ end;
 
 procedure TDigitMainForm.ModeDragPointsExecute(Sender: TObject);
 begin
-  if MouseMode = mdDragCurve then
+  if MouseMode = mdDragPoints then
   begin
     MouseMode := mdCursor;
     ModeCursor.Checked := True;
@@ -3025,7 +3025,7 @@ begin
   end
   else
   begin
-    MouseMode := mdDragCurve;
+    MouseMode := mdDragPoints;
     TAction(Sender).Checked := True;
   end;
 end;
