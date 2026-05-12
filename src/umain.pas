@@ -27,6 +27,7 @@ type
   TDigitMainForm = class(TForm)
     DigitLineTraceItem: TMenuItem;
     DigitSymbolTraceItem: TMenuItem;
+    ModeDragPointsItem: TMenuItem;
     tcCurves: TExtTabCtrl;
     tcPlots: TExtTabCtrl;
     ToolDigitSymbolTraceItem: TMenuItem;
@@ -243,9 +244,9 @@ type
     ModeGroupPointsItem: TMenuItem;
     ModeDeletePoints: TAction;
     ModeGroupPoints: TAction;
-    ModeDragCurve: TAction;
+    ModeDragPoints: TAction;
     ModeDragCurveItem: TMenuItem;
-    btnDragCurveMode: TToolButton;
+    btnDragPointsMode: TToolButton;
     MarkerUpItem: TMenuItem;
     MarkerDownItem: TMenuItem;
     MarkerLeftItem: TMenuItem;
@@ -480,7 +481,7 @@ type
     procedure ModeStepsExecute(Sender: TObject);
     procedure ModeDeletePointsExecute(Sender: TObject);
     procedure ModeGroupPointsExecute(Sender: TObject);
-    procedure ModeDragCurveExecute(Sender: TObject);
+    procedure ModeDragPointsExecute(Sender: TObject);
     procedure PlotExportExecute(Sender: TObject);
     procedure PlotScaleExecute(Sender: TObject);
     procedure rgDirectionSelectionChanged(Sender: TObject);
@@ -692,12 +693,14 @@ begin
     ModeSegment.Enabled := (State = piSetCurve) and HasPoints;
     ModeGroupPoints.Enabled := (State = piSetCurve) and HasPoints;
     ModeDeletePoints.Enabled := (State = piSetCurve) and HasPoints;
-    ModeDragCurve.Enabled := (State = piSetCurve) and HasPoints;
+    ModeDragPoints.Enabled := (State = piSetCurve) and HasPoints;
     ModeMajorGridColor.Enabled := ImageIsLoaded and (State = piSetGrid);
     ModeMinorGridColor.Enabled := ImageIsLoaded and (State = piSetGrid);
     ModeBackgroundColor.Enabled := ImageIsLoaded and (State = piSetGrid);
 
     ToolDigitLineFollowing.Enabled := Plot.Scale.IsValid and ColorIsSet and (State = piSetCurve);
+    ToolDigitLineTracing.Enabled := Plot.Scale.IsValid and ColorIsSet and (State = piSetCurve);
+    ToolDigitSymbolTracing.Enabled := Plot.Scale.IsValid and ColorIsSet and (State = piSetCurve);
     ToolDigitColorTracing.Enabled := Plot.Scale.IsValid and ColorIsSet and (State = piSetCurve);
     ToolDigitMarkers.Enabled := ToolDigitLineFollowing.Enabled and (Markers.Count > 0);
     ToolAdjustCurve.Enabled := (State = piSetCurve) and HasPoints;
@@ -3012,7 +3015,7 @@ begin
   end;
 end;
 
-procedure TDigitMainForm.ModeDragCurveExecute(Sender: TObject);
+procedure TDigitMainForm.ModeDragPointsExecute(Sender: TObject);
 begin
   if MouseMode = mdDragCurve then
   begin
