@@ -349,7 +349,7 @@ begin
     FIsSorted := True
   else if Position = 0 then
     FIsSorted := FIsSorted and (X[0] < X[1])
-  else if Position >= Count - 2 then
+  else if Position = Count - 1 then
     FIsSorted := FIsSorted and (X[Count - 1] >= X[Count - 2])
   else
     FIsSorted := FIsSorted and (X[Position - 1] < X[Position]) and
@@ -380,7 +380,7 @@ begin
     FIsSorted := True
   else if Index = 0 then
     FIsSorted := FIsSorted and (X[0] < X[1])
-  else if Index >= Count - 2 then
+  else if Index = Count - 1 then
     FIsSorted := FIsSorted and (X[Count - 1] >= X[Count - 2])
   else
     FIsSorted := FIsSorted and (X[Index - 1] < X[Index]) and
@@ -992,7 +992,8 @@ var i: Integer;
 begin
   NextCurve(True);
   for i := 0 to Curve.Count - 1 do
-    Curve.X[i] := Value/Curve.X[i];
+    if (Curve.X[i] <> 0) then
+      Curve.X[i] := Value/Curve.X[i];
 end;
 
 procedure TDigitCurve.DivideByY(Value: Double);
@@ -1000,7 +1001,8 @@ var i: Integer;
 begin
   NextCurve(True);
   for i := 0 to Curve.Count - 1 do
-    Curve.Y[i] := Value/Curve.Y[i];
+    if (Curve.Y[i] <> 0) then
+      Curve.Y[i] := Value/Curve.Y[i];
 end;
 
 procedure TDigitCurve.AddMarker(P: TCurvePoint);
@@ -1333,7 +1335,7 @@ end;
 
 procedure TDigitCurve.UnsetActiveCurve;
 begin
-  if (CurveIndex >= 0) then
+  if (CurveIndex > 0) then
   begin
     dec(FCurveIndex);
     FValidCurves := CurveIndex + 1;
@@ -1431,19 +1433,20 @@ begin
     end;
 
     Result := True;
+
+    assert(SavedPointCount = RealPointCount,
+           Format('Error: The number of points found (%d)' +
+                  ' is different from the expected (%d).',
+                  [RealPointCount, SavedPointCount]));
+
+    assert(SavedMarkerCount = RealMarkerCount,
+           Format('Error: The number of markers found (%d)' +
+                  ' is different from the expected (%d).',
+                  [RealMarkerCount, SavedMarkerCount]));
   except
     //Do nothing, just catch the exception
+    Result := False;
   end;
-
-  assert(SavedPointCount = RealPointCount,
-         Format('Error: The number of points found (%d)' +
-                ' is different from the expected (%d).',
-                [RealPointCount, SavedPointCount]));
-
-  assert(SavedMarkerCount = RealMarkerCount,
-         Format('Error: The number of markers found (%d)' +
-                ' is different from the expected (%d).',
-                [RealMarkerCount, SavedMarkerCount]));
 end;
 
 function TDigitCurve.ExportToXML(Doc: TXMLDocument): TDOMNode;
