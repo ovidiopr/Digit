@@ -16,6 +16,7 @@ const
 type
   TPlotImageState = (piSetCurve, piSetScale, piSetPlotBox, piSetGrid);
   TDragAction = (daNone, daVertex, daEdge, daAngle, daRotate);
+  TEditionMode = (emNone, emDragPoints, emSteps, emSegments, emGroup, emDelete);
 
   TSelectRegionEvent = procedure(Sender: TObject; RegionRect: TRect) of object;
   TStateChangeEvent = procedure(Sender: TObject; NewState: TPlotImageState) of object;
@@ -88,14 +89,14 @@ type
     FLastProcessMessages: QWord;
 
     // Drag-curve-point mode
-    FDragCurveMode: Boolean;
+    FEditionMode: TEditionMode;
     FDragCurveActive: Boolean;
     FDraggedPtIdx: Integer;
     FDragOrigClickPos: TPoint;
-    FDragOrigPtPos: array of TCurvePoint; // snapshot of all curve points at drag start
-    FDragArcLengths: array of Double;     // arc-length from dragged point to each point
-    FDragGaussWidth: Double;              // Gaussian sigma, in image pixels
-    FDragHoverIdx: Integer;               // index of point under cursor (-1 = none)
+    FDragOrigPtPos: array of TCurvePoint;
+    FDragArcLengths: array of Double;
+    FDragGaussWidth: Double;
+    FDragHoverIdx: Integer;
 
     procedure SetCancelAction(Value: Boolean);
     function CheckCancelStatus: Boolean;
@@ -174,6 +175,10 @@ type
     procedure RepaintForMarkerMove(Marker: TMarker);
     function FindNearestCurvePoint(X, Y: Integer): Integer;
     procedure DrawMarkersVirtualCurve;
+
+    // Hover-dot helpers (mdDragPoints, mdSteps, mdSegments)
+    procedure UpdateHoverIndex(X, Y: Integer);
+    procedure DrawHoverDot;
 
     procedure RectIntersection(Po, Pf: TCurvePoint; var Pini, Pend: TCurvePoint);
     procedure XAxisCoords(var Pini, Pend: TCurvePoint);
@@ -335,8 +340,8 @@ type
     property CanUndo: Boolean read GetCanUndo;
     property CanRedo: Boolean read GetCanRedo;
 
-    property DragCurveMode: Boolean read FDragCurveMode  write FDragCurveMode;
-    property DragGaussWidth: Double  read FDragGaussWidth write FDragGaussWidth;
+    property EditionMode: TEditionMode read FEditionMode  write FEditionMode;
+    property DragGaussWidth: Double read FDragGaussWidth write FDragGaussWidth;
   published
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnPrintMessage: TPrintMessageEvent read FOnPrintMessage write FOnPrintMessage;
@@ -438,7 +443,7 @@ begin
 
   InMouseMove := False;
 
-  FDragCurveMode := False;
+  FEditionMode := emNone;
   FDragCurveActive := False;
   FDraggedPtIdx := -1;
   FDragGaussWidth := 10.0;
@@ -1334,6 +1339,57 @@ begin
   end;
 end;
 
+// Returns True for edition modes that highlight the nearest
+// curve point under the cursor
+function NeedsHoverDot(Mode: TEditionMode): Boolean; inline;
+begin
+  Result := Mode in [emDragPoints, emSteps, emSegments];
+end;
+
+// Called from MouseMove (idle path) to update which curve point is highlighted
+procedure TPlotImage.UpdateHoverIndex(X, Y: Integer);
+var
+  NewIdx: Integer;
+  Pt: TCurvePoint;
+
+  procedure InvalidateDot(Idx: Integer);
+  begin
+    Pt := Zoom*Plot.Curve.Point[Idx];
+    RepaintRegion(TRect.Create(Round(Pt.X) - 8, Round(Pt.Y) - 8,
+                               Round(Pt.X) + 8, Round(Pt.Y) + 8));
+  end;
+
+begin
+  if NeedsHoverDot(FEditionMode) and (State = piSetCurve) and HasPoints and
+     not FDragCurveActive and not SelectingRegion then
+  begin
+    NewIdx := FindNearestCurvePoint(X, Y);
+    if NewIdx <> FDragHoverIdx then
+    begin
+      if FDragHoverIdx >= 0 then InvalidateDot(FDragHoverIdx);  // erase old dot
+      FDragHoverIdx := NewIdx;
+      if FDragHoverIdx >= 0 then InvalidateDot(FDragHoverIdx);  // draw new dot
+    end;
+  end
+  else if FDragHoverIdx >= 0 then
+  begin
+    // Mode is inactive or conditions not met: clear the hover dot
+    FDragHoverIdx := -1;
+    RepaintRegion(ClientRect);
+  end;
+end;
+
+// Paints the two-pass white-border black circle on WhiteBoard at the
+// position of the curve point currently under the cursor
+procedure TPlotImage.DrawHoverDot;
+var
+  Pt: TCurvePoint;
+begin
+  Pt := Zoom*Plot.Curve.Point[FDragHoverIdx];
+  WhiteBoard.FillEllipseAntialias(Pt.X, Pt.Y, 6, 6, BGRAWhite);
+  WhiteBoard.FillEllipseAntialias(Pt.X, Pt.Y, 4, 4, BGRABlack);
+end;
+
 function TPlotImage.FindNearestCurvePoint(X, Y: Integer): Integer;
 const
   SnapRadiusPx = 10;
@@ -1675,7 +1731,6 @@ var
   PolyColor: TBGRAPixel;
   Rect, ClipRect, PaintRect: TRect;
   Pini, Pend: TCurvePoint;
-  HoverPt: TCurvePoint;
 begin
   inherited Paint;
 
@@ -1767,14 +1822,11 @@ begin
       DrawFocusRect(MarkerUnderCursor.Rect);
   end;
 
-  // In drag-curve mode, draw a small target circle on the point below the cursor
-  if FDragCurveMode and (State = piSetCurve) and HasPoints and
-     (FDragHoverIdx >= 0) and not FDragCurveActive then
-  begin
-    HoverPt := Zoom*Plot.Curve.Point[FDragHoverIdx];
-    WhiteBoard.FillEllipseAntialias(HoverPt.X, HoverPt.Y, 6, 6, BGRAWhite);
-    WhiteBoard.FillEllipseAntialias(HoverPt.X, HoverPt.Y, 4, 4, BGRABlack);
-  end;
+  // For edition modes that work on individual points, draw a target circle
+  // on the point closest to the cursor (mdDragPoints, mdSteps, mdSegments)
+  if (State = piSetCurve) and HasPoints and (FDragHoverIdx >= 0) and
+     not FDragCurveActive and not SelectingRegion then
+    DrawHoverDot;
 
   if SelectingRegion then
     WhiteBoard.Canvas.DrawFocusRect(SelectionRect);
@@ -1831,8 +1883,8 @@ var
 begin
   if Button = mbLeft then
   begin
-    // Drag-curve-point mode
-    if FDragCurveMode and (State = piSetCurve) and HasPoints then
+    // Drag-curve-point mode: intercept the click before the marker/region logic
+    if (FEditionMode = emDragPoints) and (State = piSetCurve) and HasPoints then
     begin
       FDraggedPtIdx := FindNearestCurvePoint(X, Y);
       if FDraggedPtIdx >= 0 then
@@ -1891,8 +1943,11 @@ begin
         FDragAction := daEdge;
     end;
 
-    // No marker under cursor, we are selecting a region
-    if (HitMarker = nil) and (State = piSetCurve) and not (ssCtrl in Shift) then
+    // No marker under cursor: start a region selection
+    // Only rectangle-based modes (Steps, Segments, Group, Delete) use this
+    // emDragPoints already handled above, None/Markers/Color don't use it
+    if (HitMarker = nil) and (State = piSetCurve) and not (ssCtrl in Shift) and
+       (FEditionMode in [emSteps, emSegments, emGroup, emDelete]) then
     begin
       SelectingRegion := True;
       FSelectionRect := TRect.Create(X, Y, X, Y);
@@ -2149,35 +2204,9 @@ begin
     end;
     MarkerUnderCursor := HitMarker;
 
-    // Keep the hover-highlight index up to date for drag-curve mode
-    if FDragCurveMode and (State = piSetCurve) and HasPoints then
-    begin
-      i := FindNearestCurvePoint(MouseMovePos.X, MouseMovePos.Y);
-      if i <> FDragHoverIdx then
-      begin
-        // Invalidate the region around the old dot
-        if FDragHoverIdx >= 0 then
-        begin
-          NewPos := Zoom*Plot.Curve.Point[FDragHoverIdx];
-          RepaintRegion(TRect.Create(Round(NewPos.X) - 8, Round(NewPos.Y) - 8,
-                                     Round(NewPos.X) + 8, Round(NewPos.Y) + 8));
-        end;
-        FDragHoverIdx := i;
-        // Invalidate the region around the new dot
-        if FDragHoverIdx >= 0 then
-        begin
-          NewPos := Zoom*Plot.Curve.Point[FDragHoverIdx];
-          RepaintRegion(TRect.Create(Round(NewPos.X) - 8, Round(NewPos.Y) - 8,
-                                     Round(NewPos.X) + 8, Round(NewPos.Y) + 8));
-        end;
-      end;
-    end
-    else if FDragHoverIdx >= 0 then
-    begin
-      // Mode is inactive: clear the hover dot
-      FDragHoverIdx := -1;
-      RepaintRegion(ClientRect);
-    end;
+    // Keep the hover-highlight index up to date for modes that work on
+    // individual curve points (emDragPoints, emSteps, emSegments)
+    UpdateHoverIndex(MouseMovePos.X, MouseMovePos.Y);
   finally
     InMouseMove := False;
   end;

@@ -19,9 +19,9 @@ uses
   uRestore, uChartScale, uUtils, uCoordinates, uCurves, uMarker, uPlotImage;
 
 type
-  TMouseMode = (mdCursor, mdMarkers, mdColor, mdSteps, mdSegments,
-                mdGroup, mdDelete, mdMajorGridColor, mdMinorGridColor,
-                mdBackgroundColor, mdDragPoints);
+  TMouseMode = (mdCursor, mdMarkers, mdColor, mdDragPoints,
+                mdSteps, mdSegments, mdGroup, mdDelete,
+                mdMajorGridColor, mdMinorGridColor, mdBackgroundColor);
 
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
@@ -2151,8 +2151,9 @@ end;
 
 procedure TDigitMainForm.SetMouseMode(Value: TMouseMode);
 begin
-  if (FMouseMode = mdDragPoints) and (Value <> mdDragPoints) then
-    PlotImage.DragCurveMode := False;
+  // When leaving any mode that had set an EditionMode, clear it first
+  if (FMouseMode <> Value) then
+    PlotImage.EditionMode := emNone;
 
   FMouseMode := Value;
   case Value of
@@ -2162,14 +2163,20 @@ begin
     mdMinorGridColor,
     mdBackgroundColor: PlotImage.Cursor := crHandPoint;
     mdMarkers,
-    mdSteps,
-    mdSegments,
     mdGroup,
     mdDelete: PlotImage.Cursor := crCross;
+    mdSteps: begin
+      PlotImage.Cursor := crCross;
+      PlotImage.EditionMode := emSteps;
+    end;
+    mdSegments: begin
+      PlotImage.Cursor := crCross;
+      PlotImage.EditionMode := emSegments;
+    end;
     mdDragPoints: begin
       // crSizeAll signals that individual points can be grabbed and moved
       PlotImage.Cursor := crSizeAll;
-      PlotImage.DragCurveMode := True;
+      PlotImage.EditionMode := emDragPoints;
     end;
   end;
 end;
