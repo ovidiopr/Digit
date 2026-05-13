@@ -2162,9 +2162,15 @@ begin
     mdMajorGridColor,
     mdMinorGridColor,
     mdBackgroundColor: PlotImage.Cursor := crHandPoint;
-    mdMarkers,
-    mdGroup,
-    mdDelete: PlotImage.Cursor := crCross;
+    mdMarkers: PlotImage.Cursor := crCross;
+    mdGroup: begin
+      PlotImage.Cursor := crCross;
+      PlotImage.EditionMode := emGroup;
+    end;
+    mdDelete: begin
+      PlotImage.Cursor := crCross;
+      PlotImage.EditionMode := emDelete;
+    end;
     mdSteps: begin
       PlotImage.Cursor := crCross;
       PlotImage.EditionMode := emSteps;
