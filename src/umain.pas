@@ -19,15 +19,15 @@ uses
   uRestore, uChartScale, uUtils, uCoordinates, uCurves, uMarker, uPlotImage;
 
 type
-  TMouseMode = (mdCursor, mdMarkers, mdColor, mdDragPoints,
-                mdSteps, mdSegments, mdGroup, mdDelete,
-                mdMajorGridColor, mdMinorGridColor, mdBackgroundColor);
-
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
     DigitLineTraceItem: TMenuItem;
     DigitSymbolTraceItem: TMenuItem;
+    DragPointsItem: TMenuItem;
+    SegmentItem: TMenuItem;
+    StepsItem: TMenuItem;
     ModeDragPointsItem: TMenuItem;
+    DragMenu: TPopupMenu;
     tcCurves: TExtTabCtrl;
     tcPlots: TExtTabCtrl;
     ToolDigitSymbolTraceItem: TMenuItem;
@@ -246,7 +246,6 @@ type
     ModeGroupPoints: TAction;
     ModeDragPoints: TAction;
     ModeDragCurveItem: TMenuItem;
-    btnDragPointsMode: TToolButton;
     MarkerUpItem: TMenuItem;
     MarkerDownItem: TMenuItem;
     MarkerLeftItem: TMenuItem;
@@ -271,9 +270,8 @@ type
     btnCursorMode: TToolButton;
     btnMarkersMode: TToolButton;
     btnResample: TToolButton;
-    btnSegmentMode: TToolButton;
     btnSmooth: TToolButton;
-    btnStepsMode: TToolButton;
+    btnCorrectPoints: TToolButton;
     btnSymbols: TToolButton;
     FileImportDigit: TAction;
     EditCopyCurve: TAction;
@@ -597,6 +595,7 @@ type
 
     procedure DigitizeCurve(AMode: TDigitization; AnAction: TAction);
     procedure InterpolateCurve(AMode: TInterpolation; AnAction: TAction);
+    procedure ChangeMouseMode(AMode: TMouseMode; AnAction: TAction);
   public
     { Public declarations }
     TmpPoint: TCurvePoint;
@@ -718,8 +717,7 @@ begin
     ToolClear.Enabled := (State = piSetCurve) and HasPoints;
 
     ToolCurveAdd.Enabled := ImageIsLoaded and (State = piSetCurve);
-    ToolCurveDelete.Enabled :=
-      ImageIsLoaded and (State = piSetCurve) and (CurveCount > 1);
+    ToolCurveDelete.Enabled := ImageIsLoaded and (State = piSetCurve) and (CurveCount > 1);
     ToolCurveName.Enabled := ImageIsLoaded and (State = piSetCurve) and (CurveCount > 0);
 
     ToolPlotAdd.Enabled := ImageIsLoaded and (State = piSetCurve);
@@ -730,17 +728,14 @@ begin
     MarkersMoveDown.Enabled := ImageIsLoaded and assigned(ActiveMarker);
     MarkersMoveLeft.Enabled := ImageIsLoaded and assigned(ActiveMarker);
     MarkersMoveRight.Enabled := ImageIsLoaded and assigned(ActiveMarker);
-    MarkersDelete.Enabled := ImageIsLoaded and assigned(ActiveMarker) and
-      not ActiveMarker.IsPersistent;
+    MarkersDelete.Enabled := ImageIsLoaded and assigned(ActiveMarker) and not ActiveMarker.IsPersistent;
 
     ToolCorrectDistortion.Enabled := ImageIsLoaded and (State = piSetPlotBox) and PlotImage.Plot.Box.IsConvex;
     ToolResetBox.Enabled := ImageIsLoaded and (State = piSetPlotBox);
 
-    GridRemoval.Enabled := ImageIsLoaded and (State = piSetGrid) and
-      not (GridMask.IsValid and GridMask.IsActive);
+    GridRemoval.Enabled := ImageIsLoaded and (State = piSetGrid) and not (GridMask.IsValid and GridMask.IsActive);
     GridShowHide.Enabled := ImageIsLoaded and (State = piSetGrid) and GridMask.IsValid;
-    GridMergeMask.Enabled := ImageIsLoaded and (State = piSetGrid) and
-      GridMask.IsValid and GridMask.IsActive;
+    GridMergeMask.Enabled := ImageIsLoaded and (State = piSetGrid) and GridMask.IsValid and GridMask.IsActive;
 
     PlotExport.Enabled := (State = piSetCurve) and HasPoints;
     PlotScale.Enabled := (State = piSetCurve) and HasPoints;
@@ -2584,6 +2579,34 @@ begin
   btnResample.Action := AnAction;
 end;
 
+procedure TDigitMainForm.ChangeMouseMode(AMode: TMouseMode; AnAction: TAction);
+var
+  TmpOpt: TPlotOptions;
+begin
+  // Set/unset the mouse mode
+  if MouseMode = AMode then
+  begin
+    MouseMode := mdCursor;
+    ModeCursor.Checked := True;
+    AnAction.Checked := False;
+  end
+  else
+  begin
+    AnAction.Checked := True;
+
+    // Update the configuration for the modes that are grouped together
+    if AMode in [mdDragPoints, mdSteps, mdSegments] then
+    begin
+      TmpOpt := PlotImage.Options;
+      TmpOpt.DefaultDrag := AMode;
+      PlotImage.Options := TmpOpt;
+      btnCorrectPoints.Action := AnAction;
+    end;
+
+    MouseMode := AMode;
+  end;
+end;
+
 procedure TDigitMainForm.PlotImageMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
@@ -2952,8 +2975,7 @@ end;
 
 procedure TDigitMainForm.ModeColorExecute(Sender: TObject);
 begin
-  MouseMode := mdColor;
-  TAction(Sender).Checked := True;
+  ChangeMouseMode(mdColor, TAction(Sender));
 end;
 
 procedure TDigitMainForm.ModeCursorExecute(Sender: TObject);
@@ -2964,83 +2986,32 @@ end;
 
 procedure TDigitMainForm.ModeSegmentExecute(Sender: TObject);
 begin
-  MouseMode := mdSegments;
-  TAction(Sender).Checked := True;
+  ChangeMouseMode(mdSegments, TAction(Sender));
 end;
 
 procedure TDigitMainForm.ModeMarkersExecute(Sender: TObject);
 begin
-  if MouseMode = mdMarkers then
-  begin
-    MouseMode := mdCursor;
-    ModeCursor.Checked := True;
-    TAction(Sender).Checked := False;
-  end
-  else
-  begin
-    MouseMode := mdMarkers;
-    TAction(Sender).Checked := True;
-  end;
+  ChangeMouseMode(mdMarkers, TAction(Sender));
 end;
 
 procedure TDigitMainForm.ModeStepsExecute(Sender: TObject);
 begin
-  if MouseMode = mdSteps then
-  begin
-    MouseMode := mdCursor;
-    ModeCursor.Checked := True;
-    TAction(Sender).Checked := False;
-  end
-  else
-  begin
-    MouseMode := mdSteps;
-    TAction(Sender).Checked := True;
-  end;
+  ChangeMouseMode(mdSteps, TAction(Sender));
 end;
 
 procedure TDigitMainForm.ModeDeletePointsExecute(Sender: TObject);
 begin
-  if MouseMode = mdDelete then
-  begin
-    MouseMode := mdCursor;
-    ModeCursor.Checked := True;
-    TAction(Sender).Checked := False;
-  end
-  else
-  begin
-    MouseMode := mdDelete;
-    TAction(Sender).Checked := True;
-  end;
+  ChangeMouseMode(mdDelete, TAction(Sender));
 end;
 
 procedure TDigitMainForm.ModeGroupPointsExecute(Sender: TObject);
 begin
-  if MouseMode = mdGroup then
-  begin
-    MouseMode := mdCursor;
-    ModeCursor.Checked := True;
-    TAction(Sender).Checked := False;
-  end
-  else
-  begin
-    MouseMode := mdGroup;
-    TAction(Sender).Checked := True;
-  end;
+  ChangeMouseMode(mdGroup, TAction(Sender));
 end;
 
 procedure TDigitMainForm.ModeDragPointsExecute(Sender: TObject);
 begin
-  if MouseMode = mdDragPoints then
-  begin
-    MouseMode := mdCursor;
-    ModeCursor.Checked := True;
-    TAction(Sender).Checked := False;
-  end
-  else
-  begin
-    MouseMode := mdDragPoints;
-    TAction(Sender).Checked := True;
-  end;
+  ChangeMouseMode(mdDragPoints, TAction(Sender));
 end;
 
 procedure TDigitMainForm.PlotExportExecute(Sender: TObject);

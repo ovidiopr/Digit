@@ -18,6 +18,8 @@ type
   TInterpolation = (itpBSpline, itpSpline, itpLinear, itpPoly);
   TInterpBehavior = (ibPlotLinear, ibScaleLinear);
   TDigitization = (digLineFollowing, digLineTracing, digSymbolTracing, digColorTracing, digMarkers);
+  TMouseMode = (mdCursor, mdMarkers, mdColor, mdDragPoints, mdSteps, mdSegments,
+                mdGroup, mdDelete, mdMajorGridColor, mdMinorGridColor, mdBackgroundColor);
 
   TPrintMessageEvent = procedure(Sender: TObject; Msg: String; MsgType: TMsgDlgType) of Object;
   TShowProgressEvent = procedure(Sender: TObject; Progress: Cardinal; Msg: String) of Object;
@@ -29,6 +31,7 @@ type
     DefaultDig: TDigitization;
     DefaultItp: TInterpolation;
     ItpBehavior: TInterpBehavior;
+    DefaultDrag: TMouseMode;
 
     ShowXAxis: Boolean;
     ShowYAxis: Boolean;
@@ -451,6 +454,8 @@ begin
 
   po.DefaultDig := digLineFollowing;
   po.DefaultItp := itpBSpline;
+  po.ItpBehavior := ibPlotLinear;
+  po.DefaultDrag := mdDragPoints;
 
   po.ShowXAxis := True;
   po.ShowYAxis := True;
@@ -470,6 +475,7 @@ begin
     DefaultDig := TDigitization(IniFile.ReadInteger('Plot', 'DefaultDig', Integer(DefaultDig)));
     DefaultItp := TInterpolation(IniFile.ReadInteger('Plot', 'DefaultItp', Integer(DefaultItp)));
     ItpBehavior := TInterpBehavior(IniFile.ReadInteger('Plot', 'ItpBehavior', Integer(ItpBehavior)));
+    DefaultDrag := TMouseMode(IniFile.ReadInteger('Plot', 'DefaultDrag', Integer(DefaultDrag)));
 
     ShowXAxis := IniFile.ReadBool('Plot', 'ShowXAxis', ShowXAxis);
     ShowYAxis := IniFile.ReadBool('Plot', 'ShowYAxis', ShowYAxis);
@@ -492,6 +498,7 @@ begin
     IniFile.WriteInteger('Plot', 'DefaultDig', Integer(DefaultDig));
     IniFile.WriteInteger('Plot', 'DefaultItp', Integer(DefaultItp));
     IniFile.WriteInteger('Plot', 'ItpBehavior', Integer(ItpBehavior));
+    IniFile.WriteInteger('Plot', 'DefaultDrag', Integer(DefaultDrag));
 
     IniFile.WriteBool('Plot', 'ShowXAxis', ShowXAxis);
     IniFile.WriteBool('Plot', 'ShowYAxis', ShowYAxis);

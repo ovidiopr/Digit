@@ -1295,7 +1295,7 @@ object DigitMainForm: TDigitMainForm
       ShowHint = True
     end
     object sep04: TToolButton
-      Left = 689
+      Left = 629
       Height = 36
       Top = 2
       Caption = 'sep04'
@@ -1303,49 +1303,49 @@ object DigitMainForm: TDigitMainForm
       Style = tbsSeparator
     end
     object BtnUndo: TToolButton
-      Left = 960
+      Left = 900
       Top = 2
       Action = EditUndo
       ParentShowHint = False
       ShowHint = True
     end
     object BtnRedo: TToolButton
-      Left = 996
+      Left = 936
       Top = 2
       Action = EditRedo
       ParentShowHint = False
       ShowHint = True
     end
     object sep05: TToolButton
-      Left = 952
+      Left = 892
       Height = 36
       Top = 2
       Caption = 'sep05'
       Style = tbsSeparator
     end
     object btnAbout: TToolButton
-      Left = 1120
+      Left = 1060
       Top = 2
       Action = HelpAbout
       ParentShowHint = False
       ShowHint = True
     end
     object btnScaleOptions: TToolButton
-      Left = 1076
+      Left = 1016
       Top = 2
       Action = ToolPlotOptions
       ParentShowHint = False
       ShowHint = True
     end
     object sep06: TToolButton
-      Left = 1068
+      Left = 1008
       Height = 36
       Top = 2
       Caption = 'sep06'
       Style = tbsSeparator
     end
     object btnCopy: TToolButton
-      Left = 1032
+      Left = 972
       Top = 2
       Action = EditCopyCurve
       ParentShowHint = False
@@ -1362,6 +1362,7 @@ object DigitMainForm: TDigitMainForm
       Left = 273
       Top = 2
       Action = ModeCursor
+      Grouped = True
       ParentShowHint = False
       ShowHint = True
     end
@@ -1369,6 +1370,7 @@ object DigitMainForm: TDigitMainForm
       Left = 309
       Top = 2
       Action = ModeMarkers
+      Grouped = True
       ParentShowHint = False
       ShowHint = True
     end
@@ -1376,22 +1378,19 @@ object DigitMainForm: TDigitMainForm
       Left = 345
       Top = 2
       Action = ModeColor
+      Grouped = True
       ParentShowHint = False
       ShowHint = True
     end
-    object btnStepsMode: TToolButton
+    object btnCorrectPoints: TToolButton
       Left = 381
       Top = 2
-      Action = ModeSteps
+      Action = ModeDragPoints
+      DropdownMenu = DragMenu
+      Grouped = True
       ParentShowHint = False
       ShowHint = True
-    end
-    object btnSegmentMode: TToolButton
-      Left = 417
-      Top = 2
-      Action = ModeSegment
-      ParentShowHint = False
-      ShowHint = True
+      Style = tbsDropDown
     end
     object sep02: TToolButton
       Left = 265
@@ -1401,14 +1400,14 @@ object DigitMainForm: TDigitMainForm
       Style = tbsSeparator
     end
     object sep03: TToolButton
-      Left = 561
+      Left = 501
       Height = 36
       Top = 2
       Caption = 'sep03'
       Style = tbsSeparator
     end
     object btnResample: TToolButton
-      Left = 569
+      Left = 509
       Top = 2
       Action = ToolBSplines
       DropdownMenu = ResampleMenu
@@ -1417,30 +1416,32 @@ object DigitMainForm: TDigitMainForm
       Style = tbsDropDown
     end
     object btnSmooth: TToolButton
-      Left = 617
+      Left = 557
       Top = 2
       Action = ToolSmooth
       ParentShowHint = False
       ShowHint = True
     end
     object btnSymbols: TToolButton
-      Left = 653
+      Left = 593
       Top = 2
       Action = ToolConvertToSymbols
       ParentShowHint = False
       ShowHint = True
     end
     object btnGroupPointsmode: TToolButton
-      Left = 453
+      Left = 429
       Top = 2
       Action = ModeGroupPoints
+      Grouped = True
       ParentShowHint = False
       ShowHint = True
     end
     object btnDeletePointsMode: TToolButton
-      Left = 489
+      Left = 465
       Top = 2
       Action = ModeDeletePoints
+      Grouped = True
       ParentShowHint = False
       ShowHint = True
     end
@@ -1450,34 +1451,34 @@ object DigitMainForm: TDigitMainForm
       Action = EditPasteImage
     end
     object sep09: TToolButton
-      Left = 1112
+      Left = 1052
       Height = 36
       Top = 2
       Caption = 'sep09'
       Style = tbsSeparator
     end
     object btnZoomOriginal: TToolButton
-      Left = 772
+      Left = 712
       Top = 2
       Action = EditZoomOriginal
     end
     object btnZoomIn: TToolButton
-      Left = 808
+      Left = 748
       Top = 2
       Action = EditZoomIn
     end
     object btnZoomOut: TToolButton
-      Left = 844
+      Left = 784
       Top = 2
       Action = EditZoomOut
     end
     object btnZoomFit: TToolButton
-      Left = 880
+      Left = 820
       Top = 2
       Action = EditZoomFit
     end
     object tbZoom: TBCTrackbarUpdown
-      Left = 697
+      Left = 637
       Height = 36
       Top = 2
       Width = 75
@@ -1553,14 +1554,9 @@ object DigitMainForm: TDigitMainForm
       UseDockManager = False
     end
     object btnResize: TToolButton
-      Left = 916
+      Left = 856
       Top = 2
       Action = EditZoomResize
-    end
-    object btnDragPointsMode: TToolButton
-      Left = 525
-      Top = 2
-      Action = ModeDragPoints
     end
   end
   object StatusBar: TStatusBar
@@ -5308,6 +5304,9 @@ object DigitMainForm: TDigitMainForm
       object ModeColorItem: TMenuItem
         Action = ModeColor
       end
+      object ModeDragPointsItem: TMenuItem
+        Action = ModeDragPoints
+      end
       object ModeStepItem: TMenuItem
         Action = ModeSteps
       end
@@ -5319,9 +5318,6 @@ object DigitMainForm: TDigitMainForm
       end
       object ModeDeletePointsItem: TMenuItem
         Action = ModeDeletePoints
-      end
-      object ModeDragPointsItem: TMenuItem
-        Action = ModeDragPoints
       end
     end
     object PlotMenu: TMenuItem
@@ -5537,15 +5533,6 @@ object DigitMainForm: TDigitMainForm
       ImageIndex = 43
       OnExecute = ModeColorExecute
     end
-    object ModeSteps: TAction
-      Tag = 4
-      Category = 'Mode'
-      Caption = 'Correct steps'
-      GroupIndex = 1
-      Hint = 'Correct steps|Step correction mode'
-      ImageIndex = 15
-      OnExecute = ModeStepsExecute
-    end
     object PlotExport: TAction
       Category = 'Chart'
       Caption = 'E&xport chart'
@@ -5559,15 +5546,6 @@ object DigitMainForm: TDigitMainForm
       Hint = 'Set scale|Set chart scale'
       ImageIndex = 29
       OnExecute = PlotScaleExecute
-    end
-    object ModeSegment: TAction
-      Tag = 5
-      Category = 'Mode'
-      Caption = 'Correct segment'
-      GroupIndex = 1
-      Hint = 'Correct segment|Segment correction mode'
-      ImageIndex = 16
-      OnExecute = ModeSegmentExecute
     end
     object EditCopyCurve: TAction
       Category = 'Edit'
@@ -5662,24 +5640,6 @@ object DigitMainForm: TDigitMainForm
       ImageIndex = 22
       ShortCut = 8200
       OnExecute = MarkersDeleteExecute
-    end
-    object ModeGroupPoints: TAction
-      Tag = 6
-      Category = 'Mode'
-      Caption = 'Group points'
-      GroupIndex = 1
-      Hint = 'Group points|Group points mode'
-      ImageIndex = 36
-      OnExecute = ModeGroupPointsExecute
-    end
-    object ModeDeletePoints: TAction
-      Tag = 7
-      Category = 'Mode'
-      Caption = 'Delete points'
-      GroupIndex = 1
-      Hint = 'Delete points|Delete points mode'
-      ImageIndex = 37
-      OnExecute = ModeDeletePointsExecute
     end
     object GridRemoval: TAction
       Category = 'Grid'
@@ -5983,13 +5943,49 @@ object DigitMainForm: TDigitMainForm
       OnExecute = ToolCancelActionExecute
     end
     object ModeDragPoints: TAction
-      Tag = 8
+      Tag = 4
       Category = 'Mode'
       Caption = 'Drag curve points'
       GroupIndex = 1
       Hint = 'Drag curve points|Drad curve points mode'
       ImageIndex = 63
       OnExecute = ModeDragPointsExecute
+    end
+    object ModeSteps: TAction
+      Tag = 5
+      Category = 'Mode'
+      Caption = 'Correct steps'
+      GroupIndex = 1
+      Hint = 'Correct steps|Step correction mode'
+      ImageIndex = 15
+      OnExecute = ModeStepsExecute
+    end
+    object ModeSegment: TAction
+      Tag = 6
+      Category = 'Mode'
+      Caption = 'Correct segment'
+      GroupIndex = 1
+      Hint = 'Correct segment|Segment correction mode'
+      ImageIndex = 16
+      OnExecute = ModeSegmentExecute
+    end
+    object ModeGroupPoints: TAction
+      Tag = 7
+      Category = 'Mode'
+      Caption = 'Group points'
+      GroupIndex = 1
+      Hint = 'Group points|Group points mode'
+      ImageIndex = 36
+      OnExecute = ModeGroupPointsExecute
+    end
+    object ModeDeletePoints: TAction
+      Tag = 8
+      Category = 'Mode'
+      Caption = 'Delete points'
+      GroupIndex = 1
+      Hint = 'Delete points|Delete points mode'
+      ImageIndex = 37
+      OnExecute = ModeDeletePointsExecute
     end
     object ModeMajorGridColor: TAction
       Category = 'Mode'
@@ -9531,14 +9527,14 @@ object DigitMainForm: TDigitMainForm
     end
   end
   object AxisTransformLog: TChartAxisTransformations
-    Left = 696
+    Left = 728
     Top = 456
     object atLog: TLogarithmAxisTransform
       Base = 2.71828182845905
     end
   end
   object AxisTransformInv: TChartAxisTransformations
-    Left = 728
+    Left = 760
     Top = 456
     object atInverse: TUserDefinedAxisTransform
       OnAxisToGraph = atInverseAxisToGraph
@@ -9550,5 +9546,19 @@ object DigitMainForm: TDigitMainForm
     Filter = 'Text files|*.txt|All files|*.*'
     Left = 544
     Top = 456
+  end
+  object DragMenu: TPopupMenu
+    Images = ImageList
+    Left = 691
+    Top = 456
+    object DragPointsItem: TMenuItem
+      Action = ModeDragPoints
+    end
+    object StepsItem: TMenuItem
+      Action = ModeSteps
+    end
+    object SegmentItem: TMenuItem
+      Action = ModeSegment
+    end
   end
 end
