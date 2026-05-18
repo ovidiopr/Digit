@@ -444,8 +444,19 @@ type
     procedure LogSaveExecute(Sender: TObject);
     procedure MainPlotMouseLeave(Sender: TObject);
     procedure ModeBackgroundColorExecute(Sender: TObject);
+    procedure ModeBackgroundColorUpdate(Sender: TObject);
+    procedure ModeColorUpdate(Sender: TObject);
+    procedure ModeCursorUpdate(Sender: TObject);
+    procedure ModeDeletePointsUpdate(Sender: TObject);
+    procedure ModeDragPointsUpdate(Sender: TObject);
+    procedure ModeGroupPointsUpdate(Sender: TObject);
     procedure ModeMajorGridColorExecute(Sender: TObject);
+    procedure ModeMajorGridColorUpdate(Sender: TObject);
+    procedure ModeMarkersUpdate(Sender: TObject);
     procedure ModeMinorGridColorExecute(Sender: TObject);
+    procedure ModeMinorGridColorUpdate(Sender: TObject);
+    procedure ModeSegmentUpdate(Sender: TObject);
+    procedure ModeStepsUpdate(Sender: TObject);
     procedure msgAreaDrawItem(Control: TWinControl; Index: Integer; ARect: TRect; State: TOwnerDrawState);
     procedure pcInputChange(Sender: TObject);
     procedure PlotImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -468,10 +479,7 @@ type
     procedure InputPanelResize(Sender: TObject);
     procedure MainPlotMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure MarkersDeleteExecute(Sender: TObject);
-    procedure MarkersMoveDownExecute(Sender: TObject);
-    procedure MarkersMoveLeftExecute(Sender: TObject);
-    procedure MarkersMoveRightExecute(Sender: TObject);
-    procedure MarkersMoveUpExecute(Sender: TObject);
+    procedure MarkersMoveExecute(Sender: TObject);
     procedure ModeColorExecute(Sender: TObject);
     procedure ModeCursorExecute(Sender: TObject);
     procedure ModeSegmentExecute(Sender: TObject);
@@ -527,6 +535,9 @@ type
   private
     { Private declarations }
     FIsSaved: Boolean;
+    FMouseMode: TMouseMode;
+    FDigitFileName: TFileName;
+    FTmpPoint: TCurvePoint;
 
     UpdatingTable: Boolean;
     UpdatingPlot: Boolean;
@@ -598,17 +609,15 @@ type
     procedure ChangeMouseMode(AMode: TMouseMode; AnAction: TAction);
   public
     { Public declarations }
-    TmpPoint: TCurvePoint;
-    FMouseMode: TMouseMode;
-    FDigitFileName: TFileName;
-    ExportFileName: TFileName;
     function XLine(Y, Shift: Integer): Integer;
 
     procedure OpenProject(FileName: TFileName);
     procedure SaveProject(FileName: TFileName);
     procedure ImportProject(FileName: TFileName);
     procedure InsertImage(FileName: TFileName);
+
     procedure Initialize;
+    procedure UpdateButtons;
 
     procedure UpdateControls;
     procedure PlotCurve;
@@ -1048,31 +1057,36 @@ begin
   btnColor.ButtonColor := clBtnFace;
   rgDirection.ItemIndex := 0;
   DigitFileName := 'noname.dig';
-  ExportFileName := '';
   PlotImage.Reset;
   IsSaved := True;
   leData.Strings.Clear;
   PageControl.ActivePage := tsPicture;
   pcInput.ActivePageIndex := Integer(PlotImage.State);
 
+  UpdateButtons;
+end;
+
+procedure TDigitMainForm.UpdateButtons;
+begin
   case PlotImage.Options.DefaultItp of
-    itpSpline:
-      btnResample.Action := ToolSplines;
-    itpLinear:
-      btnResample.Action := ToolLinear;
-    itpPoly:
-      btnResample.Action := ToolPolynomial;
-    else
-      btnResample.Action := ToolBSplines;
+    itpSpline: btnResample.Action := ToolSplines;
+    itpLinear: btnResample.Action := ToolLinear;
+    itpPoly: btnResample.Action := ToolPolynomial;
+    else btnResample.Action := ToolBSplines;
   end;
 
   case PlotImage.Options.DefaultDig of
-    digColorTracing:
-      btnDigitize.Action := ToolDigitColorTracing;
-    digMarkers:
-      btnDigitize.Action := ToolDigitMarkers;
-    else
-      btnDigitize.Action := ToolDigitLineFollowing;
+    digLineTracing: btnDigitize.Action := ToolDigitLineTracing;
+    digSymbolTracing: btnDigitize.Action := ToolDigitSymbolTracing;
+    digColorTracing: btnDigitize.Action := ToolDigitColorTracing;
+    digMarkers: btnDigitize.Action := ToolDigitMarkers;
+    else btnDigitize.Action := ToolDigitLineFollowing;
+  end;
+
+  case PlotImage.Options.DefaultDrag of
+    mdSteps: btnCorrectPoints.Action := ModeSteps;
+    mdSegments: btnCorrectPoints.Action := ModeSegment;
+    else btnCorrectPoints.Action := ModeDragPoints;
   end;
 end;
 //End of general functions
@@ -1097,7 +1111,7 @@ procedure TDigitMainForm.DigitizeFromHereItemClick(Sender: TObject);
 begin
   if PlotImage.Plot.Scale.IsValid then
   begin
-    PlotImage.Digitize(TmpPoint, PlotImage.Options.DefaultDig);
+    PlotImage.Digitize(FTmpPoint, PlotImage.Options.DefaultDig);
 
     CurveToGUI;
   end;
@@ -1772,19 +1786,93 @@ end;
 procedure TDigitMainForm.ModeBackgroundColorExecute(Sender: TObject);
 begin
   MouseMode := mdBackgroundColor;
-  TAction(Sender).Checked := True;
+end;
+
+procedure TDigitMainForm.ModeBackgroundColorUpdate(Sender: TObject);
+begin
+  TAction(Sender).Checked := MouseMode = mdBackgroundColor;
+  if assigned(btnBackgroundColor.Action) and (btnBackgroundColor.Action = Sender) then
+    btnBackgroundColor.Down := TAction(Sender).Checked;
+end;
+
+procedure TDigitMainForm.ModeColorUpdate(Sender: TObject);
+begin
+  TAction(Sender).Checked := MouseMode = mdColor;
+  if assigned(btnColorMode.Action) and (btnColorMode.Action = Sender) then
+    btnColorMode.Down := TAction(Sender).Checked;
+end;
+
+procedure TDigitMainForm.ModeCursorUpdate(Sender: TObject);
+begin
+  TAction(Sender).Checked := MouseMode = mdCursor;
+  if assigned(btnCursorMode.Action) and (btnCursorMode.Action = Sender) then
+    btnCursorMode.Down := TAction(Sender).Checked;
+end;
+
+procedure TDigitMainForm.ModeDeletePointsUpdate(Sender: TObject);
+begin
+  TAction(Sender).Checked := MouseMode = mdDelete;
+  if assigned(btnDeletePointsMode.Action) and (btnDeletePointsMode.Action = Sender) then
+    btnDeletePointsMode.Down := TAction(Sender).Checked;
+end;
+
+procedure TDigitMainForm.ModeDragPointsUpdate(Sender: TObject);
+begin
+  TAction(Sender).Checked := MouseMode = mdDrag;
+  if assigned(btnCorrectPoints.Action) and (btnCorrectPoints.Action = Sender) then
+    btnCorrectPoints.Down := TAction(Sender).Checked;
+end;
+
+procedure TDigitMainForm.ModeGroupPointsUpdate(Sender: TObject);
+begin
+  TAction(Sender).Checked := MouseMode = mdGroup;
+  if assigned(btnGroupPointsmode.Action) and (btnGroupPointsmode.Action = Sender) then
+    btnGroupPointsmode.Down := TAction(Sender).Checked;
 end;
 
 procedure TDigitMainForm.ModeMajorGridColorExecute(Sender: TObject);
 begin
   MouseMode := mdMajorGridColor;
-  TAction(Sender).Checked := True;
+end;
+
+procedure TDigitMainForm.ModeMajorGridColorUpdate(Sender: TObject);
+begin
+  TAction(Sender).Checked := MouseMode = mdMajorGridColor;
+  if assigned(btnMajorGridColor.Action) and (btnMajorGridColor.Action = Sender) then
+    btnMajorGridColor.Down := TAction(Sender).Checked;
+end;
+
+procedure TDigitMainForm.ModeMarkersUpdate(Sender: TObject);
+begin
+  TAction(Sender).Checked := MouseMode = mdMarkers;
+  if assigned(btnMarkersMode.Action) and (btnMarkersMode.Action = Sender) then
+    btnMarkersMode.Down := TAction(Sender).Checked;
 end;
 
 procedure TDigitMainForm.ModeMinorGridColorExecute(Sender: TObject);
 begin
   MouseMode := mdMinorGridColor;
-  TAction(Sender).Checked := True;
+end;
+
+procedure TDigitMainForm.ModeMinorGridColorUpdate(Sender: TObject);
+begin
+  TAction(Sender).Checked := MouseMode = mdMinorGridColor;
+  if assigned(btnMinorGridColor.Action) and (btnMinorGridColor.Action = Sender) then
+    btnMinorGridColor.Down := TAction(Sender).Checked;
+end;
+
+procedure TDigitMainForm.ModeSegmentUpdate(Sender: TObject);
+begin
+  TAction(Sender).Checked := MouseMode = mdSegments;
+  if assigned(btnCorrectPoints.Action) and (btnCorrectPoints.Action = Sender) then
+    btnCorrectPoints.Down := TAction(Sender).Checked;
+end;
+
+procedure TDigitMainForm.ModeStepsUpdate(Sender: TObject);
+begin
+  TAction(Sender).Checked := MouseMode = mdSteps;
+  if assigned(btnCorrectPoints.Action) and (btnCorrectPoints.Action = Sender) then
+    btnCorrectPoints.Down := TAction(Sender).Checked;
 end;
 
 procedure TDigitMainForm.msgAreaDrawItem(Control: TWinControl;
@@ -2174,7 +2262,7 @@ begin
       PlotImage.Cursor := crCross;
       PlotImage.EditionMode := emSegments;
     end;
-    mdDragPoints: begin
+    mdDrag: begin
       // crSizeAll signals that individual points can be grabbed and moved
       PlotImage.Cursor := crSizeAll;
       PlotImage.EditionMode := emDragPoints;
@@ -2585,17 +2673,11 @@ var
 begin
   // Set/unset the mouse mode
   if MouseMode = AMode then
-  begin
-    MouseMode := mdCursor;
-    ModeCursor.Checked := True;
-    AnAction.Checked := False;
-  end
+    MouseMode := mdCursor
   else
   begin
-    AnAction.Checked := True;
-
     // Update the configuration for the modes that are grouped together
-    if AMode in [mdDragPoints, mdSteps, mdSegments] then
+    if AMode in [mdDrag, mdSteps, mdSegments] then
     begin
       TmpOpt := PlotImage.Options;
       TmpOpt.DefaultDrag := AMode;
@@ -2607,8 +2689,7 @@ begin
   end;
 end;
 
-procedure TDigitMainForm.PlotImageMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure TDigitMainForm.PlotImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   case Button of
     mbLeft: begin
@@ -2623,24 +2704,19 @@ begin
           btnColor.ButtonColor := PlotImage.GetPixel(X, Y);
           PlotImage.Plot.DigitCurve.Color := PlotImage.GetPixel(X, Y);
           PlotImage.RedrawMarkers;
+          MouseMode := mdCursor;
         end;
         mdMajorGridColor: begin
           btnMajorGrid.ButtonColor := PlotImage.GetPixel(X, Y);
           MouseMode := mdCursor;
-          ModeCursor.Checked := True;
-          ModeMajorGridColor.Checked := False;
         end;
         mdMinorGridColor: begin
           btnMinorGrid.ButtonColor := PlotImage.GetPixel(X, Y);
           MouseMode := mdCursor;
-          ModeCursor.Checked := True;
-          ModeMinorGridColor.Checked := False;
         end;
         mdBackgroundColor: begin
           btnBackground.ButtonColor := PlotImage.GetPixel(X, Y);
           MouseMode := mdCursor;
-          ModeCursor.Checked := True;
-          ModeBackgroundColor.Checked := False;
         end;
       end;
 
@@ -2648,8 +2724,8 @@ begin
     end;
     mbRight: begin
       DigitizeFromHereItem.Enabled := PlotImage.Plot.Scale.IsValid and PlotImage.ColorIsSet;
-      TmpPoint.X := X/PlotImage.Zoom;
-      TmpPoint.Y := Y/PlotImage.Zoom;
+      FTmpPoint.X := X/PlotImage.Zoom;
+      FTmpPoint.Y := Y/PlotImage.Zoom;
     end;
   end;
 end;
@@ -2933,42 +3009,13 @@ begin
   end;
 end;
 
-procedure TDigitMainForm.MarkersMoveDownExecute(Sender: TObject);
+procedure TDigitMainForm.MarkersMoveExecute(Sender: TObject);
+const
+  Deltas: array[0..3] of TPoint = ((X:0;Y:-1),(X:0;Y:1),(X:-1;Y:0),(X:1;Y:0));
 begin
   with PlotImage do
   begin
-    ShiftActiveMarker(TPoint.Create(0, 1));
-
-    PlotImageMarkerDragged(Self, ActiveMarker, True);
-  end;
-end;
-
-procedure TDigitMainForm.MarkersMoveLeftExecute(Sender: TObject);
-begin
-  with PlotImage do
-  begin
-    ShiftActiveMarker(TPoint.Create(-1, 0));
-
-    PlotImageMarkerDragged(Self, ActiveMarker, True);
-  end;
-end;
-
-procedure TDigitMainForm.MarkersMoveRightExecute(Sender: TObject);
-begin
-  with PlotImage do
-  begin
-    ShiftActiveMarker(TPoint.Create(1, 0));
-
-    PlotImageMarkerDragged(Self, ActiveMarker, True);
-  end;
-end;
-
-procedure TDigitMainForm.MarkersMoveUpExecute(Sender: TObject);
-begin
-  with PlotImage do
-  begin
-    ShiftActiveMarker(TPoint.Create(0, -1));
-
+    ShiftActiveMarker(Deltas[TComponent(Sender).Tag]);
     PlotImageMarkerDragged(Self, ActiveMarker, True);
   end;
 end;
@@ -2980,8 +3027,7 @@ end;
 
 procedure TDigitMainForm.ModeCursorExecute(Sender: TObject);
 begin
-  MouseMode := mdCursor;
-  TAction(Sender).Checked := True;
+  ChangeMouseMode(mdCursor, TAction(Sender));
 end;
 
 procedure TDigitMainForm.ModeSegmentExecute(Sender: TObject);
@@ -3011,7 +3057,7 @@ end;
 
 procedure TDigitMainForm.ModeDragPointsExecute(Sender: TObject);
 begin
-  ChangeMouseMode(mdDragPoints, TAction(Sender));
+  ChangeMouseMode(mdDrag, TAction(Sender));
 end;
 
 procedure TDigitMainForm.PlotExportExecute(Sender: TObject);
@@ -3293,23 +3339,7 @@ begin
   if OptionsDlg.Execute(PlotImage.Options) then
   begin
     PlotImage.Options := OptionsDlg.Options;
-
-    case PlotImage.Options.DefaultDig of
-      digLineTracing: btnDigitize.Action := ToolDigitLineTracing;
-      digSymbolTracing: btnDigitize.Action := ToolDigitSymbolTracing;
-      digColorTracing: btnDigitize.Action := ToolDigitColorTracing;
-      digMarkers: btnDigitize.Action := ToolDigitMarkers;
-      else
-        btnDigitize.Action := ToolDigitLineFollowing;
-    end;
-
-    case PlotImage.Options.DefaultItp of
-      itpSpline: btnResample.Action := ToolSplines;
-      itpLinear: btnResample.Action := ToolLinear;
-      itpPoly: btnResample.Action := ToolPolynomial;
-      else
-        btnResample.Action := ToolBSplines;
-    end;
+    UpdateButtons;
   end;
 end;
 

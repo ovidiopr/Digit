@@ -18,8 +18,8 @@ type
   TInterpolation = (itpBSpline, itpSpline, itpLinear, itpPoly);
   TInterpBehavior = (ibPlotLinear, ibScaleLinear);
   TDigitization = (digLineFollowing, digLineTracing, digSymbolTracing, digColorTracing, digMarkers);
-  TMouseMode = (mdCursor, mdMarkers, mdColor, mdDragPoints, mdSteps, mdSegments,
-                mdGroup, mdDelete, mdMajorGridColor, mdMinorGridColor, mdBackgroundColor);
+  TMouseMode = (mdCursor, mdMarkers, mdColor, mdDrag, mdSteps, mdSegments, mdGroup, mdDelete,
+                mdMajorGridColor, mdMinorGridColor, mdBackgroundColor);
 
   TPrintMessageEvent = procedure(Sender: TObject; Msg: String; MsgType: TMsgDlgType) of Object;
   TShowProgressEvent = procedure(Sender: TObject; Progress: Cardinal; Msg: String) of Object;
@@ -455,7 +455,7 @@ begin
   po.DefaultDig := digLineFollowing;
   po.DefaultItp := itpBSpline;
   po.ItpBehavior := ibPlotLinear;
-  po.DefaultDrag := mdDragPoints;
+  po.DefaultDrag := mdDrag;
 
   po.ShowXAxis := True;
   po.ShowYAxis := True;

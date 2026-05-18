@@ -201,6 +201,7 @@
       <Unit12>
         <Filename Value="upolygons.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="uPolygons"/>
       </Unit12>
       <Unit13>
         <Filename Value="ucurvedigitizer.pas"/>

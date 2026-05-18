@@ -58,7 +58,7 @@ type
     FActiveMarker: TMarker;
     FClickedMarker: TMarker;
     FClickedPoint: TPoint;
-    FClickedCoord: TPoint;
+    FClickedCoord: TCurvePoint;
     FDragging: Boolean;
     FSelectingRegion: Boolean;
     FSelectionRect: TRect;
@@ -92,7 +92,7 @@ type
     FEditionMode: TEditionMode;
     FDragCurveActive: Boolean;
     FDraggedPtIdx: Integer;
-    FDragOrigClickPos: TPoint;
+    FDragOrigClickPos: TCurvePoint;
     FDragOrigPtPos: array of TCurvePoint;
     FDragArcLengths: array of Double;
     FDragGaussWidth: Double;
@@ -160,6 +160,7 @@ type
     procedure SetCurveIndex(Value: Integer);
     procedure SetPlotIndex(Value: Integer);
     procedure SetIsChanged(Value: Boolean);
+    procedure SetEditionMode(Value: TEditionMode);
 
     procedure SetPoint(Index: Integer; const Value: TCurvePoint);
 
@@ -176,7 +177,7 @@ type
     function FindNearestCurvePoint(X, Y: Integer): Integer;
     procedure DrawMarkersVirtualCurve;
 
-    // Hover-dot helpers (mdDragPoints, mdSteps, mdSegments)
+    // Hover-dot helpers (mdDrag, mdSteps, mdSegments)
     procedure UpdateHoverIndex(X, Y: Integer);
     procedure DrawHoverDot;
 
@@ -276,7 +277,7 @@ type
 
     procedure ClearMarker(Marker: TMarker);
     procedure DrawMarker(Marker: TMarker);
-    procedure MoveMarker(Marker: TMarker; Point: TPoint); overload;
+    procedure MoveMarker(Marker: TMarker; Point: TCurvePoint); overload;
     procedure MoveMarker(Marker: TMarker; X, Y: Double); overload;
 
     procedure UndistortImage;
@@ -340,7 +341,7 @@ type
     property CanUndo: Boolean read GetCanUndo;
     property CanRedo: Boolean read GetCanRedo;
 
-    property EditionMode: TEditionMode read FEditionMode  write FEditionMode;
+    property EditionMode: TEditionMode read FEditionMode  write SetEditionMode;
     property DragGaussWidth: Double read FDragGaussWidth write FDragGaussWidth;
   published
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
@@ -450,6 +451,8 @@ begin
   FDragHoverIdx := -1;
   SetLength(FDragOrigPtPos,  0);
   SetLength(FDragArcLengths, 0);
+
+  FDragOrigClickPos := TCurvePoint.Create(0, 0);
 
   FRunningAction := False;
   FCancelAction := False;
@@ -1823,7 +1826,7 @@ begin
   end;
 
   // For edition modes that work on individual points, draw a target circle
-  // on the point closest to the cursor (mdDragPoints, mdSteps, mdSegments)
+  // on the point closest to the cursor (mdDrag, mdSteps, mdSegments)
   if (State = piSetCurve) and HasPoints and (FDragHoverIdx >= 0) and
      not FDragCurveActive and not SelectingRegion then
     DrawHoverDot;
@@ -1890,7 +1893,7 @@ begin
       if FDraggedPtIdx >= 0 then
       begin
         FDragCurveActive := True;
-        FDragOrigClickPos := TPoint.Create(X, Y);
+        FDragOrigClickPos := TCurvePoint.Create(X, Y);
         // Snapshot all curve points
         // The Gaussian weighting in MouseMove decides how far the influence
         // reaches along the curve
@@ -1920,7 +1923,7 @@ begin
       begin
         HitMarker := Marker;
         FClickedPoint := TPoint.Create(X, Y);
-        FClickedCoord := Marker.Rect.CenterPoint;
+        FClickedCoord := Marker.Position;
         Break;
       end;
     end;
@@ -1980,9 +1983,7 @@ begin
 
     if FDragCurveActive then
     begin
-      DeltaImg := MouseMovePos - FDragOrigClickPos;
-      DeltaImg.X := Round(DeltaImg.X/Zoom);
-      DeltaImg.Y := Round(DeltaImg.Y/Zoom);
+      DeltaImg := (MouseMovePos - FDragOrigClickPos)/Zoom;
       TmpDragRect := Plot.DigitCurve.CurveRect(Zoom);
 
       if ssAlt in Shift then
@@ -2565,11 +2566,23 @@ end;
 procedure TPlotImage.SetIsChanged(Value: Boolean);
 begin
   if (Value <> FIsChanged) then
+  begin
     FIsChanged := Value;
 
-  // Notify the parent that the PlotImage has changed
-  if (Assigned(OnChange) and IsChanged) then
-    OnChange(Self);
+    // Notify the parent that the PlotImage has changed
+    if FIsChanged and Assigned(OnChange) then
+      OnChange(Self);
+  end;
+end;
+
+procedure TPlotImage.SetEditionMode(Value: TEditionMode);
+begin
+  if Value <> FEditionMode then
+  begin
+    FEditionMode := Value;
+    FDragHoverIdx := -1;
+    RepaintAll;
+  end;
 end;
 
 procedure TPlotImage.SetPoint(Index: Integer; const Value: TCurvePoint);
@@ -3368,7 +3381,7 @@ begin
     Marker.Draw(WhiteBoard, Marker.Rect);
 end;
 
-procedure TPlotImage.MoveMarker(Marker: TMarker; Point: TPoint);
+procedure TPlotImage.MoveMarker(Marker: TMarker; Point: TCurvePoint);
 begin
   if (Markers.IndexOf(Marker) > -1) then
   begin
@@ -3382,7 +3395,7 @@ end;
 
 procedure TPlotImage.MoveMarker(Marker: TMarker; X, Y: Double);
 begin
-  MoveMarker(Marker, TPoint.Create(Round(X), Round(Y)));
+  MoveMarker(Marker, TCurvePoint.Create(X, Y));
 end;
 
 procedure TPlotImage.UndistortImage;

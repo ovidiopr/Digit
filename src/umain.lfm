@@ -1972,7 +1972,7 @@ object DigitMainForm: TDigitMainForm
       Height = 204
       Top = 35
       Width = 220
-      ActivePage = tsCurve
+      ActivePage = tsGrid
       Align = alClient
       AutoSize = True
       BorderSpacing.Top = 5
@@ -1982,7 +1982,7 @@ object DigitMainForm: TDigitMainForm
       ParentShowHint = False
       ShowHint = True
       Style = tsButtons
-      TabIndex = 0
+      TabIndex = 3
       TabOrder = 0
       OnChange = pcInputChange
       object tsCurve: TTabSheet
@@ -4475,6 +4475,7 @@ object DigitMainForm: TDigitMainForm
             Top = 8
             Width = 30
             Action = ModeMajorGridColor
+            AllowAllUp = True
             Anchors = [akTop, akRight]
             BorderSpacing.Right = 5
             GroupIndex = 1
@@ -4529,6 +4530,7 @@ object DigitMainForm: TDigitMainForm
             Top = 35
             Width = 30
             Action = ModeMinorGridColor
+            AllowAllUp = True
             Anchors = [akTop, akRight]
             BorderSpacing.Right = 5
             GroupIndex = 1
@@ -4584,6 +4586,7 @@ object DigitMainForm: TDigitMainForm
             Top = 62
             Width = 30
             Action = ModeBackgroundColor
+            AllowAllUp = True
             Anchors = [akTop, akRight]
             BorderSpacing.Right = 5
             GroupIndex = 1
@@ -5506,7 +5509,6 @@ object DigitMainForm: TDigitMainForm
       OnExecute = EditRedoExecute
     end
     object ModeCursor: TAction
-      Tag = 1
       Category = 'Mode'
       Caption = 'Cursor'
       Checked = True
@@ -5514,24 +5516,27 @@ object DigitMainForm: TDigitMainForm
       Hint = 'Cursor|Cursor mode'
       ImageIndex = 12
       OnExecute = ModeCursorExecute
+      OnUpdate = ModeCursorUpdate
     end
     object ModeMarkers: TAction
-      Tag = 2
+      Tag = 1
       Category = 'Mode'
       Caption = 'Add markers'
       GroupIndex = 1
       Hint = 'Add markers|Add markers to guide the digitization'
       ImageIndex = 13
       OnExecute = ModeMarkersExecute
+      OnUpdate = ModeMarkersUpdate
     end
     object ModeColor: TAction
-      Tag = 3
+      Tag = 2
       Category = 'Mode'
       Caption = 'Curve color selection'
       GroupIndex = 1
       Hint = 'Curve color selection|Curve color selection mode'
       ImageIndex = 43
       OnExecute = ModeColorExecute
+      OnUpdate = ModeColorUpdate
     end
     object PlotExport: TAction
       Category = 'Chart'
@@ -5607,31 +5612,34 @@ object DigitMainForm: TDigitMainForm
       Hint = 'Move up|Move marker up'
       ImageIndex = 23
       ShortCut = 8230
-      OnExecute = MarkersMoveUpExecute
+      OnExecute = MarkersMoveExecute
     end
     object MarkersMoveDown: TAction
+      Tag = 1
       Category = 'Markers'
       Caption = '&Down'
       Hint = 'Move down|Move marker down'
       ImageIndex = 24
       ShortCut = 8232
-      OnExecute = MarkersMoveDownExecute
+      OnExecute = MarkersMoveExecute
     end
     object MarkersMoveLeft: TAction
+      Tag = 2
       Category = 'Markers'
       Caption = '&Left'
       Hint = 'Move left|Move marker left'
       ImageIndex = 30
       ShortCut = 8229
-      OnExecute = MarkersMoveLeftExecute
+      OnExecute = MarkersMoveExecute
     end
     object MarkersMoveRight: TAction
+      Tag = 3
       Category = 'Markers'
       Caption = '&Right'
       Hint = 'Move right|Move marker right'
       ImageIndex = 31
       ShortCut = 8231
-      OnExecute = MarkersMoveRightExecute
+      OnExecute = MarkersMoveExecute
     end
     object MarkersDelete: TAction
       Category = 'Markers'
@@ -5943,70 +5951,81 @@ object DigitMainForm: TDigitMainForm
       OnExecute = ToolCancelActionExecute
     end
     object ModeDragPoints: TAction
-      Tag = 4
+      Tag = 3
       Category = 'Mode'
       Caption = 'Drag curve points'
       GroupIndex = 1
       Hint = 'Drag curve points|Drad curve points mode'
       ImageIndex = 63
       OnExecute = ModeDragPointsExecute
+      OnUpdate = ModeDragPointsUpdate
     end
     object ModeSteps: TAction
-      Tag = 5
+      Tag = 4
       Category = 'Mode'
       Caption = 'Correct steps'
       GroupIndex = 1
       Hint = 'Correct steps|Step correction mode'
       ImageIndex = 15
       OnExecute = ModeStepsExecute
+      OnUpdate = ModeStepsUpdate
     end
     object ModeSegment: TAction
-      Tag = 6
+      Tag = 5
       Category = 'Mode'
       Caption = 'Correct segment'
       GroupIndex = 1
       Hint = 'Correct segment|Segment correction mode'
       ImageIndex = 16
       OnExecute = ModeSegmentExecute
+      OnUpdate = ModeSegmentUpdate
     end
     object ModeGroupPoints: TAction
-      Tag = 7
+      Tag = 6
       Category = 'Mode'
       Caption = 'Group points'
       GroupIndex = 1
       Hint = 'Group points|Group points mode'
       ImageIndex = 36
       OnExecute = ModeGroupPointsExecute
+      OnUpdate = ModeGroupPointsUpdate
     end
     object ModeDeletePoints: TAction
-      Tag = 8
+      Tag = 7
       Category = 'Mode'
       Caption = 'Delete points'
       GroupIndex = 1
       Hint = 'Delete points|Delete points mode'
       ImageIndex = 37
       OnExecute = ModeDeletePointsExecute
+      OnUpdate = ModeDeletePointsUpdate
     end
     object ModeMajorGridColor: TAction
+      Tag = 8
       Category = 'Mode'
       GroupIndex = 1
       Hint = 'Major grid color selection|Major grid color selection mode'
       ImageIndex = 43
       OnExecute = ModeMajorGridColorExecute
+      OnUpdate = ModeMajorGridColorUpdate
     end
     object ModeMinorGridColor: TAction
+      Tag = 9
       Category = 'Mode'
       GroupIndex = 1
       Hint = 'Minor grid color selection|Minor grid color selection mode'
       ImageIndex = 43
       OnExecute = ModeMinorGridColorExecute
+      OnUpdate = ModeMinorGridColorUpdate
     end
     object ModeBackgroundColor: TAction
+      Tag = 10
       Category = 'Mode'
       GroupIndex = 1
       Hint = 'Background color selection|Background color selection mode'
       ImageIndex = 43
       OnExecute = ModeBackgroundColorExecute
+      OnUpdate = ModeBackgroundColorUpdate
     end
   end
   object ImageList: TImageList
