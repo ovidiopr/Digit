@@ -480,30 +480,30 @@ begin
     if ResetPoints then
       with PlotImg do
       begin
-        AxesPoint[1] := TPoint.Create(span, span);
-        AxesPoint[2] := TPoint.Create(span, Height - span - 1);
-        AxesPoint[3] := TPoint.Create(Width - span - 1, Height - span - 1);
+        AxesPoint[1] := FZoom*TCurvePoint.Create(span, span);
+        AxesPoint[2] := FZoom*TCurvePoint.Create(span, Height - span - 1);
+        AxesPoint[3] := FZoom*TCurvePoint.Create(Width - span - 1, Height - span - 1);
 
         Plot.Scale.PlotPoint[1] := TCurvePoint.Create(0, 1);
         Plot.Scale.PlotPoint[2] := TCurvePoint.Create(0, 0);
         Plot.Scale.PlotPoint[3] := TCurvePoint.Create(1, 0);
 
-        BoxVertex[1] := TCurvePoint.Create(span, span);
-        BoxVertex[2] := TCurvePoint.Create(Width - span - 1, span);
-        BoxVertex[3] := TCurvePoint.Create(Width - span - 1, Height - span - 1);
-        BoxVertex[4] := TCurvePoint.Create(span, Height - span - 1);
+        BoxVertex[1] := FZoom*TCurvePoint.Create(span, span);
+        BoxVertex[2] := FZoom*TCurvePoint.Create(Width - span - 1, span);
+        BoxVertex[3] := FZoom*TCurvePoint.Create(Width - span - 1, Height - span - 1);
+        BoxVertex[4] := FZoom*TCurvePoint.Create(span, Height - span - 1);
       end
     else
       with PlotImg do
       begin
-        AxesPoint[1] := PutInside(AxesPoint[1], Width, Height, span);
-        AxesPoint[2] := PutInside(AxesPoint[2], Width, Height, span);
-        AxesPoint[3] := PutInside(AxesPoint[3], Width, Height, span);
+        AxesPoint[1] := PutInside(FZoom*AxesPoint[1], Width, Height, span);
+        AxesPoint[2] := PutInside(FZoom*AxesPoint[2], Width, Height, span);
+        AxesPoint[3] := PutInside(FZoom*AxesPoint[3], Width, Height, span);
 
-        BoxVertex[1] := PutInside(BoxVertex[1], Width, Height, span);
-        BoxVertex[2] := PutInside(BoxVertex[2], Width, Height, span);
-        BoxVertex[3] := PutInside(BoxVertex[3], Width, Height, span);
-        BoxVertex[4] := PutInside(BoxVertex[4], Width, Height, span);
+        BoxVertex[1] := PutInside(FZoom*BoxVertex[1], Width, Height, span);
+        BoxVertex[2] := PutInside(FZoom*BoxVertex[2], Width, Height, span);
+        BoxVertex[3] := PutInside(FZoom*BoxVertex[3], Width, Height, span);
+        BoxVertex[4] := PutInside(FZoom*BoxVertex[4], Width, Height, span);
       end;
   end;
 end;
@@ -972,12 +972,12 @@ end;
 
 procedure TPlotImage.SetAxesPoint(Index: Integer; const Value: TCurvePoint);
 begin
-  if (Index in [1..3]) and (Plot.Scale.ImagePoint[Index] <> Value) then
+  if (Index in [1..3]) and (Plot.Scale.ImagePoint[Index] <> Value/FZoom) then
   begin
     if Assigned(FAxesMarkers[Index]) then
-      FAxesMarkers[Index].Position := Zoom*Value;
+      FAxesMarkers[Index].Position := Value;
 
-    Plot.Scale.ImagePoint[Index] := Value;
+    Plot.Scale.ImagePoint[Index] := Value/FZoom;
 
     IsChanged := True;
   end;
@@ -987,19 +987,19 @@ procedure TPlotImage.SetBoxVertex(Index: Integer; const Value: TCurvePoint);
 var
   Idx: Integer;
 begin
-  if (Index in [1..4]) and (Plot.Box[Index - 1] <> Value) then
+  if (Index in [1..4]) and (Plot.Box[Index - 1] <> Value/FZoom) then
   begin
     if Assigned(FBoxMarkers[Index]) then
-      FBoxMarkers[Index].Position := Zoom*Value;
+      FBoxMarkers[Index].Position := Value;
 
-    Plot.Box[Index - 1] := Value;
+    Plot.Box[Index - 1] := Value/FZoom;
 
     if Assigned(FEdgeMarkers[Index]) then
-      FEdgeMarkers[Index].Position := Zoom*Plot.Box.Edge[Index - 1];
+      FEdgeMarkers[Index].Position := FZoom*Plot.Box.Edge[Index - 1];
 
     Idx := Plot.Box.PrevVertIdx(Index - 1) + 1;
     if Assigned(FEdgeMarkers[Idx]) then
-      FEdgeMarkers[Idx].Position := Zoom*Plot.Box.Edge[Idx - 1];
+      FEdgeMarkers[Idx].Position := FZoom*Plot.Box.Edge[Idx - 1];
 
     IsChanged := True;
   end;
@@ -3407,16 +3407,18 @@ begin
   try
     with Plot.Box do
     begin
-      w := Round(Max(Vertex[0].DistanceTo(Vertex[1]),
-        Vertex[2].DistanceTo(Vertex[3])));
-      h := Round(Max(Vertex[0].DistanceTo(Vertex[3]),
-        Vertex[1].DistanceTo(Vertex[2])));
+      w := Round(Max(Vertex[0].DistanceTo(Vertex[1]), Vertex[2].DistanceTo(Vertex[3])));
+      h := Round(Max(Vertex[0].DistanceTo(Vertex[3]), Vertex[1].DistanceTo(Vertex[2])));
 
       NewImg := TBGRABitmap.Create(w, h, BGRABlack);
 
-      NewImg.FillPolyLinearMapping([PointF(0, 0), PointF(w - 1, 0),
-        PointF(w - 1, h - 1), PointF(0, h - 1)],
-        PlotImg, PolygonPoints[1], True);
+      NewImg.FillPolyPerspectiveMapping([PointF(0, 0), PointF(w - 1, 0),
+                                        PointF(w - 1, h - 1), PointF(0, h - 1)],
+                                        [1.0, 1.0, 1.0, 1.0],
+                                        PlotImg, OrderedPoints[1], True);
+      //NewImg.FillPolyLinearMapping([PointF(0, 0), PointF(w - 1, 0),
+      //                             PointF(w - 1, h - 1), PointF(0, h - 1)],
+      //                             PlotImg, PolygonPoints[1], True);
     end;
 
     Stream := TMemoryStream.Create;

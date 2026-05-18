@@ -889,6 +889,7 @@ begin
     UpdatePlotYScale;
 
     CurveToGUI;
+    CoordSystem := PlotImage.Plot.Scale.CoordSystem;
 
     DigitFileName := FileName;
     IsSaved := True;
@@ -1008,9 +1009,9 @@ begin
   if PlotImage.ImageIsLoaded then
     with PlotImage do
     begin
-      AxesPoint[1] := Plot.Scale.ImagePoint[1];
-      AxesPoint[2] := Plot.Scale.ImagePoint[2];
-      AxesPoint[3] := Plot.Scale.ImagePoint[3];
+      AxesPoint[1] := Zoom*Plot.Scale.ImagePoint[1];
+      AxesPoint[2] := Zoom*Plot.Scale.ImagePoint[2];
+      AxesPoint[3] := Zoom*Plot.Scale.ImagePoint[3];
 
       ResetPlotBox;
     end;
@@ -1058,6 +1059,7 @@ begin
   rgDirection.ItemIndex := 0;
   DigitFileName := 'noname.dig';
   PlotImage.Reset;
+  CoordSystem := csCartesian;
   IsSaved := True;
   leData.Strings.Clear;
   PageControl.ActivePage := tsPicture;
@@ -1330,16 +1332,14 @@ procedure TDigitMainForm.EditVX1Change(Sender: TObject; AByUser: Boolean);
 begin
   if AByUser then
     with TBCTrackbarUpdown(Sender) do
-      PlotImage.BoxVertex[Tag] := TCurvePoint.Create(Value/PlotImage.Zoom,
-        PlotImage.BoxVertex[Tag].Y);
+      PlotImage.BoxVertex[Tag] := TCurvePoint.Create(Value, PlotImage.Zoom*PlotImage.BoxVertex[Tag].Y);
 end;
 
 procedure TDigitMainForm.EditVY1Change(Sender: TObject; AByUser: Boolean);
 begin
   if AByUser then
     with TBCTrackbarUpdown(Sender) do
-      PlotImage.BoxVertex[Tag] := TCurvePoint.Create(PlotImage.BoxVertex[Tag].X,
-        Value/PlotImage.Zoom);
+      PlotImage.BoxVertex[Tag] := TCurvePoint.Create(PlotImage.Zoom*PlotImage.BoxVertex[Tag].X, Value);
 end;
 
 procedure TDigitMainForm.EditZoomFitExecute(Sender: TObject);
@@ -2546,7 +2546,7 @@ begin
     piSetScale: begin
       with PlotImage.Plot do
       begin
-        cbbCoords.ItemIndex := Integer(Scale.CoordSystem);
+        CoordSystem := Scale.CoordSystem;
         cbbXScale.ItemIndex := Integer(Scale.XScale);
         edtX.Text := Scale.XLabel;
         cbbYScale.ItemIndex := Integer(Scale.YScale);
@@ -2845,8 +2845,7 @@ begin
   UpdateGUI;
 end;
 
-procedure TDigitMainForm.PlotImageMarkerDragged(Sender: TObject;
-  Marker: TMarker; Zoom: Boolean);
+procedure TDigitMainForm.PlotImageMarkerDragged(Sender: TObject; Marker: TMarker; Zoom: Boolean);
 
 // Avoid an update loop, values come from PlotImage
   procedure UpdateEditors(Point: TCurvePoint; EditX, EditY: TBCTrackbarUpdown);
@@ -2858,8 +2857,8 @@ procedure TDigitMainForm.PlotImageMarkerDragged(Sender: TObject;
     EditX.OnChange := nil;
     EditY.OnChange := nil;
 
-    EditX.Value := Round(Point.X);
-    EditY.Value := Round(Point.Y);
+    EditX.Value := Round(PlotImage.Zoom*Point.X);
+    EditY.Value := Round(PlotImage.Zoom*Point.Y);
 
     EditX.OnChange := Ex;
     EditY.OnChange := Ey;

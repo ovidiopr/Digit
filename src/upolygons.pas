@@ -88,6 +88,7 @@ type
     FIMat: Array of Array of Double;
 
     function GetDrawPoints(Zoom: Double): ArrayOfTPointF; override;
+    function GetOrderedPoints(Zoom: Double): ArrayOfTPointF;
 
     procedure SetVertex(Index: Integer; const Value: TCurvePoint); override;
   protected
@@ -106,6 +107,7 @@ type
     function Contains(p: TCurvePoint): Boolean; override;
 
     property PolarCoordinates: Boolean read FPolarCoordinates write FPolarCoordinates;
+    property OrderedPoints[Zoom: Double]: ArrayOfTPointF read GetOrderedPoints;
   end;
 
 
@@ -850,6 +852,56 @@ begin
   end
   else
     Result := inherited GetDrawPoints(Zoom);
+end;
+
+function TPlotQuad.GetOrderedPoints(Zoom: Double): ArrayOfTPointF;
+var
+  Pts: ArrayOfTPointF;
+  cx, cy: Double;
+  i, j: Integer;
+  Angles: array[0..3] of Double;
+  TempPt: TPointF;
+  TempAng: Double;
+begin
+  Pts := GetPolygonPoints(Zoom);
+  SetLength(Result, Length(Pts));
+  if Length(Pts) <> 4 then
+  begin
+    Result := Pts; // Fallback if not a quad
+    Exit;
+  end;
+
+  // Calculate the centroid (center) of the quadrilateral
+  cx := 0; cy := 0;
+  for i := 0 to 3 do
+  begin
+    cx := cx + Pts[i].X;
+    cy := cy + Pts[i].Y;
+    Result[i] := Pts[i];
+  end;
+  cx := cx/4.0;
+  cy := cy/4.0;
+
+  // Calculate the angle of each point relative to the centroid
+  for i := 0 to 3 do
+    Angles[i] := ArcTan2(Result[i].Y - cy, Result[i].X - cx);
+
+  // Sort points by angle (Ascending: -180 to +180 degrees)
+  // This mathematically guarantees: [Top-Left, Top-Right, Bottom-Right, Bottom-Left]
+  for i := 0 to 2 do
+    for j := i + 1 to 3 do
+      if Angles[i] > Angles[j] then
+      begin
+        // Swap angles
+        TempAng := Angles[i];
+        Angles[i] := Angles[j];
+        Angles[j] := TempAng;
+
+        // Swap points
+        TempPt := Result[i];
+        Result[i] := Result[j];
+        Result[j] := TempPt;
+      end;
 end;
 
 procedure TPlotQuad.SetVertex(Index: Integer; const Value: TCurvePoint);
