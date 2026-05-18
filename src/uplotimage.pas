@@ -3401,6 +3401,10 @@ var
   w, h: Integer;
   Stream: TMemoryStream;
   NewImg: TBGRABitmap;
+  Q: ArrayOfTPointF;
+  sum, dx1, dx2: TPointF;
+  g, hh, denom: Double;
+  Weights: array[0..3] of Single;
 begin
   NewImg := nil;
   Stream := nil;
@@ -3410,15 +3414,38 @@ begin
       w := Round(Max(Vertex[0].DistanceTo(Vertex[1]), Vertex[2].DistanceTo(Vertex[3])));
       h := Round(Max(Vertex[0].DistanceTo(Vertex[3]), Vertex[1].DistanceTo(Vertex[2])));
 
-      NewImg := TBGRABitmap.Create(w, h, BGRABlack);
+      // Retrieve ordered corners: TL, TR, BR, BL
+      Q := OrderedPoints[1];
 
-      NewImg.FillPolyPerspectiveMapping([PointF(0, 0), PointF(w - 1, 0),
-                                        PointF(w - 1, h - 1), PointF(0, h - 1)],
-                                        [1.0, 1.0, 1.0, 1.0],
-                                        PlotImg, OrderedPoints[1], True);
+      // Heckbert's projective decomposition of the quad
+      sum := Q[0] - Q[1] + Q[2] - Q[3];
+      dx1 := Q[1] - Q[2];
+      dx2 := Q[3] - Q[2];
+      denom := dx1.x*dx2.y - dx1.y*dx2.x;
+
+      if Abs(denom) < 1e-10 then
+      begin
+        // Parallelogram: affine distortion only, equal weights suffice
+        Weights[0] := 1;  Weights[1] := 1;  Weights[2] := 1;  Weights[3] := 1;
+      end
+      else
+      begin
+        g  := (sum.x*dx2.y - sum.y*dx2.x)/denom;
+        hh := (dx1.x*sum.y - dx1.y*sum.x)/denom;
+        Weights[0] := 1;
+        Weights[1] := Single(g + 1);
+        Weights[2] := Single(g + hh + 1);
+        Weights[3] := Single(hh + 1);
+      end;
+
+      NewImg := TBGRABitmap.Create(w, h, BGRABlack);
       //NewImg.FillPolyLinearMapping([PointF(0, 0), PointF(w - 1, 0),
       //                             PointF(w - 1, h - 1), PointF(0, h - 1)],
       //                             PlotImg, PolygonPoints[1], True);
+      NewImg.FillPolyPerspectiveMapping([PointF(0, 0), PointF(w - 1, 0),
+                                        PointF(w - 1, h - 1), PointF(0, h - 1)],
+                                        [Weights[0], Weights[1], Weights[2], Weights[3]],
+                                        PlotImg, Q, True);
     end;
 
     Stream := TMemoryStream.Create;
@@ -3453,8 +3480,7 @@ begin
     Result.PixelFormat := pf24bit;
 
     TmpZoomImg := TBGRABitmap.Create(Region.Width, Region.Height, clWhite);
-    TmpZoomImg.CanvasBGRA.CopyRect(TRect.Create(0, 0, Region.Width, Region.Height),
-      WhiteBoard, Region);
+    TmpZoomImg.CanvasBGRA.CopyRect(TRect.Create(0, 0, Region.Width, Region.Height), WhiteBoard, Region);
 
     //BGRAReplace(TmpZoomImg, TmpZoomImg.Resample(w, h, rmSimpleStretch));
     TmpZoomImg.ResampleFilter := rfSpline;
