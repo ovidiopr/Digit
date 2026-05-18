@@ -2566,13 +2566,11 @@ end;
 procedure TPlotImage.SetIsChanged(Value: Boolean);
 begin
   if (Value <> FIsChanged) then
-  begin
     FIsChanged := Value;
 
-    // Notify the parent that the PlotImage has changed
-    if FIsChanged and Assigned(OnChange) then
-      OnChange(Self);
-  end;
+  // Notify the parent that the PlotImage has changed
+  if FIsChanged and Assigned(OnChange) then
+    OnChange(Self);
 end;
 
 procedure TPlotImage.SetEditionMode(Value: TEditionMode);
