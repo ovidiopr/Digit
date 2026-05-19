@@ -663,7 +663,7 @@ implementation
 
 {$R *.lfm}
 
-uses uabout, uoptions;
+uses uAbout, uoptions;
 
   //Beginning of general functions
 

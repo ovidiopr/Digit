@@ -1330,8 +1330,7 @@ begin
     for i := 0 to Length(Pts) - 2 do
     begin
       if phase < DashPoints then
-        WhiteBoard.DrawLineAntialias(Pts[i].X, Pts[i].Y,
-                                     Pts[i+1].X, Pts[i+1].Y,
+        WhiteBoard.DrawLineAntialias(Pts[i].X, Pts[i].Y, Pts[i+1].X, Pts[i+1].Y,
                                      VC, VCurvePenWidth);
       Inc(phase);
       if phase >= DashPoints + GapPoints then
@@ -2680,8 +2679,7 @@ begin
   RepaintRegion(ClientRect);
 end;
 
-procedure TPlotImage.RectIntersection(Po, Pf: TCurvePoint;
-  var Pini, Pend: TCurvePoint);
+procedure TPlotImage.RectIntersection(Po, Pf: TCurvePoint; var Pini, Pend: TCurvePoint);
 var
   P: array [1..4] of TCurvePoint;
   Idx: array [1..2] of Integer;
