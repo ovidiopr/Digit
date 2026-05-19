@@ -3430,10 +3430,10 @@ begin
       begin
         g  := (sum.x*dx2.y - sum.y*dx2.x)/denom;
         hh := (dx1.x*sum.y - dx1.y*sum.x)/denom;
-        Weights[0] := 1;
-        Weights[1] := Single(g + 1);
-        Weights[2] := Single(g + hh + 1);
-        Weights[3] := Single(hh + 1);
+        Weights[0] := 1.0;
+        Weights[1] := Single(1.0/(g + 1));
+        Weights[2] := Single(1.0/(g + hh + 1));
+        Weights[3] := Single(1.0/(hh + 1));
       end;
 
       NewImg := TBGRABitmap.Create(w, h, BGRABlack);
