@@ -13,6 +13,20 @@ unit uMarker;
 
   TMarker is deliberately UI-agnostic: it knows nothing about TPlotImage,
   zoom, or state.  Callers are responsible for coordinate translation.
+
+  Sub-pixel identity fields
+  -------------------------
+  FDigitMarkerIndex  – when >= 0, this TMarker corresponds to entry
+                       DigitCurve.Markers[FDigitMarkerIndex] (image-space,
+                       zoom=1).  Set by UpdateMarkersInImage; -1 for all
+                       persistent UI anchors (axes, box, edge markers).
+  FDirty             – True only after Move() has been called by user
+                       interaction.  False after construction or after a
+                       MoveSilent() call (programmatic repositioning from
+                       DigitCurve coordinates).  UpdateMarkersInCurve uses
+                       this flag to write back only what the user actually
+                       moved, preserving full float precision in DigitCurve
+                       for markers the user has not touched.
   ============================================================================ }
 
 interface
@@ -29,16 +43,18 @@ type
     FBitmap: TBGRABitmap;
     FRect: TRect;
     FPersistent: Boolean;
+    FDigitMarkerIndex: Integer;
+    FDirty: Boolean;
   private
     function GetPosition: TCurvePoint;
     procedure SetPosition(const Value: TCurvePoint);
+    procedure SetRect(Point: TPoint);
   public
     { Create a marker whose centre lies at Coord.
       The marker takes ownership of Bitmap and frees it on Destroy.
       Persistent markers are never deleted during a ClearMarkers sweep –
       they represent fixed UI anchors such as axis reference points. }
-    constructor Create(Bitmap: TBGRABitmap; Coord: TPoint;
-      Persistent: Boolean = False);
+    constructor Create(Bitmap: TBGRABitmap; Coord: TPoint; Persistent: Boolean = False);
     destructor Destroy; override;
 
     { Returns True when Point falls within the marker's bounding rect
@@ -48,16 +64,29 @@ type
     { Blit the marker onto Img, but only if it intersects Rectangle. }
     procedure Draw(Img: TBGRABitmap; Rectangle: TRect);
 
-    { Move the marker centre to Point. }
+    { Move the marker centre to Point and mark it as dirty.
+      Call this for all user-driven moves so that UpdateMarkersInCurve
+      knows to write the new position back to DigitCurve. }
     procedure Move(Point: TPoint);
 
-    { Shift the marker centre by Delta. }
+    { Reposition the marker centre without marking it dirty.
+      Use this for all programmatic repositioning (UpdateMarkersInImage,
+      zoom changes, box/edge ripple updates) so that the pristine float
+      coordinates stored in DigitCurve are never overwritten. }
+    procedure MoveSilent(Point: TPoint);
+
+    { Shift the marker centre by Delta.  Sets the dirty flag. }
     procedure Shift(Delta: TPoint);
+
+    { Clear the dirty flag after a successful writeback to DigitCurve. }
+    procedure ClearDirty;
 
     property Bitmap: TBGRABitmap read FBitmap;
     property Rect: TRect read FRect;
     property Position: TCurvePoint read GetPosition write SetPosition;
     property IsPersistent: Boolean read FPersistent;
+    property DigitMarkerIndex: Integer read FDigitMarkerIndex write FDigitMarkerIndex;
+    property IsDirty: Boolean read FDirty;
   end;
 
   TMarkerList = specialize TFPGObjectList<TMarker>;
@@ -155,16 +184,23 @@ end;
   TMarker
   ============================================================================ }
 
-constructor TMarker.Create(Bitmap: TBGRABitmap; Coord: TPoint;
-  Persistent: Boolean = False);
+procedure TMarker.SetRect(Point: TPoint);
 var
   Delta: TPoint;
+begin
+  Delta := TPoint.Create(Bitmap.Width div 2, Bitmap.Height div 2);
+  FRect := TRect.Create(Point - Delta, Bitmap.Width, Bitmap.Height);
+end;
+
+constructor TMarker.Create(Bitmap: TBGRABitmap; Coord: TPoint;
+  Persistent: Boolean = False);
 begin
   inherited Create;
   FBitmap := Bitmap;
   FPersistent := Persistent;
-  Delta := TPoint.Create(Bitmap.Width div 2, Bitmap.Height div 2);
-  FRect := TRect.Create(Coord - Delta, Bitmap.Width, Bitmap.Height);
+  FDigitMarkerIndex := -1;
+  FDirty := False;
+  SetRect(Coord);
 end;
 
 destructor TMarker.Destroy;
@@ -180,16 +216,26 @@ begin
 end;
 
 procedure TMarker.Move(Point: TPoint);
-var
-  Delta: TPoint;
 begin
-  Delta := TPoint.Create(Bitmap.Width div 2, Bitmap.Height div 2);
-  FRect := TRect.Create(Point - Delta, Bitmap.Width, Bitmap.Height);
+  SetRect(Point);
+  FDirty := True;
+end;
+
+procedure TMarker.MoveSilent(Point: TPoint);
+begin
+  SetRect(Point);
+  { FDirty is intentionally left unchanged: a silent reposition from
+    DigitCurve data must never trigger a writeback. }
 end;
 
 procedure TMarker.Shift(Delta: TPoint);
 begin
   Move(FRect.CenterPoint + Delta);
+end;
+
+procedure TMarker.ClearDirty;
+begin
+  FDirty := False;
 end;
 
 function TMarker.GetPosition: TCurvePoint;

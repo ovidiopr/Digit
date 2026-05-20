@@ -566,6 +566,8 @@ type
 
     procedure PrintUserMessage(Msg: String; MsgType: TMsgDlgType = mtInformation);
 
+    procedure UpdatePopupMenu;
+
     procedure UpdatePlotXScale;
     procedure UpdatePlotYScale;
     procedure LogAxis(AChart: TChart; AxisIndex: Integer; Enable: Boolean; Base: Double);
@@ -1518,7 +1520,6 @@ begin
   with PlotImage do
   begin
     Parent := ScrollBox;
-    PopupMenu := DigitPopupMenu;
 
     OnMouseDown := @PlotImageMouseDown;
     OnMouseMove := @PlotImageMouseMove;
@@ -1895,6 +1896,9 @@ procedure TDigitMainForm.pcInputChange(Sender: TObject);
 begin
   // Update PlotImage state
   PlotImage.State := TPlotImageState(pcInput.ActivePageIndex);
+  UpdatePopupMenu;
+  if (pcInput.ActivePageIndex <> Integer(piSetCurve)) then
+    MouseMode := mdCursor;
 end;
 
 function TDigitMainForm.CheckSaveStatus: Boolean;
@@ -2024,8 +2028,7 @@ begin
   end;
 end;
 
-procedure TDigitMainForm.PrintUserMessage(Msg: String;
-  MsgType: TMsgDlgType = mtInformation);
+procedure TDigitMainForm.PrintUserMessage(Msg: String; MsgType: TMsgDlgType = mtInformation);
 begin
   with msgArea.Items do
   begin
@@ -2044,6 +2047,14 @@ begin
   msgArea.ItemIndex := msgArea.Items.Count - 1;
 end;
 
+procedure TDigitMainForm.UpdatePopupMenu;
+begin
+  // The context menu is only available in cursor mode on the Curve tab.
+  if (FMouseMode = mdCursor) and (pcInput.ActivePageIndex = Integer(piSetCurve)) then
+    PlotImage.PopupMenu := DigitPopupMenu
+  else
+    PlotImage.PopupMenu := nil;
+end;
 
 procedure TDigitMainForm.UpdatePlotXScale;
 begin
@@ -2239,6 +2250,8 @@ begin
     PlotImage.EditionMode := emNone;
 
   FMouseMode := Value;
+  UpdatePopupMenu;
+
   case Value of
     mdCursor: PlotImage.Cursor := crDefault;
     mdColor,
@@ -2690,6 +2703,8 @@ begin
 end;
 
 procedure TDigitMainForm.PlotImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  i: Integer;
 begin
   case Button of
     mbLeft: begin
@@ -2723,9 +2738,23 @@ begin
       UpdateControls;
     end;
     mbRight: begin
-      DigitizeFromHereItem.Enabled := PlotImage.Plot.Scale.IsValid and PlotImage.ColorIsSet;
-      FTmpPoint.X := X/PlotImage.Zoom;
-      FTmpPoint.Y := Y/PlotImage.Zoom;
+      if MouseMode = mdMarkers then
+      begin
+        // Right-click in marker mode deletes the marker under the cursor
+        for i := 0 to PlotImage.Markers.Count - 1 do
+          if PlotImage.Markers[i].HitTest(TPoint.Create(X, Y)) then
+          begin
+            PlotImage.DeleteMarker(PlotImage.Markers[i]);
+            Break;
+          end;
+      end
+      else
+      begin
+        // Prepare context menu data
+        DigitizeFromHereItem.Enabled := PlotImage.Plot.Scale.IsValid and PlotImage.ColorIsSet;
+        FTmpPoint.X := X/PlotImage.Zoom;
+        FTmpPoint.Y := Y/PlotImage.Zoom;
+      end;
     end;
   end;
 end;

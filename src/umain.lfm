@@ -1,5 +1,5 @@
 object DigitMainForm: TDigitMainForm
-  Left = 441
+  Left = 279
   Height = 517
   Top = 145
   Width = 1191

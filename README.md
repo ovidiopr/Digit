@@ -149,3 +149,27 @@ Holding **Alt** or **Ctrl** while clicking a vertex puts the box in rotation mod
 
 When the active plot uses polar coordinates, the plot box is interpreted accordingly: it defines the region in polar space that contains the data, rather than a rectangular area of the image. The same vertex and edge controls apply, but the shape they define is mapped onto the polar grid of the plot.
 
+
+## Markers
+
+Markers are small shapes pinned to positions on the plot image. `Digit` uses three distinct kinds of marker, each belonging to a different configuration step.
+
+**Scale markers** appear in the Scale configuration panel (`tsScale`). There are always exactly three of them, one for each of the axis reference points (X axis, Y axis, and origin). They define the coordinate system of the plot and must be placed on known, labeled positions in the image — typically the tick marks closest to the axes. Once placed, a scale marker can be dragged to a new position; the coordinate mapping updates immediately.
+
+**Plot box markers** appear in the Plot box configuration panel (`tsBox`). They consist of four vertex markers at the corners of the plot box and four edge markers at the midpoint of each side (see [Plot box](#plot-box) for the full description of how they behave). Like scale markers, they are always present as a fixed set and cannot be added or removed individually.
+
+**Curve markers** appear in the Curve configuration panel (`tsCurve`) when the Add markers edition mode (`mdMarkers`) is active. Unlike the other two kinds, curve markers are created and deleted freely by the user: a left-click places a new one, a right-click removes an existing one, and any marker can be repositioned by dragging. Each curve marker is recorded as a data point and also acts as a seed or guide for the automatic digitization algorithms (see [ALGORITHMS.md](ALGORITHMS.md)).
+
+All three kinds of marker support the same basic interactions: drag to move, and nudge one pixel at a time with the arrow keys when the marker is active.
+
+### Sub-pixel resolution
+
+Even though each marker appears to sit on a single pixel of the displayed image, its position is stored internally with sub-pixel precision. This matters most for scale markers and curve markers, where small positional errors translate directly into errors in the exported data values.
+
+To place or adjust any marker with sub-pixel accuracy, zoom in before interacting with it:
+
+1. Zoom in to the area of interest using **Zoom in** or by entering a specific zoom level (for example ×2, ×4, or higher).
+2. Place or drag the marker to the desired position. At ×2 zoom each screen pixel corresponds to half an image pixel, giving 0.5-pixel resolution; at ×4 zoom the resolution is 0.25 pixels, and so on.
+3. Return to any zoom level you like. The marker snaps to the nearest screen pixel for display purposes, but its stored coordinate retains the full precision with which it was placed.
+
+The sub-pixel coordinate is what gets converted to plot-space values during export, so positioning markers at high zoom genuinely improves accuracy — particularly for scale reference points, which affect every data point in the session, and for curve markers placed at a precise peak, trough, or inflection point.

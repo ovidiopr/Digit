@@ -1458,8 +1458,21 @@ procedure TPlotImage.AddMarker(Position: TPoint; NewMarker: Boolean = True);
 var
   BMP: TBGRABitmap;
 begin
-  BMP := CreateMarker(TPoint.Create(13, 13), 'x', Plot.DigitCurve.Color, 3);
-  AddMarker(TMarker.Create(BMP, Position, False), NewMarker);
+  if (State = piSetCurve) then
+  begin
+    // Store the sub-pixel coordinate in DigitCurve first, then rebuild the list
+    Plot.DigitCurve.AddMarker(TCurvePoint.Create(Position.X, Position.Y)/Zoom);
+    Plot.DigitCurve.SortMarkers;
+    UpdateMarkersInImage;
+  end
+  else
+  begin
+    BMP := CreateMarker(TPoint.Create(13, 13), 'x', Plot.DigitCurve.Color, 3);
+    AddMarker(TMarker.Create(BMP, Position, False), NewMarker);
+  end;
+
+  if NewMarker then
+    IsChanged := True;
 end;
 
 procedure TPlotImage.AddMarker(Marker: TMarker; NewMarker: Boolean = True);
@@ -1505,6 +1518,20 @@ begin
         FBoxMarkers[i] := nil;
       if (FEdgeMarkers[i] = Marker) then
         FEdgeMarkers[i] := nil;
+    end;
+
+    // If this is a curve marker, remove the corresponding DigitCurve entry
+    // and rebuild the image markers so DigitMarkerIndex values stay valid
+    if RealDelete and (State = piSetCurve) and
+       (Marker.DigitMarkerIndex >= 0) and
+       (Marker.DigitMarkerIndex < Plot.DigitCurve.MarkerCount) then
+    begin
+      Plot.DigitCurve.DeleteMarker(Marker.DigitMarkerIndex);
+      Marker.DigitMarkerIndex := -1;    // prevent recursive re-entry
+      Markers.Remove(Marker);
+      UpdateMarkersInImage;
+      if RealDelete then IsChanged := True;
+      Exit;
     end;
 
     Markers.Remove(Marker);
@@ -1559,8 +1586,8 @@ begin
             RepaintRegion(Rect[Zoom]);
             Vertex[i - 1] := NewPos/Zoom;
 
-            EdgeMarkers[i].Move(Zoom*Edge[i - 1]);
-            EdgeMarkers[PrevVertIdx(i - 1) + 1].Move(Zoom*Edge[PrevVertIdx(i - 1)]);
+            EdgeMarkers[i].MoveSilent(Zoom*Edge[i - 1]);
+            EdgeMarkers[PrevVertIdx(i - 1) + 1].MoveSilent(Zoom*Edge[PrevVertIdx(i - 1)]);
             RepaintRegion(Rect[Zoom]);
           end;
 
@@ -1576,11 +1603,11 @@ begin
             begin
               RepaintRegion(Rect[Zoom]);
 
-              BoxMarkers[NextVertIdx(i - 1) + 1].Move(P1);
-              BoxMarkers[i].Move(P2);
+              BoxMarkers[NextVertIdx(i - 1) + 1].MoveSilent(P1);
+              BoxMarkers[i].MoveSilent(P2);
 
-              EdgeMarkers[NextVertIdx(i - 1) + 1].Move(Zoom*Edge[NextVertIdx(i - 1)]);
-              EdgeMarkers[PrevVertIdx(i - 1) + 1].Move(Zoom*Edge[PrevVertIdx(i - 1)]);
+              EdgeMarkers[NextVertIdx(i - 1) + 1].MoveSilent(Zoom*Edge[NextVertIdx(i - 1)]);
+              EdgeMarkers[PrevVertIdx(i - 1) + 1].MoveSilent(Zoom*Edge[PrevVertIdx(i - 1)]);
 
               RepaintRegion(Rect[Zoom]);
 
@@ -2030,6 +2057,13 @@ begin
       Exit;
     end;
 
+    // Guard against FClickedMarker having been freed by a re-entrant event
+    if Assigned(FClickedMarker) and (Markers.IndexOf(FClickedMarker) < 0) then
+    begin
+      FClickedMarker := nil;
+      Dragging := False;
+    end;
+
     if Assigned(FClickedMarker) then
     begin
       if not Dragging then
@@ -2088,8 +2122,8 @@ begin
                   // Check that no marker moves out of the image
                   if ClientRect.Contains(P1) and ClientRect.Contains(P2) then
                   begin
-                    BoxMarkers[NextVertIdx(i - 1) + 1].Move(P1);
-                    BoxMarkers[PrevVertIdx(i - 1) + 1].Move(P2);
+                    BoxMarkers[NextVertIdx(i - 1) + 1].MoveSilent(P1);
+                    BoxMarkers[PrevVertIdx(i - 1) + 1].MoveSilent(P2);
                   end
                   else
                   begin
@@ -2103,7 +2137,7 @@ begin
 
                 // Move edges
                 for j := 1 to NumEdges do
-                  EdgeMarkers[j].Move(Zoom*Edge[j - 1]);
+                  EdgeMarkers[j].MoveSilent(Zoom*Edge[j - 1]);
               end;
               daRotate: begin
                 // Rotate
@@ -2120,13 +2154,13 @@ begin
 
                 for j := 1 to NumVertices do
                   if (i <> j) then
-                    BoxMarkers[j].Move(Zoom*Vertex[j - 1]);
+                    BoxMarkers[j].MoveSilent(Zoom*Vertex[j - 1]);
 
                 for j := 1 to NumEdges do
-                  EdgeMarkers[j].Move(Zoom*Edge[j - 1]);
+                  EdgeMarkers[j].MoveSilent(Zoom*Edge[j - 1]);
 
                 NewPos := Zoom*Vertex[i - 1];
-                FClickedMarker.Move(NewPos);
+                FClickedMarker.MoveSilent(NewPos);
               end;
               daEdge: begin
                 for i := 1 to NumEdges do
@@ -2144,11 +2178,11 @@ begin
                   if ClientRect.Contains(P1) and ClientRect.Contains(P2) and
                     IsConvex then
                   begin
-                    BoxMarkers[NextVertIdx(i - 1) + 1].Move(P1);
-                    BoxMarkers[i].Move(P2);
+                    BoxMarkers[NextVertIdx(i - 1) + 1].MoveSilent(P1);
+                    BoxMarkers[i].MoveSilent(P2);
 
-                    EdgeMarkers[NextVertIdx(i - 1) + 1].Move(Zoom*Edge[NextVertIdx(i - 1)]);
-                    EdgeMarkers[PrevVertIdx(i - 1) + 1].Move(Zoom*Edge[PrevVertIdx(i - 1)]);
+                    EdgeMarkers[NextVertIdx(i - 1) + 1].MoveSilent(Zoom*Edge[NextVertIdx(i - 1)]);
+                    EdgeMarkers[PrevVertIdx(i - 1) + 1].MoveSilent(Zoom*Edge[PrevVertIdx(i - 1)]);
                   end
                   else
                     MoveEdge(i - 1, OldPos);
@@ -2291,7 +2325,7 @@ begin
                 daRotate: begin
                   for i := 1 to NumVertices do
                   begin
-                    BoxMarkers[i].Move(Zoom*Vertex[i - 1]);
+                    BoxMarkers[i].MoveSilent(Zoom*Vertex[i - 1]);
 
                     if (BoxMarkers[i] <> FClickedMarker) then
                       OnMarkerDragged(Self, BoxMarkers[i], False);
@@ -2610,15 +2644,19 @@ end;
 procedure TPlotImage.UpdateMarkersInCurve;
 var
   i: Integer;
+  M: TMarker;
 begin
   if (State = piSetCurve) and Assigned(Plot) and Assigned(Plot.DigitCurve) then
-  begin
-    Plot.DigitCurve.ClearMarkers;
-    for i := Markers.Count - 1 downto 0 do
-      Plot.DigitCurve.AddMarker(Markers[i].Position/Zoom);
-
-    Plot.DigitCurve.SortMarkers;
-  end;
+    for i := 0 to Markers.Count - 1 do
+    begin
+      M := Markers[i];
+      if M.IsDirty and (M.DigitMarkerIndex >= 0) and
+         (M.DigitMarkerIndex < Plot.DigitCurve.MarkerCount) then
+      begin
+        Plot.DigitCurve.Markers[M.DigitMarkerIndex] := M.Position/Zoom;
+        M.ClearDirty;
+      end;
+    end;
 end;
 
 procedure TPlotImage.UpdateMarkersInImage;
@@ -2656,7 +2694,14 @@ begin
     end;
     piSetCurve: begin
       for i := 0 to Plot.DigitCurve.MarkerCount - 1 do
-        AddMarker(Zoom*Plot.DigitCurve.Markers[i], False);
+      begin
+        // Use the TMarker overload directly to avoid calling
+        // UpdateMarkersInImage recursively
+        AddMarker(TMarker.Create(
+          CreateMarker(TPoint.Create(13, 13), 'x', Plot.DigitCurve.Color, 3),
+          Zoom*Plot.DigitCurve.Markers[i], False), False);
+        Markers[0].DigitMarkerIndex := i;
+      end;
     end;
     piSetGrid: begin
       // For now, do nothing
@@ -3382,7 +3427,7 @@ begin
   if (Markers.IndexOf(Marker) > -1) then
   begin
     ClearMarker(Marker);
-    Marker.Move(Point);
+    Marker.MoveSilent(Point);
     DrawMarker(Marker);
 
     IsChanged := True;

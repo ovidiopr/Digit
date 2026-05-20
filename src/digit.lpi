@@ -212,6 +212,7 @@
       <Unit14>
         <Filename Value="umarker.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="uMarker"/>
       </Unit14>
     </Units>
   </ProjectOptions>
