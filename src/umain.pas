@@ -1366,7 +1366,7 @@ end;
 
 procedure TDigitMainForm.EditShowSymbolsUpdate(Sender: TObject);
 begin
-  EditShowLine.Checked := not PlotImage.Plot.Curves[PlotImage.CurveIndex].ShowAsSymbols;
+  EditShowSymbols.Checked := PlotImage.Plot.Curves[PlotImage.CurveIndex].ShowAsSymbols;
 end;
 
 procedure TDigitMainForm.EditVX1Change(Sender: TObject; AByUser: Boolean);
