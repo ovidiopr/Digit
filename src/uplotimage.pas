@@ -95,7 +95,6 @@ type
     FDragOrigClickPos: TCurvePoint;
     FDragOrigPtPos: array of TCurvePoint;
     FDragArcLengths: array of Double;
-    FDragGaussWidth: Double;
     FDragHoverIdx: Integer;
 
     procedure SetCancelAction(Value: Boolean);
@@ -342,7 +341,6 @@ type
     property CanRedo: Boolean read GetCanRedo;
 
     property EditionMode: TEditionMode read FEditionMode  write SetEditionMode;
-    property DragGaussWidth: Double read FDragGaussWidth write FDragGaussWidth;
   published
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnPrintMessage: TPrintMessageEvent read FOnPrintMessage write FOnPrintMessage;
@@ -447,7 +445,6 @@ begin
   FEditionMode := emNone;
   FDragCurveActive := False;
   FDraggedPtIdx := -1;
-  FDragGaussWidth := 10.0;
   FDragHoverIdx := -1;
   SetLength(FDragOrigPtPos,  0);
   SetLength(FDragArcLengths, 0);
@@ -699,13 +696,13 @@ begin
   if (State = piSetCurve) and (Markers.Count > 0) then
   begin
     Plot.DigitCurve.NextCurve(False);
-    Plot.Curve.ShowAsSymbols := True;
 
     for i := 0 to Markers.Count - 1 do
       Plot.Curve.AddPoint(Markers[i].Position/Zoom);
 
     SortCurve;
 
+    Plot.Curve.ShowAsSymbols := True;
     IsChanged := True;
   end;
 end;
@@ -2029,7 +2026,7 @@ begin
           if ssShift in Shift then
             Weight := IfThen(i = FDraggedPtIdx, 1.0, 0.0)
           else
-            Weight := Exp(-Sqr(FDragArcLengths[i])/(2*Sqr(FDragGaussWidth)));
+            Weight := Exp(-Sqr(FDragArcLengths[i])/(2*Sqr(Options.DragGaussWidth)));
 
           OrigPlotPt := Plot.Scale.FromImgToPlot(FDragOrigPtPos[i]);
           NewPlotPt := TCurvePoint.Create(OrigPlotPt.X, OrigPlotPt.Y + Weight*DeltaPlotY);
@@ -2044,7 +2041,7 @@ begin
           if ssShift in Shift then
             Weight := IfThen(i = FDraggedPtIdx, 1.0, 0.0)
           else
-            Weight := Exp(-Sqr(FDragArcLengths[i])/(2*Sqr(FDragGaussWidth)));
+            Weight := Exp(-Sqr(FDragArcLengths[i])/(2*Sqr(Options.DragGaussWidth)));
 
           Plot.Curve.Point[i] := FDragOrigPtPos[i] + Weight*DeltaImg;
         end;
@@ -3149,8 +3146,7 @@ begin
       Smooth(k, d, i);
 end;
 
-procedure TPlotImage.Interpolate(n, d: Integer; Index: Integer;
-  IntType: TInterpolation = itpBSpline);
+procedure TPlotImage.Interpolate(n, d: Integer; Index: Integer; IntType: TInterpolation = itpBSpline);
 var
   i: Integer;
   TmpRect: TRect;
@@ -3183,8 +3179,7 @@ begin
   end;
 end;
 
-procedure TPlotImage.Interpolate(n, d: Integer; AllCurves: Boolean = False;
-  IntType: TInterpolation = itpBSpline);
+procedure TPlotImage.Interpolate(n, d: Integer; AllCurves: Boolean = False; IntType: TInterpolation = itpBSpline);
 var
   i: Integer;
 begin
@@ -3195,8 +3190,7 @@ begin
       Interpolate(n, d, i, IntType);
 end;
 
-procedure TPlotImage.Interpolate(Xo, Xf: Double; n, d: Integer;
-  Index: Integer; IntType: TInterpolation = itpBSpline);
+procedure TPlotImage.Interpolate(Xo, Xf: Double; n, d: Integer; Index: Integer; IntType: TInterpolation = itpBSpline);
 var
   i: Integer;
   TmpRect: TRect;
@@ -3229,8 +3223,7 @@ begin
   end;
 end;
 
-procedure TPlotImage.Interpolate(Xo, Xf: Double; n, d: Integer;
-  AllCurves: Boolean = False; IntType: TInterpolation = itpBSpline);
+procedure TPlotImage.Interpolate(Xo, Xf: Double; n, d: Integer; AllCurves: Boolean = False; IntType: TInterpolation = itpBSpline);
 var
   i: Integer;
 begin

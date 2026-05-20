@@ -21,15 +21,24 @@ uses
 type
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
+    EditShowSymbols: TAction;
+    EditShowLine: TAction;
     DigitLineTraceItem: TMenuItem;
     DigitSymbolTraceItem: TMenuItem;
     DragPointsItem: TMenuItem;
+    EditShowLinetem: TMenuItem;
+    EditShowSymbolsItem: TMenuItem;
     SegmentItem: TMenuItem;
+    N8: TMenuItem;
     StepsItem: TMenuItem;
     ModeDragPointsItem: TMenuItem;
     DragMenu: TPopupMenu;
+    tbWidth: TBCTrackbarUpdown;
     tcCurves: TExtTabCtrl;
     tcPlots: TExtTabCtrl;
+    sep11: TToolButton;
+    btnShowLine: TToolButton;
+    btnShowSymbols: TToolButton;
     ToolDigitSymbolTraceItem: TMenuItem;
     ToolDigitLineTraceItem: TMenuItem;
     ToolDigitLineTracing: TAction;
@@ -330,13 +339,13 @@ type
     FileNewItem: TMenuItem;
     FileOpenItem: TMenuItem;
     DigitPopupMenu: TPopupMenu;
-    Help1: TMenuItem;
+    HelpMenu: TMenuItem;
     N1: TMenuItem;
     FileExitItem: TMenuItem;
     HelpAboutItem: TMenuItem;
     FileSaveItem: TMenuItem;
     FileSaveAsItem: TMenuItem;
-    Edit1: TMenuItem;
+    EditMenu: TMenuItem;
     EditUndoItem: TMenuItem;
     ActionList: TActionList;
     FileNew: TAction;
@@ -403,6 +412,10 @@ type
     procedure EditPasteImageExecute(Sender: TObject);
     procedure EditPX1EditingDone(Sender: TObject);
     procedure EditPY1EditingDone(Sender: TObject);
+    procedure EditShowLineExecute(Sender: TObject);
+    procedure EditShowLineUpdate(Sender: TObject);
+    procedure EditShowSymbolsExecute(Sender: TObject);
+    procedure EditShowSymbolsUpdate(Sender: TObject);
     procedure EditVX1Change(Sender: TObject; AByUser: Boolean);
     procedure EditVY1Change(Sender: TObject; AByUser: Boolean);
     procedure EditZoomFitExecute(Sender: TObject);
@@ -491,6 +504,7 @@ type
     procedure PlotExportExecute(Sender: TObject);
     procedure PlotScaleExecute(Sender: TObject);
     procedure rgDirectionSelectionChanged(Sender: TObject);
+    procedure tbWidthChange(Sender: TObject; AByUser: boolean);
     procedure tbZoomChange(Sender: TObject; AByUser: Boolean);
     procedure tcCurvesAddButtonClick(Sender: TObject);
     procedure tcCurvesTabChange(Sender: TObject; NewIndex: Integer);
@@ -708,6 +722,8 @@ begin
     ModeMinorGridColor.Enabled := ImageIsLoaded and (State = piSetGrid);
     ModeBackgroundColor.Enabled := ImageIsLoaded and (State = piSetGrid);
 
+    tbWidth.Enabled := (MouseMode = mdDrag);
+
     ToolDigitLineFollowing.Enabled := Plot.Scale.IsValid and ColorIsSet and (State = piSetCurve);
     ToolDigitLineTracing.Enabled := Plot.Scale.IsValid and ColorIsSet and (State = piSetCurve);
     ToolDigitSymbolTracing.Enabled := Plot.Scale.IsValid and ColorIsSet and (State = piSetCurve);
@@ -754,6 +770,8 @@ begin
     EditUndo.Enabled := (State = piSetCurve) and CanUndo;
     EditRedo.Enabled := (State = piSetCurve) and CanRedo;
     EditCopyCurve.Enabled := (State = piSetCurve) and HasPoints;
+    EditShowLine.Enabled := (State = piSetCurve) and HasPoints;
+    EditShowSymbols.Enabled := (State = piSetCurve) and HasPoints;
 
     tbZoom.Enabled := ImageIsLoaded;
     EditZoomOriginal.Enabled := ImageIsLoaded and (PlotImage.Zoom <> 1);
@@ -1066,6 +1084,7 @@ begin
   leData.Strings.Clear;
   PageControl.ActivePage := tsPicture;
   pcInput.ActivePageIndex := Integer(PlotImage.State);
+  tbWidth.Value := PlotImage.Options.DragGaussWidth;
 
   UpdateButtons;
 end;
@@ -1328,6 +1347,26 @@ begin
     else
       Text := FloatToStr(PlotImage.Plot.Scale.PlotPoint[Tag].Y);
   end;
+end;
+
+procedure TDigitMainForm.EditShowLineExecute(Sender: TObject);
+begin
+  PlotImage.Plot.Curves[PlotImage.CurveIndex].ShowAsSymbols := False;
+end;
+
+procedure TDigitMainForm.EditShowLineUpdate(Sender: TObject);
+begin
+  EditShowLine.Checked := not PlotImage.Plot.Curves[PlotImage.CurveIndex].ShowAsSymbols;
+end;
+
+procedure TDigitMainForm.EditShowSymbolsExecute(Sender: TObject);
+begin
+  PlotImage.Plot.Curves[PlotImage.CurveIndex].ShowAsSymbols := True;
+end;
+
+procedure TDigitMainForm.EditShowSymbolsUpdate(Sender: TObject);
+begin
+  EditShowLine.Checked := not PlotImage.Plot.Curves[PlotImage.CurveIndex].ShowAsSymbols;
 end;
 
 procedure TDigitMainForm.EditVX1Change(Sender: TObject; AByUser: Boolean);
@@ -2250,6 +2289,8 @@ begin
     PlotImage.EditionMode := emNone;
 
   FMouseMode := Value;
+  tbWidth.Enabled := (FMouseMode = mdDrag);
+
   UpdatePopupMenu;
 
   case Value of
@@ -3115,6 +3156,18 @@ end;
 procedure TDigitMainForm.rgDirectionSelectionChanged(Sender: TObject);
 begin
   edtStepChange(Sender, True);
+end;
+
+procedure TDigitMainForm.tbWidthChange(Sender: TObject; AByUser: boolean);
+var
+  TmpOptions: TPlotOptions;
+begin
+  if AByUser then
+  begin
+    TmpOptions := PlotImage.Options;
+    TmpOptions.DragGaussWidth := tbWidth.Value;
+    PlotImage.Options := TmpOptions;
+  end;
 end;
 
 procedure TDigitMainForm.tbZoomChange(Sender: TObject; AByUser: Boolean);

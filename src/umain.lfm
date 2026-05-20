@@ -1,11 +1,11 @@
 object DigitMainForm: TDigitMainForm
   Left = 279
-  Height = 517
+  Height = 561
   Top = 145
   Width = 1191
   AllowDropFiles = True
   Caption = 'Digitizer'
-  ClientHeight = 517
+  ClientHeight = 561
   ClientWidth = 1191
   Color = clBtnFace
   Font.Color = clBlack
@@ -5832,7 +5832,7 @@ object DigitMainForm: TDigitMainForm
       ShowHint = True
     end
     object sep04: TToolButton
-      Left = 629
+      Left = 688
       Height = 36
       Top = 2
       Caption = 'sep04'
@@ -5840,49 +5840,49 @@ object DigitMainForm: TDigitMainForm
       Style = tbsSeparator
     end
     object BtnUndo: TToolButton
-      Left = 900
+      Left = 959
       Top = 2
       Action = EditUndo
       ParentShowHint = False
       ShowHint = True
     end
     object BtnRedo: TToolButton
-      Left = 936
+      Left = 995
       Top = 2
       Action = EditRedo
       ParentShowHint = False
       ShowHint = True
     end
     object sep05: TToolButton
-      Left = 892
+      Left = 951
       Height = 36
       Top = 2
       Caption = 'sep05'
       Style = tbsSeparator
     end
     object btnAbout: TToolButton
-      Left = 1060
+      Left = 1119
       Top = 2
       Action = HelpAbout
       ParentShowHint = False
       ShowHint = True
     end
     object btnScaleOptions: TToolButton
-      Left = 1016
+      Left = 1075
       Top = 2
       Action = ToolPlotOptions
       ParentShowHint = False
       ShowHint = True
     end
     object sep06: TToolButton
-      Left = 1008
+      Left = 1067
       Height = 36
       Top = 2
       Caption = 'sep06'
       Style = tbsSeparator
     end
     object btnCopy: TToolButton
-      Left = 972
+      Left = 1031
       Top = 2
       Action = EditCopyCurve
       ParentShowHint = False
@@ -5920,7 +5920,7 @@ object DigitMainForm: TDigitMainForm
       ShowHint = True
     end
     object btnCorrectPoints: TToolButton
-      Left = 381
+      Left = 453
       Top = 2
       Action = ModeDragPoints
       DropdownMenu = DragMenu
@@ -5937,14 +5937,14 @@ object DigitMainForm: TDigitMainForm
       Style = tbsSeparator
     end
     object sep03: TToolButton
-      Left = 501
+      Left = 560
       Height = 36
       Top = 2
       Caption = 'sep03'
       Style = tbsSeparator
     end
     object btnResample: TToolButton
-      Left = 509
+      Left = 568
       Top = 2
       Action = ToolBSplines
       DropdownMenu = ResampleMenu
@@ -5953,21 +5953,21 @@ object DigitMainForm: TDigitMainForm
       Style = tbsDropDown
     end
     object btnSmooth: TToolButton
-      Left = 557
+      Left = 616
       Top = 2
       Action = ToolSmooth
       ParentShowHint = False
       ShowHint = True
     end
     object btnSymbols: TToolButton
-      Left = 593
+      Left = 652
       Top = 2
       Action = ToolConvertToSymbols
       ParentShowHint = False
       ShowHint = True
     end
     object btnGroupPointsmode: TToolButton
-      Left = 429
+      Left = 381
       Top = 2
       Action = ModeGroupPoints
       Grouped = True
@@ -5975,7 +5975,7 @@ object DigitMainForm: TDigitMainForm
       ShowHint = True
     end
     object btnDeletePointsMode: TToolButton
-      Left = 465
+      Left = 417
       Top = 2
       Action = ModeDeletePoints
       Grouped = True
@@ -5988,34 +5988,34 @@ object DigitMainForm: TDigitMainForm
       Action = EditPasteImage
     end
     object sep09: TToolButton
-      Left = 1052
+      Left = 1111
       Height = 36
       Top = 2
       Caption = 'sep09'
       Style = tbsSeparator
     end
     object btnZoomOriginal: TToolButton
-      Left = 712
+      Left = 771
       Top = 2
       Action = EditZoomOriginal
     end
     object btnZoomIn: TToolButton
-      Left = 748
+      Left = 807
       Top = 2
       Action = EditZoomIn
     end
     object btnZoomOut: TToolButton
-      Left = 784
+      Left = 843
       Top = 2
       Action = EditZoomOut
     end
     object btnZoomFit: TToolButton
-      Left = 820
+      Left = 879
       Top = 2
       Action = EditZoomFit
     end
     object tbZoom: TBCTrackbarUpdown
-      Left = 637
+      Left = 696
       Height = 36
       Top = 2
       Width = 75
@@ -6091,15 +6091,92 @@ object DigitMainForm: TDigitMainForm
       UseDockManager = False
     end
     object btnResize: TToolButton
-      Left = 856
+      Left = 915
       Top = 2
       Action = EditZoomResize
+    end
+    object tbWidth: TBCTrackbarUpdown
+      Left = 501
+      Height = 36
+      Hint = 'Width for drag mode| Width for drag curve points mode'
+      Top = 2
+      Width = 59
+      AllowNegativeValues = False
+      BarExponent = 1
+      Increment = 1
+      LongTimeInterval = 400
+      MinValue = 1
+      MaxValue = 500
+      OnChange = tbWidthChange
+      Value = 10
+      ShortTimeInterval = 100
+      Background.Color = clWindow
+      Background.Gradient1.StartColor = clWhite
+      Background.Gradient1.EndColor = clBlack
+      Background.Gradient1.GradientType = gtLinear
+      Background.Gradient1.Point1XPercent = 0
+      Background.Gradient1.Point1YPercent = 0
+      Background.Gradient1.Point2XPercent = 0
+      Background.Gradient1.Point2YPercent = 100
+      Background.Gradient2.StartColor = clWhite
+      Background.Gradient2.EndColor = clBlack
+      Background.Gradient2.GradientType = gtLinear
+      Background.Gradient2.Point1XPercent = 0
+      Background.Gradient2.Point1YPercent = 0
+      Background.Gradient2.Point2XPercent = 0
+      Background.Gradient2.Point2YPercent = 100
+      Background.Gradient1EndPercent = 35
+      Background.Style = bbsColor
+      ButtonBackground.Gradient1.StartColor = clBtnShadow
+      ButtonBackground.Gradient1.EndColor = clBtnFace
+      ButtonBackground.Gradient1.GradientType = gtLinear
+      ButtonBackground.Gradient1.Point1XPercent = 0
+      ButtonBackground.Gradient1.Point1YPercent = -50
+      ButtonBackground.Gradient1.Point2XPercent = 0
+      ButtonBackground.Gradient1.Point2YPercent = 50
+      ButtonBackground.Gradient2.StartColor = clBtnFace
+      ButtonBackground.Gradient2.EndColor = clBtnShadow
+      ButtonBackground.Gradient2.GradientType = gtLinear
+      ButtonBackground.Gradient2.Point1XPercent = 0
+      ButtonBackground.Gradient2.Point1YPercent = 50
+      ButtonBackground.Gradient2.Point2XPercent = 0
+      ButtonBackground.Gradient2.Point2YPercent = 150
+      ButtonBackground.Gradient1EndPercent = 50
+      ButtonBackground.Style = bbsGradient
+      ButtonDownBackground.Color = clBtnShadow
+      ButtonDownBackground.Gradient1.StartColor = clWhite
+      ButtonDownBackground.Gradient1.EndColor = clBlack
+      ButtonDownBackground.Gradient1.GradientType = gtLinear
+      ButtonDownBackground.Gradient1.Point1XPercent = 0
+      ButtonDownBackground.Gradient1.Point1YPercent = 0
+      ButtonDownBackground.Gradient1.Point2XPercent = 0
+      ButtonDownBackground.Gradient1.Point2YPercent = 100
+      ButtonDownBackground.Gradient2.StartColor = clWhite
+      ButtonDownBackground.Gradient2.EndColor = clBlack
+      ButtonDownBackground.Gradient2.GradientType = gtLinear
+      ButtonDownBackground.Gradient2.Point1XPercent = 0
+      ButtonDownBackground.Gradient2.Point1YPercent = 0
+      ButtonDownBackground.Gradient2.Point2XPercent = 0
+      ButtonDownBackground.Gradient2.Point2YPercent = 100
+      ButtonDownBackground.Gradient1EndPercent = 35
+      ButtonDownBackground.Style = bbsColor
+      Border.Color = clWindowText
+      Border.Style = bboSolid
+      Rounding.RoundX = 1
+      Rounding.RoundY = 1
+      Font.Color = clWindowText
+      Font.Name = 'Arial'
+      HasTrackBar = True
+      ArrowColor = clBtnText
+      TabOrder = 1
+      TabStop = True
+      UseDockManager = False
     end
   end
   object StatusBar: TStatusBar
     Left = 0
     Height = 18
-    Top = 499
+    Top = 543
     Width = 1191
     AutoHint = True
     Panels = <    
@@ -6129,7 +6206,7 @@ object DigitMainForm: TDigitMainForm
     AnchorSideBottom.Side = asrBottom
     Left = 572
     Height = 16
-    Top = 500
+    Top = 544
     Width = 164
     Anchors = [akTop, akLeft, akBottom]
     BorderSpacing.Top = 1
@@ -6141,12 +6218,12 @@ object DigitMainForm: TDigitMainForm
   end
   object pnlData: TPanel
     Left = 1028
-    Height = 459
+    Height = 503
     Top = 40
     Width = 163
     Align = alRight
     BevelOuter = bvNone
-    ClientHeight = 459
+    ClientHeight = 503
     ClientWidth = 163
     Font.Color = clBlack
     Font.Height = -11
@@ -6432,12 +6509,12 @@ object DigitMainForm: TDigitMainForm
     end
     object gbData: TGroupBox
       Left = 0
-      Height = 303
+      Height = 347
       Top = 156
       Width = 163
       Align = alClient
       Caption = 'Data'
-      ClientHeight = 276
+      ClientHeight = 320
       ClientWidth = 153
       Font.Color = clBlack
       Font.Height = -11
@@ -6447,7 +6524,7 @@ object DigitMainForm: TDigitMainForm
       TabOrder = 2
       object leData: TValueListEditor
         Left = 0
-        Height = 276
+        Height = 320
         Top = 0
         Width = 153
         Align = alClient
@@ -6473,7 +6550,7 @@ object DigitMainForm: TDigitMainForm
   end
   object RightSplitter: TSplitter
     Left = 1023
-    Height = 459
+    Height = 503
     Top = 40
     Width = 5
     Align = alRight
@@ -6482,13 +6559,13 @@ object DigitMainForm: TDigitMainForm
   end
   object InputPanel: TPanel
     Left = 0
-    Height = 459
+    Height = 503
     Top = 40
     Width = 220
     Align = alLeft
     BevelOuter = bvNone
     BevelWidth = 2
-    ClientHeight = 459
+    ClientHeight = 503
     ClientWidth = 220
     Font.Color = clBlack
     Font.Height = -11
@@ -6500,13 +6577,13 @@ object DigitMainForm: TDigitMainForm
     object ZoomImage: TImage
       Left = 0
       Height = 220
-      Top = 239
+      Top = 283
       Width = 220
       Align = alBottom
     end
     object pcInput: TPageControl
       Left = 0
-      Height = 204
+      Height = 248
       Top = 35
       Width = 220
       ActivePage = tsCurve
@@ -6525,21 +6602,21 @@ object DigitMainForm: TDigitMainForm
       object tsCurve: TTabSheet
         Hint = 'Curve options|Options to configure the digitization of the current curve'
         Caption = 'Curve'
-        ClientHeight = 170
+        ClientHeight = 214
         ClientWidth = 210
         ImageIndex = 17
         ParentShowHint = False
         ShowHint = True
         object sbCurve: TScrollBox
           Left = 0
-          Height = 170
+          Height = 214
           Top = 0
           Width = 210
           HorzScrollBar.Page = 168
-          VertScrollBar.Page = 168
+          VertScrollBar.Page = 181
           Align = alClient
-          ClientHeight = 168
-          ClientWidth = 193
+          ClientHeight = 212
+          ClientWidth = 208
           ParentBackground = False
           TabOrder = 0
           object lblColor: TLabel
@@ -6567,7 +6644,7 @@ object DigitMainForm: TDigitMainForm
             Left = 44
             Height = 25
             Top = 2
-            Width = 144
+            Width = 159
             Anchors = [akTop, akLeft, akRight]
             BorderSpacing.Left = 5
             BorderSpacing.Top = 2
@@ -6590,7 +6667,7 @@ object DigitMainForm: TDigitMainForm
             Left = 5
             Height = 56
             Top = 29
-            Width = 183
+            Width = 198
             Anchors = [akTop, akLeft, akRight]
             AutoFill = True
             BorderSpacing.Left = 5
@@ -6605,7 +6682,7 @@ object DigitMainForm: TDigitMainForm
             ChildSizing.Layout = cclLeftToRightThenTopToBottom
             ChildSizing.ControlsPerLine = 1
             ClientHeight = 29
-            ClientWidth = 173
+            ClientWidth = 188
             Font.Color = clBlack
             Font.Height = -11
             Font.Name = 'Default'
@@ -6648,7 +6725,7 @@ object DigitMainForm: TDigitMainForm
             Left = 40
             Height = 22
             Top = 90
-            Width = 148
+            Width = 163
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -6752,7 +6829,7 @@ object DigitMainForm: TDigitMainForm
             Left = 57
             Height = 22
             Top = 113
-            Width = 131
+            Width = 146
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -6856,7 +6933,7 @@ object DigitMainForm: TDigitMainForm
             Left = 69
             Height = 22
             Top = 136
-            Width = 119
+            Width = 134
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -6959,7 +7036,7 @@ object DigitMainForm: TDigitMainForm
             Left = 79
             Height = 22
             Top = 159
-            Width = 109
+            Width = 124
             AllowNegativeValues = False
             BarExponent = 1
             Increment = 1
@@ -7040,22 +7117,22 @@ object DigitMainForm: TDigitMainForm
         Hint = 'Set scale|Set plot scale'
         AutoSize = True
         Caption = 'Scale'
-        ClientHeight = 170
+        ClientHeight = 214
         ClientWidth = 210
         ImageIndex = 41
         ParentShowHint = False
         ShowHint = True
         object sbScale: TScrollBox
           Left = 0
-          Height = 170
+          Height = 214
           Top = 0
           Width = 210
           HorzScrollBar.Page = 181
-          VertScrollBar.Page = 168
+          VertScrollBar.Page = 212
           Align = alClient
           ChildSizing.EnlargeHorizontal = crsScaleChilds
           ChildSizing.ShrinkHorizontal = crsScaleChilds
-          ClientHeight = 168
+          ClientHeight = 212
           ClientWidth = 193
           ParentBackground = False
           TabOrder = 0
@@ -8052,20 +8129,20 @@ object DigitMainForm: TDigitMainForm
       object tsBox: TTabSheet
         Hint = 'Set box|Set plot box'
         Caption = 'Box'
-        ClientHeight = 170
+        ClientHeight = 214
         ClientWidth = 210
         ImageIndex = 42
         ParentShowHint = False
         ShowHint = True
         object sbPlotBox: TScrollBox
           Left = 0
-          Height = 170
+          Height = 214
           Top = 0
           Width = 210
           HorzScrollBar.Page = 97
-          VertScrollBar.Page = 168
+          VertScrollBar.Page = 212
           Align = alClient
-          ClientHeight = 168
+          ClientHeight = 212
           ClientWidth = 193
           ParentBackground = False
           TabOrder = 0
@@ -8915,7 +8992,7 @@ object DigitMainForm: TDigitMainForm
       object tsGrid: TTabSheet
         Hint = 'Grid options|Options to remove the grid from the plot'
         Caption = 'Grid'
-        ClientHeight = 170
+        ClientHeight = 214
         ClientWidth = 210
         ImageIndex = 38
         ParentShowHint = False
@@ -8956,13 +9033,13 @@ object DigitMainForm: TDigitMainForm
         end
         object sbGrid: TScrollBox
           Left = 0
-          Height = 130
+          Height = 174
           Top = 40
           Width = 210
           HorzScrollBar.Page = 145
-          VertScrollBar.Page = 128
+          VertScrollBar.Page = 172
           Align = alClient
-          ClientHeight = 128
+          ClientHeight = 172
           ClientWidth = 193
           ParentBackground = False
           TabOrder = 1
@@ -9486,19 +9563,19 @@ object DigitMainForm: TDigitMainForm
   end
   object LeftSplitter: TSplitter
     Left = 220
-    Height = 459
+    Height = 503
     Top = 40
     Width = 5
     MinSize = 150
   end
   object MainPanel: TPanel
     Left = 225
-    Height = 459
+    Height = 503
     Top = 40
     Width = 798
     Align = alClient
     BevelOuter = bvNone
-    ClientHeight = 459
+    ClientHeight = 503
     ClientWidth = 798
     ParentBackground = False
     TabOrder = 7
@@ -9518,7 +9595,7 @@ object DigitMainForm: TDigitMainForm
       ShowHint = True
       TabOrder = 0
       object sep07: TToolButton
-        Left = 229
+        Left = 309
         Height = 36
         Top = 2
         Caption = 'sep07'
@@ -9562,14 +9639,14 @@ object DigitMainForm: TDigitMainForm
         ShowHint = True
       end
       object btnExportPlot: TToolButton
-        Left = 237
+        Left = 317
         Top = 2
         Action = PlotExport
         ParentShowHint = False
         ShowHint = True
       end
       object btnSetScale: TToolButton
-        Left = 273
+        Left = 353
         Top = 2
         Action = PlotScale
         ParentShowHint = False
@@ -9581,13 +9658,13 @@ object DigitMainForm: TDigitMainForm
         Action = ToolAdjustNoise
       end
       object btnCancel: TToolButton
-        Left = 397
+        Left = 477
         Top = 2
         Action = ToolCancelAction
         Visible = False
       end
       object sep08: TToolButton
-        Left = 389
+        Left = 469
         Height = 36
         Top = 2
         Caption = 'sep08'
@@ -9595,26 +9672,45 @@ object DigitMainForm: TDigitMainForm
         Visible = False
       end
       object sep10: TToolButton
-        Left = 309
+        Left = 389
         Height = 36
         Top = 2
         Caption = 'sep10'
         Style = tbsSeparator
       end
       object btnClearLog: TToolButton
-        Left = 353
+        Left = 433
         Top = 2
         Action = LogClear
       end
       object btnSaveLog: TToolButton
-        Left = 317
+        Left = 397
         Top = 2
         Action = LogSave
+      end
+      object sep11: TToolButton
+        Left = 229
+        Height = 36
+        Top = 2
+        Caption = 'sep11'
+        Style = tbsSeparator
+      end
+      object btnShowLine: TToolButton
+        Left = 237
+        Top = 2
+        Action = EditShowLine
+        Grouped = True
+      end
+      object btnShowSymbols: TToolButton
+        Left = 273
+        Top = 2
+        Action = EditShowSymbols
+        Grouped = True
       end
     end
     object PageControl: TPageControl
       Left = 0
-      Height = 389
+      Height = 433
       Top = 70
       Width = 798
       ActivePage = tsPicture
@@ -9625,7 +9721,7 @@ object DigitMainForm: TDigitMainForm
       TabPosition = tpBottom
       object tsPicture: TTabSheet
         Caption = 'Picture'
-        ClientHeight = 363
+        ClientHeight = 407
         ClientWidth = 788
         Font.Color = clBlack
         Font.Height = -11
@@ -9633,7 +9729,7 @@ object DigitMainForm: TDigitMainForm
         ParentFont = False
         object ScrollBox: TScrollBox
           Left = 0
-          Height = 363
+          Height = 407
           Top = 0
           Width = 788
           HorzScrollBar.Page = 1
@@ -9645,7 +9741,7 @@ object DigitMainForm: TDigitMainForm
       end
       object tsPlot: TTabSheet
         Caption = 'Plot'
-        ClientHeight = 363
+        ClientHeight = 407
         ClientWidth = 788
         Font.Color = clBlack
         Font.Height = -11
@@ -9654,7 +9750,7 @@ object DigitMainForm: TDigitMainForm
         ParentFont = False
         object MainPlot: TChart
           Left = 0
-          Height = 363
+          Height = 407
           Top = 0
           Width = 788
           AxisList = <          
@@ -9711,7 +9807,7 @@ object DigitMainForm: TDigitMainForm
       end
       object tsLog: TTabSheet
         Caption = 'Log'
-        ClientHeight = 363
+        ClientHeight = 407
         ClientWidth = 788
         Font.Color = clWindowText
         Font.Height = -13
@@ -9720,7 +9816,7 @@ object DigitMainForm: TDigitMainForm
         ParentFont = False
         object msgArea: TListBox
           Left = 0
-          Height = 363
+          Height = 407
           Top = 0
           Width = 788
           Align = alClient
@@ -9796,7 +9892,7 @@ object DigitMainForm: TDigitMainForm
         Action = FileExit
       end
     end
-    object Edit1: TMenuItem
+    object EditMenu: TMenuItem
       Caption = '&Edit'
       Hint = 'Edit commands '
       object EditUndoItem: TMenuItem
@@ -9831,6 +9927,15 @@ object DigitMainForm: TDigitMainForm
       end
       object EditZoomResizeItem: TMenuItem
         Action = EditZoomResize
+      end
+      object N8: TMenuItem
+        Caption = '-'
+      end
+      object EditShowLinetem: TMenuItem
+        Action = EditShowLine
+      end
+      object EditShowSymbolsItem: TMenuItem
+        Action = EditShowSymbols
       end
     end
     object ModeMenu: TMenuItem
@@ -9990,7 +10095,7 @@ object DigitMainForm: TDigitMainForm
         Action = MarkersDelete
       end
     end
-    object Help1: TMenuItem
+    object HelpMenu: TMenuItem
       Caption = '&Help'
       Hint = 'Help topics'
       object HelpAboutItem: TMenuItem
@@ -10563,6 +10668,24 @@ object DigitMainForm: TDigitMainForm
       ImageIndex = 43
       OnExecute = ModeBackgroundColorExecute
       OnUpdate = ModeBackgroundColorUpdate
+    end
+    object EditShowLine: TAction
+      Category = 'Edit'
+      Caption = 'Show line'
+      GroupIndex = 1
+      Hint = 'Show line|Show curve as a line'
+      ImageIndex = 20
+      OnExecute = EditShowLineExecute
+      OnUpdate = EditShowLineUpdate
+    end
+    object EditShowSymbols: TAction
+      Category = 'Edit'
+      Caption = 'Show symbols'
+      GroupIndex = 1
+      Hint = 'Show symbols|Show curve as symbols'
+      ImageIndex = 21
+      OnExecute = EditShowSymbolsExecute
+      OnUpdate = EditShowSymbolsUpdate
     end
   end
   object ImageList: TImageList

@@ -39,6 +39,8 @@ type
     XAxisColor: TColor;
     YAxisColor: TColor;
 
+    DragGaussWidth: Integer;
+
     class operator Initialize(var po: TPlotOptions);
 
     procedure LoadFromFile(FileName: TFileName);
@@ -462,6 +464,8 @@ begin
   po.OriginColor := clGreen;
   po.XAxisColor := clBlack;
   po.YAxisColor := clRed;
+
+  po.DragGaussWidth := 10;
 end;
 
 procedure TPlotOptions.LoadFromFile(FileName: TFileName);
@@ -482,6 +486,8 @@ begin
     OriginColor := IniFile.ReadInteger('Plot', 'OriginColor', OriginColor);
     XAxisColor := IniFile.ReadInteger('Plot', 'XAxisColor', XAxisColor);
     YAxisColor := IniFile.ReadInteger('Plot', 'YAxisColor', YAxisColor);
+
+    DragGaussWidth := IniFile.ReadInteger('Plot', 'DragGaussWidth', DragGaussWidth);
   finally
     IniFile.Free;
   end;
@@ -505,6 +511,8 @@ begin
     IniFile.WriteInteger('Plot', 'OriginColor', OriginColor);
     IniFile.WriteInteger('Plot', 'XAxisColor', XAxisColor);
     IniFile.WriteInteger('Plot', 'YAxisColor', YAxisColor);
+
+    IniFile.WriteInteger('Plot', 'DragGaussWidth', DragGaussWidth);
   finally
     IniFile.Free;
   end;
