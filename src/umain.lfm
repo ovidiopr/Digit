@@ -10672,7 +10672,7 @@ object DigitMainForm: TDigitMainForm
     object EditShowLine: TAction
       Category = 'Edit'
       Caption = 'Show line'
-      GroupIndex = 1
+      GroupIndex = 2
       Hint = 'Show line|Show curve as a line'
       ImageIndex = 20
       OnExecute = EditShowLineExecute
@@ -10681,7 +10681,7 @@ object DigitMainForm: TDigitMainForm
     object EditShowSymbols: TAction
       Category = 'Edit'
       Caption = 'Show symbols'
-      GroupIndex = 1
+      GroupIndex = 2
       Hint = 'Show symbols|Show curve as symbols'
       ImageIndex = 21
       OnExecute = EditShowSymbolsExecute

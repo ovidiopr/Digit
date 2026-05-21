@@ -109,6 +109,8 @@ build_dmg: clean build
 	mkdir -p "$(DMG_STAGING)/$(APP).app/Contents/Resources"
 	cp "$(ICNS_SRC)" \
 		"$(DMG_STAGING)/$(APP).app/Contents/Resources/$(ICNS_NAME)"
+	# Symlink to /Applications for drag-and-drop install
+	ln -s /Applications "$(DMG_STAGING)/Applications"
 	hdiutil create \
 		-volname "$(DMG_VOLNAME)" \
 		-srcfolder "$(DMG_STAGING)" \
