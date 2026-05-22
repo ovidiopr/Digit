@@ -507,12 +507,12 @@ type
     procedure tbWidthChange(Sender: TObject; AByUser: boolean);
     procedure tbZoomChange(Sender: TObject; AByUser: Boolean);
     procedure tcCurvesAddButtonClick(Sender: TObject);
-    procedure tcCurvesTabChange(Sender: TObject; NewIndex: Integer);
+    procedure tcCurvesTabChanged(Sender: TObject; NewIndex: Integer);
     procedure tcCurvesTabDblClick(Sender: TObject; AIndex: Integer);
     procedure tcCurvesTabDeleting(Sender: TObject; Index: Integer; var Allow: Boolean);
     procedure tcCurvesTabReordered(Sender: TObject; OldIndex, NewIndex: Integer);
     procedure tcPlotsAddButtonClick(Sender: TObject);
-    procedure tcPlotsTabChange(Sender: TObject; NewIndex: Integer);
+    procedure tcPlotsTabChanged(Sender: TObject; NewIndex: Integer);
     procedure tcPlotsTabDblClick(Sender: TObject; AIndex: Integer);
     procedure tcPlotsTabDeleting(Sender: TObject; Index: Integer; var Allow: Boolean);
     procedure tcPlotsTabReordered(Sender: TObject; OldIndex, NewIndex: Integer);
@@ -3183,7 +3183,7 @@ begin
     ToolCurveAdd.Execute;
 end;
 
-procedure TDigitMainForm.tcCurvesTabChange(Sender: TObject; NewIndex: Integer);
+procedure TDigitMainForm.tcCurvesTabChanged(Sender: TObject; NewIndex: Integer);
 begin
   //Change active curve
   PlotImage.CurveIndex := NewIndex;
@@ -3224,7 +3224,7 @@ begin
     ToolPlotAdd.Execute;
 end;
 
-procedure TDigitMainForm.tcPlotsTabChange(Sender: TObject; NewIndex: Integer);
+procedure TDigitMainForm.tcPlotsTabChanged(Sender: TObject; NewIndex: Integer);
 begin
   //Change active plot
   PlotImage.PlotIndex := NewIndex;
@@ -3288,7 +3288,7 @@ procedure TDigitMainForm.ToolCorrectDistortionExecute(Sender: TObject);
 begin
   // Almost ready, but not yet
   if (MessageDlg('You are about to crop the current plot image.' +
-    ' This action cannot be undone and will reset the' + ' digitization. Continue?',
+    ' This action cannot be undone and will reset the digitization. Continue?',
     mtWarning, [mbYes, mbNo], 0) = mrYes) then
     PlotImage.UndistortImage;
 end;
@@ -3297,7 +3297,7 @@ procedure TDigitMainForm.ToolCurveAddExecute(Sender: TObject);
 begin
   PlotImage.AddCurve;
   tcCurves.TabIndex := PlotImage.CurveCount - 1;
-  tcCurvesTabChange(Self, PlotImage.CurveCount - 1);
+  tcCurvesTabChanged(Self, PlotImage.CurveCount - 1);
 end;
 
 procedure TDigitMainForm.ToolCurveDeleteExecute(Sender: TObject);
@@ -3375,7 +3375,7 @@ begin
   ScaleCount := PlotImage.PlotCount;
 
   tcPlots.TabIndex := PlotImage.PlotIndex;
-  tcPlotsTabChange(Self, PlotImage.PlotIndex);
+  tcPlotsTabChanged(Self, PlotImage.PlotIndex);
 end;
 
 procedure TDigitMainForm.ToolPlotDeleteExecute(Sender: TObject);
