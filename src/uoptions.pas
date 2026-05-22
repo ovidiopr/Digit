@@ -22,11 +22,13 @@ type
     cbbDigitType: TComboBox;
     cbbInterpType: TComboBox;
     cbbInterpBehavior: TComboBox;
+    cbbDragType: TComboBox;
     chbShowXAxis: TCheckBox;
     chbShowYAxis: TCheckBox;
     gbX: TGroupBox;
     gbX1: TGroupBox;
     gbY: TGroupBox;
+    lblDragType: TLabel;
     lblInterpType: TLabel;
     lblDigitType: TLabel;
     lblInterpBehavior: TLabel;
@@ -80,6 +82,12 @@ begin
       Result.ItpBehavior := ibPlotLinear;
   end;
 
+  case cbbDragType.ItemIndex of
+    0..2: Result.DefaultDrag := TMouseMode(3 + cbbDragType.ItemIndex);
+    else
+      Result.DefaultDrag := mdDrag;
+  end;
+
   Result.ShowXAxis := chbShowXAxis.Checked;
   Result.ShowYAxis := chbShowYAxis.Checked;
   Result.OriginColor := btnOriginColor.ButtonColor;
@@ -105,6 +113,11 @@ begin
     cbbInterpBehavior.ItemIndex := Integer(Value.ItpBehavior)
   else
     cbbInterpBehavior.ItemIndex := -1;
+
+  if Value.DefaultDrag in [mdDrag..mdSegments] then
+    cbbDragType.ItemIndex := Integer(Value.DefaultDrag) - 3
+  else
+    cbbDragType.ItemIndex := -1;
 
   chbShowXAxis.Checked := Value.ShowXAxis;
   chbShowYAxis.Checked := Value.ShowYAxis;
