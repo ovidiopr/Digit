@@ -2525,6 +2525,7 @@ var
   TmpRect: TRect;
   TmpOnChange: TNotifyEvent;
   OldValue: Integer;
+  i: Integer;
 begin
   if (Value >= 0) and (Value < CurveCount) and (Value <> CurveIndex) then
   begin
@@ -2541,6 +2542,11 @@ begin
 
       // Now change the active curve
       TmpRect := Plot.DigitCurve.CurveRect(Zoom);
+
+      // Refresh area of old markers
+      for i := 0 to Markers.Count - 1 do
+        TmpRect.Union(Markers[i].Rect);
+
       Plot.CurveIndex := Value;
       TmpRect.Union(Plot.DigitCurve.CurveRect(Zoom));
       if (State = piSetCurve) then
