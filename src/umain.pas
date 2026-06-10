@@ -1196,7 +1196,7 @@ begin
 
   if (tcCurves.TabIndex >= 0) and (tcCurves.TabIndex < tcCurves.Tabs.Count) then
   begin
-    tcCurves.Tabs.Items[tcCurves.TabIndex].Color := btnColor.ButtonColor;
+    tcCurves.Tabs.Items[tcCurves.TabIndex].StripeColor := btnColor.ButtonColor;
     tcCurves.Invalidate;
   end;
 end;
@@ -2394,7 +2394,7 @@ begin
     if (i >= 0) and (i < tcCurves.Tabs.Count) then
     begin
       tcCurves.Tabs.Items[i].Caption := PlotImage.Plot.Curves[i].Name;
-      tcCurves.Tabs.Items[i].Color := PlotImage.Plot.Curves[i].Color;
+      tcCurves.Tabs.Items[i].StripeColor := PlotImage.Plot.Curves[i].Color;
       tcCurves.Invalidate;
     end;
   end;
