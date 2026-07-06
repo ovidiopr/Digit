@@ -68,16 +68,31 @@ jobs:
       if: matrix.os == 'windows-latest'
       shell: pwsh
       run: |
-        $LazUrl = "https://sourceforge.net/projects/lazarus/files/Lazarus%20Windows%2064%20bits/Lazarus%20${env:LAZ_VER}/lazarus-${env:LAZ_VER}-fpc-${env:FPC_VER_WINDOWS}-win64.exe"
+        $LazUrl = "https://sourceforge.net/projects/lazarus/files/Lazarus%20Windows%2064%20bits/Lazarus%20${env:LAZ_VER}/lazarus-${env:LAZ_VER}-fpc-${env:FPC_VER_WINDOWS}-win64.exe/download"
         
         Write-Host "Downloading Lazarus from: $LazUrl"
-        try {
-          # Use -UseBasicParsing to avoid IE COM object issues and follow redirects properly
-          $ProgressPreference = 'SilentlyContinue'
-          Invoke-WebRequest -Uri $LazUrl -OutFile "lazarus-setup.exe" -ErrorAction Stop -UseBasicParsing
-        } catch {
-          Write-Error "Failed to download Lazarus: $_"
-          exit 1
+        
+        # Retry logic with exponential backoff
+        $maxRetries = 3
+        $retryCount = 0
+        $downloaded = $false
+        
+        while (-not $downloaded -and $retryCount -lt $maxRetries) {
+          try {
+            $retryCount++
+            Write-Host "Download attempt $retryCount of $maxRetries..."
+            $ProgressPreference = 'SilentlyContinue'
+            Invoke-WebRequest -Uri $LazUrl -OutFile "lazarus-setup.exe" -ErrorAction Stop -UseBasicParsing
+            $downloaded = $true
+          } catch {
+            if ($retryCount -lt $maxRetries) {
+              Write-Host "Download failed, retrying in 10 seconds..."
+              Start-Sleep -Seconds 10
+            } else {
+              Write-Error "Failed to download Lazarus after $maxRetries attempts: $_"
+              exit 1
+            }
+          }
         }
         
         if (-not (Test-Path "lazarus-setup.exe")) {
@@ -88,7 +103,7 @@ jobs:
         $fileSize = (Get-Item "lazarus-setup.exe").Length
         Write-Host "Downloaded file size: $fileSize bytes"
         
-        if ($fileSize -lt 1000000) {
+        if ($fileSize -lt 50000000) {  # 50 MB threshold
           Write-Error "Downloaded file is too small (likely an HTML page, not the installer)"
           exit 1
         }
@@ -158,16 +173,16 @@ jobs:
         git clone https://github.com/ovidiopr/ExtTabCtrls.git
 
         # Register packages with lazbuild (order matters for dependencies)
-        lazbuild --add-package-link bgrabitmap/bgrabitmap/bgrabitmappack.lpk
-        lazbuild --add-package-link bgracontrols/bgracontrols.lpk
-        lazbuild --add-package-link ExtTabCtrls/components/exttabctrls.lpk 
+        lazbuild --lazarusdir="$LAZARUS_DIR" --add-package-link bgrabitmap/bgrabitmap/bgrabitmappack.lpk
+        lazbuild --lazarusdir="$LAZARUS_DIR" --add-package-link bgracontrols/bgracontrols.lpk
+        lazbuild --lazarusdir="$LAZARUS_DIR" --add-package-link ExtTabCtrls/components/exttabctrls.lpk 
 
     # ==========================================
     # 3. Compile and package
     # ==========================================
 
     - name: Compile Application
-      run: lazbuild Digit.lpi
+      run: lazbuild --lazarusdir="$LAZARUS_DIR" Digit.lpi
 
     - name: Package Debian (.deb)
       if: matrix.os == 'ubuntu-latest'
