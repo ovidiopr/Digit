@@ -48,9 +48,9 @@ jobs:
 
         BASE_URL="https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%20${LAZ_VER}"
 
-        wget ${BASE_URL}/fpc-laz_${FPC_VER_LINUX}_amd64.deb/download -O fpc-laz_${FPC_VER_LINUX}_amd64.deb
-        wget ${BASE_URL}/fpc-src_${FPC_VER_LINUX}_amd64.deb/download -O fpc-src_${FPC_VER_LINUX}_amd64.deb
-        wget ${BASE_URL}/lazarus-project_${LAZ_VER}.0-0_amd64.deb/download -O lazarus-project_${LAZ_VER}_amd64.deb
+        wget -q ${BASE_URL}/fpc-laz_${FPC_VER_LINUX}_amd64.deb/download -O fpc-laz_${FPC_VER_LINUX}_amd64.deb
+        wget -q ${BASE_URL}/fpc-src_${FPC_VER_LINUX}_amd64.deb/download -O fpc-src_${FPC_VER_LINUX}_amd64.deb
+        wget -q ${BASE_URL}/lazarus-project_${LAZ_VER}.0-0_amd64.deb/download -O lazarus-project_${LAZ_VER}_amd64.deb
 
         sudo apt-get update
 
@@ -99,8 +99,8 @@ jobs:
         FPC_DMG="fpc-${FPC_VER_MACOS}.intelarm64-macosx.dmg"
         LAZ_ZIP="lazarus-darwin-aarch64-${LAZ_VER}.zip"
         
-        wget ${BASE_URL}/${FPC_DMG}/download -O $FPC_DMG
-        wget ${BASE_URL}/${LAZ_ZIP}/download -O $LAZ_ZIP
+        wget -q ${BASE_URL}/${FPC_DMG}/download -O $FPC_DMG
+        wget -q ${BASE_URL}/${LAZ_ZIP}/download -O $LAZ_ZIP
 
         echo "Installing FPC..."
         hdiutil attach "$FPC_DMG"
@@ -148,7 +148,12 @@ jobs:
     # ==========================================
 
     - name: Compile Application
-      run: lazbuild --lazarusdir="$LAZARUS_DIR" src/digit.lpi
+      run: |
+        if [ "${{ matrix.os }}" = "macos-latest" ]; then
+          lazbuild --lazarusdir="$LAZARUS_DIR" --build-mode=Release -k-ld_classic src/digit.lpi
+        else
+          lazbuild --lazarusdir="$LAZARUS_DIR" --build-mode=Release src/digit.lpi
+        fi
 
     - name: Package Debian (.deb)
       if: matrix.os == 'ubuntu-latest'
@@ -163,7 +168,7 @@ jobs:
       run: |
         choco install nsis -y
         # Add NSIS to PATH explicitly
-        $nsisPath = "C:\Program Files\NSIS"
+        $nsisPath = "C:\ProgramData\chocolatey\lib\nsis\tools\nsis"
         if (Test-Path $nsisPath) {
           Write-Host "NSIS found at $nsisPath"
           "$nsisPath" >> $env:GITHUB_PATH
