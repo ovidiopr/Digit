@@ -45,9 +45,19 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         echo "Downloading Lazarus and FPC..."
-        wget -q "https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%20${LAZ_VER}/fpc-laz_${FPC_VER_LINUX}_amd64.deb"
-        wget -q "https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%20${LAZ_VER}/fpc-src_${FPC_VER_LINUX}_amd64.deb"
-        wget -q "https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%20${LAZ_VER}/lazarus-project_${LAZ_VER}_amd64.deb"
+        
+        # Use curl with retry and follow redirects for SourceForge
+        curl -L -o "fpc-laz_${FPC_VER_LINUX}_amd64.deb" \
+          "https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%20${LAZ_VER}/fpc-laz_${FPC_VER_LINUX}_amd64.deb/download" \
+          || { echo "Failed to download fpc-laz"; exit 1; }
+        
+        curl -L -o "fpc-src_${FPC_VER_LINUX}_amd64.deb" \
+          "https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%20${LAZ_VER}/fpc-src_${FPC_VER_LINUX}_amd64.deb/download" \
+          || { echo "Failed to download fpc-src"; exit 1; }
+        
+        curl -L -o "lazarus-project_${LAZ_VER}_amd64.deb" \
+          "https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%20${LAZ_VER}/lazarus-project_${LAZ_VER}_amd64.deb/download" \
+          || { echo "Failed to download lazarus-project"; exit 1; }
         
         sudo apt-get update
         sudo dpkg -i fpc-laz_${FPC_VER_LINUX}_amd64.deb fpc-src_${FPC_VER_LINUX}_amd64.deb lazarus-project_${LAZ_VER}_amd64.deb || true
@@ -58,10 +68,42 @@ jobs:
       if: matrix.os == 'windows-latest'
       shell: pwsh
       run: |
-        $LazUrl = "https://sourceforge.net/projects/lazarus/files/Lazarus%20Windows%2064%20bits/Lazarus%20${env:LAZ_VER}/lazarus-${env:LAZ_VER}-fpc-${env:FPC_VER_WINDOWS}-win64.exe/download"
-        Invoke-WebRequest -Uri $LazUrl -OutFile "lazarus-setup.exe"
-        Start-Process -FilePath ".\lazarus-setup.exe" -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /DIR=C:\lazarus" -Wait -NoNewWindow
-        echo "C:\lazarus" >> $env:GITHUB_PATH
+        $LazUrl = "https://sourceforge.net/projects/lazarus/files/Lazarus%20Windows%2064%20bits/Lazarus%20${env:LAZ_VER}/lazarus-${env:LAZ_VER}-fpc-${env:FPC_VER_WINDOWS}-win64.exe"
+        
+        Write-Host "Downloading Lazarus from: $LazUrl"
+        try {
+          # Use -UseBasicParsing to avoid IE COM object issues and follow redirects properly
+          $ProgressPreference = 'SilentlyContinue'
+          Invoke-WebRequest -Uri $LazUrl -OutFile "lazarus-setup.exe" -ErrorAction Stop -UseBasicParsing
+        } catch {
+          Write-Error "Failed to download Lazarus: $_"
+          exit 1
+        }
+        
+        if (-not (Test-Path "lazarus-setup.exe")) {
+          Write-Error "Lazarus installer not found after download"
+          exit 1
+        }
+        
+        $fileSize = (Get-Item "lazarus-setup.exe").Length
+        Write-Host "Downloaded file size: $fileSize bytes"
+        
+        if ($fileSize -lt 1000000) {
+          Write-Error "Downloaded file is too small (likely an HTML page, not the installer)"
+          exit 1
+        }
+        
+        Write-Host "Installing Lazarus..."
+        $process = Start-Process -FilePath ".\lazarus-setup.exe" -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /DIR=C:\lazarus" -Wait -PassThru -NoNewWindow
+        
+        if ($process.ExitCode -ne 0) {
+          Write-Error "Lazarus installation failed with exit code $($process.ExitCode)"
+          exit $process.ExitCode
+        }
+        
+        Write-Host "Adding Lazarus to PATH..."
+        "C:\lazarus" >> $env:GITHUB_PATH
+        Write-Host "Lazarus installation completed successfully"
 
     - name: Install Lazarus (macOS)
       if: matrix.os == 'macos-latest'
@@ -73,8 +115,8 @@ jobs:
         LAZ_ZIP="lazarus-darwin-aarch64-${LAZ_VER}.zip"
         BASE_URL="https://sourceforge.net/projects/lazarus/files/Lazarus%20macOS%20aarch64/Lazarus%20${LAZ_VER}"
         
-        wget -q "${BASE_URL}/${FPC_DMG}"
-        wget -q "${BASE_URL}/${LAZ_ZIP}"
+        curl -L -o "$FPC_DMG" "${BASE_URL}/${FPC_DMG}" || { echo "FPC download failed"; exit 1; }
+        curl -L -o "$LAZ_ZIP" "${BASE_URL}/${LAZ_ZIP}" || { echo "Lazarus download failed"; exit 1; }
         
         echo "Installing FPC..."
         hdiutil attach $FPC_DMG
@@ -88,9 +130,16 @@ jobs:
         xattr -cr $LAZ_ZIP
         unzip -q $LAZ_ZIP -d $HOME/lazarus_install
         
-        # Locate the directory containing lazbuild and map it to GITHUB_PATH
+        # Locate the directory containing lazbuild
         LAZ_BIN_DIR=$(dirname $(find $HOME/lazarus_install -name lazbuild | head -n 1))
+        LAZ_ROOT_DIR=$(dirname $LAZ_BIN_DIR)
+        
+        echo "Lazarus binary directory: $LAZ_BIN_DIR"
+        echo "Lazarus root directory: $LAZ_ROOT_DIR"
+        
+        # Add to PATH and set environment variable for lazbuild
         echo "$LAZ_BIN_DIR" >> $GITHUB_PATH
+        echo "LAZARUS_DIR=$LAZ_ROOT_DIR" >> $GITHUB_ENV
 
     # ==========================================
     # 2. Fetch dependencies via GIT
