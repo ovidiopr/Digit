@@ -133,14 +133,10 @@ jobs:
         [ -z "$FPC_BIN" ] && { echo "FPC not found in /usr/local/bin"; exit 1; }
         echo "Found FPC: $FPC_BIN"
 
-        # Create user FPC config pointing to the installed FPC
-        {
-          echo "-k-ld_classic"
-          echo "-FD/usr/local/bin"
-        } > "$HOME/.fpc.cfg"
-        chmod 644 "$HOME/.fpc.cfg"
-        echo "Wrote $HOME/.fpc.cfg:"
-        cat "$HOME/.fpc.cfg"
+        # Add -k-ld_classic to global FPC config
+        sudo bash -c 'echo "-k-ld_classic" >> /etc/fpc.cfg'
+        echo "Updated /etc/fpc.cfg:"
+        cat /etc/fpc.cfg
 
     # ==========================================
     # 2. Fetch dependencies via GIT
@@ -183,9 +179,12 @@ jobs:
       run: |
         # Install NSIS
         choco install nsis -y
-        # Create installer using NSIS
-        & "C:\ProgramData\chocolatey\lib\nsis\tools\nsis\makensis.exe" windows/Digit.nsi
-
+        # Refresh PATH to pick up new installations
+        $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+        # Find makensis.exe and use it
+        $makensis = & where.exe makensis.exe 2>$null | Select-Object -First 1
+        if (-not $makensis) { throw "makensis.exe not found" }
+        & "$makensis" windows/Digit.nsi
     # ==========================================
     # 4. Export artifacts to Release
     # ==========================================
