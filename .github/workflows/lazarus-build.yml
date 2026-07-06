@@ -1,0 +1,145 @@
+name: Build and Package Digit
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+env:
+  # Update these variables for new Lazarus releases
+  LAZ_VER: "4.8" 
+  FPC_VER: "3.2.4"
+
+jobs:
+  build:
+    name: Package on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: Digit-Debian
+            pattern: "*.deb"
+          - os: macos-latest
+            artifact_name: Digit-macOS
+            pattern: "*.dmg"
+          - os: windows-latest
+            artifact_name: Digit-Windows
+            pattern: "*.exe"
+
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+
+    # ==========================================
+    # 1. Native Lazarus Installation
+    # ==========================================
+    
+    - name: Install Lazarus (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        echo "Downloading Lazarus and FPC..."
+        wget -q "https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%20${LAZ_VER}/fpc-laz_${FPC_VER}_amd64.deb"
+        wget -q "https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%20${LAZ_VER}/fpc-src_${FPC_VER}_amd64.deb"
+        wget -q "https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%20${LAZ_VER}/lazarus-project_${LAZ_VER}_amd64.deb"
+        
+        sudo apt-get update
+        sudo dpkg -i fpc-laz_${FPC_VER}_amd64.deb fpc-src_${FPC_VER}_amd64.deb lazarus-project_${LAZ_VER}_amd64.deb || true
+        # Resolve missing GTK dependencies
+        sudo apt-get install -f -y
+
+    - name: Install Lazarus (Windows)
+      if: matrix.os == 'windows-latest'
+      shell: pwsh
+      run: |
+        $LazUrl = "https://sourceforge.net/projects/lazarus/files/Lazarus%20Windows%2064%20bits/Lazarus%20${env:LAZ_VER}/lazarus-${env:LAZ_VER}-fpc-${env:FPC_VER}-win64.exe/download"
+        Invoke-WebRequest -Uri $LazUrl -OutFile "lazarus-setup.exe"
+        Start-Process -FilePath ".\lazarus-setup.exe" -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /DIR=C:\lazarus" -Wait -NoNewWindow
+        echo "C:\lazarus" >> $env:GITHUB_PATH
+
+    - name: Install Lazarus (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        echo "Downloading Lazarus and FPC for macOS (aarch64)..."
+        
+        # SourceForge naming conventions for macOS Apple Silicon
+        FPC_DMG="fpc-${FPC_VER}.intelarm64-macosx.dmg"
+        LAZ_ZIP="lazarus-darwin-aarch64-${LAZ_VER}.zip"
+        BASE_URL="https://sourceforge.net/projects/lazarus/files/Lazarus%20macOS%20aarch64/Lazarus%20${LAZ_VER}"
+        
+        wget -q "${BASE_URL}/${FPC_DMG}"
+        wget -q "${BASE_URL}/${LAZ_ZIP}"
+        
+        echo "Installing FPC..."
+        hdiutil attach $FPC_DMG
+        # Dynamically find the .pkg file inside the mounted volume
+        PKG_FILE=$(find /Volumes/fpc* -name "*.pkg" | head -n 1)
+        sudo installer -pkg "$PKG_FILE" -target /
+        hdiutil detach $(df | grep '/Volumes/fpc' | awk '{print $1}')
+        
+        echo "Extracting Lazarus IDE..."
+        # Unmark quarantine flag before extraction
+        xattr -cr $LAZ_ZIP
+        unzip -q $LAZ_ZIP -d $HOME/lazarus_install
+        
+        # Locate the directory containing lazbuild and map it to GITHUB_PATH
+        LAZ_BIN_DIR=$(dirname $(find $HOME/lazarus_install -name lazbuild | head -n 1))
+        echo "$LAZ_BIN_DIR" >> $GITHUB_PATH
+
+    # ==========================================
+    # 2. Fetch dependencies via GIT
+    # ==========================================
+    
+    - name: Clone & Register Package Dependencies
+      shell: bash
+      run: |
+        # Store packages one directory above the workspace so they don't get compiled into artifacts
+        mkdir -p ../lazarus-libs
+        cd ../lazarus-libs
+
+        # Fetch latest source directly from authors (bypassing OPM entirely)
+        git clone https://github.com/bgrabitmap/bgrabitmap.git
+        git clone https://github.com/bgrabitmap/bgracontrols.git
+        git clone https://github.com/ovidiopr/ExtTabCtrls.git
+
+        # Register packages with lazbuild (order matters for dependencies)
+        lazbuild --add-package-link bgrabitmap/bgrabitmap/bgrabitmappack.lpk
+        lazbuild --add-package-link bgracontrols/bgracontrols.lpk
+        lazbuild --add-package-link ExtTabCtrls/components/exttabctrls.lpk 
+
+    # ==========================================
+    # 3. Compile and package
+    # ==========================================
+
+    - name: Compile Application
+      run: lazbuild Digit.lpi
+
+    - name: Package Debian (.deb)
+      if: matrix.os == 'ubuntu-latest'
+      run: make build_deb 
+
+    - name: Package macOS (.dmg)
+      if: matrix.os == 'macos-latest'
+      run: make build_dmg
+
+    - name: Setup NSIS (Windows)
+      if: matrix.os == 'windows-latest'
+      uses: purplehatstands/install-nsis@v2
+      with:
+        nsis-version: 3.08
+
+    - name: Package Windows Installer (.exe)
+      if: matrix.os == 'windows-latest'
+      run: makensis windows/Digit.nsi
+
+    # ==========================================
+    # 4. Export artifacts
+    # ==========================================
+
+    - name: Upload Final Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: ${{ matrix.pattern }}
