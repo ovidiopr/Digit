@@ -50,7 +50,7 @@ jobs:
 
         wget ${BASE_URL}/fpc-laz_${FPC_VER_LINUX}_amd64.deb/download -O fpc-laz_${FPC_VER_LINUX}_amd64.deb
         wget ${BASE_URL}/fpc-src_${FPC_VER_LINUX}_amd64.deb/download -O fpc-src_${FPC_VER_LINUX}_amd64.deb
-        wget ${BASE_URL}/lazarus-project_${LAZ_VER}_amd64.deb/download -O lazarus-project_${LAZ_VER}_amd64.deb
+        wget ${BASE_URL}/lazarus-project_${LAZ_VER}.0-0_amd64.deb/download -O lazarus-project_${LAZ_VER}_amd64.deb
 
         sudo apt-get update
         sudo dpkg -i fpc-laz_${FPC_VER_LINUX}_amd64.deb fpc-src_${FPC_VER_LINUX}_amd64.deb lazarus-project_${LAZ_VER}_amd64.deb
@@ -60,7 +60,7 @@ jobs:
 
     - name: Install Lazarus (Windows)
       if: matrix.os == 'windows-latest'
-      shell: pwsh
+      shell: powershell
       run: |
         $BaseUrl = "https://sourceforge.net/projects/lazarus/files/Lazarus%20Windows%2064%20bits/Lazarus%20${env:LAZ_VER}/lazarus-${env:LAZ_VER}-fpc-${env:FPC_VER_WINDOWS}-win64.exe"
         
@@ -69,7 +69,6 @@ jobs:
         Invoke-WebRequest -Uri "${BaseUrl}/download" -OutFile ".\lazarus-setup.exe" -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
 
         Write-Host "Installing Lazarus..."
-        Invoke-WebRequest -Uri $LazUrl -OutFile "lazarus-setup.exe"
         Start-Process -FilePath ".\lazarus-setup.exe" -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /DIR=C:\lazarus" -Wait -NoNewWindow
 
         "C:\lazarus" >> $env:GITHUB_PATH
