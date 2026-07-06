@@ -75,13 +75,13 @@ build_deb: clean build
 	mkdir -p $(PKGROOT)/usr/share/icons/hicolor/256x256/apps
 	mkdir -p $(PKGROOT)/usr/share/icons/hicolor/128x128/apps
 	mkdir -p $(PKGROOT)/usr/share/icons/hicolor/64x64/apps
-	cp icons/$(APP)/$(APP).svg \
+	cp icons/$(APP).svg \
 		$(PKGROOT)/usr/share/icons/hicolor/scalable/apps/$(APP).svg
-	cp icons/$(APP)/$(APP)_256.png \
+	cp icons/$(APP)_256.png \
 		$(PKGROOT)/usr/share/icons/hicolor/256x256/apps/$(APP).png
-	cp icons/$(APP)/$(APP)_128.png \
+	cp icons/$(APP)_128.png \
 		$(PKGROOT)/usr/share/icons/hicolor/128x128/apps/$(APP).png
-	cp icons/$(APP)/$(APP)_64.png \
+	cp icons/$(APP)_64.png \
 		$(PKGROOT)/usr/share/icons/hicolor/64x64/apps/$(APP).png
 	fakeroot dpkg-deb --build $(PKGROOT) $(APP)_$(VERSION)_$(DEB_ARCH).deb
 

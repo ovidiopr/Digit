@@ -160,7 +160,19 @@ jobs:
 
     - name: Setup NSIS (Windows)
       if: matrix.os == 'windows-latest'
-      run: choco install nsis -y
+      run: |
+        choco install nsis -y
+        # Add NSIS to PATH explicitly
+        $nsisPath = "C:\Program Files\NSIS"
+        if (Test-Path $nsisPath) {
+          Write-Host "NSIS found at $nsisPath"
+          "$nsisPath" >> $env:GITHUB_PATH
+          # Refresh PATH for subsequent steps
+          $env:PATH = "$nsisPath;$env:PATH"
+        } else {
+          Write-Error "NSIS installation failed"
+          exit 1
+        }
 
     - name: Package Windows Installer (.exe)
       if: matrix.os == 'windows-latest'
