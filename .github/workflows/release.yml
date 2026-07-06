@@ -128,9 +128,7 @@ jobs:
 
     - name: Setup NSIS (Windows)
       if: matrix.os == 'windows-latest'
-      uses: purplehatstands/install-nsis@v2
-      with:
-        nsis-version: 3.08
+      run: choco install nsis -y
 
     - name: Package Windows Installer (.exe)
       if: matrix.os == 'windows-latest'
