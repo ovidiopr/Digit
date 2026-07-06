@@ -1,5 +1,5 @@
 APP            := digit
-VERSION        := 4.0
+VERSION        := 4.1
 BUILD          := build/release
 PKGROOT        := $(APP)_$(VERSION)
 UNAME_M        := $(shell uname -m)

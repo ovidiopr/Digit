@@ -1,5 +1,5 @@
 Package: digit
-Version: 4.0
+Version: 4.1
 Section: utils
 Priority: optional
 Architecture: @ARCH@

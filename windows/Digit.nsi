@@ -4,7 +4,7 @@
 !define PRODUCT_NAME "Digit"
 !define PRODUCT_ARCH "win64-x86_64"
 !define EXE_NAME "${PRODUCT_NAME}.exe"
-!define PRODUCT_VERSION "v3.0"
+!define PRODUCT_VERSION "v4.1"
 !define PRODUCT_PUBLISHER "Ovidio Y. Peña Rodríguez"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\${EXE_NAME}"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
