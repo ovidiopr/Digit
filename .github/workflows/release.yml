@@ -167,7 +167,7 @@ jobs:
 
     - name: Package macOS (.dmg)
       if: matrix.os == 'macos-latest'
-      run: make build_dmg
+      run: make build_dmg LAZARUS_DIR="$LAZARUS_DIR"
 
     - name: Package Windows Installer (.exe)
       if: matrix.os == 'windows-latest'
@@ -176,7 +176,7 @@ jobs:
         choco install nsis -y
         
         # Add NSIS dir to PATH
-        $env:Path += ";C:\ProgramData\chocolatey\lib\nsis"
+        $env:Path += ";C:\ProgramData\chocolatey\bin"
         
         makensis windows/Digit.nsi
 
