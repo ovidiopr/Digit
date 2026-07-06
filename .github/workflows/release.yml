@@ -128,12 +128,19 @@ jobs:
         echo "$LAZARUS_DIR" >> $GITHUB_PATH
         echo "LAZARUS_DIR=$LAZARUS_DIR" >> $GITHUB_ENV
 
-        # create user FPC config with only the needed linker flag
-        printf '%s\n' '-k-ld_classic' > "$HOME/.fpc.cfg"
+        # Verify FPC installation
+        FPC_BIN=$(find /usr/local/bin -name "ppc*" -type f 2>/dev/null | head -n 1)
+        [ -z "$FPC_BIN" ] && { echo "FPC not found in /usr/local/bin"; exit 1; }
+        echo "Found FPC: $FPC_BIN"
+
+        # Create user FPC config pointing to the installed FPC
+        {
+          echo "-k-ld_classic"
+          echo "-FD/usr/local/bin"
+        } > "$HOME/.fpc.cfg"
         chmod 644 "$HOME/.fpc.cfg"
         echo "Wrote $HOME/.fpc.cfg:"
-        sed -n '1,50p' "$HOME/.fpc.cfg"
-
+        cat "$HOME/.fpc.cfg"
 
     # ==========================================
     # 2. Fetch dependencies via GIT
@@ -177,7 +184,7 @@ jobs:
         # Install NSIS
         choco install nsis -y
         # Create installer using NSIS
-        C:\ProgramData\chocolatey\lib\nsis\tools\nsis\makensis.exe windows/Digit.nsi
+        & "C:\ProgramData\chocolatey\lib\nsis\tools\nsis\makensis.exe" windows/Digit.nsi
 
     # ==========================================
     # 4. Export artifacts to Release
