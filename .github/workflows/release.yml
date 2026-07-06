@@ -53,6 +53,21 @@ jobs:
         wget ${BASE_URL}/lazarus-project_${LAZ_VER}.0-0_amd64.deb/download -O lazarus-project_${LAZ_VER}_amd64.deb
 
         sudo apt-get update
+
+        # Install all Lazarus dependencies
+        sudo apt-get install -y \
+          libgtk2.0-dev \
+          libgtk2.0-0 \
+          libglib2.0-0 \
+          libx11-6 \
+          libxext6 \
+          libxrender1 \
+          libcairo2 \
+          libpango-1.0-0 \
+          libpangocairo-1.0-0 \
+          libgdk-pixbuf2.0-0 \
+          libatk1.0-0
+
         sudo dpkg -i fpc-laz_${FPC_VER_LINUX}_amd64.deb fpc-src_${FPC_VER_LINUX}_amd64.deb lazarus-project_${LAZ_VER}_amd64.deb
         sudo apt-get install -f -y
 
@@ -72,6 +87,7 @@ jobs:
         Start-Process -FilePath ".\lazarus-setup.exe" -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /DIR=C:\lazarus" -Wait -NoNewWindow
 
         "C:\lazarus" >> $env:GITHUB_PATH
+        "C:\lazarus\fpc\3.2.2\bin\x86_64-win64" >> $env:GITHUB_PATH
         Write-Host "Lazarus installation completed"
 
     - name: Install Lazarus (macOS)
@@ -97,11 +113,14 @@ jobs:
         xattr -cr "$LAZ_ZIP"
         unzip -q "$LAZ_ZIP" -d "$HOME/lazarus_install"
 
-        LAZ_BIN_DIR=$(dirname $(find "$HOME/lazarus_install" -name lazbuild -type f 2>/dev/null | head -n 1))
-        [ -z "$LAZ_BIN_DIR" ] && { echo "lazbuild not found"; exit 1; }
+        # Find the lazarus directory (handle cases where it might be nested)
+        LAZARUS_DIR=$(find "$HOME/lazarus_install" -maxdepth 2 -type d -name lazarus | head -n 1)
+        [ -z "$LAZARUS_DIR" ] && { echo "Lazarus directory not found"; exit 1; }
+        [ ! -d "$LAZARUS_DIR/lcl" ] && { echo "lcl directory not found in $LAZARUS_DIR"; exit 1; }
 
-        echo "$LAZ_BIN_DIR" >> $GITHUB_PATH
-        echo "LAZARUS_DIR=$(dirname "$LAZ_BIN_DIR")" >> $GITHUB_ENV
+        # Add lazbuild to PATH
+        echo "$LAZARUS_DIR" >> $GITHUB_PATH
+        echo "LAZARUS_DIR=$LAZARUS_DIR" >> $GITHUB_ENV
 
     # ==========================================
     # 2. Fetch dependencies via GIT
@@ -129,7 +148,7 @@ jobs:
     # ==========================================
 
     - name: Compile Application
-      run: lazbuild --lazarusdir="$LAZARUS_DIR" Digit.lpi
+      run: lazbuild --lazarusdir="$LAZARUS_DIR" src/digit.lpi
 
     - name: Package Debian (.deb)
       if: matrix.os == 'ubuntu-latest'
