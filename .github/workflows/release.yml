@@ -46,31 +46,61 @@ jobs:
       run: |
         echo "Downloading Lazarus and FPC..."
         
-        # Use curl with retry and follow redirects for SourceForge
-        curl -L -o "fpc-laz_${FPC_VER_LINUX}_amd64.deb" \
-          "https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%20${LAZ_VER}/fpc-laz_${FPC_VER_LINUX}_amd64.deb/download" \
-          || { echo "Failed to download fpc-laz"; exit 1; }
+        BASE_URL="https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%20${LAZ_VER}"
         
-        curl -L -o "fpc-src_${FPC_VER_LINUX}_amd64.deb" \
-          "https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%20${LAZ_VER}/fpc-src_${FPC_VER_LINUX}_amd64.deb/download" \
-          || { echo "Failed to download fpc-src"; exit 1; }
+        # Extract actual download URL from SourceForge redirect
+        download_file() {
+          local url=$1
+          local output=$2
+          echo "Fetching: $url"
+          # Get the redirect target without following it
+          local redirect_url=$(curl -s -I "$url/download" | grep -i "^location:" | cut -d' ' -f2 | tr -d '\r')
+          if [ -z "$redirect_url" ]; then
+            echo "Failed to get redirect URL for $output"
+            return 1
+          fi
+          echo "Downloading from: $redirect_url"
+          curl -L -o "$output" "$redirect_url" || return 1
+        }
         
-        curl -L -o "lazarus-project_${LAZ_VER}_amd64.deb" \
-          "https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%20${LAZ_VER}/lazarus-project_${LAZ_VER}_amd64.deb/download" \
-          || { echo "Failed to download lazarus-project"; exit 1; }
+        download_file "${BASE_URL}/fpc-laz_${FPC_VER_LINUX}_amd64.deb" "fpc-laz_${FPC_VER_LINUX}_amd64.deb" || exit 1
+        download_file "${BASE_URL}/fpc-src_${FPC_VER_LINUX}_amd64.deb" "fpc-src_${FPC_VER_LINUX}_amd64.deb" || exit 1
+        download_file "${BASE_URL}/lazarus-project_${LAZ_VER}_amd64.deb" "lazarus-project_${LAZ_VER}_amd64.deb" || exit 1
+        
+        # Validate downloaded files are actual Debian archives
+        for file in fpc-laz_${FPC_VER_LINUX}_amd64.deb fpc-src_${FPC_VER_LINUX}_amd64.deb lazarus-project_${LAZ_VER}_amd64.deb; do
+          SIZE=$(stat -c%s "$file" 2>/dev/null || echo 0)
+          if [ "$SIZE" -lt 5000000 ]; then
+            echo "ERROR: $file is too small ($SIZE bytes)"
+            file "$file" || head -c 200 "$file"
+            exit 1
+          fi
+        done
         
         sudo apt-get update
-        sudo dpkg -i fpc-laz_${FPC_VER_LINUX}_amd64.deb fpc-src_${FPC_VER_LINUX}_amd64.deb lazarus-project_${LAZ_VER}_amd64.deb || true
-        # Resolve missing GTK dependencies
+        sudo dpkg -i fpc-laz_${FPC_VER_LINUX}_amd64.deb fpc-src_${FPC_VER_LINUX}_amd64.deb lazarus-project_${LAZ_VER}_amd64.deb
         sudo apt-get install -f -y
+        
+        which lazbuild || { echo "ERROR: lazbuild not found"; exit 1; }
 
     - name: Install Lazarus (Windows)
       if: matrix.os == 'windows-latest'
       shell: pwsh
       run: |
-        $LazUrl = "https://sourceforge.net/projects/lazarus/files/Lazarus%20Windows%2064%20bits/Lazarus%20${env:LAZ_VER}/lazarus-${env:LAZ_VER}-fpc-${env:FPC_VER_WINDOWS}-win64.exe/download"
+        $BaseUrl = "https://sourceforge.net/projects/lazarus/files/Lazarus%20Windows%2064%20bits/Lazarus%20${env:LAZ_VER}/lazarus-${env:LAZ_VER}-fpc-${env:FPC_VER_WINDOWS}-win64.exe"
         
-        Write-Host "Downloading Lazarus from: $LazUrl"
+        Write-Host "Getting download URL from SourceForge..."
+        
+        # Extract actual download URL from redirect
+        $response = Invoke-WebRequest -Uri "${BaseUrl}/download" -MaximumRedirection 0 -ErrorAction SilentlyContinue
+        $downloadUrl = $response.Headers['Location']
+        
+        if (-not $downloadUrl) {
+          Write-Error "Failed to extract download URL from SourceForge"
+          exit 1
+        }
+        
+        Write-Host "Download URL: $downloadUrl"
         
         # Retry logic with exponential backoff
         $maxRetries = 3
@@ -82,29 +112,31 @@ jobs:
             $retryCount++
             Write-Host "Download attempt $retryCount of $maxRetries..."
             $ProgressPreference = 'SilentlyContinue'
-            Invoke-WebRequest -Uri $LazUrl -OutFile "lazarus-setup.exe" -ErrorAction Stop -UseBasicParsing
+            Invoke-WebRequest -Uri $downloadUrl -OutFile "lazarus-setup.exe" -ErrorAction Stop -UseBasicParsing
             $downloaded = $true
           } catch {
             if ($retryCount -lt $maxRetries) {
-              Write-Host "Download failed, retrying in 10 seconds..."
-              Start-Sleep -Seconds 10
+              Write-Host "Download failed, retrying in 15 seconds..."
+              Start-Sleep -Seconds 15
             } else {
-              Write-Error "Failed to download Lazarus after $maxRetries attempts: $_"
+              Write-Error "Failed to download Lazarus: $_"
               exit 1
             }
           }
         }
         
-        if (-not (Test-Path "lazarus-setup.exe")) {
-          Write-Error "Lazarus installer not found after download"
-          exit 1
-        }
-        
         $fileSize = (Get-Item "lazarus-setup.exe").Length
         Write-Host "Downloaded file size: $fileSize bytes"
         
-        if ($fileSize -lt 50000000) {  # 50 MB threshold
-          Write-Error "Downloaded file is too small (likely an HTML page, not the installer)"
+        # Validate PE header (MZ)
+        $header = Get-Content "lazarus-setup.exe" -AsByteStream -TotalCount 2
+        if ($header[0] -ne 0x4D -or $header[1] -ne 0x5A) {
+          Write-Error "Downloaded file is not a valid Windows executable"
+          exit 1
+        }
+        
+        if ($fileSize -lt 100000000) {
+          Write-Error "Downloaded file is too small ($fileSize bytes)"
           exit 1
         }
         
@@ -112,49 +144,65 @@ jobs:
         $process = Start-Process -FilePath ".\lazarus-setup.exe" -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /DIR=C:\lazarus" -Wait -PassThru -NoNewWindow
         
         if ($process.ExitCode -ne 0) {
-          Write-Error "Lazarus installation failed with exit code $($process.ExitCode)"
+          Write-Error "Installation failed with exit code $($process.ExitCode)"
           exit $process.ExitCode
         }
         
-        Write-Host "Adding Lazarus to PATH..."
         "C:\lazarus" >> $env:GITHUB_PATH
-        Write-Host "Lazarus installation completed successfully"
+        Write-Host "Lazarus installation completed"
 
     - name: Install Lazarus (macOS)
       if: matrix.os == 'macos-latest'
       run: |
-        echo "Downloading Lazarus and FPC for macOS (aarch64)..."
+        echo "Downloading Lazarus and FPC for macOS..."
         
-        # SourceForge naming conventions for macOS Apple Silicon
+        BASE_URL="https://sourceforge.net/projects/lazarus/files/Lazarus%20macOS%20aarch64/Lazarus%20${LAZ_VER}"
         FPC_DMG="fpc-${FPC_VER_MACOS}.intelarm64-macosx.dmg"
         LAZ_ZIP="lazarus-darwin-aarch64-${LAZ_VER}.zip"
-        BASE_URL="https://sourceforge.net/projects/lazarus/files/Lazarus%20macOS%20aarch64/Lazarus%20${LAZ_VER}"
         
-        curl -L -o "$FPC_DMG" "${BASE_URL}/${FPC_DMG}" || { echo "FPC download failed"; exit 1; }
-        curl -L -o "$LAZ_ZIP" "${BASE_URL}/${LAZ_ZIP}" || { echo "Lazarus download failed"; exit 1; }
+        # Extract actual download URL from SourceForge redirect
+        download_file() {
+          local url=$1
+          local output=$2
+          echo "Fetching: $url"
+          local redirect_url=$(curl -s -I "$url/download" | grep -i "^location:" | cut -d' ' -f2 | tr -d '\r')
+          if [ -z "$redirect_url" ]; then
+            echo "Failed to get redirect URL for $output"
+            return 1
+          fi
+          echo "Downloading from: $redirect_url"
+          curl -L -o "$output" "$redirect_url" || return 1
+        }
+        
+        download_file "${BASE_URL}/${FPC_DMG}" "$FPC_DMG" || exit 1
+        download_file "${BASE_URL}/${LAZ_ZIP}" "$LAZ_ZIP" || exit 1
+        
+        # Validate file sizes
+        FPC_SIZE=$(stat -f%z "$FPC_DMG")
+        LAZ_SIZE=$(stat -f%z "$LAZ_ZIP")
+        echo "FPC DMG: $FPC_SIZE bytes | Lazarus ZIP: $LAZ_SIZE bytes"
+        
+        if [ "$FPC_SIZE" -lt 50000000 ] || [ "$LAZ_SIZE" -lt 100000000 ]; then
+          echo "ERROR: Files too small"
+          exit 1
+        fi
         
         echo "Installing FPC..."
-        hdiutil attach $FPC_DMG
-        # Dynamically find the .pkg file inside the mounted volume
-        PKG_FILE=$(find /Volumes/fpc* -name "*.pkg" | head -n 1)
+        hdiutil attach "$FPC_DMG"
+        PKG_FILE=$(find /Volumes/fpc* -name "*.pkg" -type f 2>/dev/null | head -n 1)
+        [ -z "$PKG_FILE" ] && { echo "No .pkg found"; exit 1; }
         sudo installer -pkg "$PKG_FILE" -target /
         hdiutil detach $(df | grep '/Volumes/fpc' | awk '{print $1}')
         
-        echo "Extracting Lazarus IDE..."
-        # Unmark quarantine flag before extraction
-        xattr -cr $LAZ_ZIP
-        unzip -q $LAZ_ZIP -d $HOME/lazarus_install
+        echo "Extracting Lazarus..."
+        xattr -cr "$LAZ_ZIP"
+        unzip -q "$LAZ_ZIP" -d "$HOME/lazarus_install"
         
-        # Locate the directory containing lazbuild
-        LAZ_BIN_DIR=$(dirname $(find $HOME/lazarus_install -name lazbuild | head -n 1))
-        LAZ_ROOT_DIR=$(dirname $LAZ_BIN_DIR)
+        LAZ_BIN_DIR=$(dirname $(find "$HOME/lazarus_install" -name lazbuild -type f 2>/dev/null | head -n 1))
+        [ -z "$LAZ_BIN_DIR" ] && { echo "lazbuild not found"; exit 1; }
         
-        echo "Lazarus binary directory: $LAZ_BIN_DIR"
-        echo "Lazarus root directory: $LAZ_ROOT_DIR"
-        
-        # Add to PATH and set environment variable for lazbuild
         echo "$LAZ_BIN_DIR" >> $GITHUB_PATH
-        echo "LAZARUS_DIR=$LAZ_ROOT_DIR" >> $GITHUB_ENV
+        echo "LAZARUS_DIR=$(dirname "$LAZ_BIN_DIR")" >> $GITHUB_ENV
 
     # ==========================================
     # 2. Fetch dependencies via GIT
