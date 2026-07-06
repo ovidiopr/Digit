@@ -122,6 +122,13 @@ jobs:
         echo "$LAZARUS_DIR" >> $GITHUB_PATH
         echo "LAZARUS_DIR=$LAZARUS_DIR" >> $GITHUB_ENV
 
+        # create user FPC config with only the needed linker flag
+        printf '%s\n' '-k-ld_classic' > "$HOME/.fpc.cfg"
+        chmod 644 "$HOME/.fpc.cfg"
+        echo "Wrote $HOME/.fpc.cfg:"
+        sed -n '1,50p' "$HOME/.fpc.cfg"
+
+
     # ==========================================
     # 2. Fetch dependencies via GIT
     # ==========================================
@@ -147,14 +154,8 @@ jobs:
     # 3. Compile and package
     # ==========================================
 
-    - name: Compile Application (Windows, Linux)
-      if: matrix.os != 'macos-latest'
+    - name: Compile Application
       run: lazbuild --lazarusdir="$LAZARUS_DIR" --build-mode=Release src/digit.lpi
-
-    - name: Compile Application (macOS)
-      if: matrix.os == 'macos-latest'
-      shell: bash
-      run: lazbuild --lazarusdir="$LAZARUS_DIR" --build-mode=Release "-k-ld_classic" src/digit.lpi
 
     - name: Package Debian (.deb)
       if: matrix.os == 'ubuntu-latest'
@@ -164,25 +165,13 @@ jobs:
       if: matrix.os == 'macos-latest'
       run: make build_dmg
 
-    - name: Setup NSIS (Windows)
-      if: matrix.os == 'windows-latest'
-      run: |
-        choco install nsis -y
-        # Add NSIS to PATH explicitly
-        $nsisPath = "C:\ProgramData\chocolatey\lib\nsis\tools\nsis"
-        if (Test-Path $nsisPath) {
-          Write-Host "NSIS found at $nsisPath"
-          "$nsisPath" >> $env:GITHUB_PATH
-          # Refresh PATH for subsequent steps
-          $env:PATH = "$nsisPath;$env:PATH"
-        } else {
-          Write-Error "NSIS installation failed"
-          exit 1
-        }
-
     - name: Package Windows Installer (.exe)
       if: matrix.os == 'windows-latest'
-      run: makensis windows/Digit.nsi
+      run: |
+        # Install NSIS
+        choco install nsis -y
+        # Create installer using NSIS
+        C:\ProgramData\chocolatey\lib\nsis\tools\nsis\makensis windows/Digit.nsi
 
     # ==========================================
     # 4. Export artifacts to Release
