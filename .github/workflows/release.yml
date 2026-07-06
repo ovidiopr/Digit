@@ -11,9 +11,6 @@ permissions:
 env:
   # Update these variables for new Lazarus releases
   LAZ_VER: "4.8" 
-  FPC_VER_LINUX: "3.2.2-210709"
-  FPC_VER_MACOS: "3.2.4rc1a"
-  FPC_VER_WINDOWS: "3.2.2"
 
 jobs:
   build:
@@ -26,12 +23,21 @@ jobs:
           - os: ubuntu-latest
             artifact_name: Digit-Debian
             pattern: "*.deb"
+            FPC_VER: "3.2.2-210709"
+            ARCH_VER: "amd64"
+          - os: ubuntu-24.04-arm
+            artifact_name: Digit-RaspberryPi
+            pattern: "*.deb"
+            FPC_VER: "3.2.3-240813"
+            ARCH_VER: "arm64"
           - os: macos-latest
             artifact_name: Digit-macOS
             pattern: "*.dmg"
+            FPC_VER: "3.2.4rc1a"
           - os: windows-latest
             artifact_name: Digit-Windows
             pattern: "*.exe"
+            FPC_VER: "3.2.2"
 
     steps:
     - name: Checkout Source Code
@@ -41,16 +47,16 @@ jobs:
     # 1. Native Lazarus Installation
     # ==========================================
 
-    - name: Install Lazarus (Ubuntu)
-      if: matrix.os == 'ubuntu-latest'
+    - name: Install Lazarus (Ubuntu, Raspberry Pi)
+      if: runner.os == 'Linux'
       run: |
         echo "Downloading Lazarus and FPC..."
 
-        BASE_URL="https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%20${LAZ_VER}"
+        BASE_URL="https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20${{ matrix.ARCH_VER }}%20DEB/Lazarus%20${LAZ_VER}"
 
-        wget -q ${BASE_URL}/fpc-laz_${FPC_VER_LINUX}_amd64.deb/download -O fpc-laz_${FPC_VER_LINUX}_amd64.deb
-        wget -q ${BASE_URL}/fpc-src_${FPC_VER_LINUX}_amd64.deb/download -O fpc-src_${FPC_VER_LINUX}_amd64.deb
-        wget -q ${BASE_URL}/lazarus-project_${LAZ_VER}.0-0_amd64.deb/download -O lazarus-project_${LAZ_VER}_amd64.deb
+        wget -q ${BASE_URL}/fpc-laz_${{ matrix.FPC_VER }}_${{ matrix.ARCH_VER }}.deb/download -O fpc-laz_${{ matrix.FPC_VER }}_${{ matrix.ARCH_VER }}.deb
+        wget -q ${BASE_URL}/fpc-src_${{ matrix.FPC_VER }}_${{ matrix.ARCH_VER }}.deb/download -O fpc-src_${{ matrix.FPC_VER }}_${{ matrix.ARCH_VER }}.deb
+        wget -q ${BASE_URL}/lazarus-project_${LAZ_VER}.0-0_${{ matrix.ARCH_VER }}.deb/download -O lazarus-project_${LAZ_VER}_${{ matrix.ARCH_VER }}.deb
 
         sudo apt-get update
 
@@ -68,7 +74,7 @@ jobs:
           libgdk-pixbuf2.0-0 \
           libatk1.0-0
 
-        sudo dpkg -i fpc-laz_${FPC_VER_LINUX}_amd64.deb fpc-src_${FPC_VER_LINUX}_amd64.deb lazarus-project_${LAZ_VER}_amd64.deb
+        sudo dpkg -i fpc-laz_${{ matrix.FPC_VER }}_${{ matrix.ARCH_VER }}.deb fpc-src_${{ matrix.FPC_VER }}_${{ matrix.ARCH_VER }}.deb lazarus-project_${LAZ_VER}_${{ matrix.ARCH_VER }}.deb
         sudo apt-get install -f -y
 
         which lazbuild || { echo "ERROR: lazbuild not found"; exit 1; }
@@ -77,7 +83,7 @@ jobs:
       if: matrix.os == 'windows-latest'
       shell: powershell
       run: |
-        $BaseUrl = "https://sourceforge.net/projects/lazarus/files/Lazarus%20Windows%2064%20bits/Lazarus%20${env:LAZ_VER}/lazarus-${env:LAZ_VER}-fpc-${env:FPC_VER_WINDOWS}-win64.exe"
+        $BaseUrl = "https://sourceforge.net/projects/lazarus/files/Lazarus%20Windows%2064%20bits/Lazarus%20${env:LAZ_VER}/lazarus-${env:LAZ_VER}-fpc-${{ matrix.FPC_VER }}-win64.exe"
         
         Write-Host "Downloading Lazarus and FPC..."
         
@@ -87,7 +93,7 @@ jobs:
         Start-Process -FilePath ".\lazarus-setup.exe" -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /DIR=C:\lazarus" -Wait -NoNewWindow
 
         "C:\lazarus" >> $env:GITHUB_PATH
-        "C:\lazarus\fpc\3.2.2\bin\x86_64-win64" >> $env:GITHUB_PATH
+        "C:\lazarus\fpc\${{ matrix.FPC_VER }}\bin\x86_64-win64" >> $env:GITHUB_PATH
         Write-Host "Lazarus installation completed"
 
     - name: Install Lazarus (macOS)
@@ -96,7 +102,7 @@ jobs:
         echo "Downloading Lazarus and FPC for macOS..."
         
         BASE_URL="https://sourceforge.net/projects/lazarus/files/Lazarus%20macOS%20aarch64/Lazarus%20${LAZ_VER}"
-        FPC_DMG="fpc-${FPC_VER_MACOS}.intelarm64-macosx.dmg"
+        FPC_DMG="fpc-${{ matrix.FPC_VER }}.intelarm64-macosx.dmg"
         LAZ_ZIP="lazarus-darwin-aarch64-${LAZ_VER}.zip"
         
         wget -q ${BASE_URL}/${FPC_DMG}/download -O $FPC_DMG
@@ -146,19 +152,19 @@ jobs:
         git clone https://github.com/ovidiopr/ExtTabCtrls.git
 
         # Register packages with lazbuild (order matters for dependencies)
-        lazbuild --lazarusdir="$LAZARUS_DIR" --add-package-link bgrabitmap/bgrabitmap/bgrabitmappack.lpk
-        lazbuild --lazarusdir="$LAZARUS_DIR" --add-package-link bgracontrols/bgracontrols.lpk
-        lazbuild --lazarusdir="$LAZARUS_DIR" --add-package-link ExtTabCtrls/components/exttabctrls.lpk 
+        lazbuild ${LAZARUS_DIR:+--lazarusdir="$LAZARUS_DIR"} --add-package-link bgrabitmap/bgrabitmap/bgrabitmappack.lpk
+        lazbuild ${LAZARUS_DIR:+--lazarusdir="$LAZARUS_DIR"} --add-package-link bgracontrols/bgracontrols.lpk
+        lazbuild ${LAZARUS_DIR:+--lazarusdir="$LAZARUS_DIR"} --add-package-link ExtTabCtrls/components/exttabctrls.lpk 
 
     # ==========================================
     # 3. Compile and package
     # ==========================================
 
     - name: Compile Application
-      run: lazbuild --lazarusdir="$LAZARUS_DIR" --build-mode=Release src/digit.lpi
+      run: lazbuild ${LAZARUS_DIR:+--lazarusdir="$LAZARUS_DIR"} --build-mode=Release src/digit.lpi
 
     - name: Package Debian (.deb)
-      if: matrix.os == 'ubuntu-latest'
+      if: runner.os == 'Linux'
       run: make build_deb 
 
     - name: Package macOS (.dmg)
@@ -171,7 +177,7 @@ jobs:
         # Install NSIS
         choco install nsis -y
         # Create installer using NSIS
-        C:\ProgramData\chocolatey\lib\nsis\tools\nsis\makensis windows/Digit.nsi
+        C:\ProgramData\chocolatey\lib\nsis\tools\nsis\makensis.exe windows/Digit.nsi
 
     # ==========================================
     # 4. Export artifacts to Release
