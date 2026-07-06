@@ -128,11 +128,6 @@ jobs:
         echo "$LAZARUS_DIR" >> $GITHUB_PATH
         echo "LAZARUS_DIR=$LAZARUS_DIR" >> $GITHUB_ENV
 
-        # Verify FPC installation
-        FPC_BIN=$(find /usr/local/bin -name "ppc*" -type f 2>/dev/null | head -n 1)
-        [ -z "$FPC_BIN" ] && { echo "FPC not found in /usr/local/bin"; exit 1; }
-        echo "Found FPC: $FPC_BIN"
-
         # Add -k-ld_classic to global FPC config
         sudo bash -c 'echo "-k-ld_classic" >> /etc/fpc.cfg'
         echo "Updated /etc/fpc.cfg:"
@@ -179,12 +174,12 @@ jobs:
       run: |
         # Install NSIS
         choco install nsis -y
-        # Refresh PATH to pick up new installations
-        $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-        # Find makensis.exe and use it
-        $makensis = & where.exe makensis.exe 2>$null | Select-Object -First 1
-        if (-not $makensis) { throw "makensis.exe not found" }
-        & "$makensis" windows/Digit.nsi
+        
+        # Add NSIS dir to PATH
+        $env:Path += ";C:\ProgramData\chocolatey\lib\nsis"
+        
+        makensis windows/Digit.nsi
+
     # ==========================================
     # 4. Export artifacts to Release
     # ==========================================
