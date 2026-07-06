@@ -1,10 +1,12 @@
 name: Build and Package Digit
 
 on:
-  push:
-    branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
+  release:
+    types: [published]
+
+# Required to allow the workflow to upload files to the Release page
+permissions:
+  contents: write
 
 env:
   # Update these variables for new Lazarus releases
@@ -135,11 +137,10 @@ jobs:
       run: makensis windows/Digit.nsi
 
     # ==========================================
-    # 4. Export artifacts
+    # 4. Export artifacts to Release
     # ==========================================
 
-    - name: Upload Final Artifacts
-      uses: actions/upload-artifact@v4
+    - name: Upload to GitHub Release
+      uses: softprops/action-gh-release@v2
       with:
-        name: ${{ matrix.artifact_name }}
-        path: ${{ matrix.pattern }}
+        files: ${{ matrix.pattern }}
