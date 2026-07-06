@@ -147,13 +147,14 @@ jobs:
     # 3. Compile and package
     # ==========================================
 
-    - name: Compile Application
-      run: |
-        if [ "${{ matrix.os }}" = "macos-latest" ]; then
-          lazbuild --lazarusdir="$LAZARUS_DIR" --build-mode=Release -k-ld_classic src/digit.lpi
-        else
-          lazbuild --lazarusdir="$LAZARUS_DIR" --build-mode=Release src/digit.lpi
-        fi
+    - name: Compile Application (Windows, Linux)
+      if: matrix.os != 'macos-latest'
+      run: lazbuild --lazarusdir="$LAZARUS_DIR" --build-mode=Release src/digit.lpi
+
+    - name: Compile Application (macOS)
+      if: matrix.os == 'macos-latest'
+      shell: bash
+      run: lazbuild --lazarusdir="$LAZARUS_DIR" --build-mode=Release "-k-ld_classic" src/digit.lpi
 
     - name: Package Debian (.deb)
       if: matrix.os == 'ubuntu-latest'
