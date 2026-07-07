@@ -42,7 +42,7 @@ PLIST_SRC      := macos/Info.plist
 # ----------------------------
 # Targets
 # ----------------------------
-.PHONY: all clean build build_deb build_dmg
+.PHONY: all clean build build_deb build_dmg package_deb package_dmg
 
 all: build
 
@@ -58,8 +58,14 @@ build:
 # ----------------------------
 # Debian package
 # ----------------------------
-build_deb: clean build
-	@echo "Building Debian package for $(DEB_ARCH)"
+
+build_deb: clean build package_deb
+
+package_deb:
+	@echo "Packaging Debian package for $(DEB_ARCH)"
+	@test -f "$(BUILDDIR)/$(APP)" || \
+		{ echo "ERROR: $(BUILDDIR)/$(APP) not found - run 'make build' (or build_deb) first"; exit 1; }
+	rm -rf $(PKGROOT)
 	mkdir -p $(PKGROOT)/DEBIAN
 	mkdir -p $(PKGROOT)/usr/bin
 	mkdir -p $(PKGROOT)/usr/share/applications
@@ -88,8 +94,11 @@ build_deb: clean build
 # ----------------------------
 # macOS DMG
 # ----------------------------
-build_dmg: clean build
-	@echo "Building macOS DMG for $(TARGETCPU)"
+
+build_dmg: clean build package_dmg
+
+package_dmg:
+	@echo "Packaging macOS DMG for $(TARGETCPU)"
 	@test -d "$(APP_BUNDLE_SRC)" || \
 		{ echo "ERROR: .app bundle not found at $(APP_BUNDLE_SRC)"; exit 1; }
 	@test -f "$(ICNS_SRC)" || \

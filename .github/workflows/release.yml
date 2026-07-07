@@ -9,8 +9,8 @@ permissions:
   contents: write
 
 env:
-  # Update these variables for new Lazarus releases
-  LAZ_VER: "4.8" 
+  # Update this variable (and FPC_VER) for new Lazarus releases
+  LAZ_VER: "4.8"
 
 jobs:
   build:
@@ -163,13 +163,13 @@ jobs:
 
     - name: Package Debian (.deb)
       if: runner.os == 'Linux'
-      run: make build_deb 
+      run: make package_deb
 
     - name: Package macOS (.dmg)
       if: matrix.os == 'macos-latest'
       run: |
         export PATH="$LAZARUS_DIR:$PATH"
-        make build_dmg LAZARUS_DIR="$LAZARUS_DIR"
+        make package_dmg LAZARUS_DIR="$LAZARUS_DIR"
 
     - name: Package Windows Installer (.exe)
       if: matrix.os == 'windows-latest'
