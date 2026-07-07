@@ -36,7 +36,7 @@ jobs:
             FPC_VER: "3.2.4rc1a"
           - os: windows-latest
             artifact_name: Digit-Windows
-            pattern: "*.exe"
+            pattern: "windows/*.exe"
             FPC_VER: "3.2.2"
 
     steps:
@@ -79,6 +79,9 @@ jobs:
 
         which lazbuild || { echo "ERROR: lazbuild not found"; exit 1; }
 
+        # Remove the Lazarus/FPC installer .debs
+        rm -f fpc-laz_*.deb fpc-src_*.deb lazarus-project_*.deb
+
     - name: Install Lazarus (Windows)
       if: matrix.os == 'windows-latest'
       shell: powershell
@@ -95,6 +98,9 @@ jobs:
         "C:\lazarus" >> $env:GITHUB_PATH
         "C:\lazarus\fpc\${{ matrix.FPC_VER }}\bin\x86_64-win64" >> $env:GITHUB_PATH
         Write-Host "Lazarus installation completed"
+
+        # Remove the Lazarus installer
+        Remove-Item ".\lazarus-setup.exe" -Force
 
     - name: Install Lazarus (macOS)
       if: matrix.os == 'macos-latest'
@@ -132,6 +138,9 @@ jobs:
         sudo bash -c 'echo "-k-ld_classic" >> /etc/fpc.cfg'
         echo "Updated /etc/fpc.cfg:"
         cat /etc/fpc.cfg
+
+        # Remove the Lazarus/FPC installer files
+        rm -f "$FPC_DMG" "$LAZ_ZIP"
 
     # ==========================================
     # 2. Fetch dependencies via GIT
