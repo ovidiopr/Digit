@@ -178,7 +178,7 @@ jobs:
         choco install nsis -y
         
         # Add NSIS dir to PATH
-        $env:Path += ";C:\ProgramData\chocolatey\bin;C:\ProgramData\chocolatey\lib\nsis;C:\ProgramData\chocolatey\lib\nsis\bin;C:\ProgramData\chocolatey\lib\nsis\tools;C:\ProgramData\chocolatey\lib\nsis\tools\bin"
+        $env:Path += ";C:\Program Files (x86)\NSIS"
         
         makensis windows/Digit.nsi
 
