@@ -7,7 +7,7 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleExecutable</key>
-    <string>Digit</string>
+    <string>digit</string>
     <key>CFBundleName</key>
     <string>Digit</string>
     <key>CFBundleIdentifier</key>
