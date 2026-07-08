@@ -128,6 +128,9 @@ package_dmg:
 	# Sign the whole bundle as the final step
 	codesign --force --deep --sign - "$(DMG_APP_BUNDLE)"
 
+	# Verify RIGHT HERE, before hdiutil touches anything
+	codesign --verify --deep --strict --verbose=4 "$(DMG_APP_BUNDLE)"
+
 	# Symlink to /Applications for drag-and-drop install
 	ln -s /Applications "$(DMG_STAGING)/Applications"
 	hdiutil create \
