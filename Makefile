@@ -111,13 +111,22 @@ package_dmg:
 	cp -RL "$(APP_BUNDLE_SRC)" "$(DMG_STAGING)/"
 	@test -f "$(DMG_STAGING)/$(APP).app/Contents/MacOS/$(APP)" || \
 		{ echo "ERROR: executable missing after copy"; exit 1; }
+
 	# Inject modified Info.plist, overwriting what lazbuild generated
 	cp "$(PLIST_SRC)" \
 		"$(DMG_STAGING)/$(APP).app/Contents/Info.plist"
+
 	# Inject the icon into Resources
 	mkdir -p "$(DMG_STAGING)/$(APP).app/Contents/Resources"
 	cp "$(ICNS_SRC)" \
 		"$(DMG_STAGING)/$(APP).app/Contents/Resources/$(ICNS_NAME)"
+
+	# Strip any quarantine flag
+	xattr -cr $(APP_BUNDLE)
+
+	# Sign the whole bundle as the final step
+	codesign --force --deep --sign - $(APP_BUNDLE)
+
 	# Symlink to /Applications for drag-and-drop install
 	ln -s /Applications "$(DMG_STAGING)/Applications"
 	hdiutil create \
