@@ -34,6 +34,7 @@ DEB_ARCH ?= unknown
 DMG_STAGING    := $(BUILD)/dmg-staging
 DMG_VOLNAME    := $(APP) $(VERSION)
 APP_BUNDLE_SRC := $(BUILDDIR)/$(APP).app
+DMG_APP_BUNDLE := $(DMG_STAGING)/$(APP).app
 DMG_OUT        := $(APP)_$(VERSION)_$(TARGETCPU).dmg
 ICNS_NAME      := Digit.icns
 ICNS_SRC       := icons/$(ICNS_NAME)
@@ -122,10 +123,10 @@ package_dmg:
 		"$(DMG_STAGING)/$(APP).app/Contents/Resources/$(ICNS_NAME)"
 
 	# Strip any quarantine flag
-	xattr -cr $(APP_BUNDLE)
+	xattr -cr "$(DMG_APP_BUNDLE)"
 
 	# Sign the whole bundle as the final step
-	codesign --force --deep --sign - $(APP_BUNDLE)
+	codesign --force --deep --sign - "$(DMG_APP_BUNDLE)"
 
 	# Symlink to /Applications for drag-and-drop install
 	ln -s /Applications "$(DMG_STAGING)/Applications"
