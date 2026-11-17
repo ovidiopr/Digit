@@ -577,6 +577,8 @@ begin
     Marker.DigitMarkerIndex := i;
     AddMarker(Marker, False);
   end;
+  // No vertex is active until the user clicks one
+  ActiveMarker := nil;
 end;
 
 

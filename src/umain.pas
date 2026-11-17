@@ -16,9 +16,12 @@ uses
   TAChartAxis, TATransformations, TACustomSource, TAChartUtils, ClipBrd,
   ActnList, ValEdit, Spin, ExtDlgs, MaskEdit, BCTrackbarUpdown, FileUtil,
   BGRABitmapTypes, GraphType, Grids, ExtTabCtrl, Math, Types,
-  uRestore, uChartScale, uUtils, uCoordinates, uCurves, uMarker, uPlotImage;
+  uRestore, uChartScale, uUtils, uCoordinates, uCurves, uMarker, uPlotImage,
+  uImageViewer, uMapImage, uMapPanel;
 
 type
+  TDocKind = (dkPlot, dkMap);
+
   { TDigitMainForm }
   TDigitMainForm = class(TForm)
     EditShowSymbols: TAction;
@@ -558,6 +561,29 @@ type
 
     PlotImage: TPlotImage;
 
+    // Map documents
+    MapImage: TMapImage;
+    MapPanel: TMapPanel;
+    MapMenu: TMenuItem;
+    MapOpenDlg: TOpenDialog;
+    FDocKind: TDocKind;
+
+    function Viewer: TImageViewer;
+    procedure CreateMapUI;
+    procedure SetDocKind(Value: TDocKind);
+    procedure UpdateMapControls;
+    procedure NewMap(const FileName: TFileName);
+    procedure OpenMapProject(FileName: TFileName);
+    procedure MapNewClick(Sender: TObject);
+    procedure MapToolClick(Sender: TObject);
+    procedure MapFinishClick(Sender: TObject);
+    procedure MapCancelClick(Sender: TObject);
+    procedure MapDeleteClick(Sender: TObject);
+    procedure MapImageMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure MapImageMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure MapImageChange(Sender: TObject);
+    procedure MapImageZoomChanged(Sender: TObject; Zoom: Double);
+
     function CheckSaveStatus: Boolean;
 
     function GetIsSaved: Boolean;
@@ -698,6 +724,12 @@ end;
 
 procedure TDigitMainForm.UpdateControls;
 begin
+  if (FDocKind = dkMap) then
+  begin
+    UpdateMapControls;
+    Exit;
+  end;
+
   with PlotImage do
   begin
     //pcInput.Enabled := ImageIsLoaded;
@@ -890,6 +922,12 @@ end;
 
 procedure TDigitMainForm.OpenProject(FileName: TFileName);
 begin
+  if (TImageViewer.DocumentTypeOf(FileName) = 'map') then
+  begin
+    OpenMapProject(FileName);
+    Exit;
+  end;
+
   Initialize;
   if PlotImage.LoadFromXML(FileName, OpenPictureDlg) then
   begin
@@ -919,7 +957,8 @@ end;
 procedure TDigitMainForm.SaveProject(FileName: TFileName);
 begin
   //Save digitization
-  if PlotImage.SaveToXML(FileName) then
+  if ((FDocKind = dkMap) and MapImage.SaveToXML(FileName)) or
+     ((FDocKind = dkPlot) and PlotImage.SaveToXML(FileName)) then
   begin
     DigitFileName := FileName;
     IsSaved := True;
@@ -1060,6 +1099,7 @@ end;
 procedure TDigitMainForm.Initialize;
 begin
   //Initiate everything to create a new digitization
+  SetDocKind(dkPlot);
   PlotImage.ImageName := '';
   PlotImage.Visible := False;
   StatusBar.Panels[0].Text := '';
@@ -1280,6 +1320,19 @@ var
 
         ResetPoints := not PlotImage.ImageIsLoaded;
 
+        // Map documents just replace the image
+        if (FDocKind = dkMap) then
+        begin
+          if MapImage.ImageIsLoaded and (MessageDlg(
+            'You are about to replace the current image.' +
+            ' This action cannot be undone. Continue?', mtWarning, [mbYes, mbNo], 0) = mrNo)
+          then Exit;
+          MapImage.Reset;
+          MapImage.PasteImage(Stream);
+          IsSaved := False;
+          Exit;
+        end;
+
         with PlotImage do
         begin
           if ImageIsLoaded and (MessageDlg(
@@ -1385,29 +1438,29 @@ end;
 
 procedure TDigitMainForm.EditZoomFitExecute(Sender: TObject);
 begin
-  PlotImage.ZoomFitBest;
+  Viewer.ZoomFitBest;
 end;
 
 procedure TDigitMainForm.EditZoomInExecute(Sender: TObject);
 begin
-  PlotImage.ZoomIn;
+  Viewer.ZoomIn;
 end;
 
 procedure TDigitMainForm.EditZoomOriginalExecute(Sender: TObject);
 begin
-  PlotImage.ZoomOriginal;
+  Viewer.ZoomOriginal;
 end;
 
 procedure TDigitMainForm.EditZoomOutExecute(Sender: TObject);
 begin
-  PlotImage.ZoomOut;
+  Viewer.ZoomOut;
 end;
 
 procedure TDigitMainForm.EditZoomResizeExecute(Sender: TObject);
 begin
   if (MessageDlg('You are about to resize the current plot image.' +
     ' This action cannot be undone. Continue?', mtWarning, [mbYes, mbNo], 0) = mrYes) then
-    PlotImage.ResizeToZoom;
+    Viewer.ResizeToZoom;
 end;
 
 procedure TDigitMainForm.edtGridMaskChange(Sender: TObject; AByUser: Boolean);
@@ -1513,8 +1566,13 @@ begin
       else
       begin
         // It should be an image, try to insert it
-        Initialize;
-        InsertImage(FileNames[0]);
+        if SameText(ExtractFileExt(FileNames[0]), '.dm3') then
+          NewMap(FileNames[0])
+        else
+        begin
+          Initialize;
+          InsertImage(FileNames[0]);
+        end;
       end;
     end;
   end;
@@ -1584,6 +1642,8 @@ begin
 
     Options.LoadFromFile(GetIniName);
   end;
+
+  CreateMapUI;
 
   Initialize;
 
@@ -1657,6 +1717,15 @@ end;
 
 procedure TDigitMainForm.FileImageExecute(Sender: TObject);
 begin
+  // Map documents start again from the new image
+  if (FDocKind = dkMap) then
+  begin
+    MapOpenDlg.FileName := MapImage.ImageName;
+    if CheckSaveStatus and MapOpenDlg.Execute then
+      NewMap(MapOpenDlg.FileName);
+    Exit;
+  end;
+
   //Load the image
   OpenPictureDlg.FileName := PlotImage.ImageName;
   if OpenPictureDlg.Execute then
@@ -2271,6 +2340,12 @@ begin
 
   FIsSaved := Value;
 
+  if (FDocKind = dkMap) then
+  begin
+    UpdateControls;
+    Exit;
+  end;
+
   ScaleCount := PlotImage.PlotCount;
   CurveCount := PlotImage.CurveCount;
 
@@ -2528,9 +2603,9 @@ begin
     Xo := 0;
     Xf := 2*span + 1;
   end
-  else if (X > (PlotImage.Width - span - 1)) then
+  else if (X > (Viewer.Width - span - 1)) then
   begin
-    Xf := PlotImage.Width;
+    Xf := Viewer.Width;
     Xo := Xf - 2*span - 1;
   end
   else
@@ -2544,9 +2619,9 @@ begin
     Yo := 0;
     Yf := 2*span + 1;
   end
-  else if (Y > (PlotImage.Height - span - 1)) then
+  else if (Y > (Viewer.Height - span - 1)) then
   begin
-    Yf := PlotImage.Height;
+    Yf := Viewer.Height;
     Yo := Yf - 2*span - 1;
   end
   else
@@ -2558,7 +2633,7 @@ begin
   ImgRect := Rect(Xo, Yo, Xf, Yf);
 
   try
-    TempBmp := PlotImage.GetZoomImage(ZoomImage.Width, ZoomImage.Height, ImgRect);
+    TempBmp := Viewer.GetZoomImage(ZoomImage.Width, ZoomImage.Height, ImgRect);
     with TempBmp do
     begin
       Xc := Width*(X - Xo) div (2*span);
@@ -3174,7 +3249,7 @@ procedure TDigitMainForm.tbZoomChange(Sender: TObject; AByUser: Boolean);
 begin
   if AByUser then
     with TBCTrackbarUpdown(Sender) do
-      PlotImage.Zoom := Value/100;
+      Viewer.Zoom := Value/100;
 end;
 
 procedure TDigitMainForm.tcCurvesAddButtonClick(Sender: TObject);
@@ -3274,8 +3349,8 @@ end;
 
 procedure TDigitMainForm.ToolCancelActionExecute(Sender: TObject);
 begin
-  if not PlotImage.CancelAction then
-    PlotImage.CancelAction := True;
+  if not Viewer.CancelAction then
+    Viewer.CancelAction := True;
 end;
 
 procedure TDigitMainForm.ToolConvertToSymbolsExecute(Sender: TObject);
@@ -3452,6 +3527,13 @@ end;
 
 procedure TDigitMainForm.EditUndoExecute(Sender: TObject);
 begin
+  if (FDocKind = dkMap) then
+  begin
+    MapImage.Undo;
+    UpdateControls;
+    Exit;
+  end;
+
   //Undo the last change to the curve
   PlotImage.UndoCurveChanges;
   CurveToGUI;
@@ -3460,6 +3542,13 @@ end;
 
 procedure TDigitMainForm.EditRedoExecute(Sender: TObject);
 begin
+  if (FDocKind = dkMap) then
+  begin
+    MapImage.Redo;
+    UpdateControls;
+    Exit;
+  end;
+
   //Redo the last change to the curve
   PlotImage.RedoCurveChanges;
   CurveToGUI;
@@ -3469,6 +3558,312 @@ procedure TDigitMainForm.ToolSplinesExecute(Sender: TObject);
 begin
   InterpolateCurve(itpSpline, TAction(Sender));
 end;
+
+//Beginning of map functions
+const
+  MapToolCaptions: array [TMapTool] of String = ('None', 'Select / edit',
+    'Scale bar', 'Reference points', 'Point', 'Polyline', 'Polygon (area)',
+    'Distance', 'Angle', 'Line profile', 'Colour bar', 'Particle region');
+
+function TDigitMainForm.Viewer: TImageViewer;
+begin
+  if (FDocKind = dkMap) then
+    Result := MapImage
+  else
+    Result := PlotImage;
+end;
+
+
+procedure TDigitMainForm.CreateMapUI;
+
+  function AddItem(AParent: TMenuItem; const ACaption: String;
+    AOnClick: TNotifyEvent; ATag: Integer = 0): TMenuItem;
+  begin
+    Result := TMenuItem.Create(Self);
+    Result.Caption := ACaption;
+    Result.OnClick := AOnClick;
+    Result.Tag := ATag;
+    AParent.Add(Result);
+  end;
+
+var
+  T: TMapTool;
+  Item, ToolsItem: TMenuItem;
+begin
+  MapImage := TMapImage.Create(ScrollBox);
+  with MapImage do
+  begin
+    Parent := ScrollBox;
+    Visible := False;
+    Options := PlotImage.Options;
+    OnMouseMove := @MapImageMouseMove;
+    OnMouseUp := @MapImageMouseUp;
+    OnMouseLeave := @PlotImageMouseLeave;
+    OnChange := @MapImageChange;
+    OnPrintMessage := @PlotImagePrintMessage;
+    OnShowProgress := @PlotImageShowProgress;
+    OnHideProgress := @PlotImageHideProgress;
+    OnZoomChanged := @MapImageZoomChanged;
+  end;
+
+  MapPanel := TMapPanel.Create(Self);
+  MapPanel.Parent := InputPanel;
+  MapPanel.Align := alClient;
+  MapPanel.Visible := False;
+  MapPanel.MapImage := MapImage;
+
+  MapOpenDlg := TOpenDialog.Create(Self);
+  MapOpenDlg.Title := 'Open image as map';
+  MapOpenDlg.Filter := 'Images and DigitalMicrograph files|*.dm3;*.png;*.jpg;*.jpeg;*.bmp;*.tif;*.tiff;*.gif|' +
+    'DigitalMicrograph (*.dm3)|*.dm3|All files (*.*)|*.*';
+
+  // File menu entry, always available
+  Item := TMenuItem.Create(Self);
+  Item.Caption := 'New map from image...';
+  Item.OnClick := @MapNewClick;
+  FileMenu.Insert(FileMenu.IndexOf(FileNewItem) + 1, Item);
+
+  // Map menu, only for map documents
+  MapMenu := TMenuItem.Create(Self);
+  MapMenu.Caption := '&Map';
+  MainMenu.Items.Insert(MainMenu.Items.IndexOf(HelpMenu), MapMenu);
+  ToolsItem := AddItem(MapMenu, 'Tool', nil);
+  for T := Low(TMapTool) to High(TMapTool) do
+  begin
+    Item := AddItem(ToolsItem, MapToolCaptions[T], @MapToolClick, Ord(T));
+    Item.RadioItem := True;
+    Item.GroupIndex := 1;
+  end;
+  AddItem(MapMenu, '-', nil);
+  AddItem(MapMenu, 'Finish drawing', @MapFinishClick).ShortCut := Menus.ShortCut(VK_RETURN, []);
+  AddItem(MapMenu, 'Cancel drawing', @MapCancelClick).ShortCut := Menus.ShortCut(VK_ESCAPE, []);
+  AddItem(MapMenu, 'Delete selected feature', @MapDeleteClick).ShortCut := Menus.ShortCut(VK_DELETE, [ssCtrl]);
+  MapMenu.Visible := False;
+end;
+
+
+procedure TDigitMainForm.SetDocKind(Value: TDocKind);
+var
+  IsMap: Boolean;
+  i: Integer;
+begin
+  FDocKind := Value;
+  IsMap := (Value = dkMap);
+
+  PlotImage.Visible := (not IsMap) and PlotImage.ImageIsLoaded;
+  MapImage.Visible := IsMap and MapImage.ImageIsLoaded;
+
+  // Side panel
+  pcInput.Visible := not IsMap;
+  tcPlots.Visible := not IsMap;
+  MapPanel.Visible := IsMap;
+
+  // Plot-only areas
+  pnlData.Visible := not IsMap;
+  RightSplitter.Visible := not IsMap;
+  if not IsMap then
+    RightSplitter.Left := pnlData.Left - RightSplitter.Width;
+  tbPlot.Visible := not IsMap;
+  tcCurves.Visible := not IsMap;
+  if not IsMap then
+  begin
+    tbPlot.Top := 0;
+    tcCurves.Top := tbPlot.Top + tbPlot.Height;
+  end;
+  tsPlot.TabVisible := not IsMap;
+  PageControl.ActivePage := tsPicture;
+
+  // Menus
+  ModeMenu.Visible := not IsMap;
+  PlotMenu.Visible := not IsMap;
+  CurveMenu.Visible := not IsMap;
+  DigitMenu.Visible := not IsMap;
+  MarkersMenu.Visible := not IsMap;
+  EditCopyItem.Visible := not IsMap;
+  EditShowLinetem.Visible := not IsMap;
+  EditShowSymbolsItem.Visible := not IsMap;
+  MapMenu.Visible := IsMap;
+  // Hidden shortcuts must not fire in plot mode
+  for i := 0 to MapMenu.Count - 1 do
+    MapMenu.Items[i].Enabled := IsMap;
+
+  // Plot-only toolbar buttons
+  BtnExport.Visible := not IsMap;
+  btnScaleOptions.Visible := not IsMap;
+  sep06.Visible := not IsMap;
+  btnCopy.Visible := not IsMap;
+  btnImport.Visible := not IsMap;
+  btnCursorMode.Visible := not IsMap;
+  btnMarkersMode.Visible := not IsMap;
+  btnColorMode.Visible := not IsMap;
+  btnCorrectPoints.Visible := not IsMap;
+  sep02.Visible := not IsMap;
+  sep03.Visible := not IsMap;
+  btnResample.Visible := not IsMap;
+  btnSmooth.Visible := not IsMap;
+  btnSymbols.Visible := not IsMap;
+  btnGroupPointsmode.Visible := not IsMap;
+  btnDeletePointsMode.Visible := not IsMap;
+  tbWidth.Visible := not IsMap;
+
+  UpdateControls;
+end;
+
+
+procedure TDigitMainForm.UpdateMapControls;
+var
+  i: Integer;
+  Loaded: Boolean;
+  Cat: String;
+begin
+  Loaded := MapImage.ImageIsLoaded;
+
+  // Plot actions do not apply to maps
+  for i := 0 to ActionList.ActionCount - 1 do
+  begin
+    Cat := TAction(ActionList.Actions[i]).Category;
+    if (Cat = 'Tools') or (Cat = 'Mode') or (Cat = 'Markers') or
+       (Cat = 'Grid') or (Cat = 'Chart') then
+      TAction(ActionList.Actions[i]).Enabled := False;
+  end;
+  ToolCancelAction.Enabled := MapImage.RunningAction;
+
+  FileSave.Enabled := Loaded and (not IsSaved);
+  FileSaveAs.Enabled := Loaded;
+  FileExport.Enabled := False;
+  FileImportDigit.Enabled := False;
+
+  EditUndo.Enabled := MapImage.CanUndo;
+  EditRedo.Enabled := MapImage.CanRedo;
+  EditCopyCurve.Enabled := False;
+  EditShowLine.Enabled := False;
+  EditShowSymbols.Enabled := False;
+
+  tbZoom.Enabled := Loaded;
+  EditZoomOriginal.Enabled := Loaded and (MapImage.Zoom <> 1);
+  EditZoomIn.Enabled := Loaded;
+  EditZoomOut.Enabled := Loaded;
+  EditZoomFit.Enabled := Loaded;
+  EditZoomResize.Enabled := Loaded and (MapImage.Zoom <> 1);
+
+  for i := 0 to MapMenu.Count - 1 do
+    if (MapMenu.Items[i].Count > 0) then
+      MapMenu.Items[i].Items[Ord(MapImage.Tool)].Checked := True;
+
+  MapPanel.UpdateControls;
+end;
+
+
+procedure TDigitMainForm.NewMap(const FileName: TFileName);
+begin
+  Initialize;
+  SetDocKind(dkMap);
+  MapImage.Options := PlotImage.Options;
+  if MapImage.LoadImageFile(FileName) then
+  begin
+    DigitFileName := ChangeFileExt(FileName, '.dig');
+    IsSaved := False;
+  end;
+  SetDocKind(dkMap);
+  MapPanel.ParamsFromMap;
+end;
+
+
+procedure TDigitMainForm.OpenMapProject(FileName: TFileName);
+begin
+  Initialize;
+  SetDocKind(dkMap);
+  MapImage.Options := PlotImage.Options;
+  if MapImage.LoadFromXML(FileName, OpenPictureDlg) then
+  begin
+    DigitFileName := FileName;
+    IsSaved := True;
+  end;
+  SetDocKind(dkMap);
+  MapPanel.ParamsFromMap;
+end;
+
+
+procedure TDigitMainForm.MapNewClick(Sender: TObject);
+begin
+  if CheckSaveStatus and MapOpenDlg.Execute then
+    NewMap(MapOpenDlg.FileName);
+end;
+
+
+procedure TDigitMainForm.MapToolClick(Sender: TObject);
+begin
+  MapImage.Tool := TMapTool(TMenuItem(Sender).Tag);
+  UpdateControls;
+end;
+
+
+procedure TDigitMainForm.MapFinishClick(Sender: TObject);
+begin
+  MapImage.FinishFeature;
+  UpdateControls;
+end;
+
+
+procedure TDigitMainForm.MapCancelClick(Sender: TObject);
+begin
+  MapImage.CancelFeature;
+  UpdateControls;
+end;
+
+
+procedure TDigitMainForm.MapDeleteClick(Sender: TObject);
+begin
+  MapImage.DeleteSelectedFeature;
+  UpdateControls;
+end;
+
+
+procedure TDigitMainForm.MapImageMouseMove(Sender: TObject; Shift: TShiftState;
+  X, Y: Integer);
+var
+  P: TCurvePoint;
+  z: Double;
+  S: String;
+begin
+  UpdateZoomImage(X, Y);
+
+  StatusBar.Panels[1].Text := Format('%.1f, %.1f px', [X/MapImage.Zoom, Y/MapImage.Zoom]);
+  if MapImage.MapScale.IsCalibrated then
+  begin
+    P := MapImage.MapCoordAt(X, Y);
+    StatusBar.Panels[2].Text := Format('%.4g, %.4g %s', [P.X, P.Y, MapImage.MapScale.Units]);
+  end
+  else
+    StatusBar.Panels[2].Text := '';
+
+  S := Format('I = %.4g', [MapImage.ValueAt(X, Y)]);
+  z := MapImage.ZAt(X, Y);
+  if not IsNan(z) then
+    S := S + Format('   z = %.4g %s', [z, MapImage.ColorBar.Units]);
+  StatusBar.Panels[3].Text := S;
+end;
+
+
+procedure TDigitMainForm.MapImageMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  UpdateControls;
+end;
+
+
+procedure TDigitMainForm.MapImageChange(Sender: TObject);
+begin
+  SetIsSaved(False, False);
+end;
+
+
+procedure TDigitMainForm.MapImageZoomChanged(Sender: TObject; Zoom: Double);
+begin
+  tbZoom.Value := Round(Zoom*100);
+  UpdateControls;
+end;
+//End of map functions
 
 //End of the action functions
 

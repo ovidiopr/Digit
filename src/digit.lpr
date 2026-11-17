@@ -10,7 +10,7 @@ uses
   Forms, tachartlazaruspkg, lazcontrols,
   uMain {DigitMainForm},
   uAbout {AboutBox},
-  uRestore, uChartScale, uOptions;
+  uRestore, uChartScale, uOptions, uMapPanel;
 
 {$R *.res}
 
