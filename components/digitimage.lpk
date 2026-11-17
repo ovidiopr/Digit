@@ -69,6 +69,10 @@
         <UnitName Value="uMapRaster"/>
       </Item>
       <Item>
+        <Filename Value="ucolorbar.pas"/>
+        <UnitName Value="uColorBar"/>
+      </Item>
+      <Item>
         <Filename Value="umapimage.pas"/>
         <UnitName Value="uMapImage"/>
       </Item>
