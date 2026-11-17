@@ -73,6 +73,10 @@
         <UnitName Value="uColorBar"/>
       </Item>
       <Item>
+        <Filename Value="uparticles.pas"/>
+        <UnitName Value="uParticles"/>
+      </Item>
+      <Item>
         <Filename Value="umapimage.pas"/>
         <UnitName Value="uMapImage"/>
       </Item>

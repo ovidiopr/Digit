@@ -8,11 +8,11 @@ uses
   Classes, SysUtils, Math, Fgl, Controls, Graphics, ExtDlgs, DOM, XMLRead,
   XMLWrite, System.UITypes, BGRABitmap, BGRABitmapTypes, uSciDM3,
   uCoordinates, uMarker, uImageViewer, uMapScale, uMapFeatures, uMapRaster,
-  uColorBar;
+  uColorBar, uParticles;
 
 type
   TMapTool = (mtNone, mtSelect, mtScaleBar, mtReference, mtPoint, mtPolyline,
-              mtPolygon, mtDistance, mtAngle, mtProfile, mtColorBar);
+              mtPolygon, mtDistance, mtAngle, mtProfile, mtColorBar, mtRegion);
 
   TScaleBarPickedEvent = procedure(Sender: TObject; const P1, P2: TCurvePoint) of object;
   TReferencePickedEvent = procedure(Sender: TObject; const ImgPts: TScalePoints) of object;
@@ -37,6 +37,8 @@ type
     FRedo: TFeatureSnapshots;
     FRaster: TMapRaster;
     FColorBar: TColorBar;
+    FParticles: TParticleAnalysis;
+    FShowParticles: Boolean;
     FSourceFile: TFileName;
 
     FTool: TMapTool;
@@ -66,6 +68,10 @@ type
     procedure CompletePending;
     procedure PushUndo;
     function ReadDM3(const FileName: TFileName; LoadDisplay: Boolean): Boolean;
+    function ParticleCancel: Boolean;
+    procedure ParticleProgress(Percent: Integer);
+    procedure SetShowParticles(Value: Boolean);
+    function CanStartRegion(Shift: TShiftState): Boolean; override;
 
     procedure ImageSizeChanged; override;
     procedure ScaleContent(Factor: Double); override;
@@ -106,6 +112,8 @@ type
     function ZAt(X, Y: Integer): Double;
     function SaveZGridCSV(Region: TRect; Step: Integer; const FileName: String): Boolean;
 
+    function AnalyzeParticles(Region: TRect): Boolean;
+
     function SaveToXML(FileName: TFileName): Boolean;
     function LoadFromXML(FileName: TFileName; PictureDlg: TOpenPictureDialog = nil): Boolean;
 
@@ -113,6 +121,8 @@ type
     property Features: TMapFeatureList read FFeatures;
     property Raster: TMapRaster read FRaster;
     property ColorBar: TColorBar read FColorBar;
+    property Particles: TParticleAnalysis read FParticles;
+    property ShowParticles: Boolean read FShowParticles write SetShowParticles;
     property HasRaster: Boolean read GetHasRaster;
     property SourceFile: TFileName read FSourceFile;
     property Tool: TMapTool read FTool write SetTool;
@@ -155,6 +165,10 @@ begin
   FUndo := TFeatureSnapshots.Create;
   FRedo := TFeatureSnapshots.Create;
   FColorBar := TColorBar.Create;
+  FParticles := TParticleAnalysis.Create;
+  FParticles.OnCancel := @ParticleCancel;
+  FParticles.OnProgress := @ParticleProgress;
+  FShowParticles := True;
   FFeatureColor := clRed;
   FSelected := -1;
 end;
@@ -163,6 +177,7 @@ end;
 destructor TMapImage.Destroy;
 begin
   FPending.Free;
+  FParticles.Free;
   FColorBar.Free;
   FRaster.Free;
   FRedo.Free;
@@ -186,6 +201,7 @@ begin
   FreeAndNil(FPending);
   FreeAndNil(FRaster);
   FColorBar.Clear;
+  FParticles.Clear;
   FSourceFile := '';
   FHasRubber := False;
   FSelected := -1;
@@ -326,6 +342,7 @@ begin
     FFeatures[i].ScalePoints(Factor);
   FMapScale.ScaleImage(Factor);
   FColorBar.ScaleImage(Factor);
+  FParticles.Clear;
   FreeAndNil(FPending);
   FUndo.Clear;
   FRedo.Clear;
@@ -622,7 +639,8 @@ begin
   P := ImagePoint(X, Y);
 
   case FTool of
-    mtNone: Exit;
+    // The base class selects the region
+    mtNone, mtRegion: Exit;
     mtSelect: begin
       // Vertex markers are dragged by the base class
       for i := 0 to Markers.Count - 1 do
@@ -674,7 +692,8 @@ end;
 
 procedure TMapImage.DrawContent(const PaintRect: TRect);
 var
-  i: Integer;
+  i, k: Integer;
+  Pts: array of TPointF;
   Last: TCurvePoint;
   c: TBGRAPixel;
 begin
@@ -687,6 +706,18 @@ begin
       Zoom*FColorBar.EndPoint.X, Zoom*FColorBar.EndPoint.Y, c, 1);
     WhiteBoard.PenStyle := psSolid;
   end;
+
+  // Particle outlines
+  if FShowParticles then
+    for i := 0 to FParticles.Count - 1 do
+      with FParticles.Particles[i] do
+        if (Length(Contour) > 1) then
+        begin
+          SetLength(Pts, Length(Contour));
+          for k := 0 to High(Contour) do
+            Pts[k] := PointF(Zoom*Contour[k].X, Zoom*Contour[k].Y);
+          WhiteBoard.DrawPolygonAntialias(Pts, BGRA(0, 255, 255), 1, BGRAPixelTransparent);
+        end;
 
   for i := 0 to FFeatures.Count - 1 do
     FFeatures[i].Draw(WhiteBoard, Zoom, FMapScale, i = FSelected);
@@ -880,6 +911,73 @@ begin
 end;
 
 
+function TMapImage.CanStartRegion(Shift: TShiftState): Boolean;
+begin
+  Result := (FTool = mtRegion);
+end;
+
+
+function TMapImage.ParticleCancel: Boolean;
+begin
+  Result := CheckCancelStatus;
+end;
+
+
+procedure TMapImage.ParticleProgress(Percent: Integer);
+begin
+  if Assigned(OnShowProgress) then
+    OnShowProgress(Self, Percent, 'Analysing particles...');
+end;
+
+
+procedure TMapImage.SetShowParticles(Value: Boolean);
+begin
+  if (Value <> FShowParticles) then
+  begin
+    FShowParticles := Value;
+    RepaintAll;
+  end;
+end;
+
+
+function TMapImage.AnalyzeParticles(Region: TRect): Boolean;
+var
+  x, y, W: Integer;
+  Grey: array of Double;
+  Raw: Boolean;
+begin
+  Result := False;
+  if not ImageIsLoaded then Exit;
+  if Region.IsEmpty then
+    Region := TRect.Create(0, 0, PlotImg.Width, PlotImg.Height);
+  Region.Intersect(TRect.Create(0, 0, PlotImg.Width, PlotImg.Height));
+  if Region.IsEmpty then Exit;
+
+  // Raw DM3 values when available, luminance otherwise
+  Raw := HasRaster;
+  W := Region.Width;
+  SetLength(Grey, W*Region.Height);
+  for y := Region.Top to Region.Bottom - 1 do
+    for x := Region.Left to Region.Right - 1 do
+      if Raw then
+        Grey[(y - Region.Top)*W + (x - Region.Left)] := FRaster[x, y]
+      else
+        Grey[(y - Region.Top)*W + (x - Region.Left)] := Luminance(PlotImg.GetPixel(x, y));
+
+  RunningAction := True;
+  CancelAction := False;
+  try
+    Result := FParticles.Run(Grey, Region, FMapScale);
+  finally
+    RunningAction := False;
+    if Assigned(OnHideProgress) then
+      OnHideProgress(Self);
+  end;
+  IsChanged := True;
+  RepaintAll;
+end;
+
+
 function TMapImage.SaveToXML(FileName: TFileName): Boolean;
 var
   XMLDoc: TXMLDocument;
@@ -904,6 +1002,7 @@ begin
     MapNode.AppendChild(FMapScale.ExportToXML(XMLDoc));
     MapNode.AppendChild(FFeatures.ExportToXML(XMLDoc));
     MapNode.AppendChild(FColorBar.ExportToXML(XMLDoc));
+    MapNode.AppendChild(FParticles.ExportToXML(XMLDoc));
     RootNode.AppendChild(MapNode);
 
     WriteXMLFile(XMLDoc, FileName);
@@ -959,6 +1058,8 @@ begin
             FFeatures.ImportFromXML(MapChild);
           if (MapChild.CompareName('colorbar') = 0) then
             FColorBar.ImportFromXML(MapChild);
+          if (MapChild.CompareName('particles') = 0) then
+            FParticles.ImportFromXML(MapChild);
           MapChild := MapChild.NextSibling;
         end;
       end;
