@@ -171,9 +171,9 @@ arc length (map units), x, y, luminance, R, G, B, and z when a colour bar is set
 6. Summary (count, mean, sd, median), size histogram, outlines on the whiteboard,
    per-particle CSV. Runs in the main thread with the existing progress/cancel events.
 
-## 7. Main form (single document)
+## 7. Main form
 
-* `TDocKind = (dkPlot, dkMap)`. Exactly one of `PlotImage` / `MapImage` exists.
+* See section 9 for the tabbed documents.
 * New actions: New map, Open image as map. A Map menu and toolbar are created in code.
 * Plot actions are disabled (and plot-only toolbars hidden) in map mode.
 * Status bar: calibrated x, y (and z with a colour bar).
@@ -199,9 +199,30 @@ calibration and its inverse, colour-bar lookup on a synthetic viridis map (mean 
 of the range, contour pixels rejected), contour tracing on 555 random components, and
 perimeter/Feret values on discs, an ellipse and a square.
 
-## 9. Deferred: tabbed documents
+## 9. Tabbed documents
 
-Later: shell form + `TBaseFrame` with `TPlotFrame` / `TMapFrame`. Notes for that work:
-menu items must be re-pointed to the active frame's actions on every tab change, and
-action lists of hidden frames must be disabled so their shortcuts and `OnUpdate`
-handlers do not fire.
+The main form is a shell; every plot or map lives in its own tab.
+
+* Tabs: `TExtPageCtrl` (ExtTabCtrls package), created in code, always visible. The add
+  button pops up New plot / New map from image...; each tab has a close button.
+  The tab caption is the file name (`*` when modified), the hint is the full path.
+* Units:
+  * `udocframe.pas` – `TDocumentFrame` (TFrame): file name and saved state, `CanClose`
+    (save prompt), zoom inset, message log, progress display, abstract `Viewer`,
+    `SaveProject`, `UpdateControls`, `PasteImage`, `Undo`/`Redo`.
+  * `uplotframe.pas` – `TPlotFrame`: the former plot panels of the main form (input
+    panel, chart, data table, log) and their code, unchanged except for the shell
+    references.
+  * `umapframe.pas` – `TMapFrame`: `TMapImage` + `TMapPanel`, built in code, with its own
+    zoom inset and log.
+* The shell keeps the single `ActionList`, main menu, toolbar, status bar and dialogs.
+  Plot actions call the same-named method of the active `TPlotFrame`; zoom, undo/redo,
+  paste, save and log actions use the active document of either kind. Frames refer to
+  the shell through `DigitMainForm`.
+* Only the active document updates the shared actions (`IsActive` guard), so hidden
+  tabs cannot change them. Switching tabs is refused while a long action runs.
+* New, Open (multi-select), drag and drop and command-line files open one tab each; a
+  file that is already open is just shown, and the untouched empty tab is replaced.
+  Closing a tab asks to save it; closing the window asks for every modified tab.
+* Plot options are kept by the shell (`PlotOptions`), copied to new documents and saved
+  on exit. Panel widths are stored per frame with the previous ini keys.
