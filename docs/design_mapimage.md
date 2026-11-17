@@ -184,7 +184,9 @@ arc length (map units), x, y, luminance, R, G, B, and z when a colour bar is set
 
 * File > New map from image... (or drop a .dm3 file) opens an image or DM3 file as a map.
   DM3 files are calibrated from the file and keep their raw values.
-* The side panel replaces the plot inputs: pick a tool, click on the image.
+* Pick a tool on the toolbar or in Map > Tool (they are actions, category `Map`), then click
+  on the image. Clicking the active tool again releases it. The side panel shows the
+  calibration, features, colour bar and particle settings.
   Distance and angle finish by themselves; polylines, polygons and profiles finish with a
   double click, Enter or Map > Finish drawing; Esc cancels.
 * Scale bar, reference points and colour bar ask for their values after the last click.
@@ -225,4 +227,11 @@ The main form is a shell; every plot or map lives in its own tab.
   file that is already open is just shown, and the untouched empty tab is replaced.
   Closing a tab asks to save it; closing the window asks for every modified tab.
 * Plot options are kept by the shell (`PlotOptions`), copied to new documents and saved
-  on exit. Panel widths are stored per frame with the previous ini keys.
+  on exit.
+* Window size, position, state and panel widths are saved with LazScience `TSciRestorer`
+  (created in code, same ini file, section and keys as the former `uRestore`). The
+  restorer walks the whole form, so while one document is saved or restored the panels of
+  the other tabs opt out with `Tag = -1`.
+* Icons: one `TExtSVGImageList` (`ImageList`, 16 px base, extra scales up to 400 %) serves
+  menus and action lists; toolbars and the input tabs use it with `ImagesWidth = 32`. The
+  SVG sources are in `icons/`, see `icons/README.md`; map tools use indexes 68 to 78.
