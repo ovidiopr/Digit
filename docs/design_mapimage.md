@@ -153,7 +153,8 @@ arc length (map units), x, y, luminance, R, G, B, and z when a colour bar is set
 * The bar is sampled (averaged across a small width) into a LUT of (CIELab, value).
 * Pixel value = value of the nearest LUT entry; if dE exceeds the tolerance the result
   is NaN (text, axes, contour lines).
-* A 32x32x32 RGB cache makes whole-region conversion fast.
+* Exact nearest-entry search with a last-colour memo (the planned 32x32x32 cache was
+  dropped: its quantisation error was comparable to the colour steps of a bar).
 * Outputs: z under cursor, z profile, z(x,y) grid over a region with chosen step (CSV).
 
 ### 6.5 Particles and grains (`uparticles.pas`)
@@ -162,11 +163,13 @@ arc length (map units), x, y, luminance, R, G, B, and z when a colour bar is set
 2. Threshold: manual or Otsu; dark or bright objects.
 3. Optional opening/closing (radius in px) and hole filling.
 4. 8-connected labelling; minimum area; optional exclusion of edge particles.
-5. Per particle: centroid, area, equivalent diameter, perimeter (chain code,
-   diagonal steps sqrt 2), max/min Feret (rotating calipers on the convex hull),
-   aspect ratio, circularity 4 pi A / P^2, all in map units.
+5. Per particle: centroid, area, equivalent diameter, perimeter (Moore tracing of the
+   outer contour, Vossepoel-Smeulders estimator 0.980 ne + 1.406 no - 0.091 nc),
+   max/min Feret (convex hull of the pixel corners, in map coordinates), aspect ratio,
+   circularity 4 pi A / P^2. Perimeter in map units uses sqrt(pixel area), exact for
+   isotropic calibrations.
 6. Summary (count, mean, sd, median), size histogram, outlines on the whiteboard,
-   per-particle CSV. Runs in a thread with the existing progress/cancel events.
+   per-particle CSV. Runs in the main thread with the existing progress/cancel events.
 
 ## 7. Main form (single document)
 
@@ -177,7 +180,26 @@ arc length (map units), x, y, luminance, R, G, B, and z when a colour bar is set
 * Small dialogs: calibration input, colour-bar values, particle settings, results
   (grid + histogram, TAChart).
 
-## 8. Deferred: tabbed documents
+## 8. Using the map mode
+
+* File > New map from image... (or drop a .dm3 file) opens an image or DM3 file as a map.
+  DM3 files are calibrated from the file and keep their raw values.
+* The side panel replaces the plot inputs: pick a tool, click on the image.
+  Distance and angle finish by themselves; polylines, polygons and profiles finish with a
+  double click, Enter or Map > Finish drawing; Esc cancels.
+* Scale bar, reference points and colour bar ask for their values after the last click.
+* Select / edit: click a feature to select it, drag its square markers to move vertices,
+  Ctrl+Del deletes it. Undo/Redo in the Edit menu apply to features.
+* Particle region: drag a rectangle to analyse it, or press Analyse image.
+* Status bar: pixel position, map coordinates, intensity (raw for DM3) and z.
+* Projects are saved as .dig with `<document Type="map">`.
+
+Checked outside Pascal (Python prototypes of the same algorithms): affine reference
+calibration and its inverse, colour-bar lookup on a synthetic viridis map (mean error 0.13 %
+of the range, contour pixels rejected), contour tracing on 555 random components, and
+perimeter/Feret values on discs, an ellipse and a square.
+
+## 9. Deferred: tabbed documents
 
 Later: shell form + `TBaseFrame` with `TPlotFrame` / `TMapFrame`. Notes for that work:
 menu items must be re-pointed to the active frame's actions on every tab change, and
