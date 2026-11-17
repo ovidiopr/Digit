@@ -132,7 +132,7 @@
         <PackageName Value="LCL"/>
       </Item7>
     </RequiredPackages>
-    <Units Count="7">
+    <Units Count="10">
       <Unit0>
         <Filename Value="digit.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -179,6 +179,30 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="uMapPanel"/>
       </Unit6>
+      <Unit7>
+        <Filename Value="udocframe.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="DocumentFrame"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+        <UnitName Value="uDocFrame"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="uplotframe.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="PlotFrame"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+        <UnitName Value="uPlotFrame"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="umapframe.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="MapFrame"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+        <UnitName Value="uMapFrame"/>
+      </Unit9>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

@@ -1,0 +1,4 @@
+inherited MapFrame: TMapFrame
+  DesignLeft = 300
+  DesignTop = 200
+end
