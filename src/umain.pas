@@ -3713,10 +3713,10 @@ end;
 procedure TDigitMainForm.UpdateMapControls;
 var
   i: Integer;
-  Loaded: Boolean;
+  ImageLoaded: Boolean;
   Cat: String;
 begin
-  Loaded := MapImage.ImageIsLoaded;
+  ImageLoaded := MapImage.ImageIsLoaded;
 
   // Plot actions do not apply to maps
   for i := 0 to ActionList.ActionCount - 1 do
@@ -3728,8 +3728,8 @@ begin
   end;
   ToolCancelAction.Enabled := MapImage.RunningAction;
 
-  FileSave.Enabled := Loaded and (not IsSaved);
-  FileSaveAs.Enabled := Loaded;
+  FileSave.Enabled := ImageLoaded and (not IsSaved);
+  FileSaveAs.Enabled := ImageLoaded;
   FileExport.Enabled := False;
   FileImportDigit.Enabled := False;
 
@@ -3739,12 +3739,12 @@ begin
   EditShowLine.Enabled := False;
   EditShowSymbols.Enabled := False;
 
-  tbZoom.Enabled := Loaded;
-  EditZoomOriginal.Enabled := Loaded and (MapImage.Zoom <> 1);
-  EditZoomIn.Enabled := Loaded;
-  EditZoomOut.Enabled := Loaded;
-  EditZoomFit.Enabled := Loaded;
-  EditZoomResize.Enabled := Loaded and (MapImage.Zoom <> 1);
+  tbZoom.Enabled := ImageLoaded;
+  EditZoomOriginal.Enabled := ImageLoaded and (MapImage.Zoom <> 1);
+  EditZoomIn.Enabled := ImageLoaded;
+  EditZoomOut.Enabled := ImageLoaded;
+  EditZoomFit.Enabled := ImageLoaded;
+  EditZoomResize.Enabled := ImageLoaded and (MapImage.Zoom <> 1);
 
   for i := 0 to MapMenu.Count - 1 do
     if (MapMenu.Items[i].Count > 0) then
