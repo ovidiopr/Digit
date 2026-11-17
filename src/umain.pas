@@ -336,6 +336,9 @@ type
     MapOpenDlg: TOpenDialog;
     FAddingDocument: Boolean;
     Restorer: TSciRestorer;
+    MapToolActions: array [TMapTool] of TAction;
+    MapToolButtons: array [TMapTool] of TToolButton;
+    MapToolSep: TToolButton;
 
     procedure CreateDocumentUI;
     function DocumentOf(APage: TExtPage): TDocumentFrame;
@@ -357,7 +360,8 @@ type
     procedure DocumentsAddClick(Sender: TObject);
     procedure NewPlotClick(Sender: TObject);
     procedure MapNewClick(Sender: TObject);
-    procedure MapToolClick(Sender: TObject);
+    procedure MapToolExecute(Sender: TObject);
+    procedure MapToolUpdate(Sender: TObject);
     procedure MapFinishClick(Sender: TObject);
     procedure MapCancelClick(Sender: TObject);
     procedure MapDeleteClick(Sender: TObject);
@@ -405,6 +409,9 @@ const
   // Keys used by the former window restorer, so saved layouts survive
   RestorerSection = 'WindowsRestorer';
   RestorerKey = 'TDigitMainForm';
+
+  // Map tool icons follow the plot icons in the image lists
+  MapIconFirst = 68;
 
   MapToolCaptions: array [TMapTool] of String = ('None', 'Select / edit',
     'Scale bar', 'Reference points', 'Point', 'Polyline', 'Polygon (area)',
@@ -501,6 +508,8 @@ procedure TDigitMainForm.CreateDocumentUI;
 var
   T: TMapTool;
   Item, ToolsItem: TMenuItem;
+  A: TAction;
+  Btn: TToolButton;
 begin
   // Document tabs fill the space between the toolbar and the status bar
   Documents := TExtPageCtrl.Create(Self);
@@ -538,12 +547,42 @@ begin
   MapMenu := TMenuItem.Create(Self);
   MapMenu.Caption := '&Map';
   MainMenu.Items.Insert(MainMenu.Items.IndexOf(HelpMenu), MapMenu);
+  // Map tools are actions, shared by the menu and the toolbar
   ToolsItem := AddItem(MapMenu, 'Tool', nil);
-  for T := Low(TMapTool) to High(TMapTool) do
+  for T := Succ(mtNone) to High(TMapTool) do
   begin
-    Item := AddItem(ToolsItem, MapToolCaptions[T], @MapToolClick, Ord(T));
+    A := TAction.Create(Self);
+    A.ActionList := ActionList;
+    A.Category := 'Map';
+    A.Caption := MapToolCaptions[T];
+    A.Hint := MapToolCaptions[T];
+    A.Tag := Ord(T);
+    A.ImageIndex := MapIconFirst + Ord(T) - 1;
+    A.OnExecute := @MapToolExecute;
+    A.OnUpdate := @MapToolUpdate;
+    MapToolActions[T] := A;
+
+    Item := TMenuItem.Create(Self);
+    Item.Action := A;
     Item.RadioItem := True;
-    Item.GroupIndex := 1;
+    ToolsItem.Add(Item);
+  end;
+
+  // Toolbar buttons sit where the plot mode buttons are (only one set is visible)
+  MapToolSep := TToolButton.Create(Self);
+  MapToolSep.Style := tbsSeparator;
+  MapToolSep.Left := sep02.Left + 1;
+  MapToolSep.Parent := tbMain;
+  MapToolSep.Visible := False;
+  for T := Succ(mtNone) to High(TMapTool) do
+  begin
+    Btn := TToolButton.Create(Self);
+    Btn.Left := sep02.Left + 2 + Ord(T);
+    Btn.Parent := tbMain;
+    Btn.Style := tbsCheck;
+    Btn.Action := MapToolActions[T];
+    Btn.Visible := False;
+    MapToolButtons[T] := Btn;
   end;
   AddItem(MapMenu, '-', nil);
   AddItem(MapMenu, 'Finish drawing', @MapFinishClick).ShortCut := Menus.ShortCut(VK_RETURN, []);
@@ -803,6 +842,7 @@ procedure TDigitMainForm.SetDocKind(Value: TDocumentKind; HasDocument: Boolean);
 var
   IsMap: Boolean;
   i: Integer;
+  T: TMapTool;
 begin
   IsMap := (Value = dkMap);
 
@@ -838,6 +878,11 @@ begin
   btnGroupPointsmode.Visible := not IsMap;
   btnDeletePointsMode.Visible := not IsMap;
   tbWidth.Visible := not IsMap;
+
+  // Map tool buttons
+  MapToolSep.Visible := IsMap;
+  for T := Succ(mtNone) to High(TMapTool) do
+    MapToolButtons[T].Visible := IsMap;
 end;
 
 procedure TDigitMainForm.DisableDocumentActions;
@@ -1262,11 +1307,29 @@ begin
     NewMap(MapOpenDlg.FileName);
 end;
 
-procedure TDigitMainForm.MapToolClick(Sender: TObject);
+procedure TDigitMainForm.MapToolExecute(Sender: TObject);
+var
+  T: TMapTool;
 begin
   if not Assigned(ActiveMap) then Exit;
-  ActiveMap.MapImage.Tool := TMapTool(TMenuItem(Sender).Tag);
+
+  // A second click on the active tool releases it, as the plot modes do
+  T := TMapTool(TComponent(Sender).Tag);
+  if (ActiveMap.MapImage.Tool = T) then
+    ActiveMap.MapImage.Tool := mtNone
+  else
+    ActiveMap.MapImage.Tool := T;
   ActiveMap.UpdateControls;
+end;
+
+procedure TDigitMainForm.MapToolUpdate(Sender: TObject);
+var
+  Map: TMapFrame;
+begin
+  Map := ActiveMap;
+  TAction(Sender).Enabled := Assigned(Map) and Map.MapImage.ImageIsLoaded;
+  TAction(Sender).Checked := Assigned(Map) and
+    (Map.MapImage.Tool = TMapTool(TAction(Sender).Tag));
 end;
 
 procedure TDigitMainForm.MapFinishClick(Sender: TObject);

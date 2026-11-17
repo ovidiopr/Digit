@@ -229,10 +229,6 @@ begin
   DigitMainForm.EditZoomFit.Enabled := ImageLoaded;
   DigitMainForm.EditZoomResize.Enabled := ImageLoaded and (MapImage.Zoom <> 1);
 
-  for i := 0 to DigitMainForm.MapMenu.Count - 1 do
-    if (DigitMainForm.MapMenu.Items[i].Count > 0) then
-      DigitMainForm.MapMenu.Items[i].Items[Ord(MapImage.Tool)].Checked := True;
-
   MapPanel.UpdateControls;
 end;
 

@@ -16,7 +16,6 @@ type
     FMap: TMapImage;
     FUpdating: Boolean;
 
-    rgTool: TRadioGroup;
     gbCalib: TGroupBox;
     lblCalib: TLabel;
     chkYUp: TCheckBox;
@@ -61,7 +60,6 @@ type
     function NewSpin(AParent: TWinControl; const ALabel: String; AMin, AMax, AValue: Integer): TSpinEdit;
     function AskFile(const ATitle, AName: String): Boolean;
 
-    procedure ToolClick(Sender: TObject);
     procedure YUpClick(Sender: TObject);
     procedure ClearCalibClick(Sender: TObject);
     procedure FeatureSelect(Sender: TObject; Item: TListItem; Selected: Boolean);
@@ -277,30 +275,6 @@ begin
   chkYUp := NewCheck(gbCalib, 'Y axis up (scale bar)', False);
   chkYUp.OnClick := @YUpClick;
   btnClearCalib := NewButton(gbCalib, 'Clear calibration', @ClearCalibClick);
-
-  rgTool := TRadioGroup.Create(Self);
-  rgTool.Parent := Self;
-  rgTool.Align := alTop;
-  rgTool.AutoSize := True;
-  rgTool.Caption := 'Tool';
-  rgTool.BorderSpacing.Around := 4;
-  with rgTool.Items do
-  begin
-    Add('None');
-    Add('Select / edit');
-    Add('Scale bar');
-    Add('Reference points');
-    Add('Point');
-    Add('Polyline');
-    Add('Polygon (area)');
-    Add('Distance');
-    Add('Angle');
-    Add('Line profile');
-    Add('Colour bar');
-    Add('Particle region');
-  end;
-  rgTool.ItemIndex := 0;
-  rgTool.OnClick := @ToolClick;
 end;
 
 function TMapPanel.NewGroup(const ACaption: String): TGroupBox;
@@ -385,8 +359,6 @@ begin
   if not Assigned(FMap) then Exit;
   FUpdating := True;
   try
-    rgTool.ItemIndex := Ord(FMap.Tool);
-
     S := FMap.MapScale;
     case S.Mode of
       mcScaleBar:
@@ -447,13 +419,6 @@ begin
   finally
     FUpdating := False;
   end;
-end;
-
-procedure TMapPanel.ToolClick(Sender: TObject);
-begin
-  if FUpdating or (not Assigned(FMap)) then Exit;
-  FMap.Tool := TMapTool(rgTool.ItemIndex);
-  UpdateControls;
 end;
 
 procedure TMapPanel.YUpClick(Sender: TObject);
