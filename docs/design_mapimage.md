@@ -108,9 +108,24 @@ zoomed pixels and are rebuilt from the model, as in `TPlotImage`.
   Y down by default (option `YUp`).
 * Reference points: three image points with map coordinates; affine with rotation and
   anisotropy, reusing `ChangeCoords` from `ucoordinates.pas`.
+* From file: DigitalMicrograph files (`.dm3`) are read with LazScience `TSciDM3`
+  (`uSciDM3`). `Axis[0]`, `Axis[1]` give per-axis origin, pixel size and units, so the
+  map is calibrated on load: `x = (i - Ox) Sx`, `y = (j - Oy) Sy`. `SptUnits` gives the
+  intensity units. The user can still recalibrate by hand.
 * Uncalibrated images work in pixels.
 * Lengths and areas are computed after transforming points to map coordinates,
   so anisotropic calibrations are handled correctly.
+
+### 6.1.1 Raw intensity data
+
+For DM3 files `TMapImage` keeps a `Single` raster with the raw values (counts, float),
+besides the 8-bit display image. Line profiles, thresholds and histograms use the raw
+values when present, and luminance otherwise. The project file stores the path of the
+DM3 file and its calibration; the raw raster is re-read from that file when it exists,
+otherwise the embedded PNG is used.
+
+Dependencies: `digitimage.lpk` requires `LazScience`; `release.yml` clones
+`github.com/ovidiopr/LazScience` and adds its package link.
 
 ### 6.2 Features and measurements (`TMapFeature`)
 
