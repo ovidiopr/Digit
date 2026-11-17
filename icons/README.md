@@ -8,7 +8,8 @@ To change an icon, edit the file and use Replace in the image list editor (doubl
 `ImageList` in the main form). New icons go at the end so existing indexes stay valid.
 
 Sources: `new` icons were drawn for Digit; the others come from the GIMP and eXperience
-sets in IconImages, with editor metadata removed.
+sets in IconImages, with editor metadata removed. The zoom icons (54 to 57) were also flattened:
+the rounded frame no longer uses a clip path or mirrored transforms.
 
 | Index | File | Used by | Source |
 |---|---|---|---|

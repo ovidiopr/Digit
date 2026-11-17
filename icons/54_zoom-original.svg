@@ -18,23 +18,7 @@
      id="defs9" />
   <g
      id="g4320">
-    <g
-       transform="matrix(-0.07682362,0,0,0.07682362,18.70247,-1.0767273)"
-       id="use4898-5"
-      
-       style="display:inline;enable-background:new"
-       clip-path="url(#clipPath8434)">
-      <rect
-         style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#eeeeec;fill-opacity:1;stroke:#555753;stroke-width:13.01682949;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;enable-background:new"
-         id="rect7870"
-         width="195.25244"
-         height="195.25244"
-         x="-236.93846"
-         y="20.524"
-         rx="41.749866"
-         ry="41.690166"
-         transform="scale(-1,1)" />
-    </g>
+    <rect x="0.5" y="0.5" width="15.0" height="15.0" rx="3.2074" ry="3.2028" style="fill:#eeeeec;stroke:#555753;stroke-width:1.0;stroke-linejoin:miter" />
     <path
       
        d="m 9.4999998,11.500003 h -3 V 7.5000029 h -1 v -1.95527 c 0.82444,0 1.36506,-0.18266 1.36506,-1.04473 h 2.63494 z"
