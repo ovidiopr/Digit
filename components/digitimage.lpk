@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="5">
+    <PathDelim Value="\"/>
+    <Name Value="DigitImage"/>
+    <Type Value="RunAndDesignTime"/>
+    <Author Value="Ovidio Y. Peña Rodríguez"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <PathDelim Value="\"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Description Value="Image viewer components of Digit: plot digitizer (TPlotImage) and 2D maps"/>
+    <License Value="GNU General Public License v3"/>
+    <Version Major="1"/>
+    <Files>
+      <Item>
+        <Filename Value="ucoordinates.pas"/>
+        <UnitName Value="uCoordinates"/>
+      </Item>
+      <Item>
+        <Filename Value="uutils.pas"/>
+        <UnitName Value="uUtils"/>
+      </Item>
+      <Item>
+        <Filename Value="ucurves.pas"/>
+        <UnitName Value="uCurves"/>
+      </Item>
+      <Item>
+        <Filename Value="upolygons.pas"/>
+        <UnitName Value="uPolygons"/>
+      </Item>
+      <Item>
+        <Filename Value="uscale.pas"/>
+        <UnitName Value="uScale"/>
+      </Item>
+      <Item>
+        <Filename Value="umarker.pas"/>
+        <UnitName Value="uMarker"/>
+      </Item>
+      <Item>
+        <Filename Value="ugrid.pas"/>
+        <UnitName Value="uGrid"/>
+      </Item>
+      <Item>
+        <Filename Value="ucurvedigitizer.pas"/>
+        <UnitName Value="uCurveDigitizer"/>
+      </Item>
+      <Item>
+        <Filename Value="uplotimage.pas"/>
+        <UnitName Value="uPlotImage"/>
+      </Item>
+      <Item>
+        <Filename Value="digitimagereg.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="DigitImageReg"/>
+      </Item>
+    </Files>
+    <RequiredPkgs>
+      <Item>
+        <PackageName Value="BGRABitmapPack"/>
+      </Item>
+      <Item>
+        <PackageName Value="LCL"/>
+      </Item>
+      <Item>
+        <PackageName Value="FCL"/>
+      </Item>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

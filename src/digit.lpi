@@ -108,113 +108,72 @@
     <RunParams>
       <FormatVersion Value="2"/>
     </RunParams>
-    <RequiredPackages Count="6">
+    <RequiredPackages Count="7">
       <Item1>
-        <PackageName Value="ExtTabCtrls"/>
+        <PackageName Value="DigitImage"/>
+        <DefaultFilename Value="..\components\digitimage.lpk" Prefer="True"/>
       </Item1>
       <Item2>
-        <PackageName Value="LazControlDsgn"/>
+        <PackageName Value="ExtTabCtrls"/>
       </Item2>
       <Item3>
-        <PackageName Value="LazControls"/>
+        <PackageName Value="LazControlDsgn"/>
       </Item3>
       <Item4>
-        <PackageName Value="bgracontrols"/>
+        <PackageName Value="LazControls"/>
       </Item4>
       <Item5>
-        <PackageName Value="TAChartLazarusPkg"/>
+        <PackageName Value="bgracontrols"/>
       </Item5>
       <Item6>
-        <PackageName Value="LCL"/>
+        <PackageName Value="TAChartLazarusPkg"/>
       </Item6>
+      <Item7>
+        <PackageName Value="LCL"/>
+      </Item7>
     </RequiredPackages>
-    <Units Count="15">
+    <Units Count="6">
       <Unit0>
         <Filename Value="digit.lpr"/>
         <IsPartOfProject Value="True"/>
       </Unit0>
       <Unit1>
-        <Filename Value="ucoordinates.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="uCoordinates"/>
-      </Unit1>
-      <Unit2>
         <Filename Value="umain.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="DigitMainForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="uMain"/>
-      </Unit2>
-      <Unit3>
+      </Unit1>
+      <Unit2>
         <Filename Value="uabout.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="AboutBox"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="uAbout"/>
-      </Unit3>
-      <Unit4>
-        <Filename Value="ucurves.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="uCurves"/>
-      </Unit4>
-      <Unit5>
+      </Unit2>
+      <Unit3>
         <Filename Value="urestore.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="uRestore"/>
-      </Unit5>
-      <Unit6>
-        <Filename Value="uutils.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="uUtils"/>
-      </Unit6>
-      <Unit7>
+      </Unit3>
+      <Unit4>
         <Filename Value="uchartscale.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="ChartScaleDlg"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="uChartScale"/>
-      </Unit7>
-      <Unit8>
+      </Unit4>
+      <Unit5>
         <Filename Value="uoptions.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="OptionsDlg"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="uOptions"/>
-      </Unit8>
-      <Unit9>
-        <Filename Value="uplotimage.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="uPlotImage"/>
-      </Unit9>
-      <Unit10>
-        <Filename Value="ugrid.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="uGrid"/>
-      </Unit10>
-      <Unit11>
-        <Filename Value="uscale.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="uScale"/>
-      </Unit11>
-      <Unit12>
-        <Filename Value="upolygons.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="uPolygons"/>
-      </Unit12>
-      <Unit13>
-        <Filename Value="ucurvedigitizer.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="uCurveDigitizer"/>
-      </Unit13>
-      <Unit14>
-        <Filename Value="umarker.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="uMarker"/>
-      </Unit14>
+      </Unit5>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

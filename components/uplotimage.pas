@@ -104,6 +104,8 @@ type
     procedure ProcessDigitizedCurve(ACurve: TCurve);
     procedure DeferredFreeThread(Data: PtrInt);
 
+    class function GetControlClassDefaultSize: TSize; override;
+
     procedure Paint; override;
     procedure Resize; override;
 
@@ -342,6 +344,28 @@ type
 
     property EditionMode: TEditionMode read FEditionMode  write SetEditionMode;
   published
+    property Align;
+    property Anchors;
+    property BorderSpacing;
+    property Constraints;
+    property Enabled;
+    property ParentShowHint;
+    property PopupMenu;
+    property ShowHint;
+    property Visible;
+    property OnClick;
+    property OnDblClick;
+    property OnKeyDown;
+    property OnKeyPress;
+    property OnKeyUp;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
+    property OnMouseMove;
+    property OnMouseUp;
+    property OnMouseWheel;
+    property OnResize;
+
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnPrintMessage: TPrintMessageEvent read FOnPrintMessage write FOnPrintMessage;
     property OnShowProgress: TShowProgressEvent read FOnShowProgress write FOnShowProgress;
@@ -381,6 +405,18 @@ begin
   FPlots := TPlotList.Create;
 
   Reset;
+
+  // Visible size in the form designer only
+  if (csDesigning in ComponentState) then
+    with GetControlClassDefaultSize do
+      SetInitialBounds(0, 0, CX, CY);
+end;
+
+
+class function TPlotImage.GetControlClassDefaultSize: TSize;
+begin
+  Result.CX := 200;
+  Result.CY := 150;
 end;
 
 destructor TPlotImage.Destroy;
@@ -1759,6 +1795,15 @@ var
   Pini, Pend: TCurvePoint;
 begin
   inherited Paint;
+
+  // Placeholder in the form designer
+  if (csDesigning in ComponentState) and not ImageIsLoaded then
+  begin
+    Canvas.Brush.Color := clWhite;
+    Canvas.Pen.Style := psDash;
+    Canvas.Rectangle(ClientRect);
+    Exit;
+  end;
 
   Rect := TRect.Create(TPoint.Create(0, 0), Width, Height);
   ClipRect := Canvas.ClipRect;
