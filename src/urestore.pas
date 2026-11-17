@@ -22,12 +22,15 @@ type
 
     procedure EnsureFormVisible(F: TForm);
     function ScaleValue(Value, FromDPI, ToDPI: Integer): Integer;
-    procedure SavePanels(Form: TForm; Ini: TCustomIniFile; const Section, FormName: string);
-    procedure RestorePanels(Form: TForm; Ini: TCustomIniFile; const Section, FormName: string);
+    procedure SavePanels(Root: TComponent; Ini: TCustomIniFile; const Section, FormName: string);
+    procedure RestorePanels(Root: TComponent; Ini: TCustomIniFile; const Section, FormName: string);
   public
     constructor Create(const IniName: TFileName; DefaultWhatSave: STWhatSave);
     procedure SaveWin(TheForm: TForm; What: STWhatSave = [svDefault]);
     procedure RestoreWin(TheForm: TForm; What: STWhatSave = [svDefault]);
+    // Panel sizes of a frame, stored under the given form name
+    procedure SaveFramePanels(Root: TComponent; const FormName: string);
+    procedure RestoreFramePanels(Root: TComponent; const FormName: string);
     property IniFileName: TFileName read mIniFile;
   end;
 
@@ -89,18 +92,18 @@ end;
 { PANEL SAVE/RESTORE                                                          }
 { --------------------------------------------------------------------------- }
 
-procedure TWinRestorer.SavePanels(Form: TForm; Ini: TCustomIniFile;
+procedure TWinRestorer.SavePanels(Root: TComponent; Ini: TCustomIniFile;
   const Section, FormName: string);
 var
   i: Integer;
   P: TPanel;
   Key: string;
 begin
-  for i := 0 to Form.ComponentCount - 1 do
+  for i := 0 to Root.ComponentCount - 1 do
   begin
-    if Form.Components[i] is TPanel then
+    if (Root.Components[i] is TPanel) and (Root.Components[i].Name <> '') then
     begin
-      P := TPanel(Form.Components[i]);
+      P := TPanel(Root.Components[i]);
 
       if P.Align in [alLeft, alRight] then
       begin
@@ -116,7 +119,7 @@ begin
   end;
 end;
 
-procedure TWinRestorer.RestorePanels(Form: TForm; Ini: TCustomIniFile;
+procedure TWinRestorer.RestorePanels(Root: TComponent; Ini: TCustomIniFile;
   const Section, FormName: string);
 var
   i: Integer;
@@ -124,11 +127,11 @@ var
   SavedSize: Integer;
   Key: string;
 begin
-  for i := 0 to Form.ComponentCount - 1 do
+  for i := 0 to Root.ComponentCount - 1 do
   begin
-    if Form.Components[i] is TPanel then
+    if (Root.Components[i] is TPanel) and (Root.Components[i].Name <> '') then
     begin
-      P := TPanel(Form.Components[i]);
+      P := TPanel(Root.Components[i]);
 
       if P.Align in [alLeft, alRight] then
       begin
@@ -143,6 +146,34 @@ begin
         P.Height := SavedSize;
       end;
     end;
+  end;
+end;
+
+procedure TWinRestorer.SaveFramePanels(Root: TComponent; const FormName: string);
+var
+  Ini: TIniFile;
+begin
+  if not Assigned(Root) then Exit;
+
+  Ini := TIniFile.Create(mIniFile);
+  try
+    SavePanels(Root, Ini, mIniSect, FormName);
+  finally
+    Ini.Free;
+  end;
+end;
+
+procedure TWinRestorer.RestoreFramePanels(Root: TComponent; const FormName: string);
+var
+  Ini: TIniFile;
+begin
+  if not Assigned(Root) then Exit;
+
+  Ini := TIniFile.Create(mIniFile);
+  try
+    RestorePanels(Root, Ini, mIniSect, FormName);
+  finally
+    Ini.Free;
   end;
 end;
 
@@ -274,4 +305,3 @@ begin
 end;
 
 end.
-
