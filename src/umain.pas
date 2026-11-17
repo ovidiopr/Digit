@@ -16,7 +16,7 @@ uses
   TAChartAxis, TATransformations, TACustomSource, TAChartUtils, ClipBrd,
   ActnList, ValEdit, Spin, ExtDlgs, MaskEdit, BCTrackbarUpdown, FileUtil,
   BGRABitmapTypes, GraphType, Grids, ExtTabCtrl, Math, Types,
-  uRestore, uChartScale, uUtils, uCoordinates, uCurves, uMarker, uPlotImage,
+  uSciRestorer, uChartScale, uUtils, uCoordinates, uCurves, uMarker, uPlotImage,
   uImageViewer, uMapImage, uMapPanel, ExtPageCtrl, uDocFrame, uPlotFrame,
   uMapFrame;
 
@@ -335,6 +335,7 @@ type
     NewDocMenu: TPopupMenu;
     MapOpenDlg: TOpenDialog;
     FAddingDocument: Boolean;
+    Restorer: TSciRestorer;
 
     procedure CreateDocumentUI;
     function DocumentOf(APage: TExtPage): TDocumentFrame;
@@ -347,6 +348,7 @@ type
     procedure SetDocKind(Value: TDocumentKind; HasDocument: Boolean);
     procedure DisableDocumentActions;
     procedure UpdateCaption;
+    procedure DocumentLayout(Doc: TDocumentFrame; Save: Boolean);
 
     procedure DocumentsTabChanging(Sender: TObject; OldIndex, NewIndex: Integer; var Allow: Boolean);
     procedure DocumentsTabChanged(Sender: TObject; NewIndex: Integer);
@@ -400,6 +402,10 @@ implementation
 uses uAbout;
 
 const
+  // Keys used by the former window restorer, so saved layouts survive
+  RestorerSection = 'WindowsRestorer';
+  RestorerKey = 'TDigitMainForm';
+
   MapToolCaptions: array [TMapTool] of String = ('None', 'Select / edit',
     'Scale bar', 'Reference points', 'Point', 'Polyline', 'Polygon (area)',
     'Distance', 'Angle', 'Line profile', 'Colour bar', 'Particle region');
@@ -560,8 +566,7 @@ begin
     Result.Parent := Page;
     Result.Align := alClient;
 
-    if Assigned(GlobalWinRestorer) then
-      GlobalWinRestorer.RestoreFramePanels(Result, ClassName);
+    DocumentLayout(Result, False);
 
     Documents.PageIndex := Documents.IndexOfPage(Page);
   finally
@@ -720,6 +725,59 @@ begin
   end;
 end;
 
+procedure TDigitMainForm.DocumentLayout(Doc: TDocumentFrame; Save: Boolean);
+var
+  i, j: Integer;
+  Other: TDocumentFrame;
+  Panels: TFPList;
+  Tags: array of PtrInt;
+
+  procedure CollectPanels(Container: TWinControl);
+  var
+    k: Integer;
+  begin
+    for k := 0 to Container.ControlCount - 1 do
+    begin
+      if (Container.Controls[k] is TWinControl) then
+        CollectPanels(TWinControl(Container.Controls[k]));
+      if (Container.Controls[k] is TPanel) then
+        Panels.Add(Container.Controls[k]);
+    end;
+  end;
+
+begin
+  if not (Assigned(Doc) and Assigned(Restorer)) then Exit;
+
+  // The restorer walks the whole form, other documents opt out with Tag = -1
+  Panels := TFPList.Create;
+  try
+    for i := 0 to Documents.PageCount - 1 do
+    begin
+      Other := DocumentOf(Documents.Page[i]);
+      if Assigned(Other) and (Other <> Doc) then
+        CollectPanels(Other);
+    end;
+
+    SetLength(Tags, Panels.Count);
+    for j := 0 to Panels.Count - 1 do
+    begin
+      Tags[j] := TPanel(Panels[j]).Tag;
+      TPanel(Panels[j]).Tag := -1;
+    end;
+    try
+      if Save then
+        Restorer.SaveForm(Self, RestorerKey, [svPanels])
+      else
+        Restorer.RestoreForm(Self, RestorerKey, [svPanels]);
+    finally
+      for j := 0 to Panels.Count - 1 do
+        TPanel(Panels[j]).Tag := Tags[j];
+    end;
+  finally
+    Panels.Free;
+  end;
+end;
+
 procedure TDigitMainForm.ActivateDocument(Doc: TDocumentFrame);
 begin
   if Assigned(Doc) then
@@ -838,8 +896,8 @@ begin
   if not Assigned(Doc) then Exit;
 
   Allow := Doc.CanClose;
-  if Allow and Assigned(GlobalWinRestorer) then
-    GlobalWinRestorer.SaveFramePanels(Doc, ClassName);
+  if Allow then
+    DocumentLayout(Doc, True);
 end;
 
 procedure TDigitMainForm.DocumentsTabDeleted(Sender: TObject);
@@ -942,8 +1000,14 @@ procedure TDigitMainForm.FormCreate(Sender: TObject);
 var
   Opt: TPlotOptions;
 begin
-  GlobalWinRestorer := TWinRestorer.Create(GetIniName, WHATSAVE_ALL);
-  GlobalWinRestorer.RestoreWin(Self, [svSize, svLocation, svState, svPanels]);
+  // Window geometry here, panel sizes per document
+  Restorer := TSciRestorer.Create(Self);
+  Restorer.AutoSaveRestoreOwner := False;
+  Restorer.IniLocation := ilCustomDir;
+  Restorer.IniFileName := GetIniName;
+  Restorer.IniSection := RestorerSection;
+  Restorer.DefaultWhatSave := [svSize, svLocation, svState];
+  Restorer.RestoreForm(Self, RestorerKey);
 
   FAddingDocument := False;
   Opt.LoadFromFile(GetIniName);
@@ -974,10 +1038,8 @@ end;
 
 procedure TDigitMainForm.FormClose(Sender: TObject; var AAction: TCloseAction);
 begin
-  if Assigned(ActiveDocument) then
-    GlobalWinRestorer.SaveFramePanels(ActiveDocument, ClassName);
-  GlobalWinRestorer.SaveWin(Self, [svSize, svLocation, svState, svPanels]);
-  FreeAndNil(GlobalWinRestorer);
+  Restorer.SaveForm(Self, RestorerKey);
+  DocumentLayout(ActiveDocument, True);
 
   PlotOptions.SaveToFile(GetIniName);
 end;

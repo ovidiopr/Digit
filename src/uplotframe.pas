@@ -10,7 +10,7 @@ uses
   TAChartAxis, TATransformations, TACustomSource, TAChartUtils, ClipBrd,
   ActnList, ValEdit, Spin, ExtDlgs, MaskEdit, BCTrackbarUpdown, FileUtil,
   BGRABitmapTypes, GraphType, Grids, ExtTabCtrl, Math, Types,
-  uRestore, uChartScale, uUtils, uCoordinates, uCurves, uMarker, uPlotImage,
+  uChartScale, uUtils, uCoordinates, uCurves, uMarker, uPlotImage,
   uImageViewer, uDocFrame;
 
 type

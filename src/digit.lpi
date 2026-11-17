@@ -108,7 +108,7 @@
     <RunParams>
       <FormatVersion Value="2"/>
     </RunParams>
-    <RequiredPackages Count="7">
+    <RequiredPackages Count="8">
       <Item1>
         <PackageName Value="DigitImage"/>
         <DefaultFilename Value="..\components\digitimage.lpk" Prefer="True"/>
@@ -131,8 +131,11 @@
       <Item7>
         <PackageName Value="LCL"/>
       </Item7>
+      <Item8>
+        <PackageName Value="LazScience"/>
+      </Item8>
     </RequiredPackages>
-    <Units Count="10">
+    <Units Count="9">
       <Unit0>
         <Filename Value="digit.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -154,55 +157,50 @@
         <UnitName Value="uAbout"/>
       </Unit2>
       <Unit3>
-        <Filename Value="urestore.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="uRestore"/>
-      </Unit3>
-      <Unit4>
         <Filename Value="uchartscale.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="ChartScaleDlg"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="uChartScale"/>
-      </Unit4>
-      <Unit5>
+      </Unit3>
+      <Unit4>
         <Filename Value="uoptions.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="OptionsDlg"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="uOptions"/>
-      </Unit5>
-      <Unit6>
+      </Unit4>
+      <Unit5>
         <Filename Value="umappanel.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="uMapPanel"/>
-      </Unit6>
-      <Unit7>
+      </Unit5>
+      <Unit6>
         <Filename Value="udocframe.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="DocumentFrame"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Frame"/>
         <UnitName Value="uDocFrame"/>
-      </Unit7>
-      <Unit8>
+      </Unit6>
+      <Unit7>
         <Filename Value="uplotframe.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="PlotFrame"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Frame"/>
         <UnitName Value="uPlotFrame"/>
-      </Unit8>
-      <Unit9>
+      </Unit7>
+      <Unit8>
         <Filename Value="umapframe.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="MapFrame"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Frame"/>
         <UnitName Value="uMapFrame"/>
-      </Unit9>
+      </Unit8>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
