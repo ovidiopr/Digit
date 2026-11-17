@@ -108,7 +108,7 @@
     <RunParams>
       <FormatVersion Value="2"/>
     </RunParams>
-    <RequiredPackages Count="8">
+    <RequiredPackages Count="9">
       <Item1>
         <PackageName Value="DigitImage"/>
         <DefaultFilename Value="..\components\digitimage.lpk" Prefer="True"/>
@@ -134,6 +134,9 @@
       <Item8>
         <PackageName Value="LazScience"/>
       </Item8>
+      <Item9>
+        <PackageName Value="ExtSVGImageList"/>
+      </Item9>
     </RequiredPackages>
     <Units Count="9">
       <Unit0>

@@ -457,11 +457,14 @@ end;
 procedure TPlotFrame.BindShell;
 begin
   // Shared actions, images and menus live in the main form
-  pcInput.Images := DigitMainForm.LargeImageList;
-  tbBox.Images := DigitMainForm.LargeImageList;
+  pcInput.Images := DigitMainForm.ImageList;
+  pcInput.ImagesWidth := 32;
+  tbBox.Images := DigitMainForm.ImageList;
+  tbBox.ImagesWidth := 32;
   tbCorrectDistortion.Action := DigitMainForm.ToolCorrectDistortion;
   tbResetBox.Action := DigitMainForm.ToolResetBox;
-  tbGrid.Images := DigitMainForm.LargeImageList;
+  tbGrid.Images := DigitMainForm.ImageList;
+  tbGrid.ImagesWidth := 32;
   tbRemoveGrid.Action := DigitMainForm.GridRemoval;
   tbShowHideGrid.Action := DigitMainForm.GridShowHide;
   btnMergeMask.Action := DigitMainForm.GridMergeMask;
@@ -471,7 +474,8 @@ begin
   btnMinorGridColor.Images := DigitMainForm.ImageList;
   btnBackgroundColor.Action := DigitMainForm.ModeBackgroundColor;
   btnBackgroundColor.Images := DigitMainForm.ImageList;
-  tbPlot.Images := DigitMainForm.LargeImageList;
+  tbPlot.Images := DigitMainForm.ImageList;
+  tbPlot.ImagesWidth := 32;
   btnDigitize.Action := DigitMainForm.ToolDigitLineFollowing;
   btnDigitize.DropdownMenu := DigitMainForm.DigitizeMenu;
   btnMoveUp.Action := DigitMainForm.ToolCurveUp;

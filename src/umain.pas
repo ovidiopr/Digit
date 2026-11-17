@@ -18,7 +18,7 @@ uses
   BGRABitmapTypes, GraphType, Grids, ExtTabCtrl, Math, Types,
   uSciRestorer, uChartScale, uUtils, uCoordinates, uCurves, uMarker, uPlotImage,
   uImageViewer, uMapImage, uMapPanel, ExtPageCtrl, uDocFrame, uPlotFrame,
-  uMapFrame;
+  uMapFrame, uExtSVGImageList;
 
 type
   { TDigitMainForm }
@@ -147,7 +147,6 @@ type
     N4: TMenuItem;
     sep06: TToolButton;
     ToolPlotOptions: TAction;
-    LargeImageList: TImageList;
     CurveMenu: TMenuItem;
     CurveAddItem: TMenuItem;
     CurveDelItem: TMenuItem;
@@ -212,7 +211,7 @@ type
     sep01: TToolButton;
     BtnUndo: TToolButton;
     BtnNew: TToolButton;
-    ImageList: TImageList;
+    ImageList: TExtSVGImageList;
     EditUndo: TAction;
     DigitMenu: TMenuItem;
     ToolDigitLineFollowing: TAction;
