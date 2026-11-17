@@ -355,6 +355,7 @@ var
   Item: TListItem;
   F: TMapFeature;
   S: TMapScale;
+  ListChanged: Boolean;
 begin
   if not Assigned(FMap) then Exit;
   FUpdating := True;
@@ -378,22 +379,39 @@ begin
     chkYUp.Checked := S.YUp;
     chkYUp.Enabled := (S.Mode = mcScaleBar);
 
-    // Feature list
-    lvFeatures.Items.BeginUpdate;
-    try
-      lvFeatures.Items.Clear;
-      for i := 0 to FMap.Features.Count - 1 do
-      begin
-        F := FMap.Features[i];
-        Item := lvFeatures.Items.Add;
-        Item.Caption := F.Name;
-        Item.SubItems.Add(F.Summary(S));
-      end;
-      if (FMap.SelectedIndex >= 0) and (FMap.SelectedIndex < lvFeatures.Items.Count) then
-        lvFeatures.Items[FMap.SelectedIndex].Selected := True;
-    finally
-      lvFeatures.Items.EndUpdate;
+    // Feature list, rebuilt only when its contents change
+    ListChanged := (lvFeatures.Items.Count <> FMap.Features.Count);
+    for i := 0 to FMap.Features.Count - 1 do
+    begin
+      if ListChanged then Break;
+      F := FMap.Features[i];
+      Item := lvFeatures.Items[i];
+      ListChanged := (Item.Caption <> F.Name) or (Item.SubItems.Count = 0) or
+        (Item.SubItems[0] <> F.Summary(S));
     end;
+    if ListChanged then
+    begin
+      lvFeatures.Items.BeginUpdate;
+      try
+        lvFeatures.Items.Clear;
+        for i := 0 to FMap.Features.Count - 1 do
+        begin
+          F := FMap.Features[i];
+          Item := lvFeatures.Items.Add;
+          Item.Caption := F.Name;
+          Item.SubItems.Add(F.Summary(S));
+        end;
+      finally
+        lvFeatures.Items.EndUpdate;
+      end;
+    end;
+    if (FMap.SelectedIndex >= 0) and (FMap.SelectedIndex < lvFeatures.Items.Count) then
+    begin
+      if not lvFeatures.Items[FMap.SelectedIndex].Selected then
+        lvFeatures.Items[FMap.SelectedIndex].Selected := True;
+    end
+    else if Assigned(lvFeatures.Selected) then
+      lvFeatures.Selected := nil;
     btnFinish.Enabled := Assigned(FMap.PendingFeature);
     btnDelete.Enabled := FMap.SelectedIndex >= 0;
     btnExportVertices.Enabled := FMap.Features.Count > 0;

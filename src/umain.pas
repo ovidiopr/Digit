@@ -338,6 +338,12 @@ type
     MapToolActions: array [TMapTool] of TAction;
     MapToolButtons: array [TMapTool] of TToolButton;
     MapToolSep: TToolButton;
+    FToolOrder: array of TControl;
+    FKindShown: Boolean;
+    FShownKind: TDocumentKind;
+    FShownHasDocument: Boolean;
+    FCaptionFile: TFileName;
+    FLastDocument: TDocumentFrame;
 
     procedure CreateDocumentUI;
     function DocumentOf(APage: TExtPage): TDocumentFrame;
@@ -351,6 +357,7 @@ type
     procedure DisableDocumentActions;
     procedure UpdateCaption;
     procedure DocumentLayout(Doc: TDocumentFrame; Save: Boolean);
+    procedure ArrangeToolbar;
 
     procedure DocumentsTabChanging(Sender: TObject; OldIndex, NewIndex: Integer; var Allow: Boolean);
     procedure DocumentsTabChanged(Sender: TObject; NewIndex: Integer);
@@ -509,6 +516,7 @@ var
   Item, ToolsItem: TMenuItem;
   A: TAction;
   Btn: TToolButton;
+  i, j, n: Integer;
 begin
   // Document tabs fill the space between the toolbar and the status bar
   Documents := TExtPageCtrl.Create(Self);
@@ -567,6 +575,19 @@ begin
     ToolsItem.Add(Item);
   end;
 
+  // The toolbar sorts its buttons by Left, so keep the design order in a list
+  SetLength(FToolOrder, tbMain.ControlCount);
+  for i := 0 to tbMain.ControlCount - 1 do
+  begin
+    j := i;
+    while (j > 0) and (FToolOrder[j - 1].Left > tbMain.Controls[i].Left) do
+    begin
+      FToolOrder[j] := FToolOrder[j - 1];
+      Dec(j);
+    end;
+    FToolOrder[j] := tbMain.Controls[i];
+  end;
+
   // Toolbar buttons sit where the plot mode buttons are (only one set is visible)
   MapToolSep := TToolButton.Create(Self);
   MapToolSep.Style := tbsSeparator;
@@ -583,6 +604,20 @@ begin
     Btn.Visible := False;
     MapToolButtons[T] := Btn;
   end;
+
+  // Map tools go right after sep02 in the fixed order
+  j := 0;
+  while (j < Length(FToolOrder)) and (FToolOrder[j] <> sep02) do
+    Inc(j);
+  Inc(j);
+  n := Ord(High(TMapTool)) - Ord(mtNone) + 1;
+  SetLength(FToolOrder, Length(FToolOrder) + n);
+  for i := High(FToolOrder) downto j + n do
+    FToolOrder[i] := FToolOrder[i - n];
+  FToolOrder[j] := MapToolSep;
+  for T := Succ(mtNone) to High(TMapTool) do
+    FToolOrder[j + Ord(T)] := MapToolButtons[T];
+  FKindShown := False;
   AddItem(MapMenu, '-', nil);
   AddItem(MapMenu, 'Finish drawing', @MapFinishClick).ShortCut := Menus.ShortCut(VK_RETURN, []);
   AddItem(MapMenu, 'Cancel drawing', @MapCancelClick).ShortCut := Menus.ShortCut(VK_ESCAPE, []);
@@ -594,6 +629,10 @@ function TDigitMainForm.AddDocument(AKind: TDocumentKind): TDocumentFrame;
 var
   Page: TExtPage;
 begin
+  // The new document starts with the panel sizes of the current one
+  if Assigned(ActiveDocument) then
+    DocumentLayout(ActiveDocument, True);
+
   FAddingDocument := True;
   try
     Page := Documents.AddPage('noname.dig');
@@ -738,22 +777,28 @@ end;
 procedure TDigitMainForm.UpdateCaption;
 var
   Doc: TDocumentFrame;
+  S: String;
 begin
   Doc := ActiveDocument;
   if not Assigned(Doc) then
   begin
-    Caption := AppFullName;
+    if (Caption <> AppFullName) then
+      Caption := AppFullName;
     Exit;
   end;
 
   if (Doc.DigitFileName = '') then
-    Caption := AppFullName
+    S := AppFullName
   else
-    Caption := AppFullName + ' - ' + ExtractFileName(Doc.DigitFileName);
-
+    S := AppFullName + ' - ' + ExtractFileName(Doc.DigitFileName);
   if not Doc.IsSaved then
-    Caption := Caption + '*';
+    S := S + '*';
+  if (Caption <> S) then
+    Caption := S;
 
+  // Dialogs follow the active file, only when it changes
+  if (FCaptionFile = Doc.DigitFileName) then Exit;
+  FCaptionFile := Doc.DigitFileName;
   OpenProjectDlg.FileName := Doc.DigitFileName;
   SaveProjectDlg.FileName := Doc.DigitFileName;
   if DirectoryExists(ExtractFilePath(Doc.DigitFileName)) then
@@ -818,6 +863,12 @@ end;
 
 procedure TDigitMainForm.ActivateDocument(Doc: TDocumentFrame);
 begin
+  // Keep the panel sizes of the document being left for the next new one
+  if Assigned(FLastDocument) and (FLastDocument <> Doc) and
+     Assigned(PageOf(FLastDocument)) then
+    DocumentLayout(FLastDocument, True);
+  FLastDocument := Doc;
+
   if Assigned(Doc) then
     SetDocKind(Doc.Kind, True)
   else
@@ -843,45 +894,71 @@ var
   i: Integer;
   T: TMapTool;
 begin
+  // Toggling many toolbar buttons is slow, do it only when the kind changes
+  if FKindShown and (FShownKind = Value) and (FShownHasDocument = HasDocument) then Exit;
+  FKindShown := True;
+  FShownKind := Value;
+  FShownHasDocument := HasDocument;
+
   IsMap := (Value = dkMap);
 
-  // Menus
-  ModeMenu.Visible := not IsMap;
-  PlotMenu.Visible := not IsMap;
-  CurveMenu.Visible := not IsMap;
-  DigitMenu.Visible := not IsMap;
-  MarkersMenu.Visible := not IsMap;
-  EditCopyItem.Visible := not IsMap;
-  EditShowLinetem.Visible := not IsMap;
-  EditShowSymbolsItem.Visible := not IsMap;
-  MapMenu.Visible := IsMap;
-  // Hidden shortcuts must not fire in plot mode
-  for i := 0 to MapMenu.Count - 1 do
-    MapMenu.Items[i].Enabled := IsMap and HasDocument;
+  tbMain.DisableAlign;
+  try
+    // Menus
+    ModeMenu.Visible := not IsMap;
+    PlotMenu.Visible := not IsMap;
+    CurveMenu.Visible := not IsMap;
+    DigitMenu.Visible := not IsMap;
+    MarkersMenu.Visible := not IsMap;
+    EditCopyItem.Visible := not IsMap;
+    EditShowLinetem.Visible := not IsMap;
+    EditShowSymbolsItem.Visible := not IsMap;
+    MapMenu.Visible := IsMap;
+    // Hidden shortcuts must not fire in plot mode
+    for i := 0 to MapMenu.Count - 1 do
+      MapMenu.Items[i].Enabled := IsMap and HasDocument;
 
-  // Plot-only toolbar buttons
-  BtnExport.Visible := not IsMap;
-  btnScaleOptions.Visible := not IsMap;
-  sep06.Visible := not IsMap;
-  btnCopy.Visible := not IsMap;
-  btnImport.Visible := not IsMap;
-  btnCursorMode.Visible := not IsMap;
-  btnMarkersMode.Visible := not IsMap;
-  btnColorMode.Visible := not IsMap;
-  btnCorrectPoints.Visible := not IsMap;
-  sep02.Visible := not IsMap;
-  sep03.Visible := not IsMap;
-  btnResample.Visible := not IsMap;
-  btnSmooth.Visible := not IsMap;
-  btnSymbols.Visible := not IsMap;
-  btnGroupPointsmode.Visible := not IsMap;
-  btnDeletePointsMode.Visible := not IsMap;
-  tbWidth.Visible := not IsMap;
+    // Plot-only toolbar buttons
+    BtnExport.Visible := not IsMap;
+    btnScaleOptions.Visible := not IsMap;
+    sep06.Visible := not IsMap;
+    btnCopy.Visible := not IsMap;
+    btnImport.Visible := not IsMap;
+    btnCursorMode.Visible := not IsMap;
+    btnMarkersMode.Visible := not IsMap;
+    btnColorMode.Visible := not IsMap;
+    btnCorrectPoints.Visible := not IsMap;
+    sep02.Visible := not IsMap;
+    sep03.Visible := not IsMap;
+    btnResample.Visible := not IsMap;
+    btnSmooth.Visible := not IsMap;
+    btnSymbols.Visible := not IsMap;
+    btnGroupPointsmode.Visible := not IsMap;
+    btnDeletePointsMode.Visible := not IsMap;
+    tbWidth.Visible := not IsMap;
 
-  // Map tool buttons
-  MapToolSep.Visible := IsMap;
-  for T := Succ(mtNone) to High(TMapTool) do
-    MapToolButtons[T].Visible := IsMap;
+    // Map tool buttons
+    MapToolSep.Visible := IsMap;
+    for T := Succ(mtNone) to High(TMapTool) do
+      MapToolButtons[T].Visible := IsMap;
+
+    ArrangeToolbar;
+  finally
+    tbMain.EnableAlign;
+  end;
+end;
+
+procedure TDigitMainForm.ArrangeToolbar;
+var
+  i, X: Integer;
+begin
+  // Increasing Left values in the fixed order, hidden buttons included
+  X := 0;
+  for i := 0 to High(FToolOrder) do
+  begin
+    FToolOrder[i].Left := X;
+    Inc(X, Max(FToolOrder[i].Width, 1) + 1);
+  end;
 end;
 
 procedure TDigitMainForm.DisableDocumentActions;
@@ -941,7 +1018,11 @@ begin
 
   Allow := Doc.CanClose;
   if Allow then
+  begin
     DocumentLayout(Doc, True);
+    if (FLastDocument = Doc) then
+      FLastDocument := nil;
+  end;
 end;
 
 procedure TDigitMainForm.DocumentsTabDeleted(Sender: TObject);

@@ -197,8 +197,7 @@ var
   TempBmp: TBitmap;
   Xo, Xf, Yo, Yf, Xc, Yc: Integer;
 begin
-  // Make sure that the image is updated
-  Application.ProcessMessages;
+  // No ProcessMessages here, the viewer already flushed the queue before this event
 
   if (X < span) then
   begin
