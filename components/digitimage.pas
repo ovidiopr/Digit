@@ -9,7 +9,8 @@ interface
 
 uses
   uCoordinates, uUtils, uCurves, uPolygons, uScale, uMarker, uGrid,
-  uCurveDigitizer, uImageViewer, uPlotImage, DigitImageReg, LazarusPackageIntf;
+  uCurveDigitizer, uImageViewer, uPlotImage, uMapScale, uMapFeatures, uMapRaster,
+  uMapImage, DigitImageReg, LazarusPackageIntf;
 
 implementation
 

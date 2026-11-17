@@ -5,7 +5,7 @@ unit uImageViewer;
 interface
 
 uses {$ifdef windows}Windows,{$endif} Forms, Classes, Controls, Graphics,
-  SysUtils, Types, BGRABitmap, BGRABitmapTypes, BGRAreadTiff,
+  SysUtils, Types, DOM, XMLRead, Base64, BGRABitmap, BGRABitmapTypes, BGRAreadTiff,
   uUtils, uCoordinates, uMarker;
 
 const
@@ -87,6 +87,10 @@ type
     procedure LoadImage(FileName: TFileName); overload;
     procedure LoadImage(Stream: TStream); overload;
 
+    // Shared <image> node of the project file
+    function ImageToXML(Doc: TXMLDocument): TDOMNode;
+    function ImageFromXML(Node: TDOMNode; out APath, AName: String): Boolean;
+
     // Hooks for descendants
     function GetSourcePixel(X, Y: Integer): TBGRAPixel; virtual;
     procedure OverlayZoomImage; virtual;
@@ -116,6 +120,9 @@ type
     procedure AfterConstruction; override;
 
     procedure Reset; virtual;
+
+    // Value of the Type attribute of <document>; 'plot' when missing
+    class function DocumentTypeOf(const FileName: String): String;
 
     function GetPixel(X, Y: Integer): Longint; overload;
     function GetPixel(X, Y: Double): Longint; overload;
@@ -706,6 +713,109 @@ begin
       inherited MouseUp(Button, Shift, X, Y);
   finally
     InMouseMove := False;
+  end;
+end;
+
+
+function TImageViewer.ImageToXML(Doc: TXMLDocument): TDOMNode;
+var
+  Stream: TMemoryStream;
+  Buffer: String;
+  Node: TDOMNode;
+begin
+  Result := Doc.CreateElement('image');
+  with TDOMElement(Result) do
+  begin
+    SetAttribute('Width', UTF8Decode(IntToStr(PlotImg.Width)));
+    SetAttribute('Height', UTF8Decode(IntToStr(PlotImg.Height)));
+  end;
+
+  Node := Doc.CreateElement('path');
+  Node.AppendChild(Doc.CreateTextNode(UTF8Decode(ExtractFilePath(ImageName))));
+  Result.AppendChild(Node);
+
+  Node := Doc.CreateElement('name');
+  Node.AppendChild(Doc.CreateTextNode(UTF8Decode(ExtractFileName(ImageName))));
+  Result.AppendChild(Node);
+
+  // Embedded PNG as Base64
+  Stream := TMemoryStream.Create;
+  try
+    PlotImg.SaveToStreamAsPng(Stream);
+    SetString(Buffer, Stream.Memory, Stream.Size);
+    Node := Doc.CreateElement('data');
+    Node.AppendChild(Doc.CreateCDATASection(UTF8Decode(EncodeStringBase64(Buffer))));
+    Result.AppendChild(Node);
+  finally
+    Stream.Free;
+  end;
+end;
+
+
+function TImageViewer.ImageFromXML(Node: TDOMNode; out APath, AName: String): Boolean;
+var
+  Child: TDOMNode;
+  Buffer: String;
+  Stream: TMemoryStream;
+begin
+  Result := False;
+  APath := '';
+  AName := '';
+  Child := Node.FirstChild;
+  while Assigned(Child) do
+  begin
+    if (Child.CompareName('path') = 0) and Assigned(Child.FirstChild) then
+      APath := UTF8Encode(Child.FirstChild.NodeValue);
+
+    if (Child.CompareName('name') = 0) and Assigned(Child.FirstChild) then
+      AName := UTF8Encode(Child.FirstChild.NodeValue);
+
+    if (Child.CompareName('data') = 0) and Assigned(Child.FirstChild) then
+    begin
+      Buffer := DecodeStringBase64(UTF8Encode(Child.FirstChild.NodeValue));
+      Stream := TMemoryStream.Create;
+      try
+        Stream.Write(Pointer(Buffer)^, Length(Buffer));
+        Stream.Position := 0;
+        LoadImage(Stream);
+        Result := ImageIsLoaded;
+      finally
+        Stream.Free;
+      end;
+    end;
+
+    Child := Child.NextSibling;
+  end;
+end;
+
+
+class function TImageViewer.DocumentTypeOf(const FileName: String): String;
+var
+  XMLDoc: TXMLDocument;
+  Child, Attr: TDOMNode;
+begin
+  Result := 'plot';
+  XMLDoc := nil;
+  try
+    try
+      ReadXMLFile(XMLDoc, FileName);
+      Child := XMLDoc.DocumentElement.FirstChild;
+      while Assigned(Child) do
+      begin
+        if (Child.CompareName('document') = 0) then
+        begin
+          Attr := Child.Attributes.GetNamedItem('Type');
+          if Assigned(Attr) and (Attr.NodeValue <> '') then
+            Result := LowerCase(UTF8Encode(Attr.NodeValue));
+          Break;
+        end;
+        Child := Child.NextSibling;
+      end;
+    except
+      Result := '';
+    end;
+  finally
+    XMLDoc.Free;
   end;
 end;
 

@@ -157,11 +157,13 @@ jobs:
         git clone https://github.com/bgrabitmap/bgrabitmap.git
         git clone https://github.com/bgrabitmap/bgracontrols.git
         git clone https://github.com/ovidiopr/ExtTabCtrls.git
+        git clone https://github.com/ovidiopr/LazScience.git
 
         # Register packages with lazbuild (order matters for dependencies)
         lazbuild ${LAZARUS_DIR:+--lazarusdir="$LAZARUS_DIR"} --add-package-link bgrabitmap/bgrabitmap/bgrabitmappack.lpk
         lazbuild ${LAZARUS_DIR:+--lazarusdir="$LAZARUS_DIR"} --add-package-link bgracontrols/bgracontrols.lpk
         lazbuild ${LAZARUS_DIR:+--lazarusdir="$LAZARUS_DIR"} --add-package-link ExtTabCtrls/components/exttabctrls.lpk 
+        lazbuild ${LAZARUS_DIR:+--lazarusdir="$LAZARUS_DIR"} --add-package-link LazScience/components/lazscience.lpk
         lazbuild ${LAZARUS_DIR:+--lazarusdir="$LAZARUS_DIR"} --add-package-link "$GITHUB_WORKSPACE/components/digitimage.lpk"
 
     # ==========================================

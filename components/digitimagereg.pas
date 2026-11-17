@@ -5,7 +5,7 @@ unit DigitImageReg;
 interface
 
 uses
-  Classes, uPlotImage;
+  Classes, uPlotImage, uMapImage;
 
 procedure Register;
 
@@ -13,7 +13,7 @@ implementation
 
 procedure Register;
 begin
-  RegisterComponents('Digit', [TPlotImage]);
+  RegisterComponents('Digit', [TPlotImage, TMapImage]);
 end;
 
 end.
