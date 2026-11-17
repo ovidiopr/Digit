@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+  
+  
+  
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+  
+  
+   width="16"
+   height="16"
+   viewBox="0 0 4.2333332 4.2333335"
+   version="1.1"
+   id="svg8"
+  
+  >
+  <title
+     id="title7906">Media Record</title>
+  <defs
+     id="defs2">
+    <linearGradient
+      
+       id="linearGradient846">
+      <stop
+         style="stop-color:#f95757;stop-opacity:1"
+         offset="0"
+         id="stop842" />
+      <stop
+         style="stop-color:#d91919;stop-opacity:1"
+         offset="1"
+         id="stop844" />
+    </linearGradient>
+    <linearGradient
+      
+       xlink:href="#linearGradient846"
+       id="linearGradient848"
+       x1="2.1166668"
+       y1="293.29581"
+       x2="2.1166668"
+       y2="296.47083"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <g
+    
+    
+     id="layer1"
+     transform="translate(0,-292.76665)">
+    <g
+       id="media-record">
+      <circle
+         r="1.8520833"
+         cy="294.88333"
+         cx="2.1166666"
+         id="path836"
+         style="opacity:0.98999999;fill:#7e1a1a;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.52916664;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.62288136;paint-order:normal" />
+      <circle
+         r="1.5875"
+         cy="294.88333"
+         cx="2.1166666"
+         id="path840"
+         style="opacity:0.98999999;fill:url(#linearGradient848);fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.52916664;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.62288136;paint-order:normal" />
+    </g>
+  </g>
+</svg>

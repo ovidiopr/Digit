@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+  
+  
+  
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+  
+  
+   id="svg7384"
+   height="16"
+   width="16"
+   version="1.1"
+  
+   viewBox="0 0 16 16"
+  >
+  <defs
+     id="defs10" />
+  <title
+     id="title9167">Gnome Symbolic Icon Theme</title>
+  <g
+     id="g4276"
+     transform="matrix(0.3636101,0,0,0.36359481,-0.72517878,0.00294496)">
+    <path
+      
+      
+       id="path9480"
+       d="M 15.591006,0.4919213 H 32.676311 L 45.497585,13.586385 V 31.48003 L 32.848986,43.496929 H 15.418649 L 2.4943857,30.658264 V 13.464078 Z"
+       style="fill:#cc0000;fill-opacity:1;fill-rule:evenodd;stroke:#860000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <path
+      
+       id="path2787"
+       d="M 16.767175,10.5 12.5,14.767175 20.035075,22.30225 12.5,29.837325 l 4.267175,4.267176 7.535075,-7.535076 7.535075,7.535076 4.267176,-4.267176 L 28.569425,22.30225 36.104501,14.767175 31.837325,10.5 24.30225,18.035075 Z"
+       style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#860000;stroke-width:0.99999958;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+  </g>
+</svg>
