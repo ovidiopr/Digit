@@ -22,7 +22,7 @@ type
   public
     procedure SetSize(AWidth, AHeight: Integer);
     procedure UpdateRange;
-    procedure LoadFromDM3(DM3: TSciDM3; Slice: Integer = 0);
+    procedure LoadFromDM3(DM3: TSciDM3; Slice: Integer = -1);
     procedure LoadLuminance(Bmp: TBGRABitmap);
 
     function Sample(X, Y: Double): Double;
@@ -87,14 +87,31 @@ begin
   end;
 end;
 
-procedure TMapRaster.LoadFromDM3(DM3: TSciDM3; Slice: Integer = 0);
+procedure TMapRaster.LoadFromDM3(DM3: TSciDM3; Slice: Integer = -1);
 var
-  x, y: Integer;
+  x, y, k, k0, k1: Integer;
+  s: Double;
 begin
   SetSize(DM3.ImageWidth, DM3.ImageHeight);
+  // A negative slice sums all of them (spectrum images)
+  if (Slice < 0) then
+  begin
+    k0 := 0;
+    k1 := Max(DM3.ImageDepth, 1) - 1;
+  end
+  else
+  begin
+    k0 := Slice;
+    k1 := Slice;
+  end;
   for y := 0 to FHeight - 1 do
     for x := 0 to FWidth - 1 do
-      FData[y*FWidth + x] := DM3.PixelValue(x, y, Slice);
+    begin
+      s := 0;
+      for k := k0 to k1 do
+        s := s + DM3.PixelValue(x, y, k);
+      FData[y*FWidth + x] := s;
+    end;
   FUnits := DM3.SptUnits;
   UpdateRange;
 end;

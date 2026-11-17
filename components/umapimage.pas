@@ -266,15 +266,26 @@ begin
     try
       DM3.ParseDM3;
       if not DM3.IsParsed then Exit;
+      if (DM3.ImageHeight < 2) then
+        raise Exception.CreateFmt('"%s" holds a 1D spectrum or profile, not an image.',
+                                  [ExtractFileName(FileName)]);
 
       FreeAndNil(FRaster);
       FRaster := TMapRaster.Create;
-      FRaster.LoadFromDM3(DM3);
+      FRaster.LoadFromDM3(DM3, -1);
 
       if LoadDisplay then
       begin
-        // Display limits stored by DigitalMicrograph
-        Bmp := FRaster.ToBitmap(DM3.LowLimit, DM3.HighLimit);
+        // DM display limits, except for summed spectrum images
+        if (DM3.ImageDepth > 1) then
+        begin
+          Bmp := FRaster.ToBitmap(FRaster.MinValue, FRaster.MaxValue);
+          if Assigned(OnPrintMessage) then
+            OnPrintMessage(Self, Format('%s: sum of %d slices', [ExtractFileName(FileName),
+              DM3.ImageDepth]), mtInformation);
+        end
+        else
+          Bmp := FRaster.ToBitmap(DM3.LowLimit, DM3.HighLimit);
         Stream := TMemoryStream.Create;
         try
           Bmp.SaveToStreamAsPng(Stream);
