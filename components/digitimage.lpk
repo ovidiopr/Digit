@@ -49,6 +49,10 @@
         <UnitName Value="uCurveDigitizer"/>
       </Item>
       <Item>
+        <Filename Value="uimageviewer.pas"/>
+        <UnitName Value="uImageViewer"/>
+      </Item>
+      <Item>
         <Filename Value="uplotimage.pas"/>
         <UnitName Value="uPlotImage"/>
       </Item>

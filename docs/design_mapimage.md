@@ -78,16 +78,24 @@ Add/Delete/Move Plot and Curve, Undo/Redo, Axes/Box properties, ConvertCoords`, 
 
 | Hook | Default | `TPlotImage` override |
 |---|---|---|
-| `GetSourcePixel(X, Y): TBGRAPixel` | `PlotImg` pixel | grid mask over image |
-| `ComposeZoomImage` | copy of `PlotImg` | adds grid mask |
+| `GetSourcePixel(X, Y)` | `PlotImg` pixel | grid mask over image |
+| `OverlayZoomImage` | none | copies the grid mask |
+| `ImageSizeChanged` | none | resizes and resets the grid mask |
+| `ScaleContent(Factor)` (in `ResizeToZoom`) | none | scales, boxes, curve points, grid mask |
 | `SyncMarkersToModel` / `SyncMarkersFromModel` | none | `UpdateMarkersInCurve/InImage` |
-| `ScaleModel(Factor)` (in `ResizeToZoom`) | none | scales, boxes, curve points |
 | `DrawContent(PaintRect)` (under markers) | none | state-dependent curve/axes/box |
 | `DrawForeground(PaintRect)` (over markers) | none | hover dot |
-| `MarkerRemoving(Marker, RealDelete): Boolean` | False | axes/box/curve marker bookkeeping |
-| `DoMouseDown/Move/Up` | marker hover, drag, region selection | curve editing, box/axes dragging |
-| `ResetContent` | none | plots, state, drag fields |
-| `WriteContentXML` / `ReadContentXML` | none | `<plots>`, grid mask, legacy nodes |
+| `MarkerRemoving(Marker, RealDelete)` | False | axes/box/curve marker bookkeeping |
+| `RepaintForMarkerMove(Marker)` | repaint marker | full repaint with the virtual curve |
+| `HandleMouseDown/Move/Up` | False | drag of curve points |
+| `MarkerClicked`, `BeforeMarkerMove`, `AfterMarkerMove` | none | box drag actions, axes repaint |
+| `MarkerDropped`, `MarkerDropDone` | none | scale points, box notifications, rotation |
+| `MouseHover(X, Y)` | none | hover index |
+| `CanStartRegion(Shift)`, `CanSelectRegion` | False, True | curve state and edition mode |
+| `Reset` (virtual, called from `AfterConstruction`) | viewer fields | plots, state, drag fields |
+
+XML reading and writing stays in `TPlotImage` for now; shared image-node helpers move
+to `TImageViewer` when `TMapImage` needs them.
 
 ## 5. Project file
 
